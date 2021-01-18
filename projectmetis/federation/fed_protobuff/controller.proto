@@ -1,0 +1,78 @@
+syntax = "proto3";
+package federation.fed_protobuff;
+import "federation/fed_protobuff/common.proto";
+
+service Controller {
+
+    // Unary RPC. A new participating learner asks the controller to join the federation.
+    rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
+
+    // Unary RPC. An existing learner informs the controller it leaves the federation.
+    rpc LeaveFederation (LeaveFederationRequest) returns (LeaveFederationResponse) {}
+
+    // Unary RPC. Controller replies with federation related runtime metadata (e.g., number of community update requests).
+    rpc RuntimeMetadata (RuntimeMetadataRequest) returns (RuntimeMetadataResponse) {}
+
+    // Unary RPC. Controller replies with community models (0:all, 1:last, 2:previous to last, etc...).
+    rpc CommunityModelLineage (CommunityModelLineageRequest) returns (CommunityModelLineageResponse) {}
+
+    // Unary RPC. Controller replies with the health status (beat) of its internal services.
+    rpc ControllerServicesHeartbeat (ControllerServicesHeartbeatRequest) returns (ControllerServicesHeartbeatResponse) {}
+
+    // Unary RPC. Controller receives the local model of a learner when it completes its local task.
+    rpc TaskCompleted (TaskCompletedRequest) returns (TaskCompletedResponse) {}
+
+}
+
+message JoinFederationRequest {
+    LearnerEntity learner_entity = 1;
+    int32 num_training_examples = 2;
+    int32 num_validation_examples = 3;
+    int32 num_test_examples = 4;
+}
+
+message JoinFederationResponse {
+    Ack ack = 1;
+}
+
+message LeaveFederationRequest {
+    LearnerEntity learner_entity = 1;
+}
+
+message LeaveFederationResponse {
+    Ack ack = 1;
+}
+
+message RuntimeMetadataRequest {
+    EmptyMessage empty_message = 1;
+}
+
+message RuntimeMetadataResponse {
+    string json_metadata = 1;
+}
+
+message CommunityModelLineageRequest {
+    int32 num_backtracks = 1;
+}
+
+message CommunityModelLineageResponse {
+    repeated NetworkMatrices model_matrices = 1;
+}
+
+message ControllerServicesHeartbeatRequest {
+    EmptyMessage empty_message = 1;
+}
+
+message ControllerServicesHeartbeatResponse {
+    bool controller_beat = 1;
+}
+
+message TaskCompletedRequest {
+    LearnerEntity learner_entity = 1;
+    LearnerExecutionBaseMetadata base_metadata = 2;
+    NetworkMatrices model_matrices = 3;
+}
+
+message TaskCompletedResponse {
+    Ack ack = 1;
+}

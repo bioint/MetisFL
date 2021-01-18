@@ -1,0 +1,69 @@
+syntax = "proto3";
+package tests.grpc;
+
+service AsyncCollaborativeLearning {
+
+    /*
+        Unary RPC: Learner pings Controller to check whether his gradients are needed
+    */
+    rpc StartShippingGradients(stream Learner) returns (stream Ack) {}
+
+    /*
+    This endpoint is an aftermath of the StartShippingGradients response. If the above response is True, then:
+        Bi-directional Streaming RPC:
+            - Client sends his latest gradients in a streaming fashion
+            - Server acts in a streaming fashion as well and streams acknowledgements for every request that is received
+    */
+	rpc DispatchGradients(stream DispatchGradientsRequest) returns (stream Ack)  {}
+
+    /*
+        Bi-directional Streaming RPC:
+            - Client requests from Controller a community update and sends his latest gradients in a streaming fashion.
+            - Server acts in a streaming fashion as well and streams acknowledgements for every request that is received
+    */
+    rpc RequestGradientsUpdate(stream DispatchGradientsRequest) returns (stream Ack) {}
+
+    /*
+        Server Streaming RPC: Client pings server to check if the community update is ready. If yes, server streams the community weights back to the client
+    */
+    rpc FetchUpdatedGradients(Learner) returns (stream CommunityReadyResponse) {}
+
+
+    rpc FetchFirstUpdatedGradients(Empty) returns (stream CommunityReadyResponse) {}
+
+
+    rpc HelloWorld (HelloRequest) returns (HelloReply) {}
+
+}
+
+message HelloRequest {
+    string value = 1;
+}
+
+message HelloReply {
+    string value = 1;
+}
+
+message Empty {}
+
+message Ack {
+    bool status = 1;
+}
+
+message Learner {
+    string learner_id = 1;
+}
+
+message Gradients {
+    string value = 1;
+}
+
+message DispatchGradientsRequest {
+    Learner learner = 1;
+    Gradients gradients = 2;
+}
+
+message CommunityReadyResponse {
+    Ack ack = 1;
+    Gradients gradients = 2;
+}

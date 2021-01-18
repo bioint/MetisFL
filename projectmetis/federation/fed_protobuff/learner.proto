@@ -1,0 +1,82 @@
+syntax = "proto3";
+package federation.fed_protobuff;
+import "federation/fed_protobuff/common.proto";
+
+service Learner {
+
+    // Unary RPC.
+    rpc RunTask (RunTaskRequest) returns (RunTaskResponse) {}
+
+    // Unary RPC.
+    rpc LearningMetadataLineage (LearningMetadataLineageRequest) returns (LearningMetadataLineageResponse) {}
+
+    // Unary RPC.
+    rpc LocalModelLineage (LocalModelLineageRequest) returns (LocalModelLineageResponse) {}
+
+    // Unary RPC.
+    rpc EvalModel (EvalModelRequest) returns (EvalModelResponse) {}
+
+    // Unary RPC.
+    rpc EvalRequestsLineage (EvalRequestsLineageRequest) returns (EvalRequestsLineageResponse) {}
+
+    // Unary RPC.
+    rpc LearnerServicesHeartbeat (LearnerServicesHeartbeatRequest) returns (LearnerServicesHeartbeatResponse) {}
+
+}
+
+
+message RunTaskRequest {
+    LearningTaskHyperParameters hyper_parameters = 1;
+}
+
+message RunTaskResponse {
+    Ack ack = 1;
+}
+
+message LearningMetadataLineageRequest {
+    int32 num_backtracks = 1;
+}
+
+message LearningMetadataLineageResponse {
+    string json_metadata = 1;
+}
+
+message LocalModelLineageRequest {
+    int32 num_backtracks = 1;
+}
+
+message LocalModelLineageResponse {
+    string json_metadata = 1;
+    repeated NetworkMatrices model_matrices = 2; // Array of stored models.
+}
+
+message EvalModelRequest {
+    NetworkMatrices model_matrices = 1;
+    enum evaluation_Dataset {
+        TRAINING = 0;
+        VALIDATION = 1;
+        TEST = 2;
+    }
+}
+
+message EvalModelResponse { // Not sure if we need a simple json response or scores! For instance, we might need additional metrics such as confusion matrices...
+    float training_dataset_score = 1;
+    float validation_dataset_score = 2;
+    float test_dataset_score = 3;
+}
+
+message EvalRequestsLineageRequest {
+    int32 num_backtracks = 1;
+}
+
+message EvalRequestsLineageResponse {
+    string json_response = 1;
+}
+
+message LearnerServicesHeartbeatRequest {
+    EmptyMessage empty_message = 1;
+}
+
+message LearnerServicesHeartbeatResponse {
+    bool learner_beat = 1;
+}

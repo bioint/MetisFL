@@ -1,0 +1,67 @@
+FederationRuntimeEnvironment:
+  Rounds: 1
+  SynchronousExecution: True
+  CommunityFunction: "FedAvg"
+  ExecutionTimeMins: 100001
+  FederationController:
+    GRPCServicer:
+      hostname/ip: "bdnf.isi.edu"
+      port: 30050
+  FederationEvaluator:
+    GRPCServicer:
+      hostname/ip: "bdnf.isi.edu"
+      port: 30051
+    TFHosts:
+      - HostID: "BDNF-Evaluator"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 8798
+            taskid: 0
+            cpuid: 0
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 8898
+            taskid: 0
+            cpuid:
+            gpuid: 1
+            dbconnection:
+            local_batch_size: 8
+            is_host_training_leader: True
+  TensorflowCluster:
+    TFHosts:
+      #### BDNF.ISI.EDU #####
+      - HostID: "BDNF-DC1"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        DatasetConfigs:
+          train_dataset_mappings: "/lfs1/stripeli/condaprojects/federatedneuroimaging/projectmetis/resources/config/experiments_configs/brainage/ukbbdata/centralized/train.csv"
+          validation_dataset_mappings:
+          test_dataset_mappings: "/lfs1/stripeli/condaprojects/federatedneuroimaging/projectmetis/resources/config/experiments_configs/brainage/ukbbdata/test.csv"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 3222
+            taskid: 0
+            cpuid: 2
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 3232
+            taskid: 0
+            cpuid:
+            gpuid: 2
+            dbconnection:
+            local_batch_size: 1
+            local_epochs_target_update: 20
+            is_host_training_leader: True
+            validation_percentage: 0
+            validation_cycle_tombstones: 0
+            validation_cycle_loss_percentage_threshold: 0

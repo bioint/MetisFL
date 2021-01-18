@@ -1,0 +1,289 @@
+FederationRuntimeEnvironment:
+  Rounds: 150
+  SynchronousExecution: True
+  CommunityFunction: "DVW"
+  ExecutionTimeMins: 100000
+  FederationController:
+    GRPCServicer:
+      hostname/ip: "bdnf.isi.edu"
+      port: 50050
+  FederationEvaluator:
+    GRPCServicer:
+      hostname/ip: "bdnf.isi.edu"
+      port: 50051
+    TFHosts:
+      - HostID: "BDNF-Evaluator"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 9898
+            taskid: 0
+            cpuid: 0
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 9899
+            taskid: 0
+            cpuid:
+            gpuid: 5
+            dbconnection:
+            is_host_training_leader: True
+  TensorflowCluster:
+    TFHosts:
+      #### BDNF.ISI.EDU #####
+      - HostID: "BDNF-DC1"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5222
+            taskid: 0
+            cpuid: 1
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5223
+            taskid: 0
+            cpuid:
+            gpuid: 0
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 5
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 4
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "BDNF-DC2"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5224
+            taskid: 0
+            cpuid: 2
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5225
+            taskid: 0
+            cpuid:
+            gpuid: 1
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 5
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 4
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "BDNF-DC3"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5226
+            taskid: 0
+            cpuid: 3
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5227
+            taskid: 0
+            cpuid:
+            gpuid: 2
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 5
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 4
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "BDNF-DC4"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5228
+            taskid: 0
+            cpuid: 4
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5229
+            taskid: 0
+            cpuid:
+            gpuid: 3
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 5
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 4
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "BDNF-DC5"
+        RemoteConfigs:
+          hostname/ip: "bdnf.isi.edu"
+          username: "stripeli"
+          ld_library_path: "/usr/local/cuda/lib64:/usr/local/cuda/extras/CUPTI/lib64/"
+          cuda_home: "/usr/local/cuda"
+          python_interpreter: "/lfs1/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5230
+            taskid: 0
+            cpuid: 5
+        WorkerServers:
+          - hostname/ip: "bdnf.isi.edu"
+            port: 5231
+            taskid: 0
+            cpuid:
+            gpuid: 4
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 5
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 4
+            validation_cycle_loss_percentage_threshold: 3
+
+      ### LEARN.ISI.EDU #####
+      - HostID: "LEARN-DC1"
+        RemoteConfigs:
+          hostname/ip: "learn.isi.edu"
+          username: "stripeli"
+          ld_library_path: ""
+          cuda_home: ""
+          python_interpreter: "/opt/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5222
+            taskid: 0
+            cpuid: 5
+        WorkerServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5223
+            taskid: 0
+            cpuid: 6
+            gpuid:
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 2
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 2
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "LEARN-DC2"
+        RemoteConfigs:
+          hostname/ip: "learn.isi.edu"
+          username: "stripeli"
+          ld_library_path: ""
+          cuda_home: ""
+          python_interpreter: "/opt/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5224
+            taskid: 0
+            cpuid: 7
+        WorkerServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5225
+            taskid: 0
+            cpuid: 8
+            gpuid:
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 2
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 2
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "LEARN-DC3"
+        RemoteConfigs:
+          hostname/ip: "learn.isi.edu"
+          username: "stripeli"
+          ld_library_path: ""
+          cuda_home: ""
+          python_interpreter: "/opt/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5226
+            taskid: 0
+            cpuid: 9
+        WorkerServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5227
+            taskid: 0
+            cpuid: 10
+            gpuid:
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 2
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 2
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "LEARN-DC4"
+        RemoteConfigs:
+          hostname/ip: "learn.isi.edu"
+          username: "stripeli"
+          ld_library_path: ""
+          cuda_home: ""
+          python_interpreter: "/opt/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5228
+            taskid: 0
+            cpuid: 11
+        WorkerServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5229
+            taskid: 0
+            cpuid: 12
+            gpuid:
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 2
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 2
+            validation_cycle_loss_percentage_threshold: 3
+      - HostID: "LEARN-DC5"
+        RemoteConfigs:
+          hostname/ip: "learn.isi.edu"
+          username: "stripeli"
+          ld_library_path: ""
+          cuda_home: ""
+          python_interpreter: "/opt/stripeli/metiscondaenv/bin/python3"
+        ParameterServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5230
+            taskid: 0
+            cpuid: 13
+        WorkerServers:
+          - hostname/ip: "learn.isi.edu"
+            port: 5231
+            taskid: 0
+            cpuid: 14
+            gpuid:
+            dbconnection:
+            local_batch_size: 50
+            local_epochs_target_update: 2
+            is_host_training_leader: True
+            validation_percentage: 5
+            validation_cycle_tombstones: 2
+            validation_cycle_loss_percentage_threshold: 3

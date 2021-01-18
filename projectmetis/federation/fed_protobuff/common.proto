@@ -1,0 +1,61 @@
+syntax = "proto3";
+package federation.fed_protobuff;
+
+message EmptyMessage {}
+
+message LearnerEntity {
+    string learner_id = 1;
+    string remote_server_hostname = 2;
+    string remote_server_ip = 3;
+    int32 remote_server_port = 4;
+}
+
+message Ack {
+    bool status = 1;
+    int64 timestamp = 2;
+}
+
+message MatrixDef {
+    int32 size = 1;
+    string dtype = 2;
+    repeated int32 dimensions = 3;
+}
+
+message DoubleMatrix {
+    repeated double values = 1;
+    MatrixDef matrixdef = 2;
+}
+
+message NetworkMatrices {
+    repeated DoubleMatrix matrices = 1;
+}
+
+message LearnerExecutionBaseMetadata {
+    repeated float epochs_training_scores = 1; // A list of all training evaluations across all epochs.
+    repeated float epochs_validation_score = 2;
+    repeated float epochs_test_score = 3;
+    float completed_epochs = 4; // Learner may perform partial epochs, thus the float data type.
+    int32 completed_batches = 5;
+    int32 batch_size = 6;
+    float processing_ms_per_epoch = 7; // Time-per-epoch in milliseconds.
+    float processing_ms_per_batch = 8; // Time-per-batch in milliseconds.
+}
+
+message LearningTaskHyperParameters {
+    int32 num_training_epochs = 1;
+    int32 batch_size = 2;
+    float learning_rate = 3;
+    float training_dataset_percentage_for_stratified_validation = 4;
+    SGDOptimizer sgd_optimizer = 5;
+}
+
+message SGDOptimizer {
+    string optimizer_name = 1;
+    SGDOptimizerMetadata optimizer_metadata = 2;
+}
+
+// HOW TO DEFINE PER OPTIMIZER METADATA?
+message SGDOptimizerMetadata {
+    float momentum_value = 1;
+
+}

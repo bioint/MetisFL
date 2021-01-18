@@ -1,0 +1,68 @@
+Assume you have two files as follows:
+
+************************************
+FILE 1:
+************************************
+
+syntax = "proto3";
+package tests.grpc;
+
+message GradientsRequest {
+    string from_learner = 1;
+    string to_learner = 2;
+    int32 request_timestamp = 3;
+}
+
+message GradientsResponse {
+    string from_learner = 1;
+    string to_learner = 2;
+    int32 reponse_timestamp = 3;
+    repeated Weight weights = 4;
+}
+
+message Weight {
+    string value = 1;
+}
+
+************************************
+FILE 2:
+************************************
+syntax = "proto3";
+package tests.grpc;
+import "tests/grpc/broker_messages.proto";
+
+
+service CollaborativeLearning {
+
+	rpc DispatchGradients(stream GradientsRequest) returns (stream GradientsResponse)  {}
+
+}
+
+************************************
+GOAL:
+************************************
+Our goal is to generate the *pb2.py files. The problem comes from how we define the package and import statement. When we invoke the
+protoc cli, the output directory for python_out will be the directory where the *.proto files are declared. That is, in order to generate
+the *.pb2.py files inside the directory tests/grpc we invoke the protoc cli from the root directory. That is:
+
+// Generate just protobuffs
+protoc -I=. --python_out=. tests/grpc/*.proto
+
+
+// Generate protobuffs and grpc
+Example 1: python -m grpc_tools.protoc -I=. --python_out=. --grpc_python_out=. tests/grpc/*.proto
+Example 2:
+    Parent directory: /Users/Dstrip/PycharmProjects/ProjectMetis/projectmetis
+    python -m grpc_tools.protoc -I=. --python_out=. --grpc_python_out=. federation/fed_protobuff/*.proto
+
+// From Google Developers Documentation on how to import other .proto files
+The protocol compiler searches for imported files in a set of directories specified on the protocol compiler command line using the -I/--proto_path flag.
+If no flag was given, it looks in the directory in which the compiler was invoked. In general you should set the --proto_path flag to the root of your project
+and use fully qualified names for all imports.
+
+Example:
+
+************************************
+FOCAL POINTS
+************************************
+The definition of an rpc service as stream, in Python code is translated as yield (generators). Check the route_guide example.
