@@ -1,0 +1,125 @@
+syntax = "proto3";
+package federation.fed_protobuff;
+
+service CollabLearning {
+
+    // Unary RPC. Check if test accuracy is reached.
+    rpc IsSystemStatScoreReached (DoubleValue) returns (Ack) {}
+
+    // Unary RPC. Check if execution time is reached.
+    rpc IsSystemExecutionTimeReached (DoubleValue) returns (Ack) {}
+
+    // Unary RPC. Check if the learner has reached the satisfied conditions to request an update.
+    rpc IsLearnerCommunityUpdateSignalReached (Learner) returns (Ack) {}
+
+    // Unary RPC. One time request for retrieving execution metadata from controller.
+    rpc RetrieveFederationRoundExecutionMetadataFromController (Learner) returns (JsonStringValue) {}
+
+    // Unary RPC. Reset all the collections of the Controller in order to start a new federation round afresh.
+    rpc ResetControllerFederationRoundCollections (EmptyMessage) returns (Ack) {}
+
+    // Server-Streaming RPC. Every learner asynchronously (through deamon thread) listens for incoming execution signal updates.
+    rpc NotifyLearnersFederationRoundSignalReached (EmptyMessage) returns (stream Ack) {}
+
+    // Server-Streaming RPC. Every learner asynchronously (through deamon thread) listens for incoming computation termination signals.
+    rpc NotifyLearnersSessionTerminationSignalReached (EmptyMessage) returns (stream Ack) {}
+
+    // Learner-Streaming RPC. Server must listen to the stream for incoming update signals from the Learners.
+    rpc NotifyControllerToUpdateFederationRoundSignals (stream FedRoundSignals) returns (Ack) {}
+
+    // Learner-Streaming RPC. Learner sends weights (e.g. when finished training). Server must listen for all the incoming requests from the Learners.
+    rpc SendLearnerExecutionResultToController (stream LearnerExecutionResult) returns (Ack) {}
+
+    // Learner-Streaming RPC. Learner requests a community update an at the same time sends its local weights. Receives community weights answer.
+    rpc CommunityUpdateWithLearnerState (stream LearnerExecutionResult) returns (NetworkMatrices) {}
+
+    // Unary RPC. Simply query the controller to return current community state.
+    rpc CommunityUpdateCurrentState (Learner) returns (NetworkMatrices) {}
+
+    // Unary RPC. Query controller with execution metadata for the value of the local epochs in-between update requests
+    rpc LearnerLocalIterationsRequest (LearnerExecutionMetadata) returns (IntegerValue) {}
+
+    // Unary RPC. Query controller to retrieve metadata regarding community state.
+    rpc LearnerCommunityStateMetadata (Learner) returns (CommunityStateMetadata) {}
+
+    // Unary RPC. Query controller to retrieve the current global epoch number.
+    rpc RequestGlobalEpochID(Learner) returns (IntegerValue) {}
+
+    // Unary RPC. Query controller for community request eligibility based on staleness.
+    rpc LearnerStalenessCommunityRequestEligibility (LearnerStalenessMetadata) returns (Ack) {}
+
+}
+
+message EmptyMessage {}
+
+message DoubleValue {
+    double value = 1;
+}
+
+message IntegerValue {
+    int32 value = 1;
+}
+
+message JsonStringValue {
+    string value = 1;
+}
+
+message Learner {
+    string learner_id = 1;
+}
+
+message Ack {
+    bool status = 1;
+}
+
+message FedRoundSignals {
+    Learner learner = 1;
+    bool learner_finished_epoch = 3;
+    bool learner_finished_training = 2;
+}
+
+message MatrixDef {
+    int32 size = 1;
+    string dtype = 2;
+    repeated int32 dimensions = 3;
+}
+
+message DoubleMatrix {
+    repeated double values = 1;
+    MatrixDef matrixdef = 2;
+}
+
+message NetworkMatrices {
+    repeated DoubleMatrix matrices = 1;
+}
+
+message LearnerExecutionResult {
+    NetworkMatrices network_matrices = 2;
+    LearnerExecutionMetadata execution_metadata = 3;
+}
+
+message LearnerExecutionMetadata {
+    Learner learner = 1;
+    int32 num_training_examples = 3;
+    int32 num_validation_examples = 4;
+    float latest_train_score = 5;
+    float latest_validation_score = 6;
+    float completed_epochs = 7;
+    int32 completed_batches = 8;
+    int32 batch_size = 9;
+    float processing_ms_per_epoch = 10;
+    int32 target_local_epochs = 11;
+}
+
+message CommunityStateMetadata {
+    int32 global_update_scalar_clock = 1;
+    int32 learner_global_update_scalar_clock = 2;
+    int32 global_community_steps = 3;
+    int32 learner_previous_global_community_steps = 4;
+}
+
+message LearnerStalenessMetadata {
+    Learner learner = 1;
+    repeated float validation_phase_stalenesses = 2;
+    int32 current_update_steps = 3;
+}
