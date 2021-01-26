@@ -1,78 +1,77 @@
 syntax = "proto3";
-package federation.fed_protobuff;
+package federation.fed_protobuff.controller;
+
 import "federation/fed_protobuff/common.proto";
+import "federation/fed_protobuff/federatedmodel.proto";
 
 service Controller {
+
+    // Unary RPC. Controller replies with community models (0:all, 1:last, 2:previous to last, etc...).
+    rpc GetCommunityModelLineage (GetCommunityModelLineageRequest) returns (GetCommunityModelLineageResponse) {}
+
+    // Unary RPC. Controller replies with federation related runtime metadata (e.g., number of community update requests).
+    rpc GetRuntimeMetadata (GetRuntimeMetadataRequest) returns (GetRuntimeMetadataResponse) {}
+
+    // Unary RPC. Controller replies with the health status (beat) of its internal services.
+    rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
 
     // Unary RPC. A new participating learner asks the controller to join the federation.
     rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
 
+    // Unary RPC. Controller receives the local model of a learner when it completes its local task.
+    rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (MarkTaskCompletedResponse) {}
+
     // Unary RPC. An existing learner informs the controller it leaves the federation.
     rpc LeaveFederation (LeaveFederationRequest) returns (LeaveFederationResponse) {}
 
-    // Unary RPC. Controller replies with federation related runtime metadata (e.g., number of community update requests).
-    rpc RuntimeMetadata (RuntimeMetadataRequest) returns (RuntimeMetadataResponse) {}
+}
 
-    // Unary RPC. Controller replies with community models (0:all, 1:last, 2:previous to last, etc...).
-    rpc CommunityModelLineage (CommunityModelLineageRequest) returns (CommunityModelLineageResponse) {}
+message GetCommunityModelLineageRequest {
+    int32 num_backtracks = 1; // Number of models that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest community models.
+}
 
-    // Unary RPC. Controller replies with the health status (beat) of its internal services.
-    rpc ControllerServicesHeartbeat (ControllerServicesHeartbeatRequest) returns (ControllerServicesHeartbeatResponse) {}
+message GetCommunityModelLineageResponse {
+    repeated federatedmodel.FederatedModel federated_models = 1; // Reply a sequence of models.
+}
 
-    // Unary RPC. Controller receives the local model of a learner when it completes its local task.
-    rpc TaskCompleted (TaskCompletedRequest) returns (TaskCompletedResponse) {}
+message GetRuntimeMetadataRequest {}
 
+message GetRuntimeMetadataResponse {
+    string json_metadata = 1;
+}
+
+message GetServicesHealthStatusRequest {}
+
+message GetServicesHealthStatusResponse {
+    map<string, bool> services_status = 1;
 }
 
 message JoinFederationRequest {
     LearnerEntity learner_entity = 1;
-    int32 num_training_examples = 2;
-    int32 num_validation_examples = 3;
-    int32 num_test_examples = 4;
+    LocalDatasetSpec local_dataset_spec = 2;
 }
 
 message JoinFederationResponse {
     Ack ack = 1;
+    string token = 2; // For security reasons, randomly generate a string of size 64-characters that is associated with the joining learner.
 }
 
-message LeaveFederationRequest {
-    LearnerEntity learner_entity = 1;
+message MarkTaskCompletedRequest {
+    string learner_id = 1;
+    string learner_token = 2;
+    LearnerExecutionBaseMetadata base_metadata = 3;
+    federatedmodel.FederatedModel federated_model = 4;
 }
 
-message LeaveFederationResponse {
+message MarkTaskCompletedResponse {
     Ack ack = 1;
 }
 
-message RuntimeMetadataRequest {
-    EmptyMessage empty_message = 1;
+message LeaveFederationRequest {
+    string learner_id = 1;
+    string learner_token = 2;
 }
 
-message RuntimeMetadataResponse {
-    string json_metadata = 1;
-}
-
-message CommunityModelLineageRequest {
-    int32 num_backtracks = 1;
-}
-
-message CommunityModelLineageResponse {
-    repeated NetworkMatrices model_matrices = 1;
-}
-
-message ControllerServicesHeartbeatRequest {
-    EmptyMessage empty_message = 1;
-}
-
-message ControllerServicesHeartbeatResponse {
-    bool controller_beat = 1;
-}
-
-message TaskCompletedRequest {
-    LearnerEntity learner_entity = 1;
-    LearnerExecutionBaseMetadata base_metadata = 2;
-    NetworkMatrices model_matrices = 3;
-}
-
-message TaskCompletedResponse {
+message LeaveFederationResponse {
     Ack ack = 1;
 }

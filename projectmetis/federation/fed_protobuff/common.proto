@@ -1,39 +1,30 @@
 syntax = "proto3";
 package federation.fed_protobuff;
 
-message EmptyMessage {}
-
-message LearnerEntity {
-    string learner_id = 1;
-    string remote_server_hostname = 2;
-    string remote_server_ip = 3;
-    int32 remote_server_port = 4;
-}
+import "federation/fed_protobuff/optimizers.proto";
+import "google/protobuf/timestamp.proto";
 
 message Ack {
     bool status = 1;
-    int64 timestamp = 2;
+    google.protobuf.Timestamp timestamp = 2;
 }
 
-message MatrixDef {
-    int32 size = 1;
-    string dtype = 2;
-    repeated int32 dimensions = 3;
-}
-
-message DoubleMatrix {
+message DoubleVariable {
     repeated double values = 1;
-    MatrixDef matrixdef = 2;
+    VariableDef variable_def = 2;
 }
 
-message NetworkMatrices {
-    repeated DoubleMatrix matrices = 1;
+message LearnerEntity {
+    string id = 1;
+    string hostname = 2; // hostname field can be a hostname or an ip.
+    int32 port = 3;
 }
 
 message LearnerExecutionBaseMetadata {
+    // TODO For every training, validation and test score below, we need to define the metrics we expect the learner to return. These metrics should be the ones defined in the evaluation field of message `common.LearningTask.evaluation`.
     repeated float epochs_training_scores = 1; // A list of all training evaluations across all epochs.
-    repeated float epochs_validation_score = 2;
-    repeated float epochs_test_score = 3;
+    repeated float epochs_validation_scores = 2;
+    repeated float epochs_test_scores = 3;
     float completed_epochs = 4; // Learner may perform partial epochs, thus the float data type.
     int32 completed_batches = 5;
     int32 batch_size = 6;
@@ -41,21 +32,32 @@ message LearnerExecutionBaseMetadata {
     float processing_ms_per_batch = 8; // Time-per-batch in milliseconds.
 }
 
-message LearningTaskHyperParameters {
-    int32 num_training_epochs = 1;
-    int32 batch_size = 2;
-    float learning_rate = 3;
-    float training_dataset_percentage_for_stratified_validation = 4;
-    SGDOptimizer sgd_optimizer = 5;
+message LearningHyperParameters {
+    int32 batch_size = 1;
+    oneof optimizer {
+        optimizers.VanillaSGD vanilla_sgd = 3;
+        optimizers.MomentumSGD momentum_sgd = 4;
+        optimizers.FedProx fed_prox = 5;
+        optimizers.Adam adam = 6;
+    }
 }
 
-message SGDOptimizer {
-    string optimizer_name = 1;
-    SGDOptimizerMetadata optimizer_metadata = 2;
+message LearningTask {
+    int32 num_local_updates = 1; // This reflects the number of local steps the learner needs to perform. It is similar to epochs if we take |num_training_examples| / batch_size.
+    float training_dataset_percentage_for_stratified_validation = 2;
+    // TODO We need to define the metrics we expect the learner to return. This should be similar to the evaluation field in message `learner.EvaluateModelRequest`.
 }
 
-// HOW TO DEFINE PER OPTIMIZER METADATA?
-message SGDOptimizerMetadata {
-    float momentum_value = 1;
-
+message LocalDatasetSpec {
+    int32 num_training_examples = 1;
+    int32 num_validation_examples = 2;
+    int32 num_test_examples = 3;
+    // TODO We need to add a message, which in the case of classification describes: (#classes, #examples_per_class), and in the case of regression: (mean, std, variance).
 }
+
+message VariableDef {
+    int32 size = 1; // Number of elements in the array.
+    string dtype = 2; // Data type (int, float, double); can be used for casting.
+    repeated int32 dimensions = 3; // List of variable's dimensions.
+}
+

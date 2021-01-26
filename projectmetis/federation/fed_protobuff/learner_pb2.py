@@ -13,22 +13,23 @@ _sym_db = _symbol_database.Default()
 
 
 from federation.fed_protobuff import common_pb2 as federation_dot_fed__protobuff_dot_common__pb2
+from federation.fed_protobuff import federatedmodel_pb2 as federation_dot_fed__protobuff_dot_federatedmodel__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='federation/fed_protobuff/learner.proto',
-  package='federation.fed_protobuff',
+  package='federation.fed_protobuff.learner',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n&federation/fed_protobuff/learner.proto\x12\x18\x66\x65\x64\x65ration.fed_protobuff\x1a%federation/fed_protobuff/common.proto\"a\n\x0eRunTaskRequest\x12O\n\x10hyper_parameters\x18\x01 \x01(\x0b\x32\x35.federation.fed_protobuff.LearningTaskHyperParameters\"=\n\x0fRunTaskResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack\"8\n\x1eLearningMetadataLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\"8\n\x1fLearningMetadataLineageResponse\x12\x15\n\rjson_metadata\x18\x01 \x01(\t\"2\n\x18LocalModelLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\"u\n\x19LocalModelLineageResponse\x12\x15\n\rjson_metadata\x18\x01 \x01(\t\x12\x41\n\x0emodel_matrices\x18\x02 \x03(\x0b\x32).federation.fed_protobuff.NetworkMatrices\"\x93\x01\n\x10\x45valModelRequest\x12\x41\n\x0emodel_matrices\x18\x01 \x01(\x0b\x32).federation.fed_protobuff.NetworkMatrices\"<\n\x12\x65valuation_Dataset\x12\x0c\n\x08TRAINING\x10\x00\x12\x0e\n\nVALIDATION\x10\x01\x12\x08\n\x04TEST\x10\x02\"q\n\x11\x45valModelResponse\x12\x1e\n\x16training_dataset_score\x18\x01 \x01(\x02\x12 \n\x18validation_dataset_score\x18\x02 \x01(\x02\x12\x1a\n\x12test_dataset_score\x18\x03 \x01(\x02\"4\n\x1a\x45valRequestsLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\"4\n\x1b\x45valRequestsLineageResponse\x12\x15\n\rjson_response\x18\x01 \x01(\t\"`\n\x1fLearnerServicesHeartbeatRequest\x12=\n\rempty_message\x18\x01 \x01(\x0b\x32&.federation.fed_protobuff.EmptyMessage\"8\n LearnerServicesHeartbeatResponse\x12\x14\n\x0clearner_beat\x18\x01 \x01(\x08\x32\x83\x06\n\x07Learner\x12`\n\x07RunTask\x12(.federation.fed_protobuff.RunTaskRequest\x1a).federation.fed_protobuff.RunTaskResponse\"\x00\x12\x90\x01\n\x17LearningMetadataLineage\x12\x38.federation.fed_protobuff.LearningMetadataLineageRequest\x1a\x39.federation.fed_protobuff.LearningMetadataLineageResponse\"\x00\x12~\n\x11LocalModelLineage\x12\x32.federation.fed_protobuff.LocalModelLineageRequest\x1a\x33.federation.fed_protobuff.LocalModelLineageResponse\"\x00\x12\x66\n\tEvalModel\x12*.federation.fed_protobuff.EvalModelRequest\x1a+.federation.fed_protobuff.EvalModelResponse\"\x00\x12\x84\x01\n\x13\x45valRequestsLineage\x12\x34.federation.fed_protobuff.EvalRequestsLineageRequest\x1a\x35.federation.fed_protobuff.EvalRequestsLineageResponse\"\x00\x12\x93\x01\n\x18LearnerServicesHeartbeat\x12\x39.federation.fed_protobuff.LearnerServicesHeartbeatRequest\x1a:.federation.fed_protobuff.LearnerServicesHeartbeatResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n&federation/fed_protobuff/learner.proto\x12 federation.fed_protobuff.learner\x1a%federation/fed_protobuff/common.proto\x1a-federation/fed_protobuff/federatedmodel.proto\"\xb7\x01\n\x14\x45valuateModelRequest\x12P\n\x0f\x66\x65\x64\x65rated_model\x18\x01 \x01(\x0b\x32\x37.federation.fed_protobuff.federatedmodel.FederatedModel\x12\x0f\n\x07metrics\x18\x02 \x03(\t\"<\n\x12\x65valuation_dataset\x12\x0c\n\x08TRAINING\x10\x00\x12\x0e\n\nVALIDATION\x10\x01\x12\x08\n\x04TEST\x10\x02\"\xae\x01\n\x15\x45valuateModelResponse\x12`\n\rmetric_values\x18\x01 \x03(\x0b\x32I.federation.fed_protobuff.learner.EvaluateModelResponse.MetricValuesEntry\x1a\x33\n\x11MetricValuesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\";\n!GetLearningMetadataLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\";\n\"GetLearningMetadataLineageResponse\x12\x15\n\rjson_metadata\x18\x01 \x01(\t\"5\n\x1bGetLocalModelLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\"q\n\x1cGetLocalModelLineageResponse\x12Q\n\x10\x66\x65\x64\x65rated_models\x18\x01 \x03(\x0b\x32\x37.federation.fed_protobuff.federatedmodel.FederatedModel\"<\n\"GetEvaluationRequestLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\"<\n#GetEvaluationRequestLineageResponse\x12\x15\n\rjson_response\x18\x01 \x01(\t\" \n\x1eGetServicesHealthStatusRequest\"\xc8\x01\n\x1fGetServicesHealthStatusResponse\x12n\n\x0fservices_status\x18\x01 \x03(\x0b\x32U.federation.fed_protobuff.learner.GetServicesHealthStatusResponse.ServicesStatusEntry\x1a\x35\n\x13ServicesStatusEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x08:\x02\x38\x01\"\xe4\x01\n\x0eRunTaskRequest\x12P\n\x0f\x66\x65\x64\x65rated_model\x18\x01 \x01(\x0b\x32\x37.federation.fed_protobuff.federatedmodel.FederatedModel\x12\x34\n\x04task\x18\x02 \x01(\x0b\x32&.federation.fed_protobuff.LearningTask\x12J\n\x0fhyperparameters\x18\x03 \x01(\x0b\x32\x31.federation.fed_protobuff.LearningHyperParameters\"=\n\x0fRunTaskResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack2\x98\x07\n\x07Learner\x12\x82\x01\n\rEvaluateModel\x12\x36.federation.fed_protobuff.learner.EvaluateModelRequest\x1a\x37.federation.fed_protobuff.learner.EvaluateModelResponse\"\x00\x12\xa9\x01\n\x1aGetLearningMetadataLineage\x12\x43.federation.fed_protobuff.learner.GetLearningMetadataLineageRequest\x1a\x44.federation.fed_protobuff.learner.GetLearningMetadataLineageResponse\"\x00\x12\x97\x01\n\x14GetLocalModelLineage\x12=.federation.fed_protobuff.learner.GetLocalModelLineageRequest\x1a>.federation.fed_protobuff.learner.GetLocalModelLineageResponse\"\x00\x12\xac\x01\n\x1bGetEvaluationRequestLineage\x12\x44.federation.fed_protobuff.learner.GetEvaluationRequestLineageRequest\x1a\x45.federation.fed_protobuff.learner.GetEvaluationRequestLineageResponse\"\x00\x12\xa0\x01\n\x17GetServicesHealthStatus\x12@.federation.fed_protobuff.learner.GetServicesHealthStatusRequest\x1a\x41.federation.fed_protobuff.learner.GetServicesHealthStatusResponse\"\x00\x12p\n\x07RunTask\x12\x30.federation.fed_protobuff.learner.RunTaskRequest\x1a\x31.federation.fed_protobuff.learner.RunTaskResponse\"\x00\x62\x06proto3')
   ,
-  dependencies=[federation_dot_fed__protobuff_dot_common__pb2.DESCRIPTOR,])
+  dependencies=[federation_dot_fed__protobuff_dot_common__pb2.DESCRIPTOR,federation_dot_fed__protobuff_dot_federatedmodel__pb2.DESCRIPTOR,])
 
 
 
-_EVALMODELREQUEST_EVALUATION_DATASET = _descriptor.EnumDescriptor(
-  name='evaluation_Dataset',
-  full_name='federation.fed_protobuff.EvalModelRequest.evaluation_Dataset',
+_EVALUATEMODELREQUEST_EVALUATION_DATASET = _descriptor.EnumDescriptor(
+  name='evaluation_dataset',
+  full_name='federation.fed_protobuff.learner.EvaluateModelRequest.evaluation_dataset',
   filename=None,
   file=DESCRIPTOR,
   values=[
@@ -47,23 +48,69 @@ _EVALMODELREQUEST_EVALUATION_DATASET = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=644,
-  serialized_end=704,
+  serialized_start=286,
+  serialized_end=346,
 )
-_sym_db.RegisterEnumDescriptor(_EVALMODELREQUEST_EVALUATION_DATASET)
+_sym_db.RegisterEnumDescriptor(_EVALUATEMODELREQUEST_EVALUATION_DATASET)
 
 
-_RUNTASKREQUEST = _descriptor.Descriptor(
-  name='RunTaskRequest',
-  full_name='federation.fed_protobuff.RunTaskRequest',
+_EVALUATEMODELREQUEST = _descriptor.Descriptor(
+  name='EvaluateModelRequest',
+  full_name='federation.fed_protobuff.learner.EvaluateModelRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='hyper_parameters', full_name='federation.fed_protobuff.RunTaskRequest.hyper_parameters', index=0,
+      name='federated_model', full_name='federation.fed_protobuff.learner.EvaluateModelRequest.federated_model', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='metrics', full_name='federation.fed_protobuff.learner.EvaluateModelRequest.metrics', index=1,
+      number=2, type=9, cpp_type=9, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _EVALUATEMODELREQUEST_EVALUATION_DATASET,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=163,
+  serialized_end=346,
+)
+
+
+_EVALUATEMODELRESPONSE_METRICVALUESENTRY = _descriptor.Descriptor(
+  name='MetricValuesEntry',
+  full_name='federation.fed_protobuff.learner.EvaluateModelResponse.MetricValuesEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='federation.fed_protobuff.learner.EvaluateModelResponse.MetricValuesEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='federation.fed_protobuff.learner.EvaluateModelResponse.MetricValuesEntry.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -73,35 +120,34 @@ _RUNTASKREQUEST = _descriptor.Descriptor(
   nested_types=[],
   enum_types=[
   ],
-  serialized_options=None,
+  serialized_options=_b('8\001'),
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=107,
-  serialized_end=204,
+  serialized_start=472,
+  serialized_end=523,
 )
 
-
-_RUNTASKRESPONSE = _descriptor.Descriptor(
-  name='RunTaskResponse',
-  full_name='federation.fed_protobuff.RunTaskResponse',
+_EVALUATEMODELRESPONSE = _descriptor.Descriptor(
+  name='EvaluateModelResponse',
+  full_name='federation.fed_protobuff.learner.EvaluateModelResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ack', full_name='federation.fed_protobuff.RunTaskResponse.ack', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='metric_values', full_name='federation.fed_protobuff.learner.EvaluateModelResponse.metric_values', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_EVALUATEMODELRESPONSE_METRICVALUESENTRY, ],
   enum_types=[
   ],
   serialized_options=None,
@@ -110,20 +156,20 @@ _RUNTASKRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=206,
-  serialized_end=267,
+  serialized_start=349,
+  serialized_end=523,
 )
 
 
-_LEARNINGMETADATALINEAGEREQUEST = _descriptor.Descriptor(
-  name='LearningMetadataLineageRequest',
-  full_name='federation.fed_protobuff.LearningMetadataLineageRequest',
+_GETLEARNINGMETADATALINEAGEREQUEST = _descriptor.Descriptor(
+  name='GetLearningMetadataLineageRequest',
+  full_name='federation.fed_protobuff.learner.GetLearningMetadataLineageRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='num_backtracks', full_name='federation.fed_protobuff.LearningMetadataLineageRequest.num_backtracks', index=0,
+      name='num_backtracks', full_name='federation.fed_protobuff.learner.GetLearningMetadataLineageRequest.num_backtracks', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -141,20 +187,20 @@ _LEARNINGMETADATALINEAGEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=269,
-  serialized_end=325,
+  serialized_start=525,
+  serialized_end=584,
 )
 
 
-_LEARNINGMETADATALINEAGERESPONSE = _descriptor.Descriptor(
-  name='LearningMetadataLineageResponse',
-  full_name='federation.fed_protobuff.LearningMetadataLineageResponse',
+_GETLEARNINGMETADATALINEAGERESPONSE = _descriptor.Descriptor(
+  name='GetLearningMetadataLineageResponse',
+  full_name='federation.fed_protobuff.learner.GetLearningMetadataLineageResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='json_metadata', full_name='federation.fed_protobuff.LearningMetadataLineageResponse.json_metadata', index=0,
+      name='json_metadata', full_name='federation.fed_protobuff.learner.GetLearningMetadataLineageResponse.json_metadata', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -172,20 +218,20 @@ _LEARNINGMETADATALINEAGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=327,
-  serialized_end=383,
+  serialized_start=586,
+  serialized_end=645,
 )
 
 
-_LOCALMODELLINEAGEREQUEST = _descriptor.Descriptor(
-  name='LocalModelLineageRequest',
-  full_name='federation.fed_protobuff.LocalModelLineageRequest',
+_GETLOCALMODELLINEAGEREQUEST = _descriptor.Descriptor(
+  name='GetLocalModelLineageRequest',
+  full_name='federation.fed_protobuff.learner.GetLocalModelLineageRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='num_backtracks', full_name='federation.fed_protobuff.LocalModelLineageRequest.num_backtracks', index=0,
+      name='num_backtracks', full_name='federation.fed_protobuff.learner.GetLocalModelLineageRequest.num_backtracks', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -203,28 +249,21 @@ _LOCALMODELLINEAGEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=385,
-  serialized_end=435,
+  serialized_start=647,
+  serialized_end=700,
 )
 
 
-_LOCALMODELLINEAGERESPONSE = _descriptor.Descriptor(
-  name='LocalModelLineageResponse',
-  full_name='federation.fed_protobuff.LocalModelLineageResponse',
+_GETLOCALMODELLINEAGERESPONSE = _descriptor.Descriptor(
+  name='GetLocalModelLineageResponse',
+  full_name='federation.fed_protobuff.learner.GetLocalModelLineageResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='json_metadata', full_name='federation.fed_protobuff.LocalModelLineageResponse.json_metadata', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='model_matrices', full_name='federation.fed_protobuff.LocalModelLineageResponse.model_matrices', index=1,
-      number=2, type=11, cpp_type=10, label=3,
+      name='federated_models', full_name='federation.fed_protobuff.learner.GetLocalModelLineageResponse.federated_models', index=0,
+      number=1, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -241,97 +280,20 @@ _LOCALMODELLINEAGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=437,
-  serialized_end=554,
+  serialized_start=702,
+  serialized_end=815,
 )
 
 
-_EVALMODELREQUEST = _descriptor.Descriptor(
-  name='EvalModelRequest',
-  full_name='federation.fed_protobuff.EvalModelRequest',
+_GETEVALUATIONREQUESTLINEAGEREQUEST = _descriptor.Descriptor(
+  name='GetEvaluationRequestLineageRequest',
+  full_name='federation.fed_protobuff.learner.GetEvaluationRequestLineageRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='model_matrices', full_name='federation.fed_protobuff.EvalModelRequest.model_matrices', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-    _EVALMODELREQUEST_EVALUATION_DATASET,
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=557,
-  serialized_end=704,
-)
-
-
-_EVALMODELRESPONSE = _descriptor.Descriptor(
-  name='EvalModelResponse',
-  full_name='federation.fed_protobuff.EvalModelResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='training_dataset_score', full_name='federation.fed_protobuff.EvalModelResponse.training_dataset_score', index=0,
-      number=1, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='validation_dataset_score', full_name='federation.fed_protobuff.EvalModelResponse.validation_dataset_score', index=1,
-      number=2, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='test_dataset_score', full_name='federation.fed_protobuff.EvalModelResponse.test_dataset_score', index=2,
-      number=3, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=706,
-  serialized_end=819,
-)
-
-
-_EVALREQUESTSLINEAGEREQUEST = _descriptor.Descriptor(
-  name='EvalRequestsLineageRequest',
-  full_name='federation.fed_protobuff.EvalRequestsLineageRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='num_backtracks', full_name='federation.fed_protobuff.EvalRequestsLineageRequest.num_backtracks', index=0,
+      name='num_backtracks', full_name='federation.fed_protobuff.learner.GetEvaluationRequestLineageRequest.num_backtracks', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -349,20 +311,20 @@ _EVALREQUESTSLINEAGEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=821,
-  serialized_end=873,
+  serialized_start=817,
+  serialized_end=877,
 )
 
 
-_EVALREQUESTSLINEAGERESPONSE = _descriptor.Descriptor(
-  name='EvalRequestsLineageResponse',
-  full_name='federation.fed_protobuff.EvalRequestsLineageResponse',
+_GETEVALUATIONREQUESTLINEAGERESPONSE = _descriptor.Descriptor(
+  name='GetEvaluationRequestLineageResponse',
+  full_name='federation.fed_protobuff.learner.GetEvaluationRequestLineageResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='json_response', full_name='federation.fed_protobuff.EvalRequestsLineageResponse.json_response', index=0,
+      name='json_response', full_name='federation.fed_protobuff.learner.GetEvaluationRequestLineageResponse.json_response', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -380,20 +342,157 @@ _EVALREQUESTSLINEAGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=875,
-  serialized_end=927,
+  serialized_start=879,
+  serialized_end=939,
 )
 
 
-_LEARNERSERVICESHEARTBEATREQUEST = _descriptor.Descriptor(
-  name='LearnerServicesHeartbeatRequest',
-  full_name='federation.fed_protobuff.LearnerServicesHeartbeatRequest',
+_GETSERVICESHEALTHSTATUSREQUEST = _descriptor.Descriptor(
+  name='GetServicesHealthStatusRequest',
+  full_name='federation.fed_protobuff.learner.GetServicesHealthStatusRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=941,
+  serialized_end=973,
+)
+
+
+_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY = _descriptor.Descriptor(
+  name='ServicesStatusEntry',
+  full_name='federation.fed_protobuff.learner.GetServicesHealthStatusResponse.ServicesStatusEntry',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='empty_message', full_name='federation.fed_protobuff.LearnerServicesHeartbeatRequest.empty_message', index=0,
+      name='key', full_name='federation.fed_protobuff.learner.GetServicesHealthStatusResponse.ServicesStatusEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='federation.fed_protobuff.learner.GetServicesHealthStatusResponse.ServicesStatusEntry.value', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=_b('8\001'),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1123,
+  serialized_end=1176,
+)
+
+_GETSERVICESHEALTHSTATUSRESPONSE = _descriptor.Descriptor(
+  name='GetServicesHealthStatusResponse',
+  full_name='federation.fed_protobuff.learner.GetServicesHealthStatusResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='services_status', full_name='federation.fed_protobuff.learner.GetServicesHealthStatusResponse.services_status', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=976,
+  serialized_end=1176,
+)
+
+
+_RUNTASKREQUEST = _descriptor.Descriptor(
+  name='RunTaskRequest',
+  full_name='federation.fed_protobuff.learner.RunTaskRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='federated_model', full_name='federation.fed_protobuff.learner.RunTaskRequest.federated_model', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='task', full_name='federation.fed_protobuff.learner.RunTaskRequest.task', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='hyperparameters', full_name='federation.fed_protobuff.learner.RunTaskRequest.hyperparameters', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1179,
+  serialized_end=1407,
+)
+
+
+_RUNTASKRESPONSE = _descriptor.Descriptor(
+  name='RunTaskResponse',
+  full_name='federation.fed_protobuff.learner.RunTaskResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ack', full_name='federation.fed_protobuff.learner.RunTaskResponse.ack', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -411,208 +510,200 @@ _LEARNERSERVICESHEARTBEATREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=929,
-  serialized_end=1025,
+  serialized_start=1409,
+  serialized_end=1470,
 )
 
-
-_LEARNERSERVICESHEARTBEATRESPONSE = _descriptor.Descriptor(
-  name='LearnerServicesHeartbeatResponse',
-  full_name='federation.fed_protobuff.LearnerServicesHeartbeatResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='learner_beat', full_name='federation.fed_protobuff.LearnerServicesHeartbeatResponse.learner_beat', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1027,
-  serialized_end=1083,
-)
-
-_RUNTASKREQUEST.fields_by_name['hyper_parameters'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNINGTASKHYPERPARAMETERS
+_EVALUATEMODELREQUEST.fields_by_name['federated_model'].message_type = federation_dot_fed__protobuff_dot_federatedmodel__pb2._FEDERATEDMODEL
+_EVALUATEMODELREQUEST_EVALUATION_DATASET.containing_type = _EVALUATEMODELREQUEST
+_EVALUATEMODELRESPONSE_METRICVALUESENTRY.containing_type = _EVALUATEMODELRESPONSE
+_EVALUATEMODELRESPONSE.fields_by_name['metric_values'].message_type = _EVALUATEMODELRESPONSE_METRICVALUESENTRY
+_GETLOCALMODELLINEAGERESPONSE.fields_by_name['federated_models'].message_type = federation_dot_fed__protobuff_dot_federatedmodel__pb2._FEDERATEDMODEL
+_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY.containing_type = _GETSERVICESHEALTHSTATUSRESPONSE
+_GETSERVICESHEALTHSTATUSRESPONSE.fields_by_name['services_status'].message_type = _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY
+_RUNTASKREQUEST.fields_by_name['federated_model'].message_type = federation_dot_fed__protobuff_dot_federatedmodel__pb2._FEDERATEDMODEL
+_RUNTASKREQUEST.fields_by_name['task'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNINGTASK
+_RUNTASKREQUEST.fields_by_name['hyperparameters'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNINGHYPERPARAMETERS
 _RUNTASKRESPONSE.fields_by_name['ack'].message_type = federation_dot_fed__protobuff_dot_common__pb2._ACK
-_LOCALMODELLINEAGERESPONSE.fields_by_name['model_matrices'].message_type = federation_dot_fed__protobuff_dot_common__pb2._NETWORKMATRICES
-_EVALMODELREQUEST.fields_by_name['model_matrices'].message_type = federation_dot_fed__protobuff_dot_common__pb2._NETWORKMATRICES
-_EVALMODELREQUEST_EVALUATION_DATASET.containing_type = _EVALMODELREQUEST
-_LEARNERSERVICESHEARTBEATREQUEST.fields_by_name['empty_message'].message_type = federation_dot_fed__protobuff_dot_common__pb2._EMPTYMESSAGE
+DESCRIPTOR.message_types_by_name['EvaluateModelRequest'] = _EVALUATEMODELREQUEST
+DESCRIPTOR.message_types_by_name['EvaluateModelResponse'] = _EVALUATEMODELRESPONSE
+DESCRIPTOR.message_types_by_name['GetLearningMetadataLineageRequest'] = _GETLEARNINGMETADATALINEAGEREQUEST
+DESCRIPTOR.message_types_by_name['GetLearningMetadataLineageResponse'] = _GETLEARNINGMETADATALINEAGERESPONSE
+DESCRIPTOR.message_types_by_name['GetLocalModelLineageRequest'] = _GETLOCALMODELLINEAGEREQUEST
+DESCRIPTOR.message_types_by_name['GetLocalModelLineageResponse'] = _GETLOCALMODELLINEAGERESPONSE
+DESCRIPTOR.message_types_by_name['GetEvaluationRequestLineageRequest'] = _GETEVALUATIONREQUESTLINEAGEREQUEST
+DESCRIPTOR.message_types_by_name['GetEvaluationRequestLineageResponse'] = _GETEVALUATIONREQUESTLINEAGERESPONSE
+DESCRIPTOR.message_types_by_name['GetServicesHealthStatusRequest'] = _GETSERVICESHEALTHSTATUSREQUEST
+DESCRIPTOR.message_types_by_name['GetServicesHealthStatusResponse'] = _GETSERVICESHEALTHSTATUSRESPONSE
 DESCRIPTOR.message_types_by_name['RunTaskRequest'] = _RUNTASKREQUEST
 DESCRIPTOR.message_types_by_name['RunTaskResponse'] = _RUNTASKRESPONSE
-DESCRIPTOR.message_types_by_name['LearningMetadataLineageRequest'] = _LEARNINGMETADATALINEAGEREQUEST
-DESCRIPTOR.message_types_by_name['LearningMetadataLineageResponse'] = _LEARNINGMETADATALINEAGERESPONSE
-DESCRIPTOR.message_types_by_name['LocalModelLineageRequest'] = _LOCALMODELLINEAGEREQUEST
-DESCRIPTOR.message_types_by_name['LocalModelLineageResponse'] = _LOCALMODELLINEAGERESPONSE
-DESCRIPTOR.message_types_by_name['EvalModelRequest'] = _EVALMODELREQUEST
-DESCRIPTOR.message_types_by_name['EvalModelResponse'] = _EVALMODELRESPONSE
-DESCRIPTOR.message_types_by_name['EvalRequestsLineageRequest'] = _EVALREQUESTSLINEAGEREQUEST
-DESCRIPTOR.message_types_by_name['EvalRequestsLineageResponse'] = _EVALREQUESTSLINEAGERESPONSE
-DESCRIPTOR.message_types_by_name['LearnerServicesHeartbeatRequest'] = _LEARNERSERVICESHEARTBEATREQUEST
-DESCRIPTOR.message_types_by_name['LearnerServicesHeartbeatResponse'] = _LEARNERSERVICESHEARTBEATRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+EvaluateModelRequest = _reflection.GeneratedProtocolMessageType('EvaluateModelRequest', (_message.Message,), dict(
+  DESCRIPTOR = _EVALUATEMODELREQUEST,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.EvaluateModelRequest)
+  ))
+_sym_db.RegisterMessage(EvaluateModelRequest)
+
+EvaluateModelResponse = _reflection.GeneratedProtocolMessageType('EvaluateModelResponse', (_message.Message,), dict(
+
+  MetricValuesEntry = _reflection.GeneratedProtocolMessageType('MetricValuesEntry', (_message.Message,), dict(
+    DESCRIPTOR = _EVALUATEMODELRESPONSE_METRICVALUESENTRY,
+    __module__ = 'federation.fed_protobuff.learner_pb2'
+    # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.EvaluateModelResponse.MetricValuesEntry)
+    ))
+  ,
+  DESCRIPTOR = _EVALUATEMODELRESPONSE,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.EvaluateModelResponse)
+  ))
+_sym_db.RegisterMessage(EvaluateModelResponse)
+_sym_db.RegisterMessage(EvaluateModelResponse.MetricValuesEntry)
+
+GetLearningMetadataLineageRequest = _reflection.GeneratedProtocolMessageType('GetLearningMetadataLineageRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETLEARNINGMETADATALINEAGEREQUEST,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetLearningMetadataLineageRequest)
+  ))
+_sym_db.RegisterMessage(GetLearningMetadataLineageRequest)
+
+GetLearningMetadataLineageResponse = _reflection.GeneratedProtocolMessageType('GetLearningMetadataLineageResponse', (_message.Message,), dict(
+  DESCRIPTOR = _GETLEARNINGMETADATALINEAGERESPONSE,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetLearningMetadataLineageResponse)
+  ))
+_sym_db.RegisterMessage(GetLearningMetadataLineageResponse)
+
+GetLocalModelLineageRequest = _reflection.GeneratedProtocolMessageType('GetLocalModelLineageRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETLOCALMODELLINEAGEREQUEST,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetLocalModelLineageRequest)
+  ))
+_sym_db.RegisterMessage(GetLocalModelLineageRequest)
+
+GetLocalModelLineageResponse = _reflection.GeneratedProtocolMessageType('GetLocalModelLineageResponse', (_message.Message,), dict(
+  DESCRIPTOR = _GETLOCALMODELLINEAGERESPONSE,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetLocalModelLineageResponse)
+  ))
+_sym_db.RegisterMessage(GetLocalModelLineageResponse)
+
+GetEvaluationRequestLineageRequest = _reflection.GeneratedProtocolMessageType('GetEvaluationRequestLineageRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETEVALUATIONREQUESTLINEAGEREQUEST,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetEvaluationRequestLineageRequest)
+  ))
+_sym_db.RegisterMessage(GetEvaluationRequestLineageRequest)
+
+GetEvaluationRequestLineageResponse = _reflection.GeneratedProtocolMessageType('GetEvaluationRequestLineageResponse', (_message.Message,), dict(
+  DESCRIPTOR = _GETEVALUATIONREQUESTLINEAGERESPONSE,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetEvaluationRequestLineageResponse)
+  ))
+_sym_db.RegisterMessage(GetEvaluationRequestLineageResponse)
+
+GetServicesHealthStatusRequest = _reflection.GeneratedProtocolMessageType('GetServicesHealthStatusRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETSERVICESHEALTHSTATUSREQUEST,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetServicesHealthStatusRequest)
+  ))
+_sym_db.RegisterMessage(GetServicesHealthStatusRequest)
+
+GetServicesHealthStatusResponse = _reflection.GeneratedProtocolMessageType('GetServicesHealthStatusResponse', (_message.Message,), dict(
+
+  ServicesStatusEntry = _reflection.GeneratedProtocolMessageType('ServicesStatusEntry', (_message.Message,), dict(
+    DESCRIPTOR = _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY,
+    __module__ = 'federation.fed_protobuff.learner_pb2'
+    # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetServicesHealthStatusResponse.ServicesStatusEntry)
+    ))
+  ,
+  DESCRIPTOR = _GETSERVICESHEALTHSTATUSRESPONSE,
+  __module__ = 'federation.fed_protobuff.learner_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.GetServicesHealthStatusResponse)
+  ))
+_sym_db.RegisterMessage(GetServicesHealthStatusResponse)
+_sym_db.RegisterMessage(GetServicesHealthStatusResponse.ServicesStatusEntry)
 
 RunTaskRequest = _reflection.GeneratedProtocolMessageType('RunTaskRequest', (_message.Message,), dict(
   DESCRIPTOR = _RUNTASKREQUEST,
   __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.RunTaskRequest)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.RunTaskRequest)
   ))
 _sym_db.RegisterMessage(RunTaskRequest)
 
 RunTaskResponse = _reflection.GeneratedProtocolMessageType('RunTaskResponse', (_message.Message,), dict(
   DESCRIPTOR = _RUNTASKRESPONSE,
   __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.RunTaskResponse)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.learner.RunTaskResponse)
   ))
 _sym_db.RegisterMessage(RunTaskResponse)
 
-LearningMetadataLineageRequest = _reflection.GeneratedProtocolMessageType('LearningMetadataLineageRequest', (_message.Message,), dict(
-  DESCRIPTOR = _LEARNINGMETADATALINEAGEREQUEST,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearningMetadataLineageRequest)
-  ))
-_sym_db.RegisterMessage(LearningMetadataLineageRequest)
 
-LearningMetadataLineageResponse = _reflection.GeneratedProtocolMessageType('LearningMetadataLineageResponse', (_message.Message,), dict(
-  DESCRIPTOR = _LEARNINGMETADATALINEAGERESPONSE,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearningMetadataLineageResponse)
-  ))
-_sym_db.RegisterMessage(LearningMetadataLineageResponse)
-
-LocalModelLineageRequest = _reflection.GeneratedProtocolMessageType('LocalModelLineageRequest', (_message.Message,), dict(
-  DESCRIPTOR = _LOCALMODELLINEAGEREQUEST,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LocalModelLineageRequest)
-  ))
-_sym_db.RegisterMessage(LocalModelLineageRequest)
-
-LocalModelLineageResponse = _reflection.GeneratedProtocolMessageType('LocalModelLineageResponse', (_message.Message,), dict(
-  DESCRIPTOR = _LOCALMODELLINEAGERESPONSE,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LocalModelLineageResponse)
-  ))
-_sym_db.RegisterMessage(LocalModelLineageResponse)
-
-EvalModelRequest = _reflection.GeneratedProtocolMessageType('EvalModelRequest', (_message.Message,), dict(
-  DESCRIPTOR = _EVALMODELREQUEST,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.EvalModelRequest)
-  ))
-_sym_db.RegisterMessage(EvalModelRequest)
-
-EvalModelResponse = _reflection.GeneratedProtocolMessageType('EvalModelResponse', (_message.Message,), dict(
-  DESCRIPTOR = _EVALMODELRESPONSE,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.EvalModelResponse)
-  ))
-_sym_db.RegisterMessage(EvalModelResponse)
-
-EvalRequestsLineageRequest = _reflection.GeneratedProtocolMessageType('EvalRequestsLineageRequest', (_message.Message,), dict(
-  DESCRIPTOR = _EVALREQUESTSLINEAGEREQUEST,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.EvalRequestsLineageRequest)
-  ))
-_sym_db.RegisterMessage(EvalRequestsLineageRequest)
-
-EvalRequestsLineageResponse = _reflection.GeneratedProtocolMessageType('EvalRequestsLineageResponse', (_message.Message,), dict(
-  DESCRIPTOR = _EVALREQUESTSLINEAGERESPONSE,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.EvalRequestsLineageResponse)
-  ))
-_sym_db.RegisterMessage(EvalRequestsLineageResponse)
-
-LearnerServicesHeartbeatRequest = _reflection.GeneratedProtocolMessageType('LearnerServicesHeartbeatRequest', (_message.Message,), dict(
-  DESCRIPTOR = _LEARNERSERVICESHEARTBEATREQUEST,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearnerServicesHeartbeatRequest)
-  ))
-_sym_db.RegisterMessage(LearnerServicesHeartbeatRequest)
-
-LearnerServicesHeartbeatResponse = _reflection.GeneratedProtocolMessageType('LearnerServicesHeartbeatResponse', (_message.Message,), dict(
-  DESCRIPTOR = _LEARNERSERVICESHEARTBEATRESPONSE,
-  __module__ = 'federation.fed_protobuff.learner_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearnerServicesHeartbeatResponse)
-  ))
-_sym_db.RegisterMessage(LearnerServicesHeartbeatResponse)
-
-
+_EVALUATEMODELRESPONSE_METRICVALUESENTRY._options = None
+_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY._options = None
 
 _LEARNER = _descriptor.ServiceDescriptor(
   name='Learner',
-  full_name='federation.fed_protobuff.Learner',
+  full_name='federation.fed_protobuff.learner.Learner',
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=1086,
-  serialized_end=1857,
+  serialized_start=1473,
+  serialized_end=2393,
   methods=[
   _descriptor.MethodDescriptor(
-    name='RunTask',
-    full_name='federation.fed_protobuff.Learner.RunTask',
+    name='EvaluateModel',
+    full_name='federation.fed_protobuff.learner.Learner.EvaluateModel',
     index=0,
+    containing_service=None,
+    input_type=_EVALUATEMODELREQUEST,
+    output_type=_EVALUATEMODELRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetLearningMetadataLineage',
+    full_name='federation.fed_protobuff.learner.Learner.GetLearningMetadataLineage',
+    index=1,
+    containing_service=None,
+    input_type=_GETLEARNINGMETADATALINEAGEREQUEST,
+    output_type=_GETLEARNINGMETADATALINEAGERESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetLocalModelLineage',
+    full_name='federation.fed_protobuff.learner.Learner.GetLocalModelLineage',
+    index=2,
+    containing_service=None,
+    input_type=_GETLOCALMODELLINEAGEREQUEST,
+    output_type=_GETLOCALMODELLINEAGERESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetEvaluationRequestLineage',
+    full_name='federation.fed_protobuff.learner.Learner.GetEvaluationRequestLineage',
+    index=3,
+    containing_service=None,
+    input_type=_GETEVALUATIONREQUESTLINEAGEREQUEST,
+    output_type=_GETEVALUATIONREQUESTLINEAGERESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetServicesHealthStatus',
+    full_name='federation.fed_protobuff.learner.Learner.GetServicesHealthStatus',
+    index=4,
+    containing_service=None,
+    input_type=_GETSERVICESHEALTHSTATUSREQUEST,
+    output_type=_GETSERVICESHEALTHSTATUSRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='RunTask',
+    full_name='federation.fed_protobuff.learner.Learner.RunTask',
+    index=5,
     containing_service=None,
     input_type=_RUNTASKREQUEST,
     output_type=_RUNTASKRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='LearningMetadataLineage',
-    full_name='federation.fed_protobuff.Learner.LearningMetadataLineage',
-    index=1,
-    containing_service=None,
-    input_type=_LEARNINGMETADATALINEAGEREQUEST,
-    output_type=_LEARNINGMETADATALINEAGERESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='LocalModelLineage',
-    full_name='federation.fed_protobuff.Learner.LocalModelLineage',
-    index=2,
-    containing_service=None,
-    input_type=_LOCALMODELLINEAGEREQUEST,
-    output_type=_LOCALMODELLINEAGERESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='EvalModel',
-    full_name='federation.fed_protobuff.Learner.EvalModel',
-    index=3,
-    containing_service=None,
-    input_type=_EVALMODELREQUEST,
-    output_type=_EVALMODELRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='EvalRequestsLineage',
-    full_name='federation.fed_protobuff.Learner.EvalRequestsLineage',
-    index=4,
-    containing_service=None,
-    input_type=_EVALREQUESTSLINEAGEREQUEST,
-    output_type=_EVALREQUESTSLINEAGERESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='LearnerServicesHeartbeat',
-    full_name='federation.fed_protobuff.Learner.LearnerServicesHeartbeat',
-    index=5,
-    containing_service=None,
-    input_type=_LEARNERSERVICESHEARTBEATREQUEST,
-    output_type=_LEARNERSERVICESHEARTBEATRESPONSE,
     serialized_options=None,
   ),
 ])

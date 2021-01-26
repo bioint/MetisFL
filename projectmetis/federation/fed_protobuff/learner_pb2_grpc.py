@@ -14,35 +14,35 @@ class LearnerStub(object):
     Args:
       channel: A grpc.Channel.
     """
+    self.EvaluateModel = channel.unary_unary(
+        '/federation.fed_protobuff.learner.Learner/EvaluateModel',
+        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.EvaluateModelRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.EvaluateModelResponse.FromString,
+        )
+    self.GetLearningMetadataLineage = channel.unary_unary(
+        '/federation.fed_protobuff.learner.Learner/GetLearningMetadataLineage',
+        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLearningMetadataLineageRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLearningMetadataLineageResponse.FromString,
+        )
+    self.GetLocalModelLineage = channel.unary_unary(
+        '/federation.fed_protobuff.learner.Learner/GetLocalModelLineage',
+        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLocalModelLineageRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLocalModelLineageResponse.FromString,
+        )
+    self.GetEvaluationRequestLineage = channel.unary_unary(
+        '/federation.fed_protobuff.learner.Learner/GetEvaluationRequestLineage',
+        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetEvaluationRequestLineageRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetEvaluationRequestLineageResponse.FromString,
+        )
+    self.GetServicesHealthStatus = channel.unary_unary(
+        '/federation.fed_protobuff.learner.Learner/GetServicesHealthStatus',
+        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetServicesHealthStatusRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetServicesHealthStatusResponse.FromString,
+        )
     self.RunTask = channel.unary_unary(
-        '/federation.fed_protobuff.Learner/RunTask',
+        '/federation.fed_protobuff.learner.Learner/RunTask',
         request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.RunTaskRequest.SerializeToString,
         response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.RunTaskResponse.FromString,
-        )
-    self.LearningMetadataLineage = channel.unary_unary(
-        '/federation.fed_protobuff.Learner/LearningMetadataLineage',
-        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.LearningMetadataLineageRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.LearningMetadataLineageResponse.FromString,
-        )
-    self.LocalModelLineage = channel.unary_unary(
-        '/federation.fed_protobuff.Learner/LocalModelLineage',
-        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.LocalModelLineageRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.LocalModelLineageResponse.FromString,
-        )
-    self.EvalModel = channel.unary_unary(
-        '/federation.fed_protobuff.Learner/EvalModel',
-        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalModelRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalModelResponse.FromString,
-        )
-    self.EvalRequestsLineage = channel.unary_unary(
-        '/federation.fed_protobuff.Learner/EvalRequestsLineage',
-        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalRequestsLineageRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalRequestsLineageResponse.FromString,
-        )
-    self.LearnerServicesHeartbeat = channel.unary_unary(
-        '/federation.fed_protobuff.Learner/LearnerServicesHeartbeat',
-        request_serializer=federation_dot_fed__protobuff_dot_learner__pb2.LearnerServicesHeartbeatRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.LearnerServicesHeartbeatResponse.FromString,
         )
 
 
@@ -50,43 +50,43 @@ class LearnerServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
+  def EvaluateModel(self, request, context):
+    """Unary RPC. The learner receives a model and evaluates it at its local dataset (any of [train, validation, test]).
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetLearningMetadataLineage(self, request, context):
+    """Unary RPC. Retrieve recorded metadata in-between community update requests.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetLocalModelLineage(self, request, context):
+    """Unary RPC. Retrieve most recent and historically trained local models.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetEvaluationRequestLineage(self, request, context):
+    """Unary RPC. Retrieve all models and metadata related to the models sent for evaluation.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetServicesHealthStatus(self, request, context):
+    """Unary RPC. Retrieve the status of all internal services.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def RunTask(self, request, context):
-    """Unary RPC.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def LearningMetadataLineage(self, request, context):
-    """Unary RPC.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def LocalModelLineage(self, request, context):
-    """Unary RPC.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def EvalModel(self, request, context):
-    """Unary RPC.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def EvalRequestsLineage(self, request, context):
-    """Unary RPC.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def LearnerServicesHeartbeat(self, request, context):
-    """Unary RPC.
+    """Unary RPC. Assigned task to be trained locally by the learner.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -95,37 +95,37 @@ class LearnerServicer(object):
 
 def add_LearnerServicer_to_server(servicer, server):
   rpc_method_handlers = {
+      'EvaluateModel': grpc.unary_unary_rpc_method_handler(
+          servicer.EvaluateModel,
+          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.EvaluateModelRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.EvaluateModelResponse.SerializeToString,
+      ),
+      'GetLearningMetadataLineage': grpc.unary_unary_rpc_method_handler(
+          servicer.GetLearningMetadataLineage,
+          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLearningMetadataLineageRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLearningMetadataLineageResponse.SerializeToString,
+      ),
+      'GetLocalModelLineage': grpc.unary_unary_rpc_method_handler(
+          servicer.GetLocalModelLineage,
+          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLocalModelLineageRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetLocalModelLineageResponse.SerializeToString,
+      ),
+      'GetEvaluationRequestLineage': grpc.unary_unary_rpc_method_handler(
+          servicer.GetEvaluationRequestLineage,
+          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetEvaluationRequestLineageRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetEvaluationRequestLineageResponse.SerializeToString,
+      ),
+      'GetServicesHealthStatus': grpc.unary_unary_rpc_method_handler(
+          servicer.GetServicesHealthStatus,
+          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.GetServicesHealthStatusRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.GetServicesHealthStatusResponse.SerializeToString,
+      ),
       'RunTask': grpc.unary_unary_rpc_method_handler(
           servicer.RunTask,
           request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.RunTaskRequest.FromString,
           response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.RunTaskResponse.SerializeToString,
       ),
-      'LearningMetadataLineage': grpc.unary_unary_rpc_method_handler(
-          servicer.LearningMetadataLineage,
-          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.LearningMetadataLineageRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.LearningMetadataLineageResponse.SerializeToString,
-      ),
-      'LocalModelLineage': grpc.unary_unary_rpc_method_handler(
-          servicer.LocalModelLineage,
-          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.LocalModelLineageRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.LocalModelLineageResponse.SerializeToString,
-      ),
-      'EvalModel': grpc.unary_unary_rpc_method_handler(
-          servicer.EvalModel,
-          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalModelRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalModelResponse.SerializeToString,
-      ),
-      'EvalRequestsLineage': grpc.unary_unary_rpc_method_handler(
-          servicer.EvalRequestsLineage,
-          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalRequestsLineageRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.EvalRequestsLineageResponse.SerializeToString,
-      ),
-      'LearnerServicesHeartbeat': grpc.unary_unary_rpc_method_handler(
-          servicer.LearnerServicesHeartbeat,
-          request_deserializer=federation_dot_fed__protobuff_dot_learner__pb2.LearnerServicesHeartbeatRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_learner__pb2.LearnerServicesHeartbeatResponse.SerializeToString,
-      ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'federation.fed_protobuff.Learner', rpc_method_handlers)
+      'federation.fed_protobuff.learner.Learner', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))

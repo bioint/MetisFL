@@ -1,0 +1,15 @@
+syntax = "proto3";
+package federation.fed_protobuff.federatedmodel;
+
+import "federation/fed_protobuff/common.proto";
+
+message FederatedModel {
+    repeated FederatedVariableDef federated_variables = 1; // List of federated variables.
+}
+
+message FederatedVariableDef {
+    string name = 1;
+    bool trainable = 2;
+    repeated string graph_collection = 3; // The collection of graph keys that this variable belongs to (e.g., tf.GraphKeys.GLOBAL_VARIABLES).
+    DoubleVariable double_variable = 4;
+}

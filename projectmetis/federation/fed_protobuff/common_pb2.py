@@ -12,6 +12,8 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from federation.fed_protobuff import optimizers_pb2 as federation_dot_fed__protobuff_dot_optimizers__pb2
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -19,86 +21,11 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='federation.fed_protobuff',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n%federation/fed_protobuff/common.proto\x12\x18\x66\x65\x64\x65ration.fed_protobuff\"\x0e\n\x0c\x45mptyMessage\"y\n\rLearnerEntity\x12\x12\n\nlearner_id\x18\x01 \x01(\t\x12\x1e\n\x16remote_server_hostname\x18\x02 \x01(\t\x12\x18\n\x10remote_server_ip\x18\x03 \x01(\t\x12\x1a\n\x12remote_server_port\x18\x04 \x01(\x05\"(\n\x03\x41\x63k\x12\x0e\n\x06status\x18\x01 \x01(\x08\x12\x11\n\ttimestamp\x18\x02 \x01(\x03\"<\n\tMatrixDef\x12\x0c\n\x04size\x18\x01 \x01(\x05\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12\x12\n\ndimensions\x18\x03 \x03(\x05\"V\n\x0c\x44oubleMatrix\x12\x0e\n\x06values\x18\x01 \x03(\x01\x12\x36\n\tmatrixdef\x18\x02 \x01(\x0b\x32#.federation.fed_protobuff.MatrixDef\"K\n\x0fNetworkMatrices\x12\x38\n\x08matrices\x18\x01 \x03(\x0b\x32&.federation.fed_protobuff.DoubleMatrix\"\x85\x02\n\x1cLearnerExecutionBaseMetadata\x12\x1e\n\x16\x65pochs_training_scores\x18\x01 \x03(\x02\x12\x1f\n\x17\x65pochs_validation_score\x18\x02 \x03(\x02\x12\x19\n\x11\x65pochs_test_score\x18\x03 \x03(\x02\x12\x18\n\x10\x63ompleted_epochs\x18\x04 \x01(\x02\x12\x19\n\x11\x63ompleted_batches\x18\x05 \x01(\x05\x12\x12\n\nbatch_size\x18\x06 \x01(\x05\x12\x1f\n\x17processing_ms_per_epoch\x18\x07 \x01(\x02\x12\x1f\n\x17processing_ms_per_batch\x18\x08 \x01(\x02\"\xe3\x01\n\x1bLearningTaskHyperParameters\x12\x1b\n\x13num_training_epochs\x18\x01 \x01(\x05\x12\x12\n\nbatch_size\x18\x02 \x01(\x05\x12\x15\n\rlearning_rate\x18\x03 \x01(\x02\x12=\n5training_dataset_percentage_for_stratified_validation\x18\x04 \x01(\x02\x12=\n\rsgd_optimizer\x18\x05 \x01(\x0b\x32&.federation.fed_protobuff.SGDOptimizer\"r\n\x0cSGDOptimizer\x12\x16\n\x0eoptimizer_name\x18\x01 \x01(\t\x12J\n\x12optimizer_metadata\x18\x02 \x01(\x0b\x32..federation.fed_protobuff.SGDOptimizerMetadata\".\n\x14SGDOptimizerMetadata\x12\x16\n\x0emomentum_value\x18\x01 \x01(\x02\x62\x06proto3')
-)
+  serialized_pb=_b('\n%federation/fed_protobuff/common.proto\x12\x18\x66\x65\x64\x65ration.fed_protobuff\x1a)federation/fed_protobuff/optimizers.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"D\n\x03\x41\x63k\x12\x0e\n\x06status\x18\x01 \x01(\x08\x12-\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"]\n\x0e\x44oubleVariable\x12\x0e\n\x06values\x18\x01 \x03(\x01\x12;\n\x0cvariable_def\x18\x02 \x01(\x0b\x32%.federation.fed_protobuff.VariableDef\";\n\rLearnerEntity\x12\n\n\x02id\x18\x01 \x01(\t\x12\x10\n\x08hostname\x18\x02 \x01(\t\x12\x0c\n\x04port\x18\x03 \x01(\x05\"\x87\x02\n\x1cLearnerExecutionBaseMetadata\x12\x1e\n\x16\x65pochs_training_scores\x18\x01 \x03(\x02\x12 \n\x18\x65pochs_validation_scores\x18\x02 \x03(\x02\x12\x1a\n\x12\x65pochs_test_scores\x18\x03 \x03(\x02\x12\x18\n\x10\x63ompleted_epochs\x18\x04 \x01(\x02\x12\x19\n\x11\x63ompleted_batches\x18\x05 \x01(\x05\x12\x12\n\nbatch_size\x18\x06 \x01(\x05\x12\x1f\n\x17processing_ms_per_epoch\x18\x07 \x01(\x02\x12\x1f\n\x17processing_ms_per_batch\x18\x08 \x01(\x02\"\xc9\x02\n\x17LearningHyperParameters\x12\x12\n\nbatch_size\x18\x01 \x01(\x05\x12\x46\n\x0bvanilla_sgd\x18\x03 \x01(\x0b\x32/.federation.fed_protobuff.optimizers.VanillaSGDH\x00\x12H\n\x0cmomentum_sgd\x18\x04 \x01(\x0b\x32\x30.federation.fed_protobuff.optimizers.MomentumSGDH\x00\x12@\n\x08\x66\x65\x64_prox\x18\x05 \x01(\x0b\x32,.federation.fed_protobuff.optimizers.FedProxH\x00\x12\x39\n\x04\x61\x64\x61m\x18\x06 \x01(\x0b\x32).federation.fed_protobuff.optimizers.AdamH\x00\x42\x0b\n\toptimizer\"h\n\x0cLearningTask\x12\x19\n\x11num_local_updates\x18\x01 \x01(\x05\x12=\n5training_dataset_percentage_for_stratified_validation\x18\x02 \x01(\x02\"m\n\x10LocalDatasetSpec\x12\x1d\n\x15num_training_examples\x18\x01 \x01(\x05\x12\x1f\n\x17num_validation_examples\x18\x02 \x01(\x05\x12\x19\n\x11num_test_examples\x18\x03 \x01(\x05\">\n\x0bVariableDef\x12\x0c\n\x04size\x18\x01 \x01(\x05\x12\r\n\x05\x64type\x18\x02 \x01(\t\x12\x12\n\ndimensions\x18\x03 \x03(\x05\x62\x06proto3')
+  ,
+  dependencies=[federation_dot_fed__protobuff_dot_optimizers__pb2.DESCRIPTOR,google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
 
-
-
-_EMPTYMESSAGE = _descriptor.Descriptor(
-  name='EmptyMessage',
-  full_name='federation.fed_protobuff.EmptyMessage',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=67,
-  serialized_end=81,
-)
-
-
-_LEARNERENTITY = _descriptor.Descriptor(
-  name='LearnerEntity',
-  full_name='federation.fed_protobuff.LearnerEntity',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='learner_id', full_name='federation.fed_protobuff.LearnerEntity.learner_id', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='remote_server_hostname', full_name='federation.fed_protobuff.LearnerEntity.remote_server_hostname', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='remote_server_ip', full_name='federation.fed_protobuff.LearnerEntity.remote_server_ip', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='remote_server_port', full_name='federation.fed_protobuff.LearnerEntity.remote_server_port', index=3,
-      number=4, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=83,
-  serialized_end=204,
-)
 
 
 _ACK = _descriptor.Descriptor(
@@ -117,89 +44,6 @@ _ACK = _descriptor.Descriptor(
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='timestamp', full_name='federation.fed_protobuff.Ack.timestamp', index=1,
-      number=2, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=206,
-  serialized_end=246,
-)
-
-
-_MATRIXDEF = _descriptor.Descriptor(
-  name='MatrixDef',
-  full_name='federation.fed_protobuff.MatrixDef',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='size', full_name='federation.fed_protobuff.MatrixDef.size', index=0,
-      number=1, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='dtype', full_name='federation.fed_protobuff.MatrixDef.dtype', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='dimensions', full_name='federation.fed_protobuff.MatrixDef.dimensions', index=2,
-      number=3, type=5, cpp_type=1, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=248,
-  serialized_end=308,
-)
-
-
-_DOUBLEMATRIX = _descriptor.Descriptor(
-  name='DoubleMatrix',
-  full_name='federation.fed_protobuff.DoubleMatrix',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='federation.fed_protobuff.DoubleMatrix.values', index=0,
-      number=1, type=1, cpp_type=5, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='matrixdef', full_name='federation.fed_protobuff.DoubleMatrix.matrixdef', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -217,22 +61,29 @@ _DOUBLEMATRIX = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=310,
-  serialized_end=396,
+  serialized_start=143,
+  serialized_end=211,
 )
 
 
-_NETWORKMATRICES = _descriptor.Descriptor(
-  name='NetworkMatrices',
-  full_name='federation.fed_protobuff.NetworkMatrices',
+_DOUBLEVARIABLE = _descriptor.Descriptor(
+  name='DoubleVariable',
+  full_name='federation.fed_protobuff.DoubleVariable',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='matrices', full_name='federation.fed_protobuff.NetworkMatrices.matrices', index=0,
-      number=1, type=11, cpp_type=10, label=3,
+      name='values', full_name='federation.fed_protobuff.DoubleVariable.values', index=0,
+      number=1, type=1, cpp_type=5, label=3,
       has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='variable_def', full_name='federation.fed_protobuff.DoubleVariable.variable_def', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -248,8 +99,53 @@ _NETWORKMATRICES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=398,
-  serialized_end=473,
+  serialized_start=213,
+  serialized_end=306,
+)
+
+
+_LEARNERENTITY = _descriptor.Descriptor(
+  name='LearnerEntity',
+  full_name='federation.fed_protobuff.LearnerEntity',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='id', full_name='federation.fed_protobuff.LearnerEntity.id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='hostname', full_name='federation.fed_protobuff.LearnerEntity.hostname', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='port', full_name='federation.fed_protobuff.LearnerEntity.port', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=308,
+  serialized_end=367,
 )
 
 
@@ -268,14 +164,14 @@ _LEARNEREXECUTIONBASEMETADATA = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='epochs_validation_score', full_name='federation.fed_protobuff.LearnerExecutionBaseMetadata.epochs_validation_score', index=1,
+      name='epochs_validation_scores', full_name='federation.fed_protobuff.LearnerExecutionBaseMetadata.epochs_validation_scores', index=1,
       number=2, type=2, cpp_type=6, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='epochs_test_score', full_name='federation.fed_protobuff.LearnerExecutionBaseMetadata.epochs_test_score', index=2,
+      name='epochs_test_scores', full_name='federation.fed_protobuff.LearnerExecutionBaseMetadata.epochs_test_scores', index=2,
       number=3, type=2, cpp_type=6, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -328,50 +224,136 @@ _LEARNEREXECUTIONBASEMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=476,
-  serialized_end=737,
+  serialized_start=370,
+  serialized_end=633,
 )
 
 
-_LEARNINGTASKHYPERPARAMETERS = _descriptor.Descriptor(
-  name='LearningTaskHyperParameters',
-  full_name='federation.fed_protobuff.LearningTaskHyperParameters',
+_LEARNINGHYPERPARAMETERS = _descriptor.Descriptor(
+  name='LearningHyperParameters',
+  full_name='federation.fed_protobuff.LearningHyperParameters',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='num_training_epochs', full_name='federation.fed_protobuff.LearningTaskHyperParameters.num_training_epochs', index=0,
+      name='batch_size', full_name='federation.fed_protobuff.LearningHyperParameters.batch_size', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='batch_size', full_name='federation.fed_protobuff.LearningTaskHyperParameters.batch_size', index=1,
+      name='vanilla_sgd', full_name='federation.fed_protobuff.LearningHyperParameters.vanilla_sgd', index=1,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='momentum_sgd', full_name='federation.fed_protobuff.LearningHyperParameters.momentum_sgd', index=2,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='fed_prox', full_name='federation.fed_protobuff.LearningHyperParameters.fed_prox', index=3,
+      number=5, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='adam', full_name='federation.fed_protobuff.LearningHyperParameters.adam', index=4,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='optimizer', full_name='federation.fed_protobuff.LearningHyperParameters.optimizer',
+      index=0, containing_type=None, fields=[]),
+  ],
+  serialized_start=636,
+  serialized_end=965,
+)
+
+
+_LEARNINGTASK = _descriptor.Descriptor(
+  name='LearningTask',
+  full_name='federation.fed_protobuff.LearningTask',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='num_local_updates', full_name='federation.fed_protobuff.LearningTask.num_local_updates', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='training_dataset_percentage_for_stratified_validation', full_name='federation.fed_protobuff.LearningTask.training_dataset_percentage_for_stratified_validation', index=1,
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=967,
+  serialized_end=1071,
+)
+
+
+_LOCALDATASETSPEC = _descriptor.Descriptor(
+  name='LocalDatasetSpec',
+  full_name='federation.fed_protobuff.LocalDatasetSpec',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='num_training_examples', full_name='federation.fed_protobuff.LocalDatasetSpec.num_training_examples', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='num_validation_examples', full_name='federation.fed_protobuff.LocalDatasetSpec.num_validation_examples', index=1,
       number=2, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='learning_rate', full_name='federation.fed_protobuff.LearningTaskHyperParameters.learning_rate', index=2,
-      number=3, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='training_dataset_percentage_for_stratified_validation', full_name='federation.fed_protobuff.LearningTaskHyperParameters.training_dataset_percentage_for_stratified_validation', index=3,
-      number=4, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='sgd_optimizer', full_name='federation.fed_protobuff.LearningTaskHyperParameters.sgd_optimizer', index=4,
-      number=5, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='num_test_examples', full_name='federation.fed_protobuff.LocalDatasetSpec.num_test_examples', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -387,29 +369,36 @@ _LEARNINGTASKHYPERPARAMETERS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=740,
-  serialized_end=967,
+  serialized_start=1073,
+  serialized_end=1182,
 )
 
 
-_SGDOPTIMIZER = _descriptor.Descriptor(
-  name='SGDOptimizer',
-  full_name='federation.fed_protobuff.SGDOptimizer',
+_VARIABLEDEF = _descriptor.Descriptor(
+  name='VariableDef',
+  full_name='federation.fed_protobuff.VariableDef',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='optimizer_name', full_name='federation.fed_protobuff.SGDOptimizer.optimizer_name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
+      name='size', full_name='federation.fed_protobuff.VariableDef.size', index=0,
+      number=1, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='dtype', full_name='federation.fed_protobuff.VariableDef.dtype', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='optimizer_metadata', full_name='federation.fed_protobuff.SGDOptimizer.optimizer_metadata', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='dimensions', full_name='federation.fed_protobuff.VariableDef.dimensions', index=2,
+      number=3, type=5, cpp_type=1, label=3,
+      has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -425,70 +414,37 @@ _SGDOPTIMIZER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=969,
-  serialized_end=1083,
+  serialized_start=1184,
+  serialized_end=1246,
 )
 
-
-_SGDOPTIMIZERMETADATA = _descriptor.Descriptor(
-  name='SGDOptimizerMetadata',
-  full_name='federation.fed_protobuff.SGDOptimizerMetadata',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='momentum_value', full_name='federation.fed_protobuff.SGDOptimizerMetadata.momentum_value', index=0,
-      number=1, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1085,
-  serialized_end=1131,
-)
-
-_DOUBLEMATRIX.fields_by_name['matrixdef'].message_type = _MATRIXDEF
-_NETWORKMATRICES.fields_by_name['matrices'].message_type = _DOUBLEMATRIX
-_LEARNINGTASKHYPERPARAMETERS.fields_by_name['sgd_optimizer'].message_type = _SGDOPTIMIZER
-_SGDOPTIMIZER.fields_by_name['optimizer_metadata'].message_type = _SGDOPTIMIZERMETADATA
-DESCRIPTOR.message_types_by_name['EmptyMessage'] = _EMPTYMESSAGE
-DESCRIPTOR.message_types_by_name['LearnerEntity'] = _LEARNERENTITY
+_ACK.fields_by_name['timestamp'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+_DOUBLEVARIABLE.fields_by_name['variable_def'].message_type = _VARIABLEDEF
+_LEARNINGHYPERPARAMETERS.fields_by_name['vanilla_sgd'].message_type = federation_dot_fed__protobuff_dot_optimizers__pb2._VANILLASGD
+_LEARNINGHYPERPARAMETERS.fields_by_name['momentum_sgd'].message_type = federation_dot_fed__protobuff_dot_optimizers__pb2._MOMENTUMSGD
+_LEARNINGHYPERPARAMETERS.fields_by_name['fed_prox'].message_type = federation_dot_fed__protobuff_dot_optimizers__pb2._FEDPROX
+_LEARNINGHYPERPARAMETERS.fields_by_name['adam'].message_type = federation_dot_fed__protobuff_dot_optimizers__pb2._ADAM
+_LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer'].fields.append(
+  _LEARNINGHYPERPARAMETERS.fields_by_name['vanilla_sgd'])
+_LEARNINGHYPERPARAMETERS.fields_by_name['vanilla_sgd'].containing_oneof = _LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer']
+_LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer'].fields.append(
+  _LEARNINGHYPERPARAMETERS.fields_by_name['momentum_sgd'])
+_LEARNINGHYPERPARAMETERS.fields_by_name['momentum_sgd'].containing_oneof = _LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer']
+_LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer'].fields.append(
+  _LEARNINGHYPERPARAMETERS.fields_by_name['fed_prox'])
+_LEARNINGHYPERPARAMETERS.fields_by_name['fed_prox'].containing_oneof = _LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer']
+_LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer'].fields.append(
+  _LEARNINGHYPERPARAMETERS.fields_by_name['adam'])
+_LEARNINGHYPERPARAMETERS.fields_by_name['adam'].containing_oneof = _LEARNINGHYPERPARAMETERS.oneofs_by_name['optimizer']
 DESCRIPTOR.message_types_by_name['Ack'] = _ACK
-DESCRIPTOR.message_types_by_name['MatrixDef'] = _MATRIXDEF
-DESCRIPTOR.message_types_by_name['DoubleMatrix'] = _DOUBLEMATRIX
-DESCRIPTOR.message_types_by_name['NetworkMatrices'] = _NETWORKMATRICES
+DESCRIPTOR.message_types_by_name['DoubleVariable'] = _DOUBLEVARIABLE
+DESCRIPTOR.message_types_by_name['LearnerEntity'] = _LEARNERENTITY
 DESCRIPTOR.message_types_by_name['LearnerExecutionBaseMetadata'] = _LEARNEREXECUTIONBASEMETADATA
-DESCRIPTOR.message_types_by_name['LearningTaskHyperParameters'] = _LEARNINGTASKHYPERPARAMETERS
-DESCRIPTOR.message_types_by_name['SGDOptimizer'] = _SGDOPTIMIZER
-DESCRIPTOR.message_types_by_name['SGDOptimizerMetadata'] = _SGDOPTIMIZERMETADATA
+DESCRIPTOR.message_types_by_name['LearningHyperParameters'] = _LEARNINGHYPERPARAMETERS
+DESCRIPTOR.message_types_by_name['LearningTask'] = _LEARNINGTASK
+DESCRIPTOR.message_types_by_name['LocalDatasetSpec'] = _LOCALDATASETSPEC
+DESCRIPTOR.message_types_by_name['VariableDef'] = _VARIABLEDEF
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
-EmptyMessage = _reflection.GeneratedProtocolMessageType('EmptyMessage', (_message.Message,), dict(
-  DESCRIPTOR = _EMPTYMESSAGE,
-  __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.EmptyMessage)
-  ))
-_sym_db.RegisterMessage(EmptyMessage)
-
-LearnerEntity = _reflection.GeneratedProtocolMessageType('LearnerEntity', (_message.Message,), dict(
-  DESCRIPTOR = _LEARNERENTITY,
-  __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearnerEntity)
-  ))
-_sym_db.RegisterMessage(LearnerEntity)
 
 Ack = _reflection.GeneratedProtocolMessageType('Ack', (_message.Message,), dict(
   DESCRIPTOR = _ACK,
@@ -497,26 +453,19 @@ Ack = _reflection.GeneratedProtocolMessageType('Ack', (_message.Message,), dict(
   ))
 _sym_db.RegisterMessage(Ack)
 
-MatrixDef = _reflection.GeneratedProtocolMessageType('MatrixDef', (_message.Message,), dict(
-  DESCRIPTOR = _MATRIXDEF,
+DoubleVariable = _reflection.GeneratedProtocolMessageType('DoubleVariable', (_message.Message,), dict(
+  DESCRIPTOR = _DOUBLEVARIABLE,
   __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.MatrixDef)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.DoubleVariable)
   ))
-_sym_db.RegisterMessage(MatrixDef)
+_sym_db.RegisterMessage(DoubleVariable)
 
-DoubleMatrix = _reflection.GeneratedProtocolMessageType('DoubleMatrix', (_message.Message,), dict(
-  DESCRIPTOR = _DOUBLEMATRIX,
+LearnerEntity = _reflection.GeneratedProtocolMessageType('LearnerEntity', (_message.Message,), dict(
+  DESCRIPTOR = _LEARNERENTITY,
   __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.DoubleMatrix)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearnerEntity)
   ))
-_sym_db.RegisterMessage(DoubleMatrix)
-
-NetworkMatrices = _reflection.GeneratedProtocolMessageType('NetworkMatrices', (_message.Message,), dict(
-  DESCRIPTOR = _NETWORKMATRICES,
-  __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.NetworkMatrices)
-  ))
-_sym_db.RegisterMessage(NetworkMatrices)
+_sym_db.RegisterMessage(LearnerEntity)
 
 LearnerExecutionBaseMetadata = _reflection.GeneratedProtocolMessageType('LearnerExecutionBaseMetadata', (_message.Message,), dict(
   DESCRIPTOR = _LEARNEREXECUTIONBASEMETADATA,
@@ -525,26 +474,33 @@ LearnerExecutionBaseMetadata = _reflection.GeneratedProtocolMessageType('Learner
   ))
 _sym_db.RegisterMessage(LearnerExecutionBaseMetadata)
 
-LearningTaskHyperParameters = _reflection.GeneratedProtocolMessageType('LearningTaskHyperParameters', (_message.Message,), dict(
-  DESCRIPTOR = _LEARNINGTASKHYPERPARAMETERS,
+LearningHyperParameters = _reflection.GeneratedProtocolMessageType('LearningHyperParameters', (_message.Message,), dict(
+  DESCRIPTOR = _LEARNINGHYPERPARAMETERS,
   __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearningTaskHyperParameters)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearningHyperParameters)
   ))
-_sym_db.RegisterMessage(LearningTaskHyperParameters)
+_sym_db.RegisterMessage(LearningHyperParameters)
 
-SGDOptimizer = _reflection.GeneratedProtocolMessageType('SGDOptimizer', (_message.Message,), dict(
-  DESCRIPTOR = _SGDOPTIMIZER,
+LearningTask = _reflection.GeneratedProtocolMessageType('LearningTask', (_message.Message,), dict(
+  DESCRIPTOR = _LEARNINGTASK,
   __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.SGDOptimizer)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LearningTask)
   ))
-_sym_db.RegisterMessage(SGDOptimizer)
+_sym_db.RegisterMessage(LearningTask)
 
-SGDOptimizerMetadata = _reflection.GeneratedProtocolMessageType('SGDOptimizerMetadata', (_message.Message,), dict(
-  DESCRIPTOR = _SGDOPTIMIZERMETADATA,
+LocalDatasetSpec = _reflection.GeneratedProtocolMessageType('LocalDatasetSpec', (_message.Message,), dict(
+  DESCRIPTOR = _LOCALDATASETSPEC,
   __module__ = 'federation.fed_protobuff.common_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.SGDOptimizerMetadata)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LocalDatasetSpec)
   ))
-_sym_db.RegisterMessage(SGDOptimizerMetadata)
+_sym_db.RegisterMessage(LocalDatasetSpec)
+
+VariableDef = _reflection.GeneratedProtocolMessageType('VariableDef', (_message.Message,), dict(
+  DESCRIPTOR = _VARIABLEDEF,
+  __module__ = 'federation.fed_protobuff.common_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.VariableDef)
+  ))
+_sym_db.RegisterMessage(VariableDef)
 
 
 # @@protoc_insertion_point(module_scope)

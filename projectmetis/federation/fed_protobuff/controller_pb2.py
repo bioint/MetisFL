@@ -13,236 +13,30 @@ _sym_db = _symbol_database.Default()
 
 
 from federation.fed_protobuff import common_pb2 as federation_dot_fed__protobuff_dot_common__pb2
+from federation.fed_protobuff import federatedmodel_pb2 as federation_dot_fed__protobuff_dot_federatedmodel__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='federation/fed_protobuff/controller.proto',
-  package='federation.fed_protobuff',
+  package='federation.fed_protobuff.controller',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n)federation/fed_protobuff/controller.proto\x12\x18\x66\x65\x64\x65ration.fed_protobuff\x1a%federation/fed_protobuff/common.proto\"\xb3\x01\n\x15JoinFederationRequest\x12?\n\x0elearner_entity\x18\x01 \x01(\x0b\x32\'.federation.fed_protobuff.LearnerEntity\x12\x1d\n\x15num_training_examples\x18\x02 \x01(\x05\x12\x1f\n\x17num_validation_examples\x18\x03 \x01(\x05\x12\x19\n\x11num_test_examples\x18\x04 \x01(\x05\"D\n\x16JoinFederationResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack\"Y\n\x16LeaveFederationRequest\x12?\n\x0elearner_entity\x18\x01 \x01(\x0b\x32\'.federation.fed_protobuff.LearnerEntity\"E\n\x17LeaveFederationResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack\"W\n\x16RuntimeMetadataRequest\x12=\n\rempty_message\x18\x01 \x01(\x0b\x32&.federation.fed_protobuff.EmptyMessage\"0\n\x17RuntimeMetadataResponse\x12\x15\n\rjson_metadata\x18\x01 \x01(\t\"6\n\x1c\x43ommunityModelLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\"b\n\x1d\x43ommunityModelLineageResponse\x12\x41\n\x0emodel_matrices\x18\x01 \x03(\x0b\x32).federation.fed_protobuff.NetworkMatrices\"c\n\"ControllerServicesHeartbeatRequest\x12=\n\rempty_message\x18\x01 \x01(\x0b\x32&.federation.fed_protobuff.EmptyMessage\">\n#ControllerServicesHeartbeatResponse\x12\x17\n\x0f\x63ontroller_beat\x18\x01 \x01(\x08\"\xe9\x01\n\x14TaskCompletedRequest\x12?\n\x0elearner_entity\x18\x01 \x01(\x0b\x32\'.federation.fed_protobuff.LearnerEntity\x12M\n\rbase_metadata\x18\x02 \x01(\x0b\x32\x36.federation.fed_protobuff.LearnerExecutionBaseMetadata\x12\x41\n\x0emodel_matrices\x18\x03 \x01(\x0b\x32).federation.fed_protobuff.NetworkMatrices\"C\n\x15TaskCompletedResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack2\x97\x06\n\nController\x12u\n\x0eJoinFederation\x12/.federation.fed_protobuff.JoinFederationRequest\x1a\x30.federation.fed_protobuff.JoinFederationResponse\"\x00\x12x\n\x0fLeaveFederation\x12\x30.federation.fed_protobuff.LeaveFederationRequest\x1a\x31.federation.fed_protobuff.LeaveFederationResponse\"\x00\x12x\n\x0fRuntimeMetadata\x12\x30.federation.fed_protobuff.RuntimeMetadataRequest\x1a\x31.federation.fed_protobuff.RuntimeMetadataResponse\"\x00\x12\x8a\x01\n\x15\x43ommunityModelLineage\x12\x36.federation.fed_protobuff.CommunityModelLineageRequest\x1a\x37.federation.fed_protobuff.CommunityModelLineageResponse\"\x00\x12\x9c\x01\n\x1b\x43ontrollerServicesHeartbeat\x12<.federation.fed_protobuff.ControllerServicesHeartbeatRequest\x1a=.federation.fed_protobuff.ControllerServicesHeartbeatResponse\"\x00\x12r\n\rTaskCompleted\x12..federation.fed_protobuff.TaskCompletedRequest\x1a/.federation.fed_protobuff.TaskCompletedResponse\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n)federation/fed_protobuff/controller.proto\x12#federation.fed_protobuff.controller\x1a%federation/fed_protobuff/common.proto\x1a-federation/fed_protobuff/federatedmodel.proto\"9\n\x1fGetCommunityModelLineageRequest\x12\x16\n\x0enum_backtracks\x18\x01 \x01(\x05\"u\n GetCommunityModelLineageResponse\x12Q\n\x10\x66\x65\x64\x65rated_models\x18\x01 \x03(\x0b\x32\x37.federation.fed_protobuff.federatedmodel.FederatedModel\"\x1b\n\x19GetRuntimeMetadataRequest\"3\n\x1aGetRuntimeMetadataResponse\x12\x15\n\rjson_metadata\x18\x01 \x01(\t\" \n\x1eGetServicesHealthStatusRequest\"\xcb\x01\n\x1fGetServicesHealthStatusResponse\x12q\n\x0fservices_status\x18\x01 \x03(\x0b\x32X.federation.fed_protobuff.controller.GetServicesHealthStatusResponse.ServicesStatusEntry\x1a\x35\n\x13ServicesStatusEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x08:\x02\x38\x01\"\xa0\x01\n\x15JoinFederationRequest\x12?\n\x0elearner_entity\x18\x01 \x01(\x0b\x32\'.federation.fed_protobuff.LearnerEntity\x12\x46\n\x12local_dataset_spec\x18\x02 \x01(\x0b\x32*.federation.fed_protobuff.LocalDatasetSpec\"S\n\x16JoinFederationResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack\x12\r\n\x05token\x18\x02 \x01(\t\"\xe6\x01\n\x18MarkTaskCompletedRequest\x12\x12\n\nlearner_id\x18\x01 \x01(\t\x12\x15\n\rlearner_token\x18\x02 \x01(\t\x12M\n\rbase_metadata\x18\x03 \x01(\x0b\x32\x36.federation.fed_protobuff.LearnerExecutionBaseMetadata\x12P\n\x0f\x66\x65\x64\x65rated_model\x18\x04 \x01(\x0b\x32\x37.federation.fed_protobuff.federatedmodel.FederatedModel\"G\n\x19MarkTaskCompletedResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack\"C\n\x16LeaveFederationRequest\x12\x12\n\nlearner_id\x18\x01 \x01(\t\x12\x15\n\rlearner_token\x18\x02 \x01(\t\"E\n\x17LeaveFederationResponse\x12*\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x1d.federation.fed_protobuff.Ack2\xb1\x07\n\nController\x12\xa9\x01\n\x18GetCommunityModelLineage\x12\x44.federation.fed_protobuff.controller.GetCommunityModelLineageRequest\x1a\x45.federation.fed_protobuff.controller.GetCommunityModelLineageResponse\"\x00\x12\x97\x01\n\x12GetRuntimeMetadata\x12>.federation.fed_protobuff.controller.GetRuntimeMetadataRequest\x1a?.federation.fed_protobuff.controller.GetRuntimeMetadataResponse\"\x00\x12\xa6\x01\n\x17GetServicesHealthStatus\x12\x43.federation.fed_protobuff.controller.GetServicesHealthStatusRequest\x1a\x44.federation.fed_protobuff.controller.GetServicesHealthStatusResponse\"\x00\x12\x8b\x01\n\x0eJoinFederation\x12:.federation.fed_protobuff.controller.JoinFederationRequest\x1a;.federation.fed_protobuff.controller.JoinFederationResponse\"\x00\x12\x94\x01\n\x11MarkTaskCompleted\x12=.federation.fed_protobuff.controller.MarkTaskCompletedRequest\x1a>.federation.fed_protobuff.controller.MarkTaskCompletedResponse\"\x00\x12\x8e\x01\n\x0fLeaveFederation\x12;.federation.fed_protobuff.controller.LeaveFederationRequest\x1a<.federation.fed_protobuff.controller.LeaveFederationResponse\"\x00\x62\x06proto3')
   ,
-  dependencies=[federation_dot_fed__protobuff_dot_common__pb2.DESCRIPTOR,])
+  dependencies=[federation_dot_fed__protobuff_dot_common__pb2.DESCRIPTOR,federation_dot_fed__protobuff_dot_federatedmodel__pb2.DESCRIPTOR,])
 
 
 
 
-_JOINFEDERATIONREQUEST = _descriptor.Descriptor(
-  name='JoinFederationRequest',
-  full_name='federation.fed_protobuff.JoinFederationRequest',
+_GETCOMMUNITYMODELLINEAGEREQUEST = _descriptor.Descriptor(
+  name='GetCommunityModelLineageRequest',
+  full_name='federation.fed_protobuff.controller.GetCommunityModelLineageRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='learner_entity', full_name='federation.fed_protobuff.JoinFederationRequest.learner_entity', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='num_training_examples', full_name='federation.fed_protobuff.JoinFederationRequest.num_training_examples', index=1,
-      number=2, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='num_validation_examples', full_name='federation.fed_protobuff.JoinFederationRequest.num_validation_examples', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='num_test_examples', full_name='federation.fed_protobuff.JoinFederationRequest.num_test_examples', index=3,
-      number=4, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=111,
-  serialized_end=290,
-)
-
-
-_JOINFEDERATIONRESPONSE = _descriptor.Descriptor(
-  name='JoinFederationResponse',
-  full_name='federation.fed_protobuff.JoinFederationResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='ack', full_name='federation.fed_protobuff.JoinFederationResponse.ack', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=292,
-  serialized_end=360,
-)
-
-
-_LEAVEFEDERATIONREQUEST = _descriptor.Descriptor(
-  name='LeaveFederationRequest',
-  full_name='federation.fed_protobuff.LeaveFederationRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='learner_entity', full_name='federation.fed_protobuff.LeaveFederationRequest.learner_entity', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=362,
-  serialized_end=451,
-)
-
-
-_LEAVEFEDERATIONRESPONSE = _descriptor.Descriptor(
-  name='LeaveFederationResponse',
-  full_name='federation.fed_protobuff.LeaveFederationResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='ack', full_name='federation.fed_protobuff.LeaveFederationResponse.ack', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=453,
-  serialized_end=522,
-)
-
-
-_RUNTIMEMETADATAREQUEST = _descriptor.Descriptor(
-  name='RuntimeMetadataRequest',
-  full_name='federation.fed_protobuff.RuntimeMetadataRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='empty_message', full_name='federation.fed_protobuff.RuntimeMetadataRequest.empty_message', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=524,
-  serialized_end=611,
-)
-
-
-_RUNTIMEMETADATARESPONSE = _descriptor.Descriptor(
-  name='RuntimeMetadataResponse',
-  full_name='federation.fed_protobuff.RuntimeMetadataResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='json_metadata', full_name='federation.fed_protobuff.RuntimeMetadataResponse.json_metadata', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=613,
-  serialized_end=661,
-)
-
-
-_COMMUNITYMODELLINEAGEREQUEST = _descriptor.Descriptor(
-  name='CommunityModelLineageRequest',
-  full_name='federation.fed_protobuff.CommunityModelLineageRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='num_backtracks', full_name='federation.fed_protobuff.CommunityModelLineageRequest.num_backtracks', index=0,
+      name='num_backtracks', full_name='federation.fed_protobuff.controller.GetCommunityModelLineageRequest.num_backtracks', index=0,
       number=1, type=5, cpp_type=1, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
@@ -260,20 +54,20 @@ _COMMUNITYMODELLINEAGEREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=663,
-  serialized_end=717,
+  serialized_start=168,
+  serialized_end=225,
 )
 
 
-_COMMUNITYMODELLINEAGERESPONSE = _descriptor.Descriptor(
-  name='CommunityModelLineageResponse',
-  full_name='federation.fed_protobuff.CommunityModelLineageResponse',
+_GETCOMMUNITYMODELLINEAGERESPONSE = _descriptor.Descriptor(
+  name='GetCommunityModelLineageResponse',
+  full_name='federation.fed_protobuff.controller.GetCommunityModelLineageResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='model_matrices', full_name='federation.fed_protobuff.CommunityModelLineageResponse.model_matrices', index=0,
+      name='federated_models', full_name='federation.fed_protobuff.controller.GetCommunityModelLineageResponse.federated_models', index=0,
       number=1, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -291,22 +85,46 @@ _COMMUNITYMODELLINEAGERESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=719,
-  serialized_end=817,
+  serialized_start=227,
+  serialized_end=344,
 )
 
 
-_CONTROLLERSERVICESHEARTBEATREQUEST = _descriptor.Descriptor(
-  name='ControllerServicesHeartbeatRequest',
-  full_name='federation.fed_protobuff.ControllerServicesHeartbeatRequest',
+_GETRUNTIMEMETADATAREQUEST = _descriptor.Descriptor(
+  name='GetRuntimeMetadataRequest',
+  full_name='federation.fed_protobuff.controller.GetRuntimeMetadataRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=346,
+  serialized_end=373,
+)
+
+
+_GETRUNTIMEMETADATARESPONSE = _descriptor.Descriptor(
+  name='GetRuntimeMetadataResponse',
+  full_name='federation.fed_protobuff.controller.GetRuntimeMetadataResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='empty_message', full_name='federation.fed_protobuff.ControllerServicesHeartbeatRequest.empty_message', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
+      name='json_metadata', full_name='federation.fed_protobuff.controller.GetRuntimeMetadataResponse.json_metadata', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -322,21 +140,52 @@ _CONTROLLERSERVICESHEARTBEATREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=819,
-  serialized_end=918,
+  serialized_start=375,
+  serialized_end=426,
 )
 
 
-_CONTROLLERSERVICESHEARTBEATRESPONSE = _descriptor.Descriptor(
-  name='ControllerServicesHeartbeatResponse',
-  full_name='federation.fed_protobuff.ControllerServicesHeartbeatResponse',
+_GETSERVICESHEALTHSTATUSREQUEST = _descriptor.Descriptor(
+  name='GetServicesHealthStatusRequest',
+  full_name='federation.fed_protobuff.controller.GetServicesHealthStatusRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=428,
+  serialized_end=460,
+)
+
+
+_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY = _descriptor.Descriptor(
+  name='ServicesStatusEntry',
+  full_name='federation.fed_protobuff.controller.GetServicesHealthStatusResponse.ServicesStatusEntry',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='controller_beat', full_name='federation.fed_protobuff.ControllerServicesHeartbeatResponse.controller_beat', index=0,
-      number=1, type=8, cpp_type=7, label=1,
+      name='key', full_name='federation.fed_protobuff.controller.GetServicesHealthStatusResponse.ServicesStatusEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='federation.fed_protobuff.controller.GetServicesHealthStatusResponse.ServicesStatusEntry.value', index=1,
+      number=2, type=8, cpp_type=7, label=1,
       has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -347,41 +196,154 @@ _CONTROLLERSERVICESHEARTBEATRESPONSE = _descriptor.Descriptor(
   nested_types=[],
   enum_types=[
   ],
+  serialized_options=_b('8\001'),
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=613,
+  serialized_end=666,
+)
+
+_GETSERVICESHEALTHSTATUSRESPONSE = _descriptor.Descriptor(
+  name='GetServicesHealthStatusResponse',
+  full_name='federation.fed_protobuff.controller.GetServicesHealthStatusResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='services_status', full_name='federation.fed_protobuff.controller.GetServicesHealthStatusResponse.services_status', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY, ],
+  enum_types=[
+  ],
   serialized_options=None,
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=920,
-  serialized_end=982,
+  serialized_start=463,
+  serialized_end=666,
 )
 
 
-_TASKCOMPLETEDREQUEST = _descriptor.Descriptor(
-  name='TaskCompletedRequest',
-  full_name='federation.fed_protobuff.TaskCompletedRequest',
+_JOINFEDERATIONREQUEST = _descriptor.Descriptor(
+  name='JoinFederationRequest',
+  full_name='federation.fed_protobuff.controller.JoinFederationRequest',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='learner_entity', full_name='federation.fed_protobuff.TaskCompletedRequest.learner_entity', index=0,
+      name='learner_entity', full_name='federation.fed_protobuff.controller.JoinFederationRequest.learner_entity', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='base_metadata', full_name='federation.fed_protobuff.TaskCompletedRequest.base_metadata', index=1,
+      name='local_dataset_spec', full_name='federation.fed_protobuff.controller.JoinFederationRequest.local_dataset_spec', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=669,
+  serialized_end=829,
+)
+
+
+_JOINFEDERATIONRESPONSE = _descriptor.Descriptor(
+  name='JoinFederationResponse',
+  full_name='federation.fed_protobuff.controller.JoinFederationResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
     _descriptor.FieldDescriptor(
-      name='model_matrices', full_name='federation.fed_protobuff.TaskCompletedRequest.model_matrices', index=2,
+      name='ack', full_name='federation.fed_protobuff.controller.JoinFederationResponse.ack', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='token', full_name='federation.fed_protobuff.controller.JoinFederationResponse.token', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=831,
+  serialized_end=914,
+)
+
+
+_MARKTASKCOMPLETEDREQUEST = _descriptor.Descriptor(
+  name='MarkTaskCompletedRequest',
+  full_name='federation.fed_protobuff.controller.MarkTaskCompletedRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='learner_id', full_name='federation.fed_protobuff.controller.MarkTaskCompletedRequest.learner_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='learner_token', full_name='federation.fed_protobuff.controller.MarkTaskCompletedRequest.learner_token', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='base_metadata', full_name='federation.fed_protobuff.controller.MarkTaskCompletedRequest.base_metadata', index=2,
       number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='federated_model', full_name='federation.fed_protobuff.controller.MarkTaskCompletedRequest.federated_model', index=3,
+      number=4, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -398,20 +360,20 @@ _TASKCOMPLETEDREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=985,
-  serialized_end=1218,
+  serialized_start=917,
+  serialized_end=1147,
 )
 
 
-_TASKCOMPLETEDRESPONSE = _descriptor.Descriptor(
-  name='TaskCompletedResponse',
-  full_name='federation.fed_protobuff.TaskCompletedResponse',
+_MARKTASKCOMPLETEDRESPONSE = _descriptor.Descriptor(
+  name='MarkTaskCompletedResponse',
+  full_name='federation.fed_protobuff.controller.MarkTaskCompletedResponse',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='ack', full_name='federation.fed_protobuff.TaskCompletedResponse.ack', index=0,
+      name='ack', full_name='federation.fed_protobuff.controller.MarkTaskCompletedResponse.ack', index=0,
       number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -429,182 +391,259 @@ _TASKCOMPLETEDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1220,
-  serialized_end=1287,
+  serialized_start=1149,
+  serialized_end=1220,
 )
 
+
+_LEAVEFEDERATIONREQUEST = _descriptor.Descriptor(
+  name='LeaveFederationRequest',
+  full_name='federation.fed_protobuff.controller.LeaveFederationRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='learner_id', full_name='federation.fed_protobuff.controller.LeaveFederationRequest.learner_id', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='learner_token', full_name='federation.fed_protobuff.controller.LeaveFederationRequest.learner_token', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1222,
+  serialized_end=1289,
+)
+
+
+_LEAVEFEDERATIONRESPONSE = _descriptor.Descriptor(
+  name='LeaveFederationResponse',
+  full_name='federation.fed_protobuff.controller.LeaveFederationResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='ack', full_name='federation.fed_protobuff.controller.LeaveFederationResponse.ack', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1291,
+  serialized_end=1360,
+)
+
+_GETCOMMUNITYMODELLINEAGERESPONSE.fields_by_name['federated_models'].message_type = federation_dot_fed__protobuff_dot_federatedmodel__pb2._FEDERATEDMODEL
+_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY.containing_type = _GETSERVICESHEALTHSTATUSRESPONSE
+_GETSERVICESHEALTHSTATUSRESPONSE.fields_by_name['services_status'].message_type = _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY
 _JOINFEDERATIONREQUEST.fields_by_name['learner_entity'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNERENTITY
+_JOINFEDERATIONREQUEST.fields_by_name['local_dataset_spec'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LOCALDATASETSPEC
 _JOINFEDERATIONRESPONSE.fields_by_name['ack'].message_type = federation_dot_fed__protobuff_dot_common__pb2._ACK
-_LEAVEFEDERATIONREQUEST.fields_by_name['learner_entity'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNERENTITY
+_MARKTASKCOMPLETEDREQUEST.fields_by_name['base_metadata'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNEREXECUTIONBASEMETADATA
+_MARKTASKCOMPLETEDREQUEST.fields_by_name['federated_model'].message_type = federation_dot_fed__protobuff_dot_federatedmodel__pb2._FEDERATEDMODEL
+_MARKTASKCOMPLETEDRESPONSE.fields_by_name['ack'].message_type = federation_dot_fed__protobuff_dot_common__pb2._ACK
 _LEAVEFEDERATIONRESPONSE.fields_by_name['ack'].message_type = federation_dot_fed__protobuff_dot_common__pb2._ACK
-_RUNTIMEMETADATAREQUEST.fields_by_name['empty_message'].message_type = federation_dot_fed__protobuff_dot_common__pb2._EMPTYMESSAGE
-_COMMUNITYMODELLINEAGERESPONSE.fields_by_name['model_matrices'].message_type = federation_dot_fed__protobuff_dot_common__pb2._NETWORKMATRICES
-_CONTROLLERSERVICESHEARTBEATREQUEST.fields_by_name['empty_message'].message_type = federation_dot_fed__protobuff_dot_common__pb2._EMPTYMESSAGE
-_TASKCOMPLETEDREQUEST.fields_by_name['learner_entity'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNERENTITY
-_TASKCOMPLETEDREQUEST.fields_by_name['base_metadata'].message_type = federation_dot_fed__protobuff_dot_common__pb2._LEARNEREXECUTIONBASEMETADATA
-_TASKCOMPLETEDREQUEST.fields_by_name['model_matrices'].message_type = federation_dot_fed__protobuff_dot_common__pb2._NETWORKMATRICES
-_TASKCOMPLETEDRESPONSE.fields_by_name['ack'].message_type = federation_dot_fed__protobuff_dot_common__pb2._ACK
+DESCRIPTOR.message_types_by_name['GetCommunityModelLineageRequest'] = _GETCOMMUNITYMODELLINEAGEREQUEST
+DESCRIPTOR.message_types_by_name['GetCommunityModelLineageResponse'] = _GETCOMMUNITYMODELLINEAGERESPONSE
+DESCRIPTOR.message_types_by_name['GetRuntimeMetadataRequest'] = _GETRUNTIMEMETADATAREQUEST
+DESCRIPTOR.message_types_by_name['GetRuntimeMetadataResponse'] = _GETRUNTIMEMETADATARESPONSE
+DESCRIPTOR.message_types_by_name['GetServicesHealthStatusRequest'] = _GETSERVICESHEALTHSTATUSREQUEST
+DESCRIPTOR.message_types_by_name['GetServicesHealthStatusResponse'] = _GETSERVICESHEALTHSTATUSRESPONSE
 DESCRIPTOR.message_types_by_name['JoinFederationRequest'] = _JOINFEDERATIONREQUEST
 DESCRIPTOR.message_types_by_name['JoinFederationResponse'] = _JOINFEDERATIONRESPONSE
+DESCRIPTOR.message_types_by_name['MarkTaskCompletedRequest'] = _MARKTASKCOMPLETEDREQUEST
+DESCRIPTOR.message_types_by_name['MarkTaskCompletedResponse'] = _MARKTASKCOMPLETEDRESPONSE
 DESCRIPTOR.message_types_by_name['LeaveFederationRequest'] = _LEAVEFEDERATIONREQUEST
 DESCRIPTOR.message_types_by_name['LeaveFederationResponse'] = _LEAVEFEDERATIONRESPONSE
-DESCRIPTOR.message_types_by_name['RuntimeMetadataRequest'] = _RUNTIMEMETADATAREQUEST
-DESCRIPTOR.message_types_by_name['RuntimeMetadataResponse'] = _RUNTIMEMETADATARESPONSE
-DESCRIPTOR.message_types_by_name['CommunityModelLineageRequest'] = _COMMUNITYMODELLINEAGEREQUEST
-DESCRIPTOR.message_types_by_name['CommunityModelLineageResponse'] = _COMMUNITYMODELLINEAGERESPONSE
-DESCRIPTOR.message_types_by_name['ControllerServicesHeartbeatRequest'] = _CONTROLLERSERVICESHEARTBEATREQUEST
-DESCRIPTOR.message_types_by_name['ControllerServicesHeartbeatResponse'] = _CONTROLLERSERVICESHEARTBEATRESPONSE
-DESCRIPTOR.message_types_by_name['TaskCompletedRequest'] = _TASKCOMPLETEDREQUEST
-DESCRIPTOR.message_types_by_name['TaskCompletedResponse'] = _TASKCOMPLETEDRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+GetCommunityModelLineageRequest = _reflection.GeneratedProtocolMessageType('GetCommunityModelLineageRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETCOMMUNITYMODELLINEAGEREQUEST,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.GetCommunityModelLineageRequest)
+  ))
+_sym_db.RegisterMessage(GetCommunityModelLineageRequest)
+
+GetCommunityModelLineageResponse = _reflection.GeneratedProtocolMessageType('GetCommunityModelLineageResponse', (_message.Message,), dict(
+  DESCRIPTOR = _GETCOMMUNITYMODELLINEAGERESPONSE,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.GetCommunityModelLineageResponse)
+  ))
+_sym_db.RegisterMessage(GetCommunityModelLineageResponse)
+
+GetRuntimeMetadataRequest = _reflection.GeneratedProtocolMessageType('GetRuntimeMetadataRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETRUNTIMEMETADATAREQUEST,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.GetRuntimeMetadataRequest)
+  ))
+_sym_db.RegisterMessage(GetRuntimeMetadataRequest)
+
+GetRuntimeMetadataResponse = _reflection.GeneratedProtocolMessageType('GetRuntimeMetadataResponse', (_message.Message,), dict(
+  DESCRIPTOR = _GETRUNTIMEMETADATARESPONSE,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.GetRuntimeMetadataResponse)
+  ))
+_sym_db.RegisterMessage(GetRuntimeMetadataResponse)
+
+GetServicesHealthStatusRequest = _reflection.GeneratedProtocolMessageType('GetServicesHealthStatusRequest', (_message.Message,), dict(
+  DESCRIPTOR = _GETSERVICESHEALTHSTATUSREQUEST,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.GetServicesHealthStatusRequest)
+  ))
+_sym_db.RegisterMessage(GetServicesHealthStatusRequest)
+
+GetServicesHealthStatusResponse = _reflection.GeneratedProtocolMessageType('GetServicesHealthStatusResponse', (_message.Message,), dict(
+
+  ServicesStatusEntry = _reflection.GeneratedProtocolMessageType('ServicesStatusEntry', (_message.Message,), dict(
+    DESCRIPTOR = _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY,
+    __module__ = 'federation.fed_protobuff.controller_pb2'
+    # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.GetServicesHealthStatusResponse.ServicesStatusEntry)
+    ))
+  ,
+  DESCRIPTOR = _GETSERVICESHEALTHSTATUSRESPONSE,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.GetServicesHealthStatusResponse)
+  ))
+_sym_db.RegisterMessage(GetServicesHealthStatusResponse)
+_sym_db.RegisterMessage(GetServicesHealthStatusResponse.ServicesStatusEntry)
 
 JoinFederationRequest = _reflection.GeneratedProtocolMessageType('JoinFederationRequest', (_message.Message,), dict(
   DESCRIPTOR = _JOINFEDERATIONREQUEST,
   __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.JoinFederationRequest)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.JoinFederationRequest)
   ))
 _sym_db.RegisterMessage(JoinFederationRequest)
 
 JoinFederationResponse = _reflection.GeneratedProtocolMessageType('JoinFederationResponse', (_message.Message,), dict(
   DESCRIPTOR = _JOINFEDERATIONRESPONSE,
   __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.JoinFederationResponse)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.JoinFederationResponse)
   ))
 _sym_db.RegisterMessage(JoinFederationResponse)
+
+MarkTaskCompletedRequest = _reflection.GeneratedProtocolMessageType('MarkTaskCompletedRequest', (_message.Message,), dict(
+  DESCRIPTOR = _MARKTASKCOMPLETEDREQUEST,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.MarkTaskCompletedRequest)
+  ))
+_sym_db.RegisterMessage(MarkTaskCompletedRequest)
+
+MarkTaskCompletedResponse = _reflection.GeneratedProtocolMessageType('MarkTaskCompletedResponse', (_message.Message,), dict(
+  DESCRIPTOR = _MARKTASKCOMPLETEDRESPONSE,
+  __module__ = 'federation.fed_protobuff.controller_pb2'
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.MarkTaskCompletedResponse)
+  ))
+_sym_db.RegisterMessage(MarkTaskCompletedResponse)
 
 LeaveFederationRequest = _reflection.GeneratedProtocolMessageType('LeaveFederationRequest', (_message.Message,), dict(
   DESCRIPTOR = _LEAVEFEDERATIONREQUEST,
   __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LeaveFederationRequest)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.LeaveFederationRequest)
   ))
 _sym_db.RegisterMessage(LeaveFederationRequest)
 
 LeaveFederationResponse = _reflection.GeneratedProtocolMessageType('LeaveFederationResponse', (_message.Message,), dict(
   DESCRIPTOR = _LEAVEFEDERATIONRESPONSE,
   __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.LeaveFederationResponse)
+  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.controller.LeaveFederationResponse)
   ))
 _sym_db.RegisterMessage(LeaveFederationResponse)
 
-RuntimeMetadataRequest = _reflection.GeneratedProtocolMessageType('RuntimeMetadataRequest', (_message.Message,), dict(
-  DESCRIPTOR = _RUNTIMEMETADATAREQUEST,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.RuntimeMetadataRequest)
-  ))
-_sym_db.RegisterMessage(RuntimeMetadataRequest)
 
-RuntimeMetadataResponse = _reflection.GeneratedProtocolMessageType('RuntimeMetadataResponse', (_message.Message,), dict(
-  DESCRIPTOR = _RUNTIMEMETADATARESPONSE,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.RuntimeMetadataResponse)
-  ))
-_sym_db.RegisterMessage(RuntimeMetadataResponse)
-
-CommunityModelLineageRequest = _reflection.GeneratedProtocolMessageType('CommunityModelLineageRequest', (_message.Message,), dict(
-  DESCRIPTOR = _COMMUNITYMODELLINEAGEREQUEST,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.CommunityModelLineageRequest)
-  ))
-_sym_db.RegisterMessage(CommunityModelLineageRequest)
-
-CommunityModelLineageResponse = _reflection.GeneratedProtocolMessageType('CommunityModelLineageResponse', (_message.Message,), dict(
-  DESCRIPTOR = _COMMUNITYMODELLINEAGERESPONSE,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.CommunityModelLineageResponse)
-  ))
-_sym_db.RegisterMessage(CommunityModelLineageResponse)
-
-ControllerServicesHeartbeatRequest = _reflection.GeneratedProtocolMessageType('ControllerServicesHeartbeatRequest', (_message.Message,), dict(
-  DESCRIPTOR = _CONTROLLERSERVICESHEARTBEATREQUEST,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.ControllerServicesHeartbeatRequest)
-  ))
-_sym_db.RegisterMessage(ControllerServicesHeartbeatRequest)
-
-ControllerServicesHeartbeatResponse = _reflection.GeneratedProtocolMessageType('ControllerServicesHeartbeatResponse', (_message.Message,), dict(
-  DESCRIPTOR = _CONTROLLERSERVICESHEARTBEATRESPONSE,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.ControllerServicesHeartbeatResponse)
-  ))
-_sym_db.RegisterMessage(ControllerServicesHeartbeatResponse)
-
-TaskCompletedRequest = _reflection.GeneratedProtocolMessageType('TaskCompletedRequest', (_message.Message,), dict(
-  DESCRIPTOR = _TASKCOMPLETEDREQUEST,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.TaskCompletedRequest)
-  ))
-_sym_db.RegisterMessage(TaskCompletedRequest)
-
-TaskCompletedResponse = _reflection.GeneratedProtocolMessageType('TaskCompletedResponse', (_message.Message,), dict(
-  DESCRIPTOR = _TASKCOMPLETEDRESPONSE,
-  __module__ = 'federation.fed_protobuff.controller_pb2'
-  # @@protoc_insertion_point(class_scope:federation.fed_protobuff.TaskCompletedResponse)
-  ))
-_sym_db.RegisterMessage(TaskCompletedResponse)
-
-
+_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY._options = None
 
 _CONTROLLER = _descriptor.ServiceDescriptor(
   name='Controller',
-  full_name='federation.fed_protobuff.Controller',
+  full_name='federation.fed_protobuff.controller.Controller',
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=1290,
-  serialized_end=2081,
+  serialized_start=1363,
+  serialized_end=2308,
   methods=[
   _descriptor.MethodDescriptor(
-    name='JoinFederation',
-    full_name='federation.fed_protobuff.Controller.JoinFederation',
+    name='GetCommunityModelLineage',
+    full_name='federation.fed_protobuff.controller.Controller.GetCommunityModelLineage',
     index=0,
+    containing_service=None,
+    input_type=_GETCOMMUNITYMODELLINEAGEREQUEST,
+    output_type=_GETCOMMUNITYMODELLINEAGERESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetRuntimeMetadata',
+    full_name='federation.fed_protobuff.controller.Controller.GetRuntimeMetadata',
+    index=1,
+    containing_service=None,
+    input_type=_GETRUNTIMEMETADATAREQUEST,
+    output_type=_GETRUNTIMEMETADATARESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetServicesHealthStatus',
+    full_name='federation.fed_protobuff.controller.Controller.GetServicesHealthStatus',
+    index=2,
+    containing_service=None,
+    input_type=_GETSERVICESHEALTHSTATUSREQUEST,
+    output_type=_GETSERVICESHEALTHSTATUSRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='JoinFederation',
+    full_name='federation.fed_protobuff.controller.Controller.JoinFederation',
+    index=3,
     containing_service=None,
     input_type=_JOINFEDERATIONREQUEST,
     output_type=_JOINFEDERATIONRESPONSE,
     serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
+    name='MarkTaskCompleted',
+    full_name='federation.fed_protobuff.controller.Controller.MarkTaskCompleted',
+    index=4,
+    containing_service=None,
+    input_type=_MARKTASKCOMPLETEDREQUEST,
+    output_type=_MARKTASKCOMPLETEDRESPONSE,
+    serialized_options=None,
+  ),
+  _descriptor.MethodDescriptor(
     name='LeaveFederation',
-    full_name='federation.fed_protobuff.Controller.LeaveFederation',
-    index=1,
+    full_name='federation.fed_protobuff.controller.Controller.LeaveFederation',
+    index=5,
     containing_service=None,
     input_type=_LEAVEFEDERATIONREQUEST,
     output_type=_LEAVEFEDERATIONRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='RuntimeMetadata',
-    full_name='federation.fed_protobuff.Controller.RuntimeMetadata',
-    index=2,
-    containing_service=None,
-    input_type=_RUNTIMEMETADATAREQUEST,
-    output_type=_RUNTIMEMETADATARESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='CommunityModelLineage',
-    full_name='federation.fed_protobuff.Controller.CommunityModelLineage',
-    index=3,
-    containing_service=None,
-    input_type=_COMMUNITYMODELLINEAGEREQUEST,
-    output_type=_COMMUNITYMODELLINEAGERESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='ControllerServicesHeartbeat',
-    full_name='federation.fed_protobuff.Controller.ControllerServicesHeartbeat',
-    index=4,
-    containing_service=None,
-    input_type=_CONTROLLERSERVICESHEARTBEATREQUEST,
-    output_type=_CONTROLLERSERVICESHEARTBEATRESPONSE,
-    serialized_options=None,
-  ),
-  _descriptor.MethodDescriptor(
-    name='TaskCompleted',
-    full_name='federation.fed_protobuff.Controller.TaskCompleted',
-    index=5,
-    containing_service=None,
-    input_type=_TASKCOMPLETEDREQUEST,
-    output_type=_TASKCOMPLETEDRESPONSE,
     serialized_options=None,
   ),
 ])

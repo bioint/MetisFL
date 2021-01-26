@@ -1,82 +1,82 @@
 syntax = "proto3";
-package federation.fed_protobuff;
+package federation.fed_protobuff.learner;
+
 import "federation/fed_protobuff/common.proto";
+import "federation/fed_protobuff/federatedmodel.proto";
 
 service Learner {
 
-    // Unary RPC.
+    // Unary RPC. The learner receives a model and evaluates it at its local dataset (any of [train, validation, test]).
+    rpc EvaluateModel (EvaluateModelRequest) returns (EvaluateModelResponse) {}
+
+    // Unary RPC. Retrieve recorded metadata in-between community update requests.
+    rpc GetLearningMetadataLineage (GetLearningMetadataLineageRequest) returns (GetLearningMetadataLineageResponse) {}
+
+    // Unary RPC. Retrieve most recent and historically trained local models.
+    rpc GetLocalModelLineage (GetLocalModelLineageRequest) returns (GetLocalModelLineageResponse) {}
+
+    // Unary RPC. Retrieve all models and metadata related to the models sent for evaluation.
+    rpc GetEvaluationRequestLineage (GetEvaluationRequestLineageRequest) returns (GetEvaluationRequestLineageResponse) {}
+
+    // Unary RPC. Retrieve the status of all internal services.
+    rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
+
+    // Unary RPC. Assigned task to be trained locally by the learner.
     rpc RunTask (RunTaskRequest) returns (RunTaskResponse) {}
 
-    // Unary RPC.
-    rpc LearningMetadataLineage (LearningMetadataLineageRequest) returns (LearningMetadataLineageResponse) {}
-
-    // Unary RPC.
-    rpc LocalModelLineage (LocalModelLineageRequest) returns (LocalModelLineageResponse) {}
-
-    // Unary RPC.
-    rpc EvalModel (EvalModelRequest) returns (EvalModelResponse) {}
-
-    // Unary RPC.
-    rpc EvalRequestsLineage (EvalRequestsLineageRequest) returns (EvalRequestsLineageResponse) {}
-
-    // Unary RPC.
-    rpc LearnerServicesHeartbeat (LearnerServicesHeartbeatRequest) returns (LearnerServicesHeartbeatResponse) {}
-
 }
 
-
-message RunTaskRequest {
-    LearningTaskHyperParameters hyper_parameters = 1;
-}
-
-message RunTaskResponse {
-    Ack ack = 1;
-}
-
-message LearningMetadataLineageRequest {
-    int32 num_backtracks = 1;
-}
-
-message LearningMetadataLineageResponse {
-    string json_metadata = 1;
-}
-
-message LocalModelLineageRequest {
-    int32 num_backtracks = 1;
-}
-
-message LocalModelLineageResponse {
-    string json_metadata = 1;
-    repeated NetworkMatrices model_matrices = 2; // Array of stored models.
-}
-
-message EvalModelRequest {
-    NetworkMatrices model_matrices = 1;
-    enum evaluation_Dataset {
+message EvaluateModelRequest {
+    federatedmodel.FederatedModel federated_model = 1; // A single model sent to the evaluation service of the learner.
+    enum evaluation_dataset {
         TRAINING = 0;
         VALIDATION = 1;
         TEST = 2;
     }
+    repeated string metrics = 2; // The list of metrics we want to evaluate the model, e.g., ["accuracy", "f1_score", "confusion_matrix", etc...]
+    // TODO We need to define a field as: `one of { classification ..., regression ...}` and create a new .proto file for each case.
 }
 
-message EvalModelResponse { // Not sure if we need a simple json response or scores! For instance, we might need additional metrics such as confusion matrices...
-    float training_dataset_score = 1;
-    float validation_dataset_score = 2;
-    float test_dataset_score = 3;
+message EvaluateModelResponse { // Not sure if we need a simple json response or scores! For instance, we might need additional metrics such as confusion matrices...
+    map<string, string> metric_values = 1; // Need to return the json formatted value FOR NOW!
 }
 
-message EvalRequestsLineageRequest {
-    int32 num_backtracks = 1;
+message GetLearningMetadataLineageRequest {
+    int32 num_backtracks = 1; // Number of historical metadata recordings that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest recordings.
 }
 
-message EvalRequestsLineageResponse {
+message GetLearningMetadataLineageResponse {
+    string json_metadata = 1;
+}
+
+message GetLocalModelLineageRequest {
+    int32 num_backtracks = 1; // Number of local models that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest local models.
+}
+
+message GetLocalModelLineageResponse {
+    repeated federatedmodel.FederatedModel federated_models = 1; // Sequence of stored models.
+}
+
+message GetEvaluationRequestLineageRequest {
+    int32 num_backtracks = 1; // Number of requests that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest requests.
+}
+
+message GetEvaluationRequestLineageResponse {
     string json_response = 1;
 }
 
-message LearnerServicesHeartbeatRequest {
-    EmptyMessage empty_message = 1;
+message GetServicesHealthStatusRequest {}
+
+message GetServicesHealthStatusResponse {
+    map<string, bool> services_status = 1;
 }
 
-message LearnerServicesHeartbeatResponse {
-    bool learner_beat = 1;
+message RunTaskRequest {
+    federatedmodel.FederatedModel federated_model = 1; // Send a single model.
+    LearningTask task = 2;
+    LearningHyperParameters hyperparameters = 3;
+}
+
+message RunTaskResponse {
+    Ack ack = 1;
 }

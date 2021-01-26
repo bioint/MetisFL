@@ -14,35 +14,35 @@ class ControllerStub(object):
     Args:
       channel: A grpc.Channel.
     """
+    self.GetCommunityModelLineage = channel.unary_unary(
+        '/federation.fed_protobuff.controller.Controller/GetCommunityModelLineage',
+        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.GetCommunityModelLineageRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.GetCommunityModelLineageResponse.FromString,
+        )
+    self.GetRuntimeMetadata = channel.unary_unary(
+        '/federation.fed_protobuff.controller.Controller/GetRuntimeMetadata',
+        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.GetRuntimeMetadataRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.GetRuntimeMetadataResponse.FromString,
+        )
+    self.GetServicesHealthStatus = channel.unary_unary(
+        '/federation.fed_protobuff.controller.Controller/GetServicesHealthStatus',
+        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.GetServicesHealthStatusRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.GetServicesHealthStatusResponse.FromString,
+        )
     self.JoinFederation = channel.unary_unary(
-        '/federation.fed_protobuff.Controller/JoinFederation',
+        '/federation.fed_protobuff.controller.Controller/JoinFederation',
         request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.JoinFederationRequest.SerializeToString,
         response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.JoinFederationResponse.FromString,
         )
+    self.MarkTaskCompleted = channel.unary_unary(
+        '/federation.fed_protobuff.controller.Controller/MarkTaskCompleted',
+        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.MarkTaskCompletedRequest.SerializeToString,
+        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.MarkTaskCompletedResponse.FromString,
+        )
     self.LeaveFederation = channel.unary_unary(
-        '/federation.fed_protobuff.Controller/LeaveFederation',
+        '/federation.fed_protobuff.controller.Controller/LeaveFederation',
         request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.LeaveFederationRequest.SerializeToString,
         response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.LeaveFederationResponse.FromString,
-        )
-    self.RuntimeMetadata = channel.unary_unary(
-        '/federation.fed_protobuff.Controller/RuntimeMetadata',
-        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.RuntimeMetadataRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.RuntimeMetadataResponse.FromString,
-        )
-    self.CommunityModelLineage = channel.unary_unary(
-        '/federation.fed_protobuff.Controller/CommunityModelLineage',
-        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.CommunityModelLineageRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.CommunityModelLineageResponse.FromString,
-        )
-    self.ControllerServicesHeartbeat = channel.unary_unary(
-        '/federation.fed_protobuff.Controller/ControllerServicesHeartbeat',
-        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.ControllerServicesHeartbeatRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.ControllerServicesHeartbeatResponse.FromString,
-        )
-    self.TaskCompleted = channel.unary_unary(
-        '/federation.fed_protobuff.Controller/TaskCompleted',
-        request_serializer=federation_dot_fed__protobuff_dot_controller__pb2.TaskCompletedRequest.SerializeToString,
-        response_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.TaskCompletedResponse.FromString,
         )
 
 
@@ -50,8 +50,36 @@ class ControllerServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
+  def GetCommunityModelLineage(self, request, context):
+    """Unary RPC. Controller replies with community models (0:all, 1:last, 2:previous to last, etc...).
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetRuntimeMetadata(self, request, context):
+    """Unary RPC. Controller replies with federation related runtime metadata (e.g., number of community update requests).
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def GetServicesHealthStatus(self, request, context):
+    """Unary RPC. Controller replies with the health status (beat) of its internal services.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
   def JoinFederation(self, request, context):
     """Unary RPC. A new participating learner asks the controller to join the federation.
+    """
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def MarkTaskCompleted(self, request, context):
+    """Unary RPC. Controller receives the local model of a learner when it completes its local task.
     """
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
@@ -64,68 +92,40 @@ class ControllerServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def RuntimeMetadata(self, request, context):
-    """Unary RPC. Controller replies with federation related runtime metadata (e.g., number of community update requests).
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def CommunityModelLineage(self, request, context):
-    """Unary RPC. Controller replies with community models (0:all, 1:last, 2:previous to last, etc...).
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def ControllerServicesHeartbeat(self, request, context):
-    """Unary RPC. Controller replies with the health status (beat) of its internal services.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
-  def TaskCompleted(self, request, context):
-    """Unary RPC. Controller receives the local model of a learner when it completes its local task.
-    """
-    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-    context.set_details('Method not implemented!')
-    raise NotImplementedError('Method not implemented!')
-
 
 def add_ControllerServicer_to_server(servicer, server):
   rpc_method_handlers = {
+      'GetCommunityModelLineage': grpc.unary_unary_rpc_method_handler(
+          servicer.GetCommunityModelLineage,
+          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.GetCommunityModelLineageRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.GetCommunityModelLineageResponse.SerializeToString,
+      ),
+      'GetRuntimeMetadata': grpc.unary_unary_rpc_method_handler(
+          servicer.GetRuntimeMetadata,
+          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.GetRuntimeMetadataRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.GetRuntimeMetadataResponse.SerializeToString,
+      ),
+      'GetServicesHealthStatus': grpc.unary_unary_rpc_method_handler(
+          servicer.GetServicesHealthStatus,
+          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.GetServicesHealthStatusRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.GetServicesHealthStatusResponse.SerializeToString,
+      ),
       'JoinFederation': grpc.unary_unary_rpc_method_handler(
           servicer.JoinFederation,
           request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.JoinFederationRequest.FromString,
           response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.JoinFederationResponse.SerializeToString,
+      ),
+      'MarkTaskCompleted': grpc.unary_unary_rpc_method_handler(
+          servicer.MarkTaskCompleted,
+          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.MarkTaskCompletedRequest.FromString,
+          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.MarkTaskCompletedResponse.SerializeToString,
       ),
       'LeaveFederation': grpc.unary_unary_rpc_method_handler(
           servicer.LeaveFederation,
           request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.LeaveFederationRequest.FromString,
           response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.LeaveFederationResponse.SerializeToString,
       ),
-      'RuntimeMetadata': grpc.unary_unary_rpc_method_handler(
-          servicer.RuntimeMetadata,
-          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.RuntimeMetadataRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.RuntimeMetadataResponse.SerializeToString,
-      ),
-      'CommunityModelLineage': grpc.unary_unary_rpc_method_handler(
-          servicer.CommunityModelLineage,
-          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.CommunityModelLineageRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.CommunityModelLineageResponse.SerializeToString,
-      ),
-      'ControllerServicesHeartbeat': grpc.unary_unary_rpc_method_handler(
-          servicer.ControllerServicesHeartbeat,
-          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.ControllerServicesHeartbeatRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.ControllerServicesHeartbeatResponse.SerializeToString,
-      ),
-      'TaskCompleted': grpc.unary_unary_rpc_method_handler(
-          servicer.TaskCompleted,
-          request_deserializer=federation_dot_fed__protobuff_dot_controller__pb2.TaskCompletedRequest.FromString,
-          response_serializer=federation_dot_fed__protobuff_dot_controller__pb2.TaskCompletedResponse.SerializeToString,
-      ),
   }
   generic_handler = grpc.method_handlers_generic_handler(
-      'federation.fed_protobuff.Controller', rpc_method_handlers)
+      'federation.fed_protobuff.controller.Controller', rpc_method_handlers)
   server.add_generic_rpc_handlers((generic_handler,))
