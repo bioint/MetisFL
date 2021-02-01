@@ -8,8 +8,7 @@ message FederatedModel {
 }
 
 message FederatedVariableDef {
-    string name = 1;
-    bool trainable = 2;
-    repeated string graph_collection = 3; // The collection of graph keys that this variable belongs to (e.g., tf.GraphKeys.GLOBAL_VARIABLES).
-    DoubleVariable double_variable = 4;
+    string name = 1; // The name assigned to the federated variable.
+    bool trainable = 2; // Whether this variable is trainable or not.
+    DoubleVariable double_variable = 3; // The structure of the variable.
 }
