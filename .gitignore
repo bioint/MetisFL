@@ -8,6 +8,7 @@
 **.png
 **.gz
 **.ipynb_checkpoints
+/cmake-build-debug
 /FedProx
 /cifar
 /fashion_mnist
