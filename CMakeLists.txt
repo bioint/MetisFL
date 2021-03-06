@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(test)
+project(projectmetis-rc)
 
 set(CMAKE_CXX_STANDARD 17)
 
