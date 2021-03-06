@@ -4,8 +4,6 @@ package federation.fed_protobuff.controller;
 import "federation/fed_protobuff/common.proto";
 import "federation/fed_protobuff/federatedmodel.proto";
 
-// TODO Move all Lineage Requests from the learners to the controller-end! Allow learners to be light-weight.
-
 service Controller {
 
     // Unary RPC. Retrieve community models' metadata related to the models' evaluation.
@@ -45,6 +43,9 @@ message GetCommunityModelEvaluationLineageRequest {
 }
 
 message GetCommunityModelEvaluationLineageResponse {
+    // Endpoint response is possible to contain two separate evaluations:
+    //  1. Evaluation on datasets held exclusively by the controller (e.g. global test dataset).
+    //  2. Evaluation on datasets held exclusively by the learners (e.g. local train/validation/test dataset).
     string json_evaluation_lineage_response = 1; // TODO No structured response yet, but in a future release this should follow a specific format.
 }
 
