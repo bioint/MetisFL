@@ -5,7 +5,7 @@ from federation.fed_protobuff import controller_pb2 as federation_dot_fed__proto
 
 
 class ControllerStub(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def __init__(self, channel):
@@ -47,7 +47,7 @@ class ControllerStub(object):
 
 
 class ControllerServicer(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def GetCommunityModelLineage(self, request, context):

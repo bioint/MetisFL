@@ -5,7 +5,7 @@ from federation.fed_protobuff import collaborative_learning_pb2 as federation_do
 
 
 class CollabLearningStub(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def __init__(self, channel):
@@ -92,7 +92,7 @@ class CollabLearningStub(object):
 
 
 class CollabLearningServicer(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def IsSystemStatScoreReached(self, request, context):

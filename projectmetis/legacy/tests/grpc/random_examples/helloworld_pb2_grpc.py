@@ -11,7 +11,7 @@ from tests.grpc.random_examples import helloworld_pb2 as tests_dot_grpc_dot_hell
 
 
 class GreetingServiceStub(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def __init__(self, channel):
@@ -28,11 +28,11 @@ class GreetingServiceStub(object):
 
 
 class GreetingServiceServicer(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def HelloWorld(self, request, context):
-    # missing associated documentation comment in .proto file
+    # missing associated documentation comment in protos file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')

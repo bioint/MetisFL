@@ -6,7 +6,7 @@ from federation.fed_protobuff import model_evaluation_serving_pb2 as federation_
 
 
 class EvalServingStub(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def __init__(self, channel):
@@ -28,7 +28,7 @@ class EvalServingStub(object):
 
 
 class EvalServingServicer(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def ModelEvaluationOnFederationValidationSets(self, request_iterator, context):

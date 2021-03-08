@@ -5,7 +5,7 @@ from federation.fed_protobuff import learner_pb2 as federation_dot_fed__protobuf
 
 
 class LearnerStub(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def __init__(self, channel):
@@ -47,7 +47,7 @@ class LearnerStub(object):
 
 
 class LearnerServicer(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def EvaluateModel(self, request, context):

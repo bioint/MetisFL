@@ -5,7 +5,7 @@ from tests.grpc.random_examples import async_collaborative_learning_no_cache_pb2
 
 
 class AsyncCollaborativeLearningStub(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def __init__(self, channel):
@@ -47,7 +47,7 @@ class AsyncCollaborativeLearningStub(object):
 
 
 class AsyncCollaborativeLearningServicer(object):
-  # missing associated documentation comment in .proto file
+  # missing associated documentation comment in protos file
   pass
 
   def StartShippingGradients(self, request_iterator, context):
@@ -88,14 +88,14 @@ class AsyncCollaborativeLearningServicer(object):
     raise NotImplementedError('Method not implemented!')
 
   def FetchFirstUpdatedGradients(self, request, context):
-    # missing associated documentation comment in .proto file
+    # missing associated documentation comment in protos file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
   def HelloWorld(self, request, context):
-    # missing associated documentation comment in .proto file
+    # missing associated documentation comment in protos file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
