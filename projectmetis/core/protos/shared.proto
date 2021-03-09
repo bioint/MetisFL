@@ -1,7 +1,7 @@
 syntax = "proto3";
-package core.protos;
+package projectmetis.core;
 
-import "core/protos/optimizers.proto";
+import "optimizers.proto";
 import "google/protobuf/timestamp.proto";
 
 message Ack {
@@ -39,10 +39,10 @@ message LearnerExecutionBaseMetadata {
 message LearningHyperParameters {
     int32 batch_size = 1;
     oneof optimizer {
-        optimizers.VanillaSGD vanilla_sgd = 3;
-        optimizers.MomentumSGD momentum_sgd = 4;
-        optimizers.FedProx fed_prox = 5;
-        optimizers.Adam adam = 6;
+        VanillaSGD vanilla_sgd = 3;
+        MomentumSGD momentum_sgd = 4;
+        FedProx fed_prox = 5;
+        Adam adam = 6;
     }
     // TODO We defined this message as LearningHyperparameters because we expect to extend its definition with additional fields related to model training.
 }

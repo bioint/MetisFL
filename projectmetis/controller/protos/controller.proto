@@ -1,5 +1,5 @@
 syntax = "proto3";
-package controller.protos;
+package projectmetis.controller;
 
 import "core/protos/shared.proto";
 import "core/protos/federatedmodel.proto";

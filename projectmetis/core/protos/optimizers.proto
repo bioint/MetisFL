@@ -1,5 +1,5 @@
 syntax = "proto3";
-package core.protos;
+package projectmetis.core;
 
 message VanillaSGD {
     float learning_rate = 1;

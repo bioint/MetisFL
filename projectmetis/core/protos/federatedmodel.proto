@@ -1,7 +1,7 @@
 syntax = "proto3";
-package core.protos;
+package projectmetis.core;
 
-import "core/protos/shared.proto";
+import "shared.proto";
 
 message FederatedModel {
     repeated FederatedVariableDef federated_variables = 1; // List of federated variables.

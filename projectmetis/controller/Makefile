@@ -35,8 +35,8 @@ GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
 # Set lookup location of protobufs.
-CONTROLLER_PROTOS_PATH = ./protos/
-CORE_PROTOS_PATH = ../core/protos/
+CONTROLLER_PROTOS_PATH = ./protos
+CORE_PROTOS_PATH = ..
 
 vpath %.proto $(CONTROLLER_PROTOS_PATH)
 vpath %.proto $(CORE_PROTOS_PATH)
@@ -50,10 +50,10 @@ controller_server: controller_server.pb.o controller_server.grpc.pb.o controller
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto
-	$(PROTOC) -I $(CONTROLLER_PROTOS_PATH) --proto_path=$(CORE_PROTOS_PATH) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $<
+	$(PROTOC) -I$(CONTROLLER_PROTOS_PATH) --proto_path=$(CORE_PROTOS_PATH) --grpc_out=. --plugin=protoc-gen-grpc=$(GRPC_CPP_PLUGIN_PATH) $<
 
 %.pb.cc: %.proto
-	$(PROTOC) -I $(CONTROLLER_PROTOS_PATH) --proto_path=$(CORE_PROTOS_PATH) --cpp_out=. $<
+	$(PROTOC) -I$(CONTROLLER_PROTOS_PATH) --proto_path=$(CORE_PROTOS_PATH) --cpp_out=. $<
 
 clean:
 	rm -f *.o *.pb.cc *.pb.h controller_client controller_server

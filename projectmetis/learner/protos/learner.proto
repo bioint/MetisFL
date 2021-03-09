@@ -1,8 +1,8 @@
 syntax = "proto3";
-package learner.protos;
+package projectmetis.learner;
 
-import "core/protos/shared.proto";
-import "core/protos/federatedmodel.proto";
+import "projectmetis/core/protos/shared.proto";
+import "projectmetis/core/protos/federatedmodel.proto";
 
 service Learner {
 
@@ -18,7 +18,7 @@ service Learner {
 }
 
 message EvaluateModelRequest {
-    federatedmodel.FederatedModel federated_model = 1; // A single model sent to the evaluation service of the learner.
+    projectmetis.core.FederatedModel federated_model = 1; // A single model sent to the evaluation service of the learner.
     enum dataset_to_eval {
         TRAINING = 0;
         VALIDATION = 1;
@@ -41,11 +41,11 @@ message GetServicesHealthStatusResponse {
 }
 
 message RunTaskRequest {
-    federatedmodel.FederatedModel federated_model = 1; // This is the community model sent by the controller to the learner to run the assigned task.
-    LearningTask task = 2; // Description of the assigned task.
-    LearningHyperParameters learning_hyperparameters = 3; // The hyperparameters related to the SGD optimization, related to the model's optimizer.
+    projectmetis.core.FederatedModel federated_model = 1; // This is the community model sent by the controller to the learner to run the assigned task.
+    projectmetis.core.LearningTask task = 2; // Description of the assigned task.
+    projectmetis.core.LearningHyperParameters learning_hyperparameters = 3; // The hyperparameters related to the SGD optimization, related to the model's optimizer.
 }
 
 message RunTaskResponse {
-    Ack ack = 1;
+    projectmetis.core.Ack ack = 1;
 }
