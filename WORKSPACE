@@ -23,3 +23,17 @@ rules_proto_grpc_cpp_repos()
 
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 grpc_deps()
+
+# Imports abseil
+http_archive(
+    name = "absl",
+    strip_prefix = "googletest-release-1.10.0",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/20200923.3.tar.gz"],
+)
+
+# Imports googletest
+http_archive(
+    name = "gtest",
+    strip_prefix = "googletest-release-1.10.0",
+    urls = ["https://github.com/google/googletest/archive/release-1.10.0.tar.gz"],
+)
