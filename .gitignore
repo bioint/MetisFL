@@ -8,6 +8,7 @@
 **.png
 **.gz
 **.ipynb_checkpoints
+.vscode/
 /cmake-build-debug
 /FedProx
 /cifar
@@ -29,3 +30,5 @@
 /tfmodels
 /venv*
 __pycache__/
+
+bazel-*

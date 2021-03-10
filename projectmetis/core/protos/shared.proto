@@ -1,7 +1,7 @@
 syntax = "proto3";
 package projectmetis.core;
 
-import "optimizers.proto";
+import "projectmetis/core/protos/optimizers.proto";
 import "google/protobuf/timestamp.proto";
 
 message Ack {

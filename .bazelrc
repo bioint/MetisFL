@@ -1,0 +1,2 @@
+build --action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
+build --cxxopt="--std=c++17"

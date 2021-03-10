@@ -1,8 +1,8 @@
 syntax = "proto3";
 package projectmetis.controller;
 
-import "core/protos/shared.proto";
-import "core/protos/federatedmodel.proto";
+import "projectmetis/core/protos/shared.proto";
+import "projectmetis/core/protos/federatedmodel.proto";
 
 service Controller {
 
@@ -54,12 +54,12 @@ message GetCommunityModelLineageRequest {
 }
 
 message GetCommunityModelLineageResponse {
-    repeated federatedmodel.FederatedModel federated_models = 1; // Reply a sequence of models.
+    repeated core.FederatedModel federated_models = 1; // Reply a sequence of models.
 }
 
 message GetLearnerLocalModelEvaluationLineageRequest {
     int32 num_backtracks = 1; // Refer to the number of evaluation request rounds that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models evaluations.
-    repeated LearnerEntity learner_entity = 2; // Retrieve the num_backtracks evaluations for every learner that exists in the provided LearnerEntity collection.
+    repeated core.LearnerEntity learner_entity = 2; // Retrieve the num_backtracks evaluations for every learner that exists in the provided LearnerEntity collection.
 }
 
 message GetLearnerLocalModelEvaluationLineageResponse {
@@ -68,7 +68,7 @@ message GetLearnerLocalModelEvaluationLineageResponse {
 
 message GetLearnerLocalModelLineageRequest {
     int32 num_backtracks = 1; // Refer to the number of local models that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models.
-    repeated LearnerEntity learner_entity = 2; // Retrieve the num_backtracks local models for every learner that exists in the provided LearnerEntity collection.
+    repeated core.LearnerEntity learner_entity = 2; // Retrieve the num_backtracks local models for every learner that exists in the provided LearnerEntity collection.
 }
 
 message GetLearnerLocalModelLineageResponse {
@@ -78,7 +78,7 @@ message GetLearnerLocalModelLineageResponse {
 message GetParticipatingLearnersRequest {}
 
 message GetParticipatingLearnersResponse {
-    repeated LearnerEntity learner_entity = 1; // Return a collection with all the participating learners in the federation.
+    repeated core.LearnerEntity learner_entity = 1; // Return a collection with all the participating learners in the federation.
 }
 
 message GetRuntimeMetadataRequest {}
@@ -95,26 +95,26 @@ message GetServicesHealthStatusResponse {
 
 message JoinFederationRequest {
     string learner_id = 1; // If this field is empty/None then this learner is new. If it not empty its (id,token) must match with the existing records inside controller's book keeping collection.
-    LearnerEntity learner_entity = 2;
-    LocalDatasetSpec local_dataset_spec = 3;
+    core.LearnerEntity learner_entity = 2;
+    core.LocalDatasetSpec local_dataset_spec = 3;
 }
 
 message JoinFederationResponse {
-    Ack ack = 1;
+    core.Ack ack = 1;
     string learner_id = 2; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
     string auth_token = 3; // For security reasons, the controller generates a random 64-characters string that is associated with the joining learner. The (learner_id, token) composite key is required throughout training when a learner contacts the controller.
 }
 
 message LearnerLocalModelResponse {
-    LearnerEntity learner_entity = 1; // The description of the learner entity.
-    repeated federatedmodel.FederatedModel federated_model = 2; // For a single learner we can return a collection of locally trained models. We encapsulate the local models as federation models because there is no difference in the structure of the two model types.
+    core.LearnerEntity learner_entity = 1; // The description of the learner entity.
+    repeated core.FederatedModel federated_model = 2; // For a single learner we can return a collection of locally trained models. We encapsulate the local models as federation models because there is no difference in the structure of the two model types.
 }
 
 message MarkTaskCompletedRequest {
     string learner_id = 1; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
     string auth_token = 2; // This is associated with the auth_token in `JoinFederationResponse` message.
-    federatedmodel.FederatedModel federated_model = 3; // This is the model trained by the learner locally.
-    LearnerExecutionBaseMetadata base_metadata = 4; // These are the basic metadata sent by the learner to the controller whenever a locally assigned training task is complete.
+    core.FederatedModel federated_model = 3; // This is the model trained by the learner locally.
+    core.LearnerExecutionBaseMetadata base_metadata = 4; // These are the basic metadata sent by the learner to the controller whenever a locally assigned training task is complete.
     string aux_metadata = 5; // These are additional metadata sent by the learner to the controller. TODO No structured response yet, but in a future release this should follow a specific format.
 }
 
@@ -123,7 +123,7 @@ message LearnerExecutionAuxMetadata {
 }
 
 message MarkTaskCompletedResponse {
-    Ack ack = 1;
+    core.Ack ack = 1;
 }
 
 message LeaveFederationRequest {
@@ -132,5 +132,5 @@ message LeaveFederationRequest {
 }
 
 message LeaveFederationResponse {
-    Ack ack = 1;
+    core.Ack ack = 1;
 }
