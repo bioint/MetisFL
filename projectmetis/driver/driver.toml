@@ -1,0 +1,69 @@
+[build-system]
+requires = [
+    "setuptools>=42",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "projectmetis-driver"
+version = "0.0.1"
+description = "Driver package is the entry point to initialize the METIS federated learning ecosystem."
+readme = "README.rst"
+requires-python = ">=3.7"
+license = {file = "../LICENSE.txt"}
+keywords = ["federated learning", "cross-silo", "learner package"]
+authors = [
+    {name = "Dimitris Stripelis", email = "stripeli@isi.edu"},
+    {name = "Chrysovalantis Anastasiou", email = "canastas@usc.edu"}
+]
+maintainers = [
+    {name = "Dimitris Stripelis", email = "stripeli@isi.edu"},
+    {name = "Chrysovalantis Anastasiou", email = "canastas@usc.edu"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: System :: Distributed Computing"
+]
+
+[project.urls]
+homepage = ""
+documentation = ""
+repository = "https://bitbucket.org/isi-usc/projectmetis-rc"
+changelog = ""
+
+[project.dependencies]
+fabric = "2.5.0"
+future = "0.18.2"
+gast = "0.3.3"
+grpcio = "1.23.0"
+mock = "3.0.5"
+numpy = "1.19.1"
+pandas = "0.25.1"
+protobuf = "3.8.0"
+psycopg2 = "2.7.6.1"
+pycparser = "2.19"
+pyparsing = "2.4.2"
+PyYAML = "5.1"
+requests = "2.22.0"
+scikit-learn = "0.23.0"
+scipy = "1.2.1"
+simplejson = "3.17.0"
+six = "1.12.0"
+sklearn = "0.0"
+SQLAlchemy = "1.3.18"
+tensorboard = "1.13.1"
+tensorflow = "1.13.1"
+tensorflow-estimator = "1.13.0"
+tensorflow-probability = "0.10.1"
+threadpoolctl = "2.0.0"
+urllib3 = "1.25.6"
+
+[project.optional-dependencies]
+test = [
+    "pytest < 5.0.0",
+    "pytest-cov[all]"
+]
