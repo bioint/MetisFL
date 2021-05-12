@@ -134,3 +134,10 @@ message LeaveFederationRequest {
 message LeaveFederationResponse {
   Ack ack = 1;
 }
+
+message LearnerState {
+  LearnerEntity learner_entity = 1;
+  string auth_token = 2;
+  LocalDatasetSpec local_dataset_spec = 3;
+  repeated FederatedModel federated_model = 4;
+}
