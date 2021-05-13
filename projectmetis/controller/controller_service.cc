@@ -16,6 +16,23 @@ using ::grpc::ServerContext;
 class ControllerServiceImpl final : public Controller::Service {
 
 public:
+  Status GetParticipatingLearners(
+      ServerContext *context, const GetParticipatingLearnersRequest *request,
+      GetParticipatingLearnersResponse *response) override {
+
+    // Capture unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return Status::CANCELLED;
+    }
+
+    // Create LearnerEntity response collection.
+    for(auto &kv : learner_state_map_) {
+      LearnerEntity* learner_entity = response->add_learner_entity();
+      *learner_entity = kv.second.learner_entity();
+    }
+    return Status::OK;
+  }
+
   Status JoinFederation(ServerContext* context,
                         const JoinFederationRequest* request,
                         JoinFederationResponse* response) override {

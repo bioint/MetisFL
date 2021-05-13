@@ -5,6 +5,47 @@
 namespace projectmetis {
 namespace {
 
+TEST(ControllerService, GetParticipatingLearnersEmptyFederation) /* NOLINT */ {
+  auto service = controller::New();
+
+  GetParticipatingLearnersRequest req;
+  GetParticipatingLearnersResponse res;
+
+  auto status = service->GetParticipatingLearners(nullptr, &req, &res);
+
+  EXPECT_TRUE(status.ok());
+}
+
+TEST(ControllerService, GetParticipatingLearnersLoadedFederation) /* NOLINT */ {
+  auto service = controller::New();
+
+  std::string hostname = "localhost1";
+  int32_t port = 1991;
+
+  // TODO(canastas) We need the learner micro service spawned in this test too.
+
+  // Register first learner with the controller.
+  JoinFederationRequest join_req;
+  join_req.mutable_learner_entity()->set_hostname(hostname);
+  join_req.mutable_learner_entity()->set_port(port);
+  join_req.mutable_local_dataset_spec()->set_num_training_examples(100);
+  JoinFederationResponse join_res;
+
+  auto join_status = service->JoinFederation(nullptr, &join_req, &join_res);
+
+  GetParticipatingLearnersRequest get_req;
+  GetParticipatingLearnersResponse get_res;
+
+  auto get_status =
+      service->GetParticipatingLearners(nullptr, &get_req, &get_res);
+
+  // We only registered a single learner hence the check of size equal to 1.
+  EXPECT_EQ(get_res.learner_entity().size(), 1);
+  EXPECT_EQ(get_res.mutable_learner_entity(0)->hostname(), hostname);
+  EXPECT_EQ(get_res.mutable_learner_entity(0)->port(), port);
+  EXPECT_TRUE(get_status.ok());
+}
+
 TEST(ControllerService, JoinFederationEmptyRequest) /* NOLINT */ {
   auto service = controller::New();
 

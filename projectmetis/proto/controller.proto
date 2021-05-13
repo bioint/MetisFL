@@ -18,7 +18,7 @@ service Controller {
   // Unary RPC. Retrieve most recent and historically trained learners local models (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
   rpc GetLearnerLocalModelLineage (GetLearnerLocalModelLineageRequest) returns (GetLearnerLocalModelLineageResponse) {}
 
-  // Unary RPC. Retrieve collection of all participating learners in the federation.
+  // Unary RPC. Retrieve a collection of all participating learners in the federation.
   rpc GetParticipatingLearners (GetParticipatingLearnersRequest) returns (GetParticipatingLearnersResponse) {}
 
   // Unary RPC. Controller replies with runtime metadata related to the federation environment (e.g., number of community update requests).
