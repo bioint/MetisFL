@@ -51,17 +51,7 @@ public:
     }
 
     // Validate non-empty hostname and non-negative port.
-    if (request->learner_entity().hostname().empty() ||
-        request->learner_entity().port() < 0) {
-      response->mutable_ack()->set_status(false);
-      return Status::OK;
-    }
-
-    // Validate number of train, validation and test examples. Train examples
-    // must always be positive, while validation and test can be non-negative.
-    if (request->local_dataset_spec().num_training_examples() <= 0 ||
-        request->local_dataset_spec().num_validation_examples() < 0 ||
-        request->local_dataset_spec().num_test_examples() < 0) {
+    if (request->learner_entity().hostname().empty()) {
       response->mutable_ack()->set_status(false);
       return Status::OK;
     }
