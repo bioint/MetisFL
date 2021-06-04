@@ -20,7 +20,7 @@ Let's see an example where we try to merge the edits we made on the feature bran
 The destination branch is where we want to apply our changes and feature branch is our current working files.
 
 ##### Perform Merge and Resolve Conflicts:
-- https://support.atlassian.com/bitbucket-cloud/docs/resolve-merge-conflicts/
+https://support.atlassian.com/bitbucket-cloud/docs/resolve-merge-conflicts/
 
 Steps:
 1. git checkout \<destination\>
@@ -52,16 +52,16 @@ git push origin feature/ModifyInt32TypeToUint32
 
 https://support.atlassian.com/bitbucket-cloud/docs/merge-a-pull-request/#Mergeapullrequest-Mergestrategies
   
-* Merge commit (--no-ff): Always create a new merge commit and update the \<destination\> branch to it, even if the \<source\> branch is already up to date with the \<destination\> branch.
-    
-* Fast-forward (--ff): If the \<source\> branch is out of date with the \<destination\> branch, create a merge commit. Otherwise, update the \<destination\> branch to the latest commit on the \<source\> branch.
-  
-* Fast-forward only (--ff-only): If the \<source\> branch is out of date with the \<destination\> branch, reject the merge request. Otherwise, update the \<destination\> branch to the latest commit on the \<source\> branch.
-  
-* Rebase, merge  (rebase + merge --no-ff): Commits from the \<source\> branch onto the \<destination\> branch, creating a new non-merge commit for each incoming commit. Creates a merge commit to update the \<destination\> branch. The PR branch is not modified by this operation.
-  
-* Rebase, fast-forward (rebase + merge --ff-only): Commits from the \<source\> branch onto the \<destination\> branch, creating a new non-merge commit for each incoming commit. Fast-forwards the \<destination\> branch with the resulting commits. The PR branch is not modified by this operation.
+- Merge commit (--no-ff): Always create a new merge commit and update the \<destination\> branch to it, even if the \<source\> branch is already up to date with the \<destination\> branch.
 
-* Squash (--squash) **METIS DEFAULT**: Combine all commits into one new non-merge commit on the \<destination\> branch.
-    
-* Squash, fast-forward only (--squash --ff-only): If the \<source\> branch is out of date with the \<destination\> branch, reject the merge request. Otherwise, combine all commits into one new non-merge commit on the \<destination\> branch.
+- Fast-forward (--ff): If the \<source\> branch is out of date with the \<destination\> branch, create a merge commit. Otherwise, update the \<destination\> branch to the latest commit on the \<source\> branch.
+
+- Fast-forward only (--ff-only): If the \<source\> branch is out of date with the \<destination\> branch, reject the merge request. Otherwise, update the \<destination\> branch to the latest commit on the \<source\> branch.
+
+- Rebase, merge  (rebase + merge --no-ff): Commits from the \<source\> branch onto the \<destination\> branch, creating a new non-merge commit for each incoming commit. Creates a merge commit to update the \<destination\> branch. The PR branch is not modified by this operation.
+
+- Rebase, fast-forward (rebase + merge --ff-only): Commits from the \<source\> branch onto the \<destination\> branch, creating a new non-merge commit for each incoming commit. Fast-forwards the \<destination\> branch with the resulting commits. The PR branch is not modified by this operation.
+
+- Squash (--squash) **METIS DEFAULT**: Combine all commits into one new non-merge commit on the \<destination\> branch.
+
+- Squash, fast-forward only (--squash --ff-only): If the \<source\> branch is out of date with the \<destination\> branch, reject the merge request. Otherwise, combine all commits into one new non-merge commit on the \<destination\> branch.
