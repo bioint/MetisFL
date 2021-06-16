@@ -20,7 +20,7 @@ message EpochEvaluation {
   float epoch_score = 2; // The associated score of the epoch. This could be any numeric value, such as accuracy and f1-score in classification and MSE in regression tasks.
 }
 
-message LearnerEntity {
+message ServerEntity {
   string hostname = 1; // This field can be a hostname or an ip.
   uint32 port = 2; // Important, this is the port that learner's grpc server will be listening on for requests from the outside world.
 }

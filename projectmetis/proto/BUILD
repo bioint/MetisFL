@@ -20,6 +20,11 @@ proto_library(
     deps = [":core_proto"],
 )
 
+cc_proto_library(
+    name = "controller_cc_proto",
+    deps = [":controller_proto"],
+)
+
 proto_library(
     name = "learner_proto",
     srcs = ["learner.proto"],

@@ -27,8 +27,9 @@ grpc_deps()
 # Imports abseil
 http_archive(
     name = "absl",
-    strip_prefix = "googletest-release-1.10.0",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/20200923.3.tar.gz"],
+    sha256 = "59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f",
+    strip_prefix = "abseil-cpp-20210324.2",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.tar.gz"],
 )
 
 # Imports googletest

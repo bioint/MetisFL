@@ -4,7 +4,7 @@ package projectmetis;
 import "projectmetis/proto/federatedmodel.proto";
 import "projectmetis/proto/shared.proto";
 
-service Controller {
+service ControllerService {
 
   // Unary RPC. Retrieve community models' metadata related to the models' evaluation.
   rpc GetCommunityModelEvaluationsLineage (GetCommunityModelEvaluationLineageRequest) returns (GetCommunityModelEvaluationLineageResponse) {}
@@ -59,7 +59,7 @@ message GetCommunityModelLineageResponse {
 
 message GetLearnerLocalModelEvaluationLineageRequest {
   int32 num_backtracks = 1; // Refer to the number of evaluation request rounds that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models evaluations.
-  repeated LearnerEntity learner_entity = 2; // Retrieve the num_backtracks evaluations for every learner that exists in the provided LearnerEntity collection.
+  repeated ServerEntity server_entity = 2; // Retrieve the num_backtracks evaluations for every learner that exists in the provided LearnerEntity collection.
 }
 
 message GetLearnerLocalModelEvaluationLineageResponse {
@@ -68,7 +68,7 @@ message GetLearnerLocalModelEvaluationLineageResponse {
 
 message GetLearnerLocalModelLineageRequest {
   int32 num_backtracks = 1; // Refer to the number of local models that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models.
-  repeated LearnerEntity learner_entity = 2; // Retrieve the num_backtracks local models for every learner that exists in the provided LearnerEntity collection.
+  repeated ServerEntity server_entity = 2; // Retrieve the num_backtracks local models for every learner that exists in the provided LearnerEntity collection.
 }
 
 message GetLearnerLocalModelLineageResponse {
@@ -78,7 +78,7 @@ message GetLearnerLocalModelLineageResponse {
 message GetParticipatingLearnersRequest {}
 
 message GetParticipatingLearnersResponse {
-  repeated LearnerEntity learner_entity = 1; // Return a collection with all the participating learners in the federation.
+  repeated ServerEntity server_entity = 1; // Return a collection with all the participating learners in the federation.
 }
 
 message GetRuntimeMetadataRequest {}
@@ -95,7 +95,7 @@ message GetServicesHealthStatusResponse {
 
 message JoinFederationRequest {
   string learner_id = 1; // If this field is empty/None then this learner is new. If it not empty its (id,token) must match with the existing records inside controller's book keeping collection.
-  LearnerEntity learner_entity = 2;
+  ServerEntity server_entity = 2;
   LocalDatasetSpec local_dataset_spec = 3;
 }
 
@@ -106,7 +106,7 @@ message JoinFederationResponse {
 }
 
 message LearnerLocalModelResponse {
-  LearnerEntity learner_entity = 1; // The description of the learner entity.
+  ServerEntity server_entity = 1; // The description of the learner entity.
   repeated FederatedModel federated_model = 2; // For a single learner we can return a collection of locally trained models. We encapsulate the local models as federation models because there is no difference in the structure of the two model types.
 }
 
@@ -136,8 +136,36 @@ message LeaveFederationResponse {
 }
 
 message LearnerState {
-  LearnerEntity learner_entity = 1;
-  string auth_token = 2;
-  LocalDatasetSpec local_dataset_spec = 3;
-  repeated FederatedModel federated_model = 4;
+  string learner_id = 1;
+  ServerEntity server_entity = 2;
+  string auth_token = 3;
+  LocalDatasetSpec local_dataset_spec = 4;
+  repeated FederatedModel federated_model = 5;
+}
+
+message ControllerParams {
+  ServerEntity server_entity = 1;
+  GlobalModelSpecs global_model_specs = 2;
+  CommunicationProtocolSpecs communication_protocol_specs = 3;
+  int32 federated_execution_cutoff_mins = 4;
+  float federated_execution_cutoff_score = 5;
+}
+
+message GlobalModelSpecs {
+  enum AggregationRule {
+    UNKNOWN = 0;
+    FED_AVG = 1;
+  }
+  AggregationRule aggregation_rule = 1;
+  float learners_participation_ratio = 2;
+}
+
+message CommunicationProtocolSpecs {
+  enum Protocol {
+    UNKNOWN = 0;
+    SYNCHRONOUS = 1;
+    ASYNCHRONOUS = 2;
+    // TODO: add support for more protocols, e.g., semi-sync
+  }
+  Protocol protocol = 1;
 }
