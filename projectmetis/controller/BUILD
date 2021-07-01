@@ -1,5 +1,7 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load("@rules_proto_grpc//cpp:defs.bzl", "cpp_grpc_library")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+load("@rules_python//python:defs.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -79,4 +81,15 @@ cc_test(
         "@gtest//:gtest",
         "@gtest//:gtest_main"
     ],
+)
+
+# Python Interoperability.
+pybind_extension(
+    name = "pybind_example",
+    srcs = ["pybind_test.cc"],
+)
+
+py_library(
+    name = "pybind_example_lib",
+    data = [":pybind_example.so"],
 )
