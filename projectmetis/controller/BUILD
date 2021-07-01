@@ -22,6 +22,7 @@ cc_library(
     deps = [
         ":controller_utils",
         ":controller_cc_grpc_proto",
+        "//projectmetis/controller/model_aggregation",
         "@absl//absl/status:statusor",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/memory",

@@ -50,7 +50,7 @@ public:
   // LearnerState instance is returned. Otherwise, it returns null.
   virtual absl::StatusOr<LearnerState>
   AddLearner(const ServerEntity &server_entity,
-             const LocalDatasetSpec &dataset_spec) = 0;
+             const DatasetSpec &dataset_spec) = 0;
 
   // Removes a learner from the federation. If successful it returns OK.
   // Otherwise, it returns an error.

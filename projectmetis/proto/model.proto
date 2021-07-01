@@ -1,0 +1,72 @@
+syntax = "proto3";
+
+package projectmetis;
+
+// Structural info of a tensor.
+message TensorSpec {
+  // Length of the tensor, i.e., total number of values it stores.
+  uint32 length = 1;
+
+  // The size of each dimension of the tensor.
+  repeated uint32 dimensions = 2;
+
+  // Supported data types.
+  enum DType {
+    UNKNOWN = 0;
+    INT = 1;
+    LONG = 2;
+    FLOAT = 3;
+    DOUBLE = 4;
+  }
+
+  // (Optional) The data type this tensor holds; may be used for casting the
+  // values to a specific type.
+  DType dtype = 3;
+}
+
+// Tensor storing double values.
+message DoubleTensor {
+  // Tensor metadata.
+  TensorSpec spec = 1;
+
+  // Flattened representation of the array.
+  repeated double values = 2;
+}
+
+// Tensor storing integer values.
+message IntTensor {
+  // Tensor metadata.
+  TensorSpec spec = 1;
+
+  // Flattened representation of the array.
+  repeated int32 values = 2;
+}
+
+// Represents a machine learning model.
+message Model {
+  message Variable {
+    // The name of the variable.
+    string name = 1;
+
+    // Set to true if this is a trainable variable. Otherwise, false.
+    bool trainable = 2;
+
+    // The tensor holding the values of this variable.
+    oneof tensor {
+      IntTensor int_tensor = 3;
+      DoubleTensor double_tensor = 4;
+    }
+  }
+
+  // Model's variables.
+  repeated Variable variables = 1;
+}
+
+// Represents a community model.
+message FederatedModel {
+  // Number of entities that contributed to the aggregation of this model.
+  uint32 num_contributors = 1;
+
+  // The aggregated community model.
+  Model model = 2;
+}

@@ -2,7 +2,7 @@ syntax = "proto3";
 package projectmetis;
 
 import "projectmetis/proto/shared.proto";
-import "projectmetis/proto/federatedmodel.proto";
+import "projectmetis/proto/model.proto";
 
 service Learner {
 

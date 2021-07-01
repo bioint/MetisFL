@@ -6,12 +6,17 @@ proto_library(
     name = "core_proto",
     srcs = [
         "optimizers.proto",
-        "federatedmodel.proto",
+        "model.proto",
         "shared.proto"
     ],
     deps = [
         "@com_google_protobuf//:timestamp_proto",
     ],
+)
+
+cc_proto_library(
+    name = "core_cc_proto",
+    deps = [":core_proto"],
 )
 
 proto_library(

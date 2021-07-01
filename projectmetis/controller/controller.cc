@@ -20,18 +20,30 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "controller.h"
+#include "projectmetis/controller/controller.h"
 
 #include "absl/memory/memory.h"
+
+#include "projectmetis/controller/model_aggregation/aggregations.h"
 #include "projectmetis/controller/controller_utils.h"
 
 namespace projectmetis::controller {
 namespace {
 
+std::unique_ptr<AggregationFunction> CreateAggregator(GlobalModelSpecs::AggregationRule rule) {
+  switch (rule) {
+    case GlobalModelSpecs::FED_AVG:
+      return absl::make_unique<FederatedAverage>();
+    default:
+      throw std::runtime_error("unsupported aggregation rule.");
+  }
+}
+
 class ControllerDefaultImpl : public Controller {
-public:
+ public:
   explicit ControllerDefaultImpl(ControllerParams controller_params)
-      : controller_params_(std::move(controller_params)) {}
+      : controller_params_(std::move(controller_params))
+      , aggregator_(CreateAggregator(controller_params.global_model_specs().aggregation_rule())) {}
 
   const ControllerParams &GetParams() const override {
     return controller_params_;
@@ -47,7 +59,7 @@ public:
 
   absl::StatusOr<LearnerState>
   AddLearner(const ServerEntity &server_entity,
-             const LocalDatasetSpec &dataset_spec) override {
+             const DatasetSpec &dataset_spec) override {
     // Validates non-empty hostname and non-negative port.
     if (server_entity.hostname().empty() || server_entity.port() < 0) {
       return absl::InvalidArgumentError("Hostname and port must be provided.");
@@ -110,11 +122,13 @@ public:
     }
   }
 
-private:
+ private:
   // Controllers parameters.
   ControllerParams controller_params_;
   // Stores active learners execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
+  // Aggregation function to use for computing the community model.
+  std::unique_ptr<AggregationFunction> aggregator_;
 };
 
 } // namespace

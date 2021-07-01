@@ -1,28 +1,71 @@
 syntax = "proto3";
+
 package projectmetis;
 
 import "google/protobuf/timestamp.proto";
 import "projectmetis/proto/optimizers.proto";
 
+// Acknowledgment message.
 message Ack {
+  // Set to true if this acknowledges the successful completion of a request, or
+  // false otherwise.
   bool status = 1;
+
+  // Timestamp of the acknowledgement.
   google.protobuf.Timestamp timestamp = 2;
-  // TODO Add response (string) field for the client.
+
+  // An optional message.
+  string message = 3;
 }
 
-message DoubleVariable {
-  repeated double values = 1; // The numeric values of a variable can be represented as a flatten list/collection of values; thus the list/collection of doubles.
-  VariableDef variable_def = 2; // This is the definition of the variable that is used to restructure/reshape the flatten representation of the variable.
+// A server entity that participates in the collaborative learning environment.
+message ServerEntity {
+  // Either the hostname or the IP address of the server.
+  string hostname = 1;
+
+  // The server port that the service is running on.
+  uint32 port = 2;
+}
+
+message DatasetSpec {
+  uint32 num_training_examples = 1;
+  uint32 num_validation_examples = 2;
+  uint32 num_test_examples = 3;
+
+  message ClassificationDatasetSpec {
+    map<uint32, uint32> class_examples_num = 1;
+  }
+
+  message RegressionDatasetSpec {
+    // TODO (canast02) Need to add histogram support; the following statistics should refer to a histogram bucket.
+    double min = 1;
+    double max = 2;
+    double mean = 3;
+    double median = 4;
+    double mode = 5;
+    double stddev = 6;
+  }
+
+  oneof specs {
+    ClassificationDatasetSpec classification_spec = 4;
+    RegressionDatasetSpec regression_spec = 5;
+  }
+}
+
+message LearningTask {
+  // This reflects the number of local steps the learner needs to perform.
+  // It is similar to epochs if we take |num_training_examples| / batch_size.
+  uint32 num_local_updates = 1;
+
+  float training_dataset_percentage_for_stratified_validation = 2;
+
+  // TODO We need to define the metrics we expect the learner to return. This
+  //  should be similar to the evaluation field in message `learner.EvaluateModelRequest`.
 }
 
 message EpochEvaluation {
   uint32 epoch_id = 1; // The id of the epoch. This is an integer-incremental value (i.e., serial number). A learner is training continuously and therefore it can increment its epoch id as it progresses its training.
   float epoch_score = 2; // The associated score of the epoch. This could be any numeric value, such as accuracy and f1-score in classification and MSE in regression tasks.
-}
-
-message ServerEntity {
-  string hostname = 1; // This field can be a hostname or an ip.
-  uint32 port = 2; // Important, this is the port that learner's grpc server will be listening on for requests from the outside world.
 }
 
 message LearnerExecutionBaseMetadata {
@@ -46,24 +89,4 @@ message LearningHyperParameters {
     Adam adam = 6;
   }
   // TODO We defined this message as LearningHyperparameters because we expect to extend its definition with additional fields related to model training.
-}
-
-message LearningTask {
-  uint32 num_local_updates = 1; // This reflects the number of local steps the learner needs to perform. It is similar to epochs if we take |num_training_examples| / batch_size.
-  float training_dataset_percentage_for_stratified_validation = 2;
-  // TODO We need to define the metrics we expect the learner to return. This should be similar to the evaluation field in message `learner.EvaluateModelRequest`.
-}
-
-message LocalDatasetSpec {
-  uint32 num_training_examples = 1;
-  uint32 num_validation_examples = 2;
-  uint32 num_test_examples = 3;
-  // TODO We need to add a message, which in the case of classification describes: (#classes, #examples_per_class), and in the case of regression: (mean, std, variance).
-  // TODO Local dataset attributes and schema.
-}
-
-message VariableDef {
-  uint32 size = 1; // Number of elements in the array.
-  string dtype = 2; // Data type (int, float, double); can be used for casting.
-  repeated int32 dimensions = 3; // List of variable's dimensions.
 }

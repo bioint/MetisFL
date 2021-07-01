@@ -1,0 +1,14 @@
+package(default_visibility = ["//projectmetis/controller:__subpackages__"])
+
+cc_library(
+    name = "model_aggregation",
+    srcs = ["federated_average.cc"],
+    hdrs = [
+        "aggregation_function.h",
+        "aggregations.h",
+        "federated_average.h"
+    ],
+    deps = [
+        "//projectmetis/proto:core_cc_proto"
+    ],
+)

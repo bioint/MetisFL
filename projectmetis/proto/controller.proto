@@ -1,7 +1,7 @@
 syntax = "proto3";
 package projectmetis;
 
-import "projectmetis/proto/federatedmodel.proto";
+import "projectmetis/proto/model.proto";
 import "projectmetis/proto/shared.proto";
 
 service ControllerService {
@@ -96,7 +96,7 @@ message GetServicesHealthStatusResponse {
 message JoinFederationRequest {
   string learner_id = 1; // If this field is empty/None then this learner is new. If it not empty its (id,token) must match with the existing records inside controller's book keeping collection.
   ServerEntity server_entity = 2;
-  LocalDatasetSpec local_dataset_spec = 3;
+  DatasetSpec local_dataset_spec = 3;
 }
 
 message JoinFederationResponse {
@@ -139,7 +139,7 @@ message LearnerState {
   string learner_id = 1;
   ServerEntity server_entity = 2;
   string auth_token = 3;
-  LocalDatasetSpec local_dataset_spec = 4;
+  DatasetSpec local_dataset_spec = 4;
   repeated FederatedModel federated_model = 5;
 }
 
