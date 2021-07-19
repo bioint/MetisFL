@@ -1,0 +1,78 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//cpp:defs.bzl", "cc_proto_library", "cpp_grpc_library")
+load("@rules_proto_grpc//python:defs.bzl", "py_proto_library", "python_grpc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Core proto.
+proto_library(
+    name = "core_proto",
+    srcs = [
+        "optimizers.proto",
+        "model.proto",
+        "shared.proto",
+    ],
+    deps = [
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "core_cc_proto",
+    protos = [":core_proto"],
+)
+
+py_proto_library(
+    name = "core_py_proto",
+    protos = [":core_proto"]
+)
+
+# Controller proto.
+proto_library(
+    name = "controller_proto",
+    srcs = ["controller.proto"],
+    deps = [":core_proto"],
+)
+
+cc_proto_library(
+    name = "controller_cc_proto",
+    protos = [":controller_proto"],
+)
+
+py_proto_library(
+    name = "controller_py_proto",
+    protos = [":controller_proto"],
+)
+
+cpp_grpc_library(
+    name = "controller_cc_grpc_proto",
+    protos = [
+        ":controller_proto",
+        ":core_proto",
+    ]
+)
+
+python_grpc_library(
+    name = "controller_py_grpc_proto",
+    protos = [
+        ":controller_proto",
+        ":core_proto",
+    ]
+)
+
+# Learner proto.
+proto_library(
+    name = "learner_proto",
+    srcs = ["learner.proto"],
+    deps = [":core_proto"],
+)
+
+cc_proto_library(
+    name = "learner_cc_proto",
+    protos = [":learner_proto"],
+)
+
+py_proto_library(
+    name = "learner_py_proto",
+    protos = [":learner_proto"],
+)

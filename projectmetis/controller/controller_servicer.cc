@@ -20,12 +20,15 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "projectmetis/controller/controller_servicer.h"
-
 #include <memory>
 #include <utility>
 
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
+
 #include "absl/memory/memory.h"
+#include "projectmetis/controller/controller_servicer.h"
 #include "projectmetis/proto/controller.grpc.pb.h"
 #include "projectmetis/proto/shared.grpc.pb.h"
 
@@ -34,9 +37,59 @@ namespace {
 using ::grpc::ServerContext;
 using ::grpc::Status;
 using ::grpc::StatusCode;
+using ::grpc::Server;
+using ::grpc::ServerBuilder;
+using ::grpc::ServerContext;
+using ::grpc::Status;
 
-class ControllerServicerImpl : public ControllerServicer {
-public:
+class ServicerBase {
+ public:
+
+  template<class Service>
+  void Start(const std::string& hostname, uint32_t port, Service* service) {
+    const auto server_address = absl::StrCat(hostname, ":", port);
+
+    grpc::EnableDefaultHealthCheckService(true);
+    grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+
+    ServerBuilder builder;
+
+    // Listens on the given address without any authentication mechanism.
+    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+
+    // Registers "service" as the instance through which we'll communicate with
+    // clients. In this case it corresponds to an *synchronous* service.
+    builder.RegisterService(service);
+
+    // Finally assemble the server.
+    server_ = builder.BuildAndStart();
+    std::cout << "Controller listening on " << server_address << std::endl;
+  }
+
+  void Stop() {
+    if (server_ == nullptr) {
+      return;
+    }
+
+    server_->Shutdown();
+    server_ = nullptr;
+    std::cout << "Controller has shut down" << std::endl;
+  }
+
+  void Wait() {
+    if (server_ == nullptr) {
+      return;
+    }
+
+    server_->Wait();
+  }
+
+ protected:
+  std::unique_ptr<Server> server_;
+};
+
+class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
+ public:
   explicit ControllerServicerImpl(Controller *controller)
       : controller_(controller) {
     GOOGLE_CHECK_NOTNULL(controller_);
@@ -44,6 +97,20 @@ public:
 
   ABSL_MUST_USE_RESULT
   const Controller *GetController() const override { return controller_; }
+
+  void StartService() override {
+    const auto& params = controller_->GetParams();
+
+    Start(params.server_entity().hostname(), params.server_entity().port(), this);
+  }
+
+  void WaitService() override {
+    Wait();
+  }
+
+  void StopService() override {
+    Stop();
+  }
 
   Status GetParticipatingLearners(
       ServerContext *context, const GetParticipatingLearnersRequest *request,

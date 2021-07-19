@@ -24,6 +24,7 @@
 #define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FEDERATED_AVERAGE_H_
 
 #include "projectmetis/controller/model_aggregation/aggregation_function.h"
+#include "projectmetis/proto/model.pb.h"
 
 namespace projectmetis::controller {
 

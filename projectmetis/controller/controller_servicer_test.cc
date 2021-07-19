@@ -20,16 +20,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "projectmetis/controller/controller_servicer.h"
-
 #include <string>
 #include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include "projectmetis/controller/controller.h"
+#include "projectmetis/controller/controller_servicer.h"
 #include "projectmetis/core/macros.h"
 #include "projectmetis/core/matchers/proto_matchers.h"
+#include "projectmetis/proto/controller.grpc.pb.h"
+#include "projectmetis/proto/shared.pb.h"
 
 namespace projectmetis::controller {
 namespace {
@@ -59,7 +61,7 @@ class MockController : public Controller {
   MOCK_METHOD(ControllerParams &, GetParams, (), (const));
   MOCK_METHOD(std::vector<LearnerState>, GetLearners, (), (const));
   MOCK_METHOD(absl::StatusOr<LearnerState>, AddLearner,
-              (const ServerEntity &, const LocalDatasetSpec &));
+              (const ServerEntity &, const DatasetSpec &));
   MOCK_METHOD(absl::Status, RemoveLearner,
               (const std::string &, const std::string &));
 };

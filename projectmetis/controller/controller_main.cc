@@ -20,68 +20,60 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+/**
+ * A standalone controller instance running at port 50051.
+ */
+
+#include <memory>
+#include <csignal>
+
+#include "projectmetis/controller/controller.h"
 #include "projectmetis/controller/controller_servicer.h"
 
-#include <iostream>
-#include <memory>
+using projectmetis::controller::Controller;
+using projectmetis::controller::ControllerServicer;
+using projectmetis::GlobalModelSpecs;
+using projectmetis::CommunicationProtocolSpecs;
 
-#include <grpcpp/ext/proto_server_reflection_plugin.h>
-#include <grpcpp/grpcpp.h>
-#include <grpcpp/health_check_service_interface.h>
+std::unique_ptr<ControllerServicer> servicer;
 
-#include "absl/strings/str_cat.h"
-#include "projectmetis/controller/controller.h"
-#include "projectmetis/proto/controller.grpc.pb.h"
-
-namespace projectmetis::controller {
-using ::grpc::Server;
-using ::grpc::ServerBuilder;
-using ::grpc::ServerContext;
-using ::grpc::Status;
-
-void RunServer(ControllerParams &params) {
-  // Creates a controller.
-  auto controller = Controller::New(params);
-  auto service = ControllerServicer::New(controller.get());
-
-  const auto server_address = absl::StrCat(params.server_entity().hostname(),
-                                           ":", params.server_entity().port());
-
-  grpc::EnableDefaultHealthCheckService(true);
-  grpc::reflection::InitProtoReflectionServerBuilderPlugin();
-  ServerBuilder builder;
-  // Listens on the given address without any authentication mechanism.
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  // Registers "service" as the instance through which we'll communicate with
-  // clients. In this case it corresponds to an *synchronous* service.
-  builder.RegisterService(service.get());
-  // Finally assemble the server.
-  std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << "Controller listening on " << server_address << std::endl;
-
-  // Waits for the server to shutdown. Note that some other thread must be
-  // responsible for shutting down the server for this call to ever return.
-  server->Wait();
+void sigint_handler(int code) {
+  std::cout << "Received SIGINT (code " << code << ")" << std::endl;
+  if (servicer != nullptr) {
+    servicer->StopService();
+  }
+  exit(code);
 }
-
-} // namespace projectmetis::controller
 
 int main(int argc, char **argv) {
   // Initializes controller parameters proto message.
-  projectmetis::ControllerParams controller_params;
-  controller_params.mutable_server_entity()->set_hostname("0.0.0.0");
-  controller_params.mutable_server_entity()->set_port(50051);
-  controller_params.mutable_global_model_specs()
+  projectmetis::ControllerParams params;
+  params.mutable_server_entity()->set_hostname("0.0.0.0");
+  params.mutable_server_entity()->set_port(50051);
+  params.mutable_global_model_specs()
       ->set_learners_participation_ratio(1);
-  controller_params.mutable_global_model_specs()->set_aggregation_rule(
-      projectmetis::GlobalModelSpecs_AggregationRule_FED_AVG);
-  controller_params.mutable_global_model_specs()
-      ->set_learners_participation_ratio(1);
-  controller_params.mutable_communication_protocol_specs()->set_protocol(
-      projectmetis::CommunicationProtocolSpecs_Protocol_SYNCHRONOUS);
-  controller_params.set_federated_execution_cutoff_mins(200);
-  controller_params.set_federated_execution_cutoff_score(0.85);
-  projectmetis::controller::RunServer(controller_params);
+  params.mutable_global_model_specs()->set_aggregation_rule(
+      projectmetis::GlobalModelSpecs::FED_AVG);
+  params.mutable_communication_protocol_specs()->set_protocol(
+      projectmetis::CommunicationProtocolSpecs::SYNCHRONOUS);
+  params.set_federated_execution_cutoff_mins(200);
+  params.set_federated_execution_cutoff_score(0.85);
+
+  {
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = sigint_handler;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, nullptr);
+  }
+
+  auto controller = Controller::New(params);
+  servicer = ControllerServicer::New(controller.get());
+
+  servicer->StartService();
+  servicer->WaitService();
 
   return 0;
 }

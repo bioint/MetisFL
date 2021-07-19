@@ -1,0 +1,43 @@
+load("@python_deps//:requirements.bzl", "requirement")
+
+# Generates executable binary.
+py_binary(
+    name = "pybind_example_binary",
+    main = "pybind_test.py",
+    srcs = ["__init__.py", "pybind_test.py"],
+    srcs_version = "PY3",
+    legacy_create_init = False,
+    deps = [
+        "//pybind/controller:controller_pybind_lib",
+        "//projectmetis/proto:controller_py_grpc_proto",
+        "//projectmetis/proto:learner_py_proto",
+        requirement("fabric"),
+        requirement("future"),
+        requirement("gast"),
+        requirement("grpcio"),
+        requirement("mock"),
+        requirement("numpy"),
+        requirement("pandas"),
+        requirement("protobuf"),
+        requirement("psycopg2-binary"),
+        requirement("pycparser"),
+        requirement("pyparsing"),
+        requirement("PyYAML"),
+        requirement("requests"),
+        requirement("scikit-learn"),
+        requirement("scipy"),
+        requirement("simplejson"),
+        requirement("six"),
+        requirement("sklearn"),
+        requirement("SQLAlchemy"),
+        requirement("tensorboard"),
+        requirement("tensorflow"),
+        #    requirement(tensorflow-gpu), # TODO pip need to upgrade to find dependency: https://stackoverflow.com/questions/38896424/tensorflow-not-found-using-pip
+        requirement("tensorflow-estimator"),
+        requirement("tensorflow-probability"),
+        requirement("threadpoolctl"),
+        requirement("urllib3"),
+    ],
+    python_version = "PY3",
+)
+

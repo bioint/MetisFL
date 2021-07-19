@@ -20,33 +20,40 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "projectmetis/controller/controller.h"
+#include <iostream>
+#include <utility>
 
 #include "absl/memory/memory.h"
-
-#include "projectmetis/controller/model_aggregation/aggregations.h"
+#include "projectmetis/controller/controller.h"
 #include "projectmetis/controller/controller_utils.h"
+#include "projectmetis/controller/model_aggregation/aggregations.h"
+#include "projectmetis/proto/controller.pb.h"
 
 namespace projectmetis::controller {
 namespace {
 
-std::unique_ptr<AggregationFunction> CreateAggregator(GlobalModelSpecs::AggregationRule rule) {
-  switch (rule) {
-    case GlobalModelSpecs::FED_AVG:
-      return absl::make_unique<FederatedAverage>();
-    default:
-      throw std::runtime_error("unsupported aggregation rule.");
+std::unique_ptr<AggregationFunction>
+CreateAggregator(GlobalModelSpecs::AggregationRule rule) {
+  // TODO (dstripelis) Create a util function to fetch the supporting model
+  //  aggregation rules - needs to also be invoked with Python Bindings.
+  if (rule == GlobalModelSpecs::FED_AVG) {
+    return absl::make_unique<FederatedAverage>();
   }
+
+  throw std::runtime_error("Unsupported aggregation rule.");
 }
 
 class ControllerDefaultImpl : public Controller {
  public:
+  // std::move() clears the controller_params collection,
+  // hence we need to access the initialized private collection.
   explicit ControllerDefaultImpl(ControllerParams controller_params)
-      : controller_params_(std::move(controller_params))
-      , aggregator_(CreateAggregator(controller_params.global_model_specs().aggregation_rule())) {}
+      : params_(std::move(controller_params)),
+        aggregator_(CreateAggregator(
+            params_.global_model_specs().aggregation_rule())) {}
 
   const ControllerParams &GetParams() const override {
-    return controller_params_;
+    return params_;
   }
 
   std::vector<LearnerState> GetLearners() const override {
@@ -124,7 +131,7 @@ class ControllerDefaultImpl : public Controller {
 
  private:
   // Controllers parameters.
-  ControllerParams controller_params_;
+  ControllerParams params_;
   // Stores active learners execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
   // Aggregation function to use for computing the community model.
