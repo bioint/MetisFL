@@ -1,7 +1,6 @@
 workspace(name = "projectmetis")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
-
 # Imports grpc.
 http_archive(
     name = "rules_proto_grpc",
@@ -57,7 +56,7 @@ http_archive(
 # Imports PyBind11 library.
 http_archive(
   name = "pybind11",
-  sha256 = "7a92b5c4433b445dadcafad99c95b399bd823af0430c73d0ca5da03a570a69dd",
+  sha256 = "bcb738109172ec99ca7243bebe4617acbd7215dc5448741459911884263eba3d",
   build_file = "@pybind11_bazel//:pybind11.BUILD",
   strip_prefix = "pybind11-stable",
   urls = ["https://github.com/pybind/pybind11/archive/stable.tar.gz"],
@@ -71,7 +70,8 @@ new_local_repository(
 exports_files(["bin/python", "bin/python3"])
 filegroup(
     name = "files",
-    srcs = glob(["**/*"], exclude = ["* *", "**/* *"]),
+    srcs = glob(["**/*"],
+    exclude = ["* *", "**/* *"]),
     visibility = ["//visibility:public"]
 )"""
 )
@@ -86,11 +86,58 @@ http_archive(
     sha256 = "934c9ceb552e84577b0faf1e5a2f0450314985b4d8712b2b70717dc679fdc01b",
 )
 
-# Defines Python package dependencies.
 load("@rules_python//python:pip.bzl", "pip_install")
-# Creates a central repo that knows about the dependencies needed for requirements.txt.
+# Creates a central repo that knows about the python interpreter dependencies based on requirements.txt.
 pip_install(
    name = "python_deps",
    requirements = "//:requirements.txt",
    python_interpreter_target = "@metis_python//:bin/python",
 )
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+# Imports Palisades library.
+new_git_repository(
+    name = "palisade_git",
+    commit = "fded3711c5855e968467e2e73ccf2fcd7948dc7d",
+    shallow_since = "1622060746 -0400",
+    remote = "https://gitlab.com/palisade/palisade-development.git",
+    verbose = True,
+    recursive_init_submodules = True,
+    build_file_content = """
+filegroup(
+    name = "all",
+    srcs = glob(["**/*"]),
+    visibility = ["//visibility:public"],
+)
+""",
+)
+
+# Imports SHELFI-FHE library.
+new_git_repository(
+    name = "shelfi_fhe_git",
+    branch = "main",
+    remote = "https://github.com/tanmayghai18/he-encryption-shelfi.git",
+    verbose = True,
+    build_file_content = """
+filegroup(
+    name = "all",
+    srcs = glob(["**/*"]),
+    visibility = ["//visibility:public"],
+)
+""",
+)
+
+
+# Imports foreign rules repository.
+http_archive(
+    name = "rules_foreign_cc",
+    sha256 = "33a5690733c5cc2ede39cb62ebf89e751f2448e27f20c8b2fbbc7d136b166804",
+    strip_prefix = "rules_foreign_cc-0.5.1",
+    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/0.5.1.tar.gz"
+)
+
+load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+
+# This sets up some common toolchains for building targets. For more details, please see
+# https://bazelbuild.github.io/rules_foreign_cc/0.4.0/flatten.html#rules_foreign_cc_dependencies
+rules_foreign_cc_dependencies()
