@@ -4,13 +4,16 @@ load("@python_deps//:requirements.bzl", "requirement")
 py_binary(
     name = "pybind_example_binary",
     main = "pybind_test.py",
-    srcs = ["__init__.py", "pybind_test.py"],
+    srcs = [
+        "__init__.py",
+        "pybind_test.py"
+    ],
     srcs_version = "PY3",
     legacy_create_init = False,
     deps = [
         "//pybind/controller:controller_pybind_lib",
-        "//projectmetis/proto:controller_py_grpc_proto",
-        "//projectmetis/proto:learner_py_proto",
+        "//projectmetis/proto:controller_py_grpc",
+        "//projectmetis/proto:learner_py_grpc",
         requirement("fabric"),
         requirement("future"),
         requirement("gast"),

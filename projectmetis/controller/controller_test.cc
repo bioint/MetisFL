@@ -25,14 +25,13 @@
 #include <gtest/gtest.h>
 
 #include "projectmetis/controller/controller.h"
-#include "projectmetis/proto/controller.pb.h"
-#include "projectmetis/proto/shared.pb.h"
+#include "projectmetis/proto/metis.pb.h"
 
 namespace projectmetis::controller {
 namespace {
 
 class ControllerTest : public ::testing::Test {
-public:
+ public:
 
   static ControllerParams CreateDefaultParams() {
     // Construct default (testing) parameters to initialize controller.
@@ -42,9 +41,9 @@ public:
     params.mutable_global_model_specs()
         ->set_learners_participation_ratio(1);
     params.mutable_global_model_specs()->set_aggregation_rule(
-        projectmetis::GlobalModelSpecs::FED_AVG);
-    params.mutable_communication_protocol_specs()->set_protocol(
-        projectmetis::CommunicationProtocolSpecs::SYNCHRONOUS);
+        GlobalModelSpecs::FED_AVG);
+    params.mutable_communication_specs()->set_protocol(
+        CommunicationSpecs::SYNCHRONOUS);
     params.set_federated_execution_cutoff_mins(200);
     params.set_federated_execution_cutoff_score(0.85);
     return params;
@@ -53,13 +52,13 @@ public:
   static std::unique_ptr<Controller> CreateEmptyController() {
     auto default_params = CreateDefaultParams();
     // A controller with no registered learner.
-    return Controller::New(ControllerParams(default_params));
+    return Controller::New(default_params);
   }
 
   static std::unique_ptr<Controller> CreateController() {
     auto default_params = CreateDefaultParams();
     // A controller with a single registered learner.
-    auto controller = Controller::New(ControllerParams(default_params));
+    auto controller = Controller::New(default_params);
 
     auto learner = ServerEntity();
     learner.set_hostname("localhost");
@@ -144,7 +143,7 @@ TEST_F(ControllerTest, RemoveLearnerExistingEntity) /* NOLINT */ {
 
   // We already know that the Controller is initialized with a single learner
   // therefore the 0 index on the returned vector.
-  auto status = controller->RemoveLearner(learners[0].learner_id(),
+  auto status = controller->RemoveLearner(learners[0].id(),
                                           learners[0].auth_token());
   EXPECT_TRUE(status.ok());
 }
@@ -155,7 +154,7 @@ TEST_F(ControllerTest, RemoveLearnerExistingEntityWrongToken) /* NOLINT */ {
 
   // We already know that the Controller is initialized with a single learner
   // therefore the 0 index on the returned vector.
-  auto status = controller->RemoveLearner(learners[0].learner_id(),
+  auto status = controller->RemoveLearner(learners[0].id(),
                                           "foobar");
   EXPECT_FALSE(status.ok());
 }

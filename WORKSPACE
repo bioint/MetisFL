@@ -48,9 +48,9 @@ http_archive(
 # Imports PyBind11 Bazel plugin.
 http_archive(
   name = "pybind11_bazel",
-  sha256 = "43a2d54d833bba1c19ed04bfb0e09eb73a50513b300f654573637351656cd3ab",
-  urls = ["https://github.com/pybind/pybind11_bazel/archive/master.zip"],
-  strip_prefix = "pybind11_bazel-master",
+  sha256 = "3dc6435bd41c058453efe102995ef084d0a86b0176fd6a67a6b7100a2e9a940e",
+  urls = ["https://github.com/pybind/pybind11_bazel/archive/992381ced716ae12122360b0fbadbc3dda436dbf.zip"],
+  strip_prefix = "pybind11_bazel-992381ced716ae12122360b0fbadbc3dda436dbf",
 )
 
 # Imports PyBind11 library.

@@ -29,13 +29,13 @@
 
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
-#include "projectmetis/proto/controller.pb.h"
+#include "projectmetis/proto/controller.grpc.pb.h"
 
 namespace projectmetis::controller {
 
 // TODO(stripeli): Add a nice description about what the controller is about :)
 class Controller {
-public:
+ public:
   virtual ~Controller() = default;
 
   // Returns the parameters with which the controller was initialized.
@@ -44,11 +44,15 @@ public:
 
   // Returns the list of all the active learners.
   ABSL_MUST_USE_RESULT
-  virtual std::vector<LearnerState> GetLearners() const = 0;
+  virtual std::vector<LearnerDescriptor> GetLearners() const = 0;
+
+  // Returns the number of active learners.
+  ABSL_MUST_USE_RESULT
+  virtual uint32_t GetNumLearners() const = 0;
 
   // Attempts to add a new learner to the federation. If successful, a
   // LearnerState instance is returned. Otherwise, it returns null.
-  virtual absl::StatusOr<LearnerState>
+  virtual absl::StatusOr<LearnerDescriptor>
   AddLearner(const ServerEntity &server_entity,
              const DatasetSpec &dataset_spec) = 0;
 
@@ -57,7 +61,11 @@ public:
   virtual absl::Status RemoveLearner(const std::string &learner_id,
                                      const std::string &token) = 0;
 
-public:
+  virtual absl::Status LearnerCompletedTask(const std::string &learner_id,
+                                            const std::string &token,
+                                            const CompletedLearningTask &task) = 0;
+
+ public:
   // Creates a new controller using the default implementation, i.e., in-memory.
   static std::unique_ptr<Controller> New(const ControllerParams &params);
 };

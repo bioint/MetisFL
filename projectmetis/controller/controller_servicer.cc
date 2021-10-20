@@ -30,7 +30,7 @@
 #include "absl/memory/memory.h"
 #include "projectmetis/controller/controller_servicer.h"
 #include "projectmetis/proto/controller.grpc.pb.h"
-#include "projectmetis/proto/shared.grpc.pb.h"
+#include "projectmetis/proto/metis.pb.h"
 
 namespace projectmetis::controller {
 namespace {
@@ -124,7 +124,7 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
     // Creates LearnerEntity response collection.
     for (const auto &learner : controller_->GetLearners()) {
       std::cout << learner.DebugString() << std::endl;
-      *response->add_server_entity() = learner.server_entity();
+      *response->add_server_entity() = learner.service_spec();
     }
 
     return Status::OK;
@@ -146,19 +146,19 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
                     "Server entity and local dataset cannot be empty.");
     }
 
-    const auto learner_state_or = controller_->AddLearner(
+    const auto learner_or = controller_->AddLearner(
         request->server_entity(), request->local_dataset_spec());
 
-    if (!learner_state_or.ok()) {
+    if (!learner_or.ok()) {
       response->mutable_ack()->set_status(false);
       // Returns the internal status error message as servicer's status message.
       return Status(StatusCode::ALREADY_EXISTS,
-                    std::string(learner_state_or.status().message()));
+                    std::string(learner_or.status().message()));
     } else {
       response->mutable_ack()->set_status(true);
 
-      const auto &learner_state = learner_state_or.value();
-      response->set_learner_id(learner_state.learner_id());
+      const auto &learner_state = learner_or.value();
+      response->set_learner_id(learner_state.id());
       response->set_auth_token(learner_state.auth_token());
     }
 

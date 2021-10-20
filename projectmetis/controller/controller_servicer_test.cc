@@ -20,18 +20,17 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include <string>
 #include <vector>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "projectmetis/controller/controller.h"
+#include "projectmetis/controller/controller_mock.h"
 #include "projectmetis/controller/controller_servicer.h"
 #include "projectmetis/core/macros.h"
 #include "projectmetis/core/matchers/proto_matchers.h"
 #include "projectmetis/proto/controller.grpc.pb.h"
-#include "projectmetis/proto/shared.pb.h"
+#include "projectmetis/proto/metis.pb.h"
 
 namespace projectmetis::controller {
 namespace {
@@ -43,28 +42,20 @@ using ::testing::proto::EqualsProto;
 using ::testing::_;
 
 const char kLearnerState[] = R"pb(
-  learner_id: "localhost:1991"
-  server_entity {
-    hostname: "localhost"
-    port: 1991
-  }
-  auth_token: "token"
-  local_dataset_spec {
-    num_training_examples: 1
-    num_validation_examples: 1
-    num_test_examples: 1
+  learner {
+    id: "localhost:1991"
+    auth_token: "token"
+    service_spec {
+      hostname: "localhost"
+      port: 1991
+    }
+    dataset_spec {
+      num_training_examples: 1
+      num_validation_examples: 1
+      num_test_examples: 1
+    }
   }
 )pb";
-
-class MockController : public Controller {
- public:
-  MOCK_METHOD(ControllerParams &, GetParams, (), (const));
-  MOCK_METHOD(std::vector<LearnerState>, GetLearners, (), (const));
-  MOCK_METHOD(absl::StatusOr<LearnerState>, AddLearner,
-              (const ServerEntity &, const DatasetSpec &));
-  MOCK_METHOD(absl::Status, RemoveLearner,
-              (const std::string &, const std::string &));
-};
 
 class ControllerServicerImplTest : public ::testing::Test {
  protected:
@@ -88,7 +79,7 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyRequest) {
 TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyVector) {
   EXPECT_CALL(controller_, GetLearners())
       .Times(Exactly(1))
-      .WillOnce(Return(std::vector<LearnerState>()));
+      .WillOnce(Return(std::vector<LearnerDescriptor>()));
 
   GetParticipatingLearnersRequest req_;
   GetParticipatingLearnersResponse res_;
@@ -101,10 +92,11 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyVector) {
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, GetParticipatingLearners_NotEmptyVector) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
+  const auto &learner = learner_state.learner();
 
   EXPECT_CALL(controller_, GetLearners())
       .Times(Exactly(1))
-      .WillOnce(Return(std::vector({learner_state})));
+      .WillOnce(Return(std::vector({learner})));
 
   GetParticipatingLearnersRequest req_;
   GetParticipatingLearnersResponse res_;
@@ -128,18 +120,19 @@ TEST_F(ControllerServicerImplTest, JoinFederation_EmptyRequest) {
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, JoinFederation_NewLearner) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
+  const auto& learner = learner_state.learner();
 
   EXPECT_CALL(controller_,
-              AddLearner(EqualsProto(learner_state.server_entity()),
-                         EqualsProto(learner_state.local_dataset_spec())))
+              AddLearner(EqualsProto(learner_state.learner().service_spec()),
+                         EqualsProto(learner_state.learner().dataset_spec())))
       .Times(Exactly(1))
-      .WillOnce(Return(learner_state));
+      .WillOnce(Return(learner));
 
   JoinFederationRequest req_;
   JoinFederationResponse res_;
-  req_.set_learner_id(learner_state.learner_id());
-  *req_.mutable_server_entity() = learner_state.server_entity();
-  *req_.mutable_local_dataset_spec() = learner_state.local_dataset_spec();
+  req_.set_learner_id(learner_state.learner().id());
+  *req_.mutable_server_entity() = learner_state.learner().service_spec();
+  *req_.mutable_local_dataset_spec() = learner_state.learner().dataset_spec();
 
   auto status = service_->JoinFederation(&ctx_, &req_, &res_);
 
@@ -158,19 +151,20 @@ TEST_F(ControllerServicerImplTest, JoinFederation_LearnerServiceUnreachable) {
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, JoinFederation_LearnerCollision) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
+  const auto& learner = learner_state.learner();
 
   EXPECT_CALL(controller_,
-              AddLearner(EqualsProto(learner_state.server_entity()),
-                         EqualsProto(learner_state.local_dataset_spec())))
+              AddLearner(EqualsProto(learner.service_spec()),
+                         EqualsProto(learner.dataset_spec())))
       .Times(Exactly(2))
-      .WillOnce(Return(learner_state))
+      .WillOnce(Return(learner))
       .WillOnce(Return(absl::AlreadyExistsError("Learner has already joined.")));
 
   JoinFederationRequest req_;
   JoinFederationResponse res_;
-  req_.set_learner_id(learner_state.learner_id());
-  *req_.mutable_server_entity() = learner_state.server_entity();
-  *req_.mutable_local_dataset_spec() = learner_state.local_dataset_spec();
+  req_.set_learner_id(learner.id());
+  *req_.mutable_server_entity() = learner.service_spec();
+  *req_.mutable_local_dataset_spec() = learner.dataset_spec();
 
   // First time, learner joins successfully.
   service_->JoinFederation(&ctx_, &req_, &res_);
@@ -193,14 +187,15 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_EmptyRequest) {
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerExists) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
+  const auto& learner = learner_state.learner();
 
-  EXPECT_CALL(controller_,RemoveLearner(learner_state.learner_id(), learner_state.auth_token()))
+  EXPECT_CALL(controller_,RemoveLearner(learner.id(), learner.auth_token()))
       .Times(Exactly(1))
       .WillOnce(Return(absl::OkStatus()));
 
   LeaveFederationRequest req;
-  req.set_auth_token(learner_state.auth_token());
-  req.set_learner_id(learner_state.learner_id());
+  req.set_auth_token(learner.auth_token());
+  req.set_learner_id(learner.id());
   LeaveFederationResponse res;
 
   auto status = service_->LeaveFederation(&ctx_, &req, &res);
@@ -211,14 +206,15 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerExists) {
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerNotExists) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
+  const auto& learner = learner_state.learner();
 
-  EXPECT_CALL(controller_,RemoveLearner(learner_state.learner_id(), learner_state.auth_token()))
+  EXPECT_CALL(controller_,RemoveLearner(learner.id(), learner.auth_token()))
       .Times(Exactly(1))
       .WillOnce(Return(absl::NotFoundError("No such learner.")));
 
   LeaveFederationRequest req;
-  req.set_auth_token(learner_state.auth_token());
-  req.set_learner_id(learner_state.learner_id());
+  req.set_auth_token(learner.auth_token());
+  req.set_learner_id(learner.id());
   LeaveFederationResponse res;
 
   auto status = service_->LeaveFederation(&ctx_, &req, &res);
@@ -229,14 +225,15 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerNotExists) {
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerInvalidCredentials) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
+  const auto& learner = learner_state.learner();
 
-  EXPECT_CALL(controller_,RemoveLearner(learner_state.learner_id(), learner_state.auth_token()))
+  EXPECT_CALL(controller_,RemoveLearner(learner.id(), learner.auth_token()))
       .Times(Exactly(1))
       .WillOnce(Return(absl::UnauthenticatedError("Incorrect token.")));
 
   LeaveFederationRequest req;
-  req.set_auth_token(learner_state.auth_token());
-  req.set_learner_id(learner_state.learner_id());
+  req.set_auth_token(learner.auth_token());
+  req.set_learner_id(learner.id());
   LeaveFederationResponse res;
 
   auto status = service_->LeaveFederation(&ctx_, &req, &res);

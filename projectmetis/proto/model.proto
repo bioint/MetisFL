@@ -1,6 +1,9 @@
 syntax = "proto3";
-
 package projectmetis;
+
+///////////////////////////
+// Tensor Representation //
+///////////////////////////
 
 // Structural info of a tensor.
 message TensorSpec {
@@ -42,6 +45,10 @@ message IntTensor {
   repeated int32 values = 2;
 }
 
+//////////////////////////
+// Model Representation //
+//////////////////////////
+
 // Represents a machine learning model.
 message Model {
   message Variable {
@@ -69,4 +76,40 @@ message FederatedModel {
 
   // The aggregated community model.
   Model model = 2;
+}
+
+////////////////
+// Optimizers //
+////////////////
+
+message OptimizerConfig {
+  oneof config {
+    VanillaSGD vanilla_sgd = 1;
+    MomentumSGD momentum_sgd = 2;
+    FedProx fed_prox = 3;
+    Adam adam = 4;
+  }
+}
+
+message VanillaSGD {
+  float learning_rate = 1;
+  bool L1_reg = 2;
+  bool L2_reg = 3;
+}
+
+message MomentumSGD {
+  float learning_rate = 1;
+  float momentum_factor = 2;
+}
+
+message FedProx {
+  float learning_rate = 1;
+  float proximal_term = 2;
+}
+
+message Adam {
+  float learning_rate = 1;
+  float beta_1 = 2;
+  float beta_2 = 3;
+  float epsilon = 4;
 }

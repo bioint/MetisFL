@@ -1,17 +1,18 @@
+//
 // MIT License
-//
+// 
 // Copyright (c) 2021 Project Metis
-//
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -20,22 +21,29 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_UTILS_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_UTILS_H_
-
-#include <string>
-
-#include "absl/strings/str_cat.h"
-#include "projectmetis/proto/metis.pb.h"
+#include "projectmetis/controller/model_scaling/dataset_size_scaler.h"
 
 namespace projectmetis::controller {
 
-// Generates a unique identifier for the provided learner entity. In the current
-// implementation, the generated id is in the format of `<hostname>:<port>`.
-inline std::string GenerateLearnerId(const ServerEntity &server_entity) {
-  return absl::StrCat(server_entity.hostname(), ":", server_entity.port());
+absl::flat_hash_map<std::string,
+                    double> DatasetSizeScaler::ComputeScalingFactors(
+    const FederatedModel &community_model,
+    const absl::flat_hash_map<std::string, LearnerState> &states) {
+  long dataset_size = 0;
+  for (const auto&[_, state] : states) {
+    dataset_size += state.learner().dataset_spec().num_validation_examples();
+  }
+
+  absl::flat_hash_map<std::string, double> scaling_factors;
+  for (const auto&[learner_id, state] : states) {
+    long
+        num_examples = state.learner().dataset_spec().num_validation_examples();
+    double scaling_factor =
+        static_cast<double>(num_examples) / static_cast<double>(dataset_size);
+    scaling_factors[learner_id] = scaling_factor;
+  }
+
+  return scaling_factors;
 }
 
 } // namespace projectmetis::controller
-
-#endif // PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_UTILS_H_

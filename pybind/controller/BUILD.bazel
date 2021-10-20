@@ -27,7 +27,7 @@ py_library(
     srcs_version = "PY3",
     deps = [
         ":controller_pybind_lib",
-        "//projectmetis/proto:controller_py_grpc_proto",
+        "//projectmetis/proto:controller_py_grpc",
     ],
 )
 

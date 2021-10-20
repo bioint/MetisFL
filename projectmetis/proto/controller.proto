@@ -1,8 +1,9 @@
 syntax = "proto3";
 package projectmetis;
 
+import "projectmetis/proto/metis.proto";
 import "projectmetis/proto/model.proto";
-import "projectmetis/proto/shared.proto";
+import "projectmetis/proto/service_common.proto";
 
 service ControllerService {
 
@@ -107,15 +108,13 @@ message JoinFederationResponse {
 
 message LearnerLocalModelResponse {
   ServerEntity server_entity = 1; // The description of the learner entity.
-  repeated FederatedModel federated_model = 2; // For a single learner we can return a collection of locally trained models. We encapsulate the local models as federation models because there is no difference in the structure of the two model types.
+  repeated Model model = 2; // For a single learner we can return a collection of locally trained models. We encapsulate the local models as federation models because there is no difference in the structure of the two model types.
 }
 
 message MarkTaskCompletedRequest {
   string learner_id = 1; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
   string auth_token = 2; // This is associated with the auth_token in `JoinFederationResponse` message.
-  FederatedModel federated_model = 3; // This is the model trained by the learner locally.
-  LearnerExecutionBaseMetadata base_metadata = 4; // These are the basic metadata sent by the learner to the controller whenever a locally assigned training task is complete.
-  string aux_metadata = 5; // These are additional metadata sent by the learner to the controller. TODO No structured response yet, but in a future release this should follow a specific format.
+  CompletedLearningTask task = 3;
 }
 
 message LearnerExecutionAuxMetadata {
@@ -133,39 +132,4 @@ message LeaveFederationRequest {
 
 message LeaveFederationResponse {
   Ack ack = 1;
-}
-
-message LearnerState {
-  string learner_id = 1;
-  ServerEntity server_entity = 2;
-  string auth_token = 3;
-  DatasetSpec local_dataset_spec = 4;
-  repeated FederatedModel federated_model = 5;
-}
-
-message ControllerParams {
-  ServerEntity server_entity = 1;
-  GlobalModelSpecs global_model_specs = 2;
-  CommunicationProtocolSpecs communication_protocol_specs = 3;
-  int32 federated_execution_cutoff_mins = 4;
-  float federated_execution_cutoff_score = 5;
-}
-
-message GlobalModelSpecs {
-  enum AggregationRule {
-    UNKNOWN = 0;
-    FED_AVG = 1;
-  }
-  AggregationRule aggregation_rule = 1;
-  float learners_participation_ratio = 2;
-}
-
-message CommunicationProtocolSpecs {
-  enum Protocol {
-    UNKNOWN = 0;
-    SYNCHRONOUS = 1;
-    ASYNCHRONOUS = 2;
-    // TODO: add support for more protocols, e.g., semi-sync
-  }
-  Protocol protocol = 1;
 }

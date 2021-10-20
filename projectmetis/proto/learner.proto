@@ -1,8 +1,9 @@
 syntax = "proto3";
 package projectmetis;
 
-import "projectmetis/proto/shared.proto";
+import "projectmetis/proto/metis.proto";
 import "projectmetis/proto/model.proto";
+import "projectmetis/proto/service_common.proto";
 
 service Learner {
 
@@ -10,7 +11,7 @@ service Learner {
   rpc EvaluateModel (EvaluateModelRequest) returns (EvaluateModelResponse) {}
 
   // Unary RPC. Retrieve the status of all internal services.
-  rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
+//  rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
 
   // Unary RPC. Assign task to be trained locally by the learner.
   rpc RunTask (RunTaskRequest) returns (RunTaskResponse) {}
@@ -34,16 +35,16 @@ message EvaluateModelResponse {
   // TODO Not sure if we need a simple json response or scores! For instance, we might need additional metrics such as confusion matrices...
 }
 
-message GetServicesHealthStatusRequest {}
-
-message GetServicesHealthStatusResponse {
-  map<string, bool> services_status = 1;
-}
+//message GetServicesHealthStatusRequest {}
+//
+//message GetServicesHealthStatusResponse {
+//  map<string, bool> services_status = 1;
+//}
 
 message RunTaskRequest {
   FederatedModel federated_model = 1; // This is the community model sent by the controller to the learner to run the assigned task.
   LearningTask task = 2; // Description of the assigned task.
-  LearningHyperParameters learning_hyperparameters = 3; // The hyperparameters related to the SGD optimization, related to the model's optimizer.
+  Hyperparameters learning_hyperparameters = 3; // The hyperparameters related to the SGD optimization, related to the model's optimizer.
 }
 
 message RunTaskResponse {

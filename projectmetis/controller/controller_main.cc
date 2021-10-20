@@ -33,7 +33,7 @@
 using projectmetis::controller::Controller;
 using projectmetis::controller::ControllerServicer;
 using projectmetis::GlobalModelSpecs;
-using projectmetis::CommunicationProtocolSpecs;
+using projectmetis::CommunicationSpecs;
 
 std::unique_ptr<ControllerServicer> servicer;
 
@@ -53,11 +53,14 @@ int main(int argc, char **argv) {
   params.mutable_global_model_specs()
       ->set_learners_participation_ratio(1);
   params.mutable_global_model_specs()->set_aggregation_rule(
-      projectmetis::GlobalModelSpecs::FED_AVG);
-  params.mutable_communication_protocol_specs()->set_protocol(
-      projectmetis::CommunicationProtocolSpecs::SYNCHRONOUS);
+      GlobalModelSpecs::FED_AVG);
+  params.mutable_communication_specs()->set_protocol(
+      CommunicationSpecs::SYNCHRONOUS);
   params.set_federated_execution_cutoff_mins(200);
   params.set_federated_execution_cutoff_score(0.85);
+
+  std::cout << "Starting controller with params: " << std::endl;
+  std::cout << params.DebugString() << std::endl;
 
   {
     struct sigaction sigIntHandler;

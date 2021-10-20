@@ -40,7 +40,7 @@ void ScaleTensor(const Tensor &tensor, double scale, Tensor *scaled) {
 }
 
 FederatedModel
-FederatedAverage::Aggregate(std::vector<std::pair<Model, double>> pairs) {
+FederatedAverage::Aggregate(std::vector<std::pair<const Model*, double>> pairs) {
   double z = 0;
   for (const auto &pair : pairs) {
     z += pair.second;
@@ -48,7 +48,7 @@ FederatedAverage::Aggregate(std::vector<std::pair<Model, double>> pairs) {
 
   FederatedModel community_model;
   for (const auto &pair : pairs) {
-    for (const auto &variable : pair.first.variables()) {
+    for (const auto &variable : pair.first->variables()) {
       auto contrib_value = pair.second / z;
       auto scaled_variable = community_model.mutable_model()->add_variables();
       scaled_variable->set_name(variable.name());

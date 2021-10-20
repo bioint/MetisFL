@@ -20,51 +20,55 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include "projectmetis/controller/controller.h"
+
 #include <iostream>
 #include <utility>
 
+#include <grpcpp/client_context.h>
+#include <grpcpp/create_channel.h>
+
 #include "absl/memory/memory.h"
-#include "projectmetis/controller/controller.h"
-#include "projectmetis/controller/controller_utils.h"
 #include "projectmetis/controller/model_aggregation/aggregations.h"
-#include "projectmetis/proto/controller.pb.h"
+#include "projectmetis/controller/model_scaling/scalings.h"
+#include "projectmetis/controller/scheduling/scheduling.h"
+#include "projectmetis/controller/controller_utils.h"
+#include "projectmetis/proto/learner.grpc.pb.h"
+#include "projectmetis/proto/metis.pb.h"
+#include "projectmetis/core/macros.h"
 
 namespace projectmetis::controller {
 namespace {
 
-std::unique_ptr<AggregationFunction>
-CreateAggregator(GlobalModelSpecs::AggregationRule rule) {
-  // TODO (dstripelis) Create a util function to fetch the supporting model
-  //  aggregation rules - needs to also be invoked with Python Bindings.
-  if (rule == GlobalModelSpecs::FED_AVG) {
-    return absl::make_unique<FederatedAverage>();
-  }
-
-  throw std::runtime_error("Unsupported aggregation rule.");
-}
-
 class ControllerDefaultImpl : public Controller {
  public:
-  // std::move() clears the controller_params collection,
-  // hence we need to access the initialized private collection.
-  explicit ControllerDefaultImpl(ControllerParams controller_params)
-      : params_(std::move(controller_params)),
-        aggregator_(CreateAggregator(
-            params_.global_model_specs().aggregation_rule())) {}
+  ControllerDefaultImpl(ControllerParams params,
+                        std::unique_ptr<ScalingFunction> scaler,
+                        std::unique_ptr<AggregationFunction> aggregator,
+                        std::unique_ptr<Scheduler> scheduler)
+      : params_(std::move(params)),
+        scaler_(std::move(scaler)),
+        aggregator_(std::move(aggregator)),
+        scheduler_(std::move(scheduler)),
+        community_model_() {}
 
   const ControllerParams &GetParams() const override {
     return params_;
   }
 
-  std::vector<LearnerState> GetLearners() const override {
-    std::vector<LearnerState> learners;
-    for (const auto &[key, learner] : learners_) {
-      learners.push_back(learner);
+  std::vector<LearnerDescriptor> GetLearners() const override {
+    std::vector<LearnerDescriptor> learners;
+    for (const auto &[key, learner_state] : learners_) {
+      learners.push_back(learner_state.learner());
     }
     return learners;
   }
 
-  absl::StatusOr<LearnerState>
+  uint32_t GetNumLearners() const override {
+    return learners_.size();
+  }
+
+  absl::StatusOr<LearnerDescriptor>
   AddLearner(const ServerEntity &server_entity,
              const DatasetSpec &dataset_spec) override {
     // Validates non-empty hostname and non-negative port.
@@ -74,9 +78,7 @@ class ControllerDefaultImpl : public Controller {
 
     // Validates number of train, validation and test examples. Train examples
     // must always be positive, while validation and test can be non-negative.
-    if (dataset_spec.num_training_examples() <= 0 ||
-        dataset_spec.num_validation_examples() < 0 ||
-        dataset_spec.num_test_examples() < 0) {
+    if (dataset_spec.num_training_examples() <= 0) {
       return absl::InvalidArgumentError("Invalid dataset spec provided.");
     }
 
@@ -95,30 +97,36 @@ class ControllerDefaultImpl : public Controller {
     const std::string auth_token = std::to_string(learners_.size() + 1);
 
     // Initializes learner state with an empty model.
+    LearnerDescriptor learner;
+    learner.set_id(learner_id);
+    learner.set_auth_token(auth_token);
+    *learner.mutable_service_spec() = server_entity;
+    *learner.mutable_dataset_spec() = dataset_spec;
+
     LearnerState learner_state;
-    learner_state.set_learner_id(learner_id);
-    *learner_state.mutable_server_entity() = server_entity;
-    learner_state.set_auth_token(auth_token);
-    *learner_state.mutable_local_dataset_spec() = dataset_spec;
+    *learner_state.mutable_learner() = learner;
 
     // Registers learner.
     learners_[learner_id] = learner_state;
 
-    return learner_state;
+    // Opens gRPC channel with learner.
+    auto target =
+        absl::StrCat(server_entity.hostname(), ":", server_entity.port());
+    auto channel =
+        ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
+    learner_stubs_[learner_id] = Learner::NewStub(channel);
+
+    return learner;
   }
 
   absl::Status RemoveLearner(const std::string &learner_id,
                              const std::string &token) override {
-
-    // Validates non-empty learner_id and authentication token.
-    if (learner_id.empty() || token.empty()) {
-      return absl::InvalidArgumentError("Learner id and token cannot be empty");
-    }
+    RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
     auto it = learners_.find(learner_id);
     // Checks requesting learner existence inside the state map.
     if (it != learners_.end()) {
-      if (it->second.auth_token() == token) {
+      if (it->second.learner().auth_token() == token) {
         learners_.erase(it);
         return absl::OkStatus();
       } else {
@@ -129,19 +137,109 @@ class ControllerDefaultImpl : public Controller {
     }
   }
 
+  absl::Status LearnerCompletedTask(const std::string &learner_id,
+                                    const std::string &token,
+                                    const CompletedLearningTask &task) override {
+    RETURN_IF_ERROR(ValidateLearner(learner_id, token));
+
+    // Updates the learner's state.
+    *learners_[learner_id].mutable_model()->Add() = task.model();
+
+    auto
+        to_schedule = scheduler_->ScheduleNext(learner_id, task, GetLearners());
+    if (!to_schedule.empty()) {
+      auto scaling_factors =
+          scaler_->ComputeScalingFactors(community_model_, learners_);
+
+      std::vector<std::pair<const Model *, double>> participating_models;
+      for (const auto&[learner_id, state]: learners_) {
+        const auto history_size = state.model_size();
+        const auto latest_model = state.model(history_size - 1);
+        const auto scaling_factor = scaling_factors[learner_id];
+
+        participating_models.emplace_back(std::make_pair(&latest_model,
+                                                         scaling_factor));
+      }
+
+      auto community_model = aggregator_->Aggregate(participating_models);
+
+      for (const auto &to_schedule_id : to_schedule) {
+        ::grpc::ClientContext context;
+        RunTaskResponse response;
+        RunTaskRequest request;
+        *request.mutable_federated_model() = community_model;
+        // TODO: define learning task. how many steps?
+
+        // Finds learner gRPC channel and sends RunTask request.
+        learner_stubs_[to_schedule_id]->RunTask(&context, request, &response);
+
+        // TODO: check if response indicates a success.
+      }
+
+      // Updates the community model.
+      // TODO: maybe we want to keep track of the lineage?
+      community_model_ = community_model;
+    }
+
+    return absl::OkStatus();
+  }
+
  private:
+  typedef std::unique_ptr<Learner::Stub> LearnerStub;
+
+  absl::Status ValidateLearner(const std::string &learner_id,
+                               const std::string &token) const {
+    // Validates non-empty learner_id and authentication token.
+    if (learner_id.empty() || token.empty()) {
+      return absl::InvalidArgumentError("Learner id and token cannot be empty");
+    }
+
+    const auto &learner = learners_.find(learner_id);
+    if (learner == learners_.end()
+        || learner->second.learner().auth_token() != token) {
+      return absl::PermissionDeniedError("Invalid token provided.");
+    }
+
+    return absl::OkStatus();
+  }
+
   // Controllers parameters.
   ControllerParams params_;
   // Stores active learners execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
+  absl::flat_hash_map<std::string, LearnerStub> learner_stubs_;
+  // Scaling function for computing the scaling factor of each learner.
+  std::unique_ptr<ScalingFunction> scaler_;
   // Aggregation function to use for computing the community model.
   std::unique_ptr<AggregationFunction> aggregator_;
+  // Federated task scheduler.
+  std::unique_ptr<Scheduler> scheduler_;
+  // Community model.
+  FederatedModel community_model_;
 };
+
+std::unique_ptr<AggregationFunction> CreateAggregator(const GlobalModelSpecs &specs) {
+  if (specs.aggregation_rule() == GlobalModelSpecs::FED_AVG) {
+    return absl::make_unique<FederatedAverage>();
+  }
+  throw std::runtime_error("unsupported aggregation rule.");
+}
+
+std::unique_ptr<Scheduler> CreateScheduler(const CommunicationSpecs &specs) {
+  if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS) {
+    return absl::make_unique<SynchronousScheduler>();
+  }
+  throw std::runtime_error("unsupported scheduling policy.");
+}
 
 } // namespace
 
 std::unique_ptr<Controller> Controller::New(const ControllerParams &params) {
-  return absl::make_unique<ControllerDefaultImpl>(params);
+  return absl::make_unique<ControllerDefaultImpl>(params,
+                                                  absl::make_unique<
+                                                      DatasetSizeScaler>(),
+                                                  CreateAggregator(params.global_model_specs()),
+                                                  CreateScheduler(params.communication_specs()));
 }
 
 } // namespace projectmetis::controller

@@ -2,27 +2,66 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
+# Binaries.
+cc_binary(
+    name = "controller_main",
+    srcs = ["controller_main.cc"],
+    deps = [
+        ":controller",
+        ":controller_servicer",
+        "@absl//absl/strings"
+    ],
+)
+
+# Libraries.
+cc_library(
+    name = "controller_interface",
+    hdrs = ["controller.h"],
+    deps = [
+        "//projectmetis/proto:controller_cc_grpc",
+        "//projectmetis/proto:metis_cc_proto",
+        "//projectmetis/proto:model_cc_proto",
+        "//projectmetis/proto:service_common_cc_proto",
+        "@absl//absl/status:statusor",
+        "@absl//absl/container:flat_hash_map",
+    ],
+    visibility = ["//projectmetis/controller:__subpackages__"]
+)
+
 cc_library(
     name = "controller",
     srcs = ["controller.cc"],
     hdrs = ["controller.h"],
     deps = [
         ":controller_utils",
-        "//projectmetis/proto:controller_cc_grpc_proto",
-        "//projectmetis/controller/model_aggregation:model_aggregation",
+        "//projectmetis/proto:controller_cc_grpc",
+        "//projectmetis/proto:learner_cc_grpc",
+        "//projectmetis/controller/model_aggregation",
+        "//projectmetis/controller/model_scaling",
+        "//projectmetis/controller/scheduling:task_schedulers",
+        "//projectmetis/core:macros",
         "@absl//absl/status:statusor",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/memory",
     ],
 )
 
-cc_test(
-    name = "controller_test",
-    srcs = ["controller_test.cc"],
+cc_library(
+    name = "controller_mock",
+    hdrs = ["controller_mock.h"],
     deps = [
-        ":controller",
+        ":controller_interface",
         "@gtest//:gtest",
-        "@gtest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "controller_utils",
+    srcs = ["controller_utils.cc"],
+    hdrs = ["controller_utils.h"],
+    deps = [
+        "//projectmetis/proto:metis_cc_proto",
+        "@absl//absl/strings"
     ],
 )
 
@@ -32,7 +71,19 @@ cc_library(
     hdrs = ["controller_servicer.h"],
     deps = [
         ":controller",
+        "//projectmetis/proto:controller_cc_grpc",
         "@absl//absl/memory",
+    ],
+)
+
+# Tests.
+cc_test(
+    name = "controller_test",
+    srcs = ["controller_test.cc"],
+    deps = [
+        ":controller",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main"
     ],
 )
 
@@ -41,29 +92,10 @@ cc_test(
     srcs = ["controller_servicer_test.cc"],
     deps = [
         ":controller_servicer",
+        ":controller_mock",
         "//projectmetis/core:macros",
         "//projectmetis/core/matchers:proto_matchers",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "controller_utils",
-    srcs = ["controller_utils.cc"],
-    hdrs = ["controller_utils.h"],
-    deps = [
-        "//projectmetis/proto:controller_cc_grpc_proto",
-        "@absl//absl/strings",
-    ],
-)
-
-cc_binary(
-    name = "controller_main",
-    srcs = ["controller_main.cc"],
-    deps = [
-        ":controller",
-        ":controller_servicer",
-        "@absl//absl/strings",
     ],
 )

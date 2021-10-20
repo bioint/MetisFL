@@ -3,7 +3,6 @@ syntax = "proto3";
 package projectmetis;
 
 import "google/protobuf/timestamp.proto";
-import "projectmetis/proto/optimizers.proto";
 
 // Acknowledgment message.
 message Ack {

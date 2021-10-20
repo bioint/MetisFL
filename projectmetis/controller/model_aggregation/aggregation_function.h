@@ -41,7 +41,7 @@ class AggregationFunction {
   // respective scaling factors. Each federated model refers to the local
   // model of a learner and the associated scaling factor value refers to the
   // contribution value of the local model in the federation.
-  virtual FederatedModel Aggregate(std::vector<std::pair<Model, double>> pairs) = 0;
+  virtual FederatedModel Aggregate(std::vector<std::pair<const Model*, double>> pairs) = 0;
 
   virtual std::string name() = 0;
 };

@@ -9,6 +9,6 @@ cc_library(
         "federated_average.h"
     ],
     deps = [
-        "//projectmetis/proto:controller_cc_grpc_proto"
+        "//projectmetis/proto:model_cc_proto",
     ],
 )
