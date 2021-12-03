@@ -62,6 +62,9 @@ cc_binary(
     deps = [
         ":shelfi_fhe_cmake",
     ],
+    linkopts = [
+        "-Lpath/to/libs"
+    ],
     linkshared = 1,
 )
 

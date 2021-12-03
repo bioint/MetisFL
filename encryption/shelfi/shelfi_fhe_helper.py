@@ -3,12 +3,16 @@ import SHELFI_FHE as m
 import numpy as np
 import gc
 
-
 class ShelfiFheHelper(object):
 
-    def __init__(self):
-        self.FHE_helper = m.FHE_Helper("ckks", 8192, 52)
-        self.FHE_helper.load_cyrpto_params()
+    def __init__(self, encryption_scheme, batch_size, scale_factor_bits, cryptoparams_dir):
+        self.encryption_scheme = encryption_scheme
+        self.batch_size = batch_size
+        self.scale_factor_bits = scale_factor_bits
+        self.cryptoparams_dir = cryptoparams_dir
+        self.FHE_helper = m.FHE_Helper(self.encryption_scheme, self.batch_size, self.scale_factor_bits,
+                                       self.cryptoparams_dir)
+        self.FHE_helper.load_crypto_params()
 
     def encrypt_compute_decrypt(self, models, models_scaling_factors, total_model_parameters):
         encoded_models = list()

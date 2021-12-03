@@ -1,9 +1,11 @@
 import numpy as np
+import os
 from shelfi_fhe_helper import ShelfiFheHelper
 
 # Dummy test example to evaluate the above functions!
 if __name__ == "__main__":
-    fhe_helper = ShelfiFheHelper()
+    fhe_helper = ShelfiFheHelper(encryption_scheme="ckks", batch_size=8192, scale_factor_bits=52,
+                                 cryptoparams_dir="/metis/cryptoparams")
     iterations = range(0, 2)
     num_models = 2
     for i in iterations:

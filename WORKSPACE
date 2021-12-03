@@ -1,5 +1,7 @@
 workspace(name = "projectmetis")
 
+load("//:GlobalVars.bzl", "METIS_VENV_PATH")
+
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Imports grpc.
 http_archive(
@@ -65,7 +67,7 @@ http_archive(
 # Configures MetisProject Python environment.
 new_local_repository(
     name = "metis_python",
-    path = "python/metisenv",
+    path = METIS_VENV_PATH,
     build_file_content = """
 exports_files(["bin/python", "bin/python3"])
 filegroup(
@@ -126,7 +128,6 @@ filegroup(
 )
 """,
 )
-
 
 # Imports foreign rules repository.
 http_archive(
