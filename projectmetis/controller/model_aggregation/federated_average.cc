@@ -27,39 +27,75 @@
 namespace projectmetis::controller {
 namespace {
 
-// TODO (canast02) Move this under the util package.
+//// TODO (canast02) Move this under the util package.
+//template<typename Tensor>
+//void ScaleTensor(const Tensor &tensor, double scale, Tensor *scaled) {
+//  *scaled->mutable_spec() = tensor.spec();
+//  scaled->clear_values();
+//  for (const auto &value : tensor.values()) {
+//    scaled->add_values(scale * value);
+//  }
+//}
+
 template<typename Tensor>
-void ScaleTensor(const Tensor &tensor, double scale, Tensor *scaled) {
-  *scaled->mutable_spec() = tensor.spec();
-  scaled->clear_values();
-  for (const auto &value : tensor.values()) {
-    scaled->add_values(scale * value);
+void AddScaledValues(const Tensor &tensor, double scale, Tensor *scaled) {
+  for (int i = 0; i < tensor.values_size(); ++i) {
+    auto unscaled = tensor.values(i);
+
+    auto current = scaled->values(i);
+    scaled->set_values(i, current + scale * unscaled);
   }
 }
 
 }
 
 FederatedModel
-FederatedAverage::Aggregate(std::vector<std::pair<const Model*, double>> pairs) {
+FederatedAverage::Aggregate(std::vector<std::pair<const Model*, double>>& pairs) {
   double z = 0;
   for (const auto &pair : pairs) {
     z += pair.second;
   }
 
+  // Initializes the community model.
   FederatedModel community_model;
+  const auto& sample_model = pairs.front().first;
+  for (int i = 0; i < sample_model->variables_size(); ++i) {
+    const auto& sample_variable = sample_model->variables(i);
+
+    auto* variable = community_model.mutable_model()->add_variables();
+    variable->set_name(sample_variable.name());
+    variable->set_trainable(sample_variable.trainable());
+    if (sample_variable.has_int_tensor()) {
+      *variable->mutable_int_tensor()->mutable_spec() = sample_variable.int_tensor().spec();
+      for (int j = 0; j < sample_variable.int_tensor().values_size(); ++j) {
+        variable->mutable_int_tensor()->add_values(0);
+      }
+    } else if (sample_variable.has_double_tensor()) {
+      *variable->mutable_double_tensor()->mutable_spec() = sample_variable.double_tensor().spec();
+      for (int j = 0; j < sample_variable.double_tensor().values_size(); ++j) {
+        variable->mutable_double_tensor()->add_values(0.0);
+      }
+    } else {
+      throw std::runtime_error("unsupported variable type");
+    }
+  }
+
+  // Aggregates the input models.
   for (const auto &pair : pairs) {
-    for (const auto &variable : pair.first->variables()) {
-      auto contrib_value = pair.second / z;
-      auto scaled_variable = community_model.mutable_model()->add_variables();
-      scaled_variable->set_name(variable.name());
-      scaled_variable->set_trainable(variable.trainable());
+    const auto* model = pair.first;
+    const double scale = pair.second;
+    for (int i = 0; i < model->variables_size(); ++i) {
+      const auto& variable = model->variables(i);
+
+      auto contrib_value = scale / z;
+      auto scaled_variable = community_model.mutable_model()->mutable_variables(i);
 
       if (variable.has_double_tensor()) {
-        ScaleTensor(variable.double_tensor(),
+        AddScaledValues(variable.double_tensor(),
                     contrib_value,
                     scaled_variable->mutable_double_tensor());
       } else if (variable.has_int_tensor()) {
-        ScaleTensor(variable.int_tensor(),
+        AddScaledValues(variable.int_tensor(),
                     contrib_value,
                     scaled_variable->mutable_int_tensor());
       } else {
@@ -68,6 +104,7 @@ FederatedAverage::Aggregate(std::vector<std::pair<const Model*, double>> pairs) 
     }
   }
 
+  // Sets the number of contributors to the number of input models.
   community_model.set_num_contributors(pairs.size());
   return community_model;
 }

@@ -12,3 +12,31 @@ cc_library(
         "//projectmetis/proto:model_cc_proto",
     ],
 )
+
+cc_library(
+    name = "federated_average",
+    srcs = [
+        "federated_average.cc"
+    ],
+    hdrs = [
+        "aggregation_function.h",
+        "federated_average.h"
+    ],
+    deps = [
+        "//projectmetis/proto:model_cc_proto",
+    ],
+)
+
+cc_test(
+    name = "federated_average_test",
+    srcs = [
+        "federated_average_test.cc"
+    ],
+    deps = [
+        ":federated_average",
+        "//projectmetis/core:macros",
+        "//projectmetis/core/matchers:proto_matchers",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ],
+)

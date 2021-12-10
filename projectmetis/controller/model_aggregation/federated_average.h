@@ -30,7 +30,7 @@ namespace projectmetis::controller {
 
 class FederatedAverage : public AggregationFunction {
  public:
-  FederatedModel Aggregate(std::vector<std::pair<const Model*, double>> pairs) override;
+  FederatedModel Aggregate(std::vector<std::pair<const Model*, double>>& pairs) override;
 
   inline std::string name() override {
     return "FedAvg";

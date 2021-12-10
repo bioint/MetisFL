@@ -30,6 +30,10 @@
 #include "projectmetis/controller/controller.h"
 #include "projectmetis/controller/controller_servicer.h"
 
+#include "projectmetis/core/macros.h"
+
+using ::proto::ParseTextOrDie;
+
 using projectmetis::controller::Controller;
 using projectmetis::controller::ControllerServicer;
 using projectmetis::GlobalModelSpecs;
@@ -47,17 +51,30 @@ void sigint_handler(int code) {
 
 int main(int argc, char **argv) {
   // Initializes controller parameters proto message.
-  projectmetis::ControllerParams params;
-  params.mutable_server_entity()->set_hostname("0.0.0.0");
-  params.mutable_server_entity()->set_port(50051);
-  params.mutable_global_model_specs()
-      ->set_learners_participation_ratio(1);
-  params.mutable_global_model_specs()->set_aggregation_rule(
-      GlobalModelSpecs::FED_AVG);
-  params.mutable_communication_specs()->set_protocol(
-      CommunicationSpecs::SYNCHRONOUS);
-  params.set_federated_execution_cutoff_mins(200);
-  params.set_federated_execution_cutoff_score(0.85);
+  auto params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
+    server_entity {
+      hostname: "0.0.0.0"
+      port: 50051
+    }
+    global_model_specs {
+      learners_participation_ratio: 1
+      aggregation_rule: FED_AVG
+    }
+    communication_specs {
+      protocol: SYNCHRONOUS
+    }
+    model_hyperparams {
+      batch_size: 50
+      epochs: 5
+      optimizer {
+        vanilla_sgd {
+          learning_rate: 0.05
+          L2_reg: 0.001
+        }
+      }
+      percent_validation: 0
+    }
+  )pb2");
 
   std::cout << "Starting controller with params: " << std::endl;
   std::cout << params.DebugString() << std::endl;

@@ -34,19 +34,16 @@
 
 namespace projectmetis::controller {
 namespace {
-using ::grpc::ServerContext;
-using ::grpc::Status;
-using ::grpc::StatusCode;
 using ::grpc::Server;
 using ::grpc::ServerBuilder;
 using ::grpc::ServerContext;
 using ::grpc::Status;
+using ::grpc::StatusCode;
 
 class ServicerBase {
- public:
-
-  template<class Service>
-  void Start(const std::string& hostname, uint32_t port, Service* service) {
+public:
+  template <class Service>
+  void Start(const std::string &hostname, uint32_t port, Service *service) {
     const auto server_address = absl::StrCat(hostname, ":", port);
 
     grpc::EnableDefaultHealthCheckService(true);
@@ -84,12 +81,12 @@ class ServicerBase {
     server_->Wait();
   }
 
- protected:
+protected:
   std::unique_ptr<Server> server_;
 };
 
 class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
- public:
+public:
   explicit ControllerServicerImpl(Controller *controller)
       : controller_(controller) {
     GOOGLE_CHECK_NOTNULL(controller_);
@@ -99,17 +96,38 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
   const Controller *GetController() const override { return controller_; }
 
   void StartService() override {
-    const auto& params = controller_->GetParams();
+    const auto &params = controller_->GetParams();
 
-    Start(params.server_entity().hostname(), params.server_entity().port(), this);
+    Start(params.server_entity().hostname(), params.server_entity().port(),
+          this);
   }
 
-  void WaitService() override {
-    Wait();
-  }
+  void WaitService() override { Wait(); }
 
-  void StopService() override {
-    Stop();
+  void StopService() override { Stop(); }
+
+  Status GetLocalModelEvaluationLineage(
+      ServerContext *context,
+      const GetLocalModelEvaluationLineageRequest *request,
+      GetLocalModelEvaluationLineageResponse *response) override {
+    // Captures unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
+    }
+
+    for (const auto &learner_id : request->learner_ids()) {
+      const auto lineage = controller_->GetEvaluationLineage(learner_id, request->num_backtracks());
+
+      ModelEvaluations evaluations;
+      for (const auto& evaluation: lineage) {
+        *evaluations.add_evaluation() = evaluation;
+      }
+
+      (*response->mutable_learner_evaluations())[learner_id] = evaluations;
+    }
+
+    return Status::OK;
   }
 
   Status GetParticipatingLearners(
@@ -117,8 +135,8 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
       GetParticipatingLearnersResponse *response) override {
     // Captures unexpected behavior.
     if (request == nullptr || response == nullptr) {
-      return Status(StatusCode::INVALID_ARGUMENT,
-                    "Request and response cannot be empty.");
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
     }
 
     // Creates LearnerEntity response collection.
@@ -135,15 +153,15 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
                         JoinFederationResponse *response) override {
     // Captures unexpected behavior.
     if (request == nullptr || response == nullptr) {
-      return Status(StatusCode::INVALID_ARGUMENT,
-                    "Request and response cannot be empty.");
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
     }
 
     // Validates that the incoming request has the required fields populated.
     if (!request->has_server_entity() && !request->has_local_dataset_spec()) {
       response->mutable_ack()->set_status(false);
-      return Status(StatusCode::INVALID_ARGUMENT,
-                    "Server entity and local dataset cannot be empty.");
+      return {StatusCode::INVALID_ARGUMENT,
+              "Server entity and local dataset cannot be empty."};
     }
 
     const auto learner_or = controller_->AddLearner(
@@ -152,8 +170,8 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
     if (!learner_or.ok()) {
       response->mutable_ack()->set_status(false);
       // Returns the internal status error message as servicer's status message.
-      return Status(StatusCode::ALREADY_EXISTS,
-                    std::string(learner_or.status().message()));
+      return {StatusCode::ALREADY_EXISTS,
+              std::string(learner_or.status().message())};
     } else {
       response->mutable_ack()->set_status(true);
 
@@ -170,15 +188,15 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
                          LeaveFederationResponse *response) override {
     // Captures unexpected behavior.
     if (request == nullptr || response == nullptr) {
-      return Status(StatusCode::INVALID_ARGUMENT,
-                    "Request and response cannot be empty.");
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
     }
 
     // Validates that the incoming request has the required fields populated.
     if (request->learner_id().empty() || request->auth_token().empty()) {
       response->mutable_ack()->set_status(false);
-      return Status(StatusCode::INVALID_ARGUMENT,
-                    "Learner id and authentication token cannot be empty.");
+      return {StatusCode::INVALID_ARGUMENT,
+              "Learner id and authentication token cannot be empty."};
     }
 
     const std::string &learner_id = request->learner_id();
@@ -191,8 +209,36 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
       return Status::OK;
     } else {
       response->mutable_ack()->set_status(false);
-      return Status(StatusCode::CANCELLED, std::string(del_status.message()));
+      return {StatusCode::CANCELLED, std::string(del_status.message())};
     }
+  }
+
+  Status MarkTaskCompleted(ServerContext *context,
+                           const MarkTaskCompletedRequest *request,
+                           MarkTaskCompletedResponse *response) override {
+    const auto status = controller_->LearnerCompletedTask(
+        request->learner_id(), request->auth_token(), request->task());
+    if (!status.ok()) {
+      switch (status.code()) {
+      case absl::StatusCode::kInvalidArgument:
+        return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
+      case absl::StatusCode::kPermissionDenied:
+        return {StatusCode::PERMISSION_DENIED, std::string(status.message())};
+      case absl::StatusCode::kNotFound:
+        return {StatusCode::NOT_FOUND, std::string(status.message())};
+      default:
+        return {StatusCode::INTERNAL, std::string(status.message())};
+      }
+    }
+
+    return Status::OK;
+  }
+
+  Status ShutDown(ServerContext *context, const ShutDownRequest *request,
+                  ShutDownResponse *response) override {
+    response->mutable_ack()->set_status(true);
+    this->StopService();
+    return Status::OK;
   }
 
 private:

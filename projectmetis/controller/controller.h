@@ -65,7 +65,10 @@ class Controller {
                                             const std::string &token,
                                             const CompletedLearningTask &task) = 0;
 
- public:
+  virtual std::vector<ModelEvaluation>
+  GetEvaluationLineage(const std::string &learner_id, uint32_t num_steps) = 0;
+
+public:
   // Creates a new controller using the default implementation, i.e., in-memory.
   static std::unique_ptr<Controller> New(const ControllerParams &params);
 };

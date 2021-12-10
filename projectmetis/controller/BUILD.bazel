@@ -40,6 +40,7 @@ cc_library(
         "//projectmetis/controller/model_scaling",
         "//projectmetis/controller/scheduling:task_schedulers",
         "//projectmetis/core:macros",
+        "//projectmetis/core:thread_pool",
         "@absl//absl/status:statusor",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/memory",

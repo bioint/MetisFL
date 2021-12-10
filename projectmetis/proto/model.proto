@@ -74,8 +74,10 @@ message FederatedModel {
   // Number of entities that contributed to the aggregation of this model.
   uint32 num_contributors = 1;
 
+  uint32 global_iteration = 2;
+
   // The aggregated community model.
-  Model model = 2;
+  Model model = 3;
 }
 
 ////////////////
@@ -93,8 +95,8 @@ message OptimizerConfig {
 
 message VanillaSGD {
   float learning_rate = 1;
-  bool L1_reg = 2;
-  bool L2_reg = 3;
+  float L1_reg = 2;
+  float L2_reg = 3;
 }
 
 message MomentumSGD {

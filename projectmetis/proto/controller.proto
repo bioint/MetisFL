@@ -13,13 +13,15 @@ service ControllerService {
   // Unary RPC. Controller replies with community models (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
   rpc GetCommunityModelLineage (GetCommunityModelLineageRequest) returns (GetCommunityModelLineageResponse) {}
 
-  // Unary RPC. Retrieve learners local models' metadata related to the models' evaluation (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
-  rpc GetLearnerLocalModelEvaluationsLineage (GetLearnerLocalModelEvaluationLineageRequest) returns (GetLearnerLocalModelEvaluationLineageResponse) {}
+  // Unary RPC. Retrieve learners local models' metadata related to the models'
+  // evaluation (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
+  rpc GetLocalModelEvaluationLineage (GetLocalModelEvaluationLineageRequest) returns (GetLocalModelEvaluationLineageResponse) {}
 
   // Unary RPC. Retrieve most recent and historically trained learners local models (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
   rpc GetLearnerLocalModelLineage (GetLearnerLocalModelLineageRequest) returns (GetLearnerLocalModelLineageResponse) {}
 
-  // Unary RPC. Retrieve a collection of all participating learners in the federation.
+  // Unary RPC. Retrieve a collection of all participating learners in the
+  // federation.
   rpc GetParticipatingLearners (GetParticipatingLearnersRequest) returns (GetParticipatingLearnersResponse) {}
 
   // Unary RPC. Controller replies with runtime metadata related to the federation environment (e.g., number of community update requests).
@@ -28,15 +30,20 @@ service ControllerService {
   // Unary RPC. Controller replies with the health status (beat) of its internal services.
   rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
 
-  // Unary RPC. A new participating learner asks the controller to join the federation.
+  // Unary RPC. A new participating learner asks the controller to join the
+  // federation.
   rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
 
-  // Unary RPC. An existing learner informs the controller that it leaves the federation.
+  // Unary RPC. An existing learner informs the controller that it leaves the
+  // federation.
   rpc LeaveFederation (LeaveFederationRequest) returns (LeaveFederationResponse) {}
 
-  // Unary RPC. Controller receives the local model of a learner when it completes its (locally) assigned task.
+  // Unary RPC. Controller receives the local model of a learner when it
+  // completes its (locally) assigned task.
   rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (MarkTaskCompletedResponse) {}
 
+  // Shuts down the controller service and clears any resources.
+  rpc ShutDown(ShutDownRequest) returns (ShutDownResponse) {}
 }
 
 message GetCommunityModelEvaluationLineageRequest {
@@ -58,13 +65,19 @@ message GetCommunityModelLineageResponse {
   repeated FederatedModel federated_models = 1; // Reply a sequence of models.
 }
 
-message GetLearnerLocalModelEvaluationLineageRequest {
-  int32 num_backtracks = 1; // Refer to the number of evaluation request rounds that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models evaluations.
-  repeated ServerEntity server_entity = 2; // Retrieve the num_backtracks evaluations for every learner that exists in the provided LearnerEntity collection.
+message GetLocalModelEvaluationLineageRequest {
+  // Refer to the number of evaluation request rounds that we need to re-track.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and
+  // num-1 latest learners' local models evaluations.
+  uint32 num_backtracks = 1;
+
+  // Retrieve the num_backtracks evaluations for every learner that exists in
+  // the provided LearnerEntity collection.
+  repeated string learner_ids = 2;
 }
 
-message GetLearnerLocalModelEvaluationLineageResponse {
-  string json_evaluation_lineage_response = 1; // TODO No structured response yet, but in a future release this should follow a specific format.
+message GetLocalModelEvaluationLineageResponse {
+  map<string, ModelEvaluations> learner_evaluations = 1;
 }
 
 message GetLearnerLocalModelLineageRequest {
@@ -131,5 +144,13 @@ message LeaveFederationRequest {
 }
 
 message LeaveFederationResponse {
+  Ack ack = 1;
+}
+
+message ShutDownRequest {
+  //TODO: require some sort of auth key here?
+}
+
+message ShutDownResponse {
   Ack ack = 1;
 }

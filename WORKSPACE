@@ -58,7 +58,7 @@ http_archive(
 # Imports PyBind11 library.
 http_archive(
   name = "pybind11",
-  sha256 = "bcb738109172ec99ca7243bebe4617acbd7215dc5448741459911884263eba3d",
+  sha256 = "06ab3c1b0d27f1ee6c1e0c0c889ae56ff2d702ee17f52e6410db0564db002cef",
   build_file = "@pybind11_bazel//:pybind11.BUILD",
   strip_prefix = "pybind11-stable",
   urls = ["https://github.com/pybind/pybind11/archive/stable.tar.gz"],
@@ -117,7 +117,9 @@ filegroup(
 # Imports SHELFI-FHE library.
 new_git_repository(
     name = "shelfi_fhe_git",
-    branch = "main",
+    #branch = "main",
+    commit = "5cba05be07320b5a5a828a40bd148fcd59720c19",
+    shallow_since = "1635215298 -0700",
     remote = "https://github.com/tanmayghai18/he-encryption-shelfi.git",
     verbose = True,
     build_file_content = """

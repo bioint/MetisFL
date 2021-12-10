@@ -112,15 +112,24 @@ message EpochEvaluation {
   float epoch_score = 2;
 }
 
+message ModelEvaluation {
+  // Need to return the key-value formatted value FOR NOW! That is for every
+  // string metric passed through the EvaluateModelRequest endpoint we reply a
+  // <metric, value> collection.
+  map<string, string> metric_values = 1;
+
+  // TODO: Not sure if we need a simple json response or scores! For instance,
+  //       we might need additional metrics such as confusion matrices...
+}
+
+// Wrapper for multiple model evaluations.
+message ModelEvaluations {
+  repeated ModelEvaluation evaluation = 1;
+}
+
 message Hyperparameters {
   uint32 batch_size = 1;
-
-  oneof optimizer {
-    VanillaSGD vanilla_sgd = 2;
-    MomentumSGD momentum_sgd = 3;
-    FedProx fed_prox = 4;
-    Adam adam = 5;
-  }
+  OptimizerConfig optimizer = 2;
 }
 
 ////////////////
@@ -137,6 +146,15 @@ message ControllerParams {
   int32 federated_execution_cutoff_mins = 4;
 
   float federated_execution_cutoff_score = 5;
+
+  message ModelHyperparams {
+    uint32 batch_size = 1;
+    uint32 epochs = 2;
+    OptimizerConfig optimizer = 3;
+    float percent_validation = 4;
+  }
+
+  ModelHyperparams model_hyperparams = 6;
 }
 
 message GlobalModelSpecs {

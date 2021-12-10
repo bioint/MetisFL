@@ -6,3 +6,8 @@ cc_library(
     hdrs = ["macros.h"],
     deps = [],
 )
+
+cc_library(
+    name = "thread_pool",
+    hdrs = ["thread_pool.h"],
+)
