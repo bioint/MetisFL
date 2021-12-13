@@ -1,0 +1,74 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//visibility:public"])
+
+py_binary(
+    name = "brainage",
+    main = "brainage.py",
+    srcs = [
+        "brainage.py",
+    ],
+    srcs_version = "PY3",
+    python_version = "PY3",
+    legacy_create_init = False,
+    data = [
+        # To be able to load the federation environments .yaml files relative to the execution script.
+        "//experiments/federation_environments_config:configuration_files",
+        "//experiments/keras/datasets/brainage:experiment_data",
+    ],
+    deps = [
+        "//experiments/keras/models:keras_models_py_lib",
+        "//projectmetis/python/driver:driver_py_lib",
+        requirement("cloudpickle"),
+        requirement("nibabel"),
+        requirement("numpy"),
+        requirement("pandas"),
+        requirement("scipy"),
+        requirement("tensorflow"),
+    ],
+)
+
+py_binary(
+    name = "cifar10",
+    main = "cifar10.py",
+    srcs = [
+        "cifar10.py",
+    ],
+    srcs_version = "PY3",
+    python_version = "PY3",
+    legacy_create_init = False,
+    data = [
+        # To be able to load the federation environments .yaml files relative to the execution script.
+        "//experiments/federation_environments_config:configuration_files",
+    ],
+    deps = [
+        "//experiments/keras/models:keras_models_py_lib",
+        "//projectmetis/python/driver:driver_py_lib",
+        requirement("cloudpickle"),
+        requirement("numpy"),
+        requirement("tensorflow"),
+    ],
+)
+
+py_binary(
+    name = "fashion_mnist",
+    main = "fashion_mnist.py",
+    srcs = [
+        "fashion_mnist.py",
+    ],
+    srcs_version = "PY3",
+    python_version = "PY3",
+    legacy_create_init = False,
+    data = [
+        # To be able to load the federation environments .yaml files relative to the execution script.
+        "//experiments/federation_environments_config:configuration_files",
+    ],
+    deps = [
+        "//experiments/keras/models:keras_models_py_lib",
+        "//projectmetis/python/driver:driver_py_lib",
+        requirement("cloudpickle"),
+        requirement("numpy"),
+        requirement("tensorflow"),
+    ],
+)

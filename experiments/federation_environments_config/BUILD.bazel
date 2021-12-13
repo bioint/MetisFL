@@ -1,0 +1,5 @@
+filegroup(
+    name = "configuration_files",
+    srcs = glob(["*.yaml"]),
+    visibility = ["//:__subpackages__"]
+)

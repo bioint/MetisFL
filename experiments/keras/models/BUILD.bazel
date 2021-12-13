@@ -1,0 +1,21 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "keras_models_py_lib",
+    srcs = [
+        "brainage_3dcnn.py",
+        "cifar_cnn.py",
+        "fashion_mnist_fc.py",
+        "imdb_lstm.py",
+        "melanoma_fc.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        "//projectmetis/python/models:models_py_lib",
+        requirement("tensorflow"),
+        requirement("numpy")
+    ],
+)

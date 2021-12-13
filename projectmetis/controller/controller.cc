@@ -50,7 +50,10 @@ public:
       : params_(std::move(params)), global_iteration_(0), learners_(),
         learner_stubs_(), learners_mutex_(), scaler_(std::move(scaler)),
         aggregator_(std::move(aggregator)), scheduler_(std::move(scheduler)),
-        community_model_(), community_mutex_(), pool_(2) {}
+        // TODO(canastas) needed to increase thread pool count to carry out
+        //  global iterations. Should the count be equal to the total number of
+        //  participating learners?
+        community_model_(), community_mutex_(), pool_(10) {}
 
   const ControllerParams &GetParams() const override { return params_; }
 
@@ -115,7 +118,7 @@ public:
         absl::StrCat(server_entity.hostname(), ":", server_entity.port());
     auto channel =
         ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
-    learner_stubs_[learner_id] = Learner::NewStub(channel);
+    learner_stubs_[learner_id] = LearnerService::NewStub(channel);
 
     return learner;
   }
@@ -181,7 +184,7 @@ public:
   }
 
 private:
-  typedef std::unique_ptr<Learner::Stub> LearnerStub;
+  typedef std::unique_ptr<LearnerService::Stub> LearnerStub;
 
   absl::Status ValidateLearner(const std::string &learner_id,
                                const std::string &token) const {
@@ -212,6 +215,7 @@ private:
     if (!to_schedule.empty()) {
       // Increases global step.
       ++global_iteration_;
+      std::cout << "Global Iteration: " << unsigned(global_iteration_) << std::endl;
 
       auto community_model = ComputeCommunityModel();
       community_model.set_global_iteration(global_iteration_);
@@ -220,15 +224,16 @@ private:
         const auto &learner = learners_[to_schedule_id].learner();
         auto *learner_stub = learner_stubs_[to_schedule_id].get();
         const auto &dataset_spec = learner.dataset_spec();
-
+        auto &params = params_;
         // Send evaluation tasks.
         if (!evaluations_.contains(to_schedule_id)) {
           evaluations_[to_schedule_id] = std::list<ModelEvaluation>();
         }
         auto &evaluation_lineage = evaluations_[to_schedule_id];
-        pool_.push_task([learner_stub, community_model, &evaluation_lineage] {
+        pool_.push_task([learner_stub, params, community_model, &evaluation_lineage] {
           EvaluateModelRequest request;
           *request.mutable_model() = community_model.model();
+          request.set_batch_size(params.model_hyperparams().batch_size());
           request.add_evaluation_dataset(EvaluateModelRequest::TRAINING);
           request.add_evaluation_dataset(EvaluateModelRequest::VALIDATION);
           request.add_evaluation_dataset(EvaluateModelRequest::TEST);
@@ -245,7 +250,6 @@ private:
         });
 
         // Send next training tasks.
-        auto &params = params_;
         pool_.push_task([learner_stub, dataset_spec, community_model, &params] {
           RunTaskRequest request;
           *request.mutable_federated_model() = community_model;
@@ -259,7 +263,7 @@ private:
           next_task->set_training_dataset_percentage_for_stratified_validation(
               model_params.percent_validation());
 
-          auto *hyperparams = request.mutable_learning_hyperparameters();
+          auto *hyperparams = request.mutable_hyperparameters();
           hyperparams->set_batch_size(model_params.batch_size());
           *hyperparams->mutable_optimizer() =
               params.model_hyperparams().optimizer();
@@ -278,17 +282,14 @@ private:
   FederatedModel ComputeCommunityModel() {
     auto scaling_factors =
         scaler_->ComputeScalingFactors(community_model_, learners_);
-
-    std::vector<std::pair<const Model *, double>> participating_models;
+    std::vector<std::pair<const Model*, double>> participating_models;
     for (const auto &[id, state] : learners_) {
       const auto history_size = state.model_size();
-      const auto latest_model = state.model(history_size - 1);
+      const auto& latest_model = state.model(history_size - 1);
       const auto scaling_factor = scaling_factors[id];
-
       participating_models.emplace_back(
           std::make_pair(&latest_model, scaling_factor));
     }
-
     return aggregator_->Aggregate(participating_models);
   }
 

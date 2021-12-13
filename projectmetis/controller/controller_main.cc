@@ -64,8 +64,8 @@ int main(int argc, char **argv) {
       protocol: SYNCHRONOUS
     }
     model_hyperparams {
-      batch_size: 50
-      epochs: 5
+      batch_size: 1
+      epochs: 1
       optimizer {
         vanilla_sgd {
           learning_rate: 0.05

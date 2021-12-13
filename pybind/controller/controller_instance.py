@@ -1,10 +1,11 @@
 import time
 
-from projectmetis.proto.controller_pb2 import ControllerParams
+from projectmetis.proto.metis_pb2 import ControllerParams
+# This imports the controller python module defined inside the `controller_pybind.cc` script.
 from pybind.controller import controller
 
 
-class Controller(object):
+class ControllerInstance(object):
 
     def __init__(self):
         self.__service_wrapper = None
@@ -34,7 +35,3 @@ class Controller(object):
             raise RuntimeError("Controller needs to be initialized.")
         self.__should_stop = True
         controller.Shutdown(self.__service_wrapper)
-
-
-
-

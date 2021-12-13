@@ -5,16 +5,19 @@ import "projectmetis/proto/metis.proto";
 import "projectmetis/proto/model.proto";
 import "projectmetis/proto/service_common.proto";
 
-service Learner {
+service LearnerService {
 
   // Unary RPC. The learner receives a model and evaluates it at its local dataset (any of [train, validation, test]).
   rpc EvaluateModel (EvaluateModelRequest) returns (EvaluateModelResponse) {}
 
-  // Unary RPC. Retrieve the status of all internal services.
-//  rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
+  // Unary RPC. Learner replies with the health status (beat) of its internal services.
+  rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
 
   // Unary RPC. Assign task to be trained locally by the learner.
   rpc RunTask (RunTaskRequest) returns (RunTaskResponse) {}
+
+  // Unary rpc. Shutdown all running services of the learner module.
+  rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
 
 }
 
@@ -22,18 +25,22 @@ message EvaluateModelRequest {
   // A single model sent to the evaluation service of the learner.
   Model model = 1;
 
+  // We need to provide the batch size for evaluation because a default value will not work for all
+  // models, due to memory limitations, cf. CIFAR images to sentences for NER sequence tagging.
+  uint32 batch_size = 2;
+
   // This is a repeated field since we might request to evaluate a model on more
   // than one datasets.
   enum dataset_to_eval {
     TRAINING = 0;
-    VALIDATION = 1;
-    TEST = 2;
+    TEST = 1;
+    VALIDATION = 2;
   }
-  repeated dataset_to_eval evaluation_dataset = 2;
+  repeated dataset_to_eval evaluation_dataset = 3;
 
   // The list of metrics we want to evaluate the model, e.g., ["accuracy",
   // "f1_score", "confusion_matrix", etc...]
-  repeated string metrics = 3;
+  repeated string metrics = 4;
 
   // TODO: We need to define a field as `one of {classification ..., regression ...}`
   //       and create a new .proto file for each case.
@@ -43,16 +50,15 @@ message EvaluateModelResponse {
   ModelEvaluation evaluation = 1;
 }
 
-//message GetServicesHealthStatusRequest {}
-//
-//message GetServicesHealthStatusResponse {
-//  map<string, bool> services_status = 1;
-//}
-
 message RunTaskRequest {
-  FederatedModel federated_model = 1; // This is the community model sent by the controller to the learner to run the assigned task.
-  LearningTask task = 2; // Description of the assigned task.
-  Hyperparameters learning_hyperparameters = 3; // The hyperparameters related to the SGD optimization, related to the model's optimizer.
+  // This is the community model sent by the controller to the learner to run the assigned task.
+  FederatedModel federated_model = 1;
+
+  // Description of the assigned task.
+  LearningTask task = 2;
+
+  // The hyperparameters related to the SGD optimization, related to the model's optimizer.
+  Hyperparameters hyperparameters = 3;
 }
 
 message RunTaskResponse {

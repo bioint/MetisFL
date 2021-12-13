@@ -58,10 +58,10 @@ http_archive(
 # Imports PyBind11 library.
 http_archive(
   name = "pybind11",
-  sha256 = "06ab3c1b0d27f1ee6c1e0c0c889ae56ff2d702ee17f52e6410db0564db002cef",
+  sha256 = "9ca7770fc5453b10b00a4a2f99754d7a29af8952330be5f5602e7c2635fa3e79",
   build_file = "@pybind11_bazel//:pybind11.BUILD",
-  strip_prefix = "pybind11-stable",
-  urls = ["https://github.com/pybind/pybind11/archive/stable.tar.gz"],
+  strip_prefix = "pybind11-2.8.0",
+  urls = ["https://github.com/pybind/pybind11/archive/refs/tags/v2.8.0.tar.gz"],
 )
 
 # Configures MetisProject Python environment.

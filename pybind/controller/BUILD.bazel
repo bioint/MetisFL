@@ -1,5 +1,5 @@
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
-load("@rules_python//python:defs.bzl", "py_library", "py_binary")
+load("@rules_python//python:defs.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -12,7 +12,7 @@ pybind_extension(
     srcs = ["controller_pybind.cc"],
     deps = [
         "//projectmetis/controller:controller",
-        "//projectmetis/controller:controller_servicer"
+        "//projectmetis/controller:controller_servicer",
     ]
 )
 
@@ -22,23 +22,8 @@ py_library(
 )
 
 py_library(
-    name = "controller_demo",
-    srcs = ["controller_demo.py", "controller.py"],
+    name = "controller_py_lib",
+    srcs = ["controller_instance.py"],
     srcs_version = "PY3",
-    deps = [
-        ":controller_pybind_lib",
-        "//projectmetis/proto:controller_py_grpc",
-    ],
-)
-
-py_binary(
-    name = "controller_demo_main",
-    main = "controller_demo_main.py",
-    srcs = ["controller_demo_main.py"],
-    srcs_version = "PY3",
-    python_version = "PY3",
-    legacy_create_init = False,
-    deps = [
-        ":controller_demo",
-    ],
+    deps = [":controller_pybind_lib"],
 )

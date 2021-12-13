@@ -41,9 +41,17 @@ message DatasetSpec {
     double stddev = 6;
   }
 
-  oneof spec {
-    ClassificationDatasetSpec classification_spec = 4;
-    RegressionDatasetSpec regression_spec = 5;
+  oneof training_dataset_spec {
+    ClassificationDatasetSpec training_classification_spec = 4;
+    RegressionDatasetSpec training_regression_spec = 5;
+  }
+  oneof validation_dataset_spec {
+    ClassificationDatasetSpec validation_classification_spec = 6;
+    RegressionDatasetSpec validation_regression_spec = 7;
+  }
+  oneof test_dataset_spec {
+    ClassificationDatasetSpec test_classification_spec = 8;
+    RegressionDatasetSpec test_regression_spec = 9;
   }
 }
 
@@ -110,6 +118,9 @@ message EpochEvaluation {
   // This could be any numeric value, such as accuracy and f1-score in
   // classification and MSE in regression tasks.
   float epoch_score = 2;
+
+  // Loss value of each evaluation.
+  float epoch_loss = 3;
 }
 
 message ModelEvaluation {
@@ -143,14 +154,17 @@ message ControllerParams {
 
   CommunicationSpecs communication_specs = 3;
 
+  // TODO Remove this, we do not need them anymore here! Driver Logic!
   int32 federated_execution_cutoff_mins = 4;
 
   float federated_execution_cutoff_score = 5;
 
   message ModelHyperparams {
+    // TODO Shall we replace (batch_size, optimizer) with Hyperparameters message?
     uint32 batch_size = 1;
     uint32 epochs = 2;
     OptimizerConfig optimizer = 3;
+    // TODO Need to figure out, if this quantity will be used as part of the aggregation scheme or as part of the actual validation evaluation.
     float percent_validation = 4;
   }
 

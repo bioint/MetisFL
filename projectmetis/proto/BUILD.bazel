@@ -113,7 +113,7 @@ cc_grpc_library(
     ],
 )
 
-py_proto_library(
+python_grpc_library(
     name = "learner_py_grpc",
     protos = [":learner_grpc"],
     deps = [

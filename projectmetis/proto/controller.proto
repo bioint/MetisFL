@@ -43,7 +43,7 @@ service ControllerService {
   rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (MarkTaskCompletedResponse) {}
 
   // Shuts down the controller service and clears any resources.
-  rpc ShutDown(ShutDownRequest) returns (ShutDownResponse) {}
+  rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
 }
 
 message GetCommunityModelEvaluationLineageRequest {
@@ -101,14 +101,9 @@ message GetRuntimeMetadataResponse {
   string json_metadata = 1; // TODO No structured response yet, but in a future release this should follow a specific format.
 }
 
-message GetServicesHealthStatusRequest {}
-
-message GetServicesHealthStatusResponse {
-  map<string, bool> services_status = 1; // A Key-Value services status reply.
-}
-
 message JoinFederationRequest {
-  string learner_id = 1; // If this field is empty/None then this learner is new. If it not empty its (id,token) must match with the existing records inside controller's book keeping collection.
+  //  TODO This field seems redundant - not used anywhere! Controller generates the learner_ids based on ServerEntity!
+  // string learner_id = 1; // If this field is empty/None then this learner is new. If it not empty its (id,token) must match with the existing records inside controller's book keeping collection.
   ServerEntity server_entity = 2;
   DatasetSpec local_dataset_spec = 3;
 }
@@ -144,13 +139,5 @@ message LeaveFederationRequest {
 }
 
 message LeaveFederationResponse {
-  Ack ack = 1;
-}
-
-message ShutDownRequest {
-  //TODO: require some sort of auth key here?
-}
-
-message ShutDownResponse {
   Ack ack = 1;
 }

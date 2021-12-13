@@ -130,7 +130,6 @@ TEST_F(ControllerServicerImplTest, JoinFederation_NewLearner) {
 
   JoinFederationRequest req_;
   JoinFederationResponse res_;
-  req_.set_learner_id(learner_state.learner().id());
   *req_.mutable_server_entity() = learner_state.learner().service_spec();
   *req_.mutable_local_dataset_spec() = learner_state.learner().dataset_spec();
 
@@ -162,7 +161,6 @@ TEST_F(ControllerServicerImplTest, JoinFederation_LearnerCollision) {
 
   JoinFederationRequest req_;
   JoinFederationResponse res_;
-  req_.set_learner_id(learner.id());
   *req_.mutable_server_entity() = learner.service_spec();
   *req_.mutable_local_dataset_spec() = learner.dataset_spec();
 

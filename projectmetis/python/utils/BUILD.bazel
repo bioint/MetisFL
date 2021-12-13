@@ -1,0 +1,20 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "utils_py_lib",
+    srcs = [
+        "fedenv_parser.py",
+        "grpc_services.py",
+        "proto_messages_factory.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        "//projectmetis/proto:controller_py_grpc",
+        "//projectmetis/proto:learner_py_grpc",
+        requirement("grpcio"),
+        requirement("PyYAML"),
+    ],
+)

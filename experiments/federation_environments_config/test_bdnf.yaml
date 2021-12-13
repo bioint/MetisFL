@@ -1,0 +1,49 @@
+FederationEnvironment:
+  TerminationSignals:
+    FederationRounds: 100 # only in synchronous execution
+    ExecutionCutoffTimeMins: 100000
+    ExecutionCutoffScore: 0.0
+  CommunicationProtocol: "SYNCHRONOUS"
+  GlobalModelConfig:
+    AggregationFunction: "FED_AVG"
+    ParticipationRatio: 1
+  LocalModelConfig:
+    BatchSize: 50
+    LocalEpochs: 5
+    ValidationPercentage: 0.0
+    OptimizerConfig:
+      OptimizerName: "VanillaSGD"
+      LearningRate: 0.05
+      L2Reg: 0.001
+  Controller:
+    ConnectionConfigs:
+      Hostname: "bdnf.isi.edu"
+      Username: "stripeli"
+      Password: ""
+    GRPCServicer:
+      Port: 40050
+  Learners:
+    - LearnerID: "BDNF-1"
+      ConnectionConfigs:
+        Hostname: "bdnf.isi.edu"
+        Username: "stripeli"
+        Password: ""
+      GRPCServicer:
+        Port: 4223
+      CudaDevices: []
+      DatasetConfigs:
+        TrainDatasetPath: ""
+        ValidationDatasetPath: ""
+        TestDatasetPath: ""
+    - LearnerID: "BDNF-2"
+      ConnectionConfigs:
+        Hostname: "bdnf.isi.edu"
+        Username: "stripeli"
+        Password: ""
+      GRPCServicer:
+        Port: 4224
+      CudaDevices: []
+      DatasetConfigs:
+        TrainDatasetPath: ""
+        ValidationDatasetPath: ""
+        TestDatasetPath: ""

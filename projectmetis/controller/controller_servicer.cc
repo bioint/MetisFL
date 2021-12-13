@@ -58,6 +58,9 @@ public:
     // clients. In this case it corresponds to an *synchronous* service.
     builder.RegisterService(service);
 
+    // Override default grpc max received message size.
+    builder.SetMaxReceiveMessageSize(INT_MAX);
+
     // Finally assemble the server.
     server_ = builder.BuildAndStart();
     std::cout << "Controller listening on " << server_address << std::endl;
@@ -221,16 +224,20 @@ public:
     if (!status.ok()) {
       switch (status.code()) {
       case absl::StatusCode::kInvalidArgument:
+        response->mutable_ack()->set_status(false);
         return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
       case absl::StatusCode::kPermissionDenied:
+        response->mutable_ack()->set_status(false);
         return {StatusCode::PERMISSION_DENIED, std::string(status.message())};
       case absl::StatusCode::kNotFound:
+        response->mutable_ack()->set_status(false);
         return {StatusCode::NOT_FOUND, std::string(status.message())};
       default:
+        response->mutable_ack()->set_status(false);
         return {StatusCode::INTERNAL, std::string(status.message())};
       }
     }
-
+    response->mutable_ack()->set_status(true);
     return Status::OK;
   }
 

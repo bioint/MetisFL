@@ -1,0 +1,19 @@
+load("@python_deps//:requirements.bzl", "requirement")
+load("@rules_python//python:defs.bzl", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "models_keras_py_lib",
+    srcs = [
+        "keras_model_ops.py",
+        "step_counter.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        "//projectmetis/python/models:models_py_lib",
+        "//projectmetis/python/models/keras/optimizers:models_keras_optimizers_py_lib",
+        requirement("tensorflow"),
+        requirement("numpy"),
+    ],
+)

@@ -15,3 +15,17 @@ message Ack {
   // An optional message.
   string message = 3;
 }
+
+message GetServicesHealthStatusRequest {}
+
+message GetServicesHealthStatusResponse {
+  map<string, bool> services_status = 1; // A Key-Value services status reply.
+}
+
+message ShutDownRequest {
+  //TODO: require some sort of auth key here?
+}
+
+message ShutDownResponse {
+  Ack ack = 1;
+}

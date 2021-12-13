@@ -65,3 +65,8 @@ https://support.atlassian.com/bitbucket-cloud/docs/merge-a-pull-request/#Mergeap
 - Squash (--squash) **METIS DEFAULT**: Combine all commits into one new non-merge commit on the \<destination\> branch.
 
 - Squash, fast-forward only (--squash --ff-only): If the \<source\> branch is out of date with the \<destination\> branch, reject the merge request. Otherwise, combine all commits into one new non-merge commit on the \<destination\> branch.
+
+
+## Bazel files formatting conventions:
+- For lists with a single element, we do not go next line.
+- For lists with at least 2 elements, we start the first element from the line below.
