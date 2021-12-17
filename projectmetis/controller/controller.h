@@ -50,6 +50,16 @@ class Controller {
   ABSL_MUST_USE_RESULT
   virtual uint32_t GetNumLearners() const = 0;
 
+  // Returns the current community model;
+  ABSL_MUST_USE_RESULT
+  virtual const FederatedModel& CommunityModel() const = 0;
+
+  // Overwrites/replaces the community model with the provided.
+  virtual absl::Status ReplaceCommunityModel(const FederatedModel& model) = 0;
+
+  ABSL_MUST_USE_RESULT
+  virtual const FedRuntimeMetadata& RuntimeMetadata() const = 0;
+
   // Attempts to add a new learner to the federation. If successful, a
   // LearnerState instance is returned. Otherwise, it returns null.
   virtual absl::StatusOr<LearnerDescriptor>
@@ -64,6 +74,9 @@ class Controller {
   virtual absl::Status LearnerCompletedTask(const std::string &learner_id,
                                             const std::string &token,
                                             const CompletedLearningTask &task) = 0;
+
+  virtual std::vector<ModelEvaluation>
+  GetEvaluationLineage(uint32_t num_steps) = 0;
 
   virtual std::vector<ModelEvaluation>
   GetEvaluationLineage(const std::string &learner_id, uint32_t num_steps) = 0;

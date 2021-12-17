@@ -25,7 +25,8 @@
  */
 
 #include <memory>
-#include <csignal>
+//#include <csignal>
+#include <signal.h>
 
 #include "projectmetis/controller/controller.h"
 #include "projectmetis/controller/controller_servicer.h"
@@ -46,7 +47,7 @@ void sigint_handler(int code) {
   if (servicer != nullptr) {
     servicer->StopService();
   }
-  exit(code);
+  //exit(code);
 }
 
 int main(int argc, char **argv) {
@@ -79,15 +80,7 @@ int main(int argc, char **argv) {
   std::cout << "Starting controller with params: " << std::endl;
   std::cout << params.DebugString() << std::endl;
 
-  {
-    struct sigaction sigIntHandler;
-
-    sigIntHandler.sa_handler = sigint_handler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-
-    sigaction(SIGINT, &sigIntHandler, nullptr);
-  }
+  signal(SIGINT, sigint_handler);
 
   auto controller = Controller::New(params);
   servicer = ControllerServicer::New(controller.get());
@@ -95,5 +88,6 @@ int main(int argc, char **argv) {
   servicer->StartService();
   servicer->WaitService();
 
+  std::cout << "Exiting... Bye!" << std::endl;
   return 0;
 }

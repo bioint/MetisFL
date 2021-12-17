@@ -3,6 +3,9 @@ package projectmetis;
 
 import "projectmetis/proto/model.proto";
 
+import "google/protobuf/timestamp.proto";
+//import "google/protobuf/duration.proto";
+
 /////////////
 // Generic //
 /////////////
@@ -207,4 +210,15 @@ message LearnerState {
 
   // Learner's model lineage.
   repeated Model model = 3;
+}
+
+message FedRuntimeMetadata {
+  uint32 global_iteration = 1;
+
+  google.protobuf.Timestamp started_at = 2;
+
+  google.protobuf.Timestamp last_iteration_started_at = 3;
+  google.protobuf.Timestamp last_iteration_finished_at = 4;
+
+  google.protobuf.Timestamp current_iteration_started_at = 5;
 }

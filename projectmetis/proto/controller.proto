@@ -8,7 +8,7 @@ import "projectmetis/proto/service_common.proto";
 service ControllerService {
 
   // Unary RPC. Retrieve community models' metadata related to the models' evaluation.
-  rpc GetCommunityModelEvaluationsLineage (GetCommunityModelEvaluationLineageRequest) returns (GetCommunityModelEvaluationLineageResponse) {}
+  rpc GetCommunityModelEvaluationLineage (GetCommunityModelEvaluationLineageRequest) returns (GetCommunityModelEvaluationLineageResponse) {}
 
   // Unary RPC. Controller replies with community models (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
   rpc GetCommunityModelLineage (GetCommunityModelLineageRequest) returns (GetCommunityModelLineageResponse) {}
@@ -42,19 +42,25 @@ service ControllerService {
   // completes its (locally) assigned task.
   rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (MarkTaskCompletedResponse) {}
 
+  rpc ReplaceCommunityModel (ReplaceCommunityModelRequest) returns (ReplaceCommunityModelResponse) {}
+
   // Shuts down the controller service and clears any resources.
   rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
 }
 
 message GetCommunityModelEvaluationLineageRequest {
-  int32 num_backtracks = 1; // Refer to the number of evaluation request rounds that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest community models evaluations.
+  // Refer to the number of evaluation request rounds that we need to re-track.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and
+  // num-1 latest community models evaluations.
+  int32 num_backtracks = 1;
 }
 
 message GetCommunityModelEvaluationLineageResponse {
+  ModelEvaluations evaluations = 1;
   // Endpoint response is possible to contain two separate evaluations:
   //  1. Evaluation on datasets held exclusively by the controller (e.g. global test dataset).
   //  2. Evaluation on datasets held exclusively by the learners (e.g. local train/validation/test dataset).
-  string json_evaluation_lineage_response = 1; // TODO No structured response yet, but in a future release this should follow a specific format.
+  //string json_evaluation_lineage_response = 1; // TODO No structured response yet, but in a future release this should follow a specific format.
 }
 
 message GetCommunityModelLineageRequest {
@@ -98,7 +104,8 @@ message GetParticipatingLearnersResponse {
 message GetRuntimeMetadataRequest {}
 
 message GetRuntimeMetadataResponse {
-  string json_metadata = 1; // TODO No structured response yet, but in a future release this should follow a specific format.
+  FedRuntimeMetadata metadata = 1;
+  string json_metadata = 2; // TODO No structured response yet, but in a future release this should follow a specific format.
 }
 
 message JoinFederationRequest {
@@ -139,5 +146,15 @@ message LeaveFederationRequest {
 }
 
 message LeaveFederationResponse {
+  Ack ack = 1;
+}
+
+message ReplaceCommunityModelRequest {
+  // TODO: Require some some of auth to ensure that whoever is replacing the model, e.g., a driver
+  // is authorized to do so.
+  FederatedModel model = 1;
+}
+
+message ReplaceCommunityModelResponse {
   Ack ack = 1;
 }

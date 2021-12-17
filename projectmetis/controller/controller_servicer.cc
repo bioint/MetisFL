@@ -72,7 +72,7 @@ public:
     }
 
     server_->Shutdown();
-    server_ = nullptr;
+    //server_ = nullptr;
     std::cout << "Controller has shut down" << std::endl;
   }
 
@@ -109,6 +109,29 @@ public:
 
   void StopService() override { Stop(); }
 
+  Status GetCommunityModelEvaluationLineage(
+      ServerContext *context,
+      const GetCommunityModelEvaluationLineageRequest *request,
+      GetCommunityModelEvaluationLineageResponse *response) override {
+
+    // Captures unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
+    }
+
+    const auto lineage = controller_->GetEvaluationLineage(
+        request->num_backtracks());
+
+    ModelEvaluations evaluations;
+    for (const auto &evaluation : lineage) {
+      *evaluations.add_evaluation() = evaluation;
+    }
+
+    *response->mutable_evaluations() = evaluations;
+    return Status::OK;
+  }
+
   Status GetLocalModelEvaluationLineage(
       ServerContext *context,
       const GetLocalModelEvaluationLineageRequest *request,
@@ -120,10 +143,11 @@ public:
     }
 
     for (const auto &learner_id : request->learner_ids()) {
-      const auto lineage = controller_->GetEvaluationLineage(learner_id, request->num_backtracks());
+      const auto lineage = controller_->GetEvaluationLineage(
+          learner_id, request->num_backtracks());
 
       ModelEvaluations evaluations;
-      for (const auto& evaluation: lineage) {
+      for (const auto &evaluation : lineage) {
         *evaluations.add_evaluation() = evaluation;
       }
 
@@ -148,6 +172,13 @@ public:
       *response->add_server_entity() = learner.service_spec();
     }
 
+    return Status::OK;
+  }
+
+  Status GetRuntimeMetadata(ServerContext *context,
+                            const GetRuntimeMetadataRequest *request,
+                            GetRuntimeMetadataResponse *response) override {
+    *response->mutable_metadata() = controller_->RuntimeMetadata();
     return Status::OK;
   }
 
@@ -239,6 +270,19 @@ public:
     }
     response->mutable_ack()->set_status(true);
     return Status::OK;
+  }
+
+  Status
+  ReplaceCommunityModel(ServerContext *context,
+                        const ReplaceCommunityModelRequest *request,
+                        ReplaceCommunityModelResponse *response) override {
+    auto status = controller_->ReplaceCommunityModel(request->model());
+    if (status.ok()) {
+      response->mutable_ack()->set_status(true);
+      return Status::OK;
+    }
+
+    return {StatusCode::UNAUTHENTICATED, std::string(status.message())};
   }
 
   Status ShutDown(ServerContext *context, const ShutDownRequest *request,

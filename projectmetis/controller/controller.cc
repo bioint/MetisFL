@@ -25,6 +25,7 @@
 #include <mutex>
 #include <utility>
 
+#include <google/protobuf/util/time_util.h>
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
 
@@ -40,6 +41,8 @@
 
 namespace projectmetis::controller {
 namespace {
+
+using google::protobuf::util::TimeUtil;
 
 class ControllerDefaultImpl : public Controller {
 public:
@@ -66,6 +69,20 @@ public:
   }
 
   uint32_t GetNumLearners() const override { return learners_.size(); }
+
+  const FederatedModel &CommunityModel() const override {
+    return community_model_;
+  }
+
+  // TODO: add admin auth token support
+  absl::Status ReplaceCommunityModel(const FederatedModel &model) override {
+    community_model_ = model;
+    return absl::OkStatus();
+  }
+
+  const FedRuntimeMetadata &RuntimeMetadata() const override {
+    return metadata_;
+  }
 
   absl::StatusOr<LearnerDescriptor>
   AddLearner(const ServerEntity &server_entity,
@@ -120,6 +137,9 @@ public:
         ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
     learner_stubs_[learner_id] = LearnerService::NewStub(channel);
 
+    // Triggers the initial task.
+    ScheduleInitialTask(learner_id);
+
     return learner;
   }
 
@@ -158,6 +178,28 @@ public:
     ScheduleTasks(learner_id, task);
 
     return absl::OkStatus();
+  }
+
+  std::vector<ModelEvaluation>
+  GetEvaluationLineage(uint32_t num_steps) override {
+    if (community_evaluations_.empty()) {
+      return {};
+    }
+
+    const auto &lineage = community_evaluations_;
+
+    if (num_steps <= 0) {
+      return {lineage.begin(), lineage.end()};
+    }
+
+    std::vector<ModelEvaluation> lineage_head;
+    auto iter = lineage.begin();
+    while (lineage_head.size() < num_steps && iter != lineage.end()) {
+      lineage_head.push_back(*iter);
+      ++iter;
+    }
+
+    return lineage_head;
   }
 
   std::vector<ModelEvaluation>
@@ -203,6 +245,46 @@ private:
     return absl::OkStatus();
   }
 
+  void ScheduleInitialTask(const std::string &learner_id) {
+    if (!community_model_.IsInitialized()) {
+      return;
+    }
+
+    if (!metadata_.has_started_at()) {
+      *metadata_.mutable_started_at() = TimeUtil::GetCurrentTime();
+    }
+
+    const auto &learner = learners_[learner_id].learner();
+    auto *learner_stub = learner_stubs_[learner_id].get();
+    const auto &dataset_spec = learner.dataset_spec();
+
+    auto &community_model = community_model_;
+
+    // Send initial training
+    auto &params = params_;
+    pool_.push_task([learner_stub, dataset_spec, community_model, &params] {
+      RunTaskRequest request;
+      *request.mutable_federated_model() = community_model;
+
+      auto *next_task = request.mutable_task();
+      const auto &model_params = params.model_hyperparams();
+      uint32_t steps_per_epoch =
+          dataset_spec.num_training_examples() / model_params.batch_size();
+      next_task->set_num_local_updates(model_params.epochs() * steps_per_epoch);
+      next_task->set_training_dataset_percentage_for_stratified_validation(
+          model_params.percent_validation());
+
+      auto *hyperparams = request.mutable_hyperparameters();
+      hyperparams->set_batch_size(model_params.batch_size());
+      *hyperparams->mutable_optimizer() =
+          params.model_hyperparams().optimizer();
+
+      ::grpc::ClientContext context;
+      RunTaskResponse response;
+      learner_stub->RunTask(&context, request, &response);
+    });
+  }
+
   void ScheduleTasks(const std::string &learner_id,
                      const CompletedLearningTask &task) {
     // Acquires a lock to avoid having multiple threads overwriting the
@@ -217,9 +299,16 @@ private:
       ++global_iteration_;
       std::cout << "Global Iteration: " << unsigned(global_iteration_) << std::endl;
 
+      metadata_.set_global_iteration(global_iteration_);
+      *metadata_.mutable_last_iteration_started_at() = metadata_.current_iteration_started_at();
+      *metadata_.mutable_last_iteration_finished_at() = TimeUtil::GetCurrentTime();
+      *metadata_.mutable_current_iteration_started_at() = TimeUtil::GetCurrentTime();
+
       auto community_model = ComputeCommunityModel();
       community_model.set_global_iteration(global_iteration_);
 
+      // Schedule next iteration
+      bool first_learner = true;
       for (const auto &to_schedule_id : to_schedule) {
         const auto &learner = learners_[to_schedule_id].learner();
         auto *learner_stub = learner_stubs_[to_schedule_id].get();
@@ -229,8 +318,11 @@ private:
         if (!evaluations_.contains(to_schedule_id)) {
           evaluations_[to_schedule_id] = std::list<ModelEvaluation>();
         }
-        auto &evaluation_lineage = evaluations_[to_schedule_id];
-        pool_.push_task([learner_stub, params, community_model, &evaluation_lineage] {
+
+        auto &local_evaluations = evaluations_[to_schedule_id];
+        auto &global_evaluations = community_evaluations_;
+        pool_.push_task([learner_stub, community_model, &local_evaluations,
+                         &global_evaluations, params, first_learner] {
           EvaluateModelRequest request;
           *request.mutable_model() = community_model.model();
           request.set_batch_size(params.model_hyperparams().batch_size());
@@ -245,7 +337,10 @@ private:
               learner_stub->EvaluateModel(&context, request, &response);
 
           if (status.ok()) {
-            evaluation_lineage.push_front(response.evaluation());
+            local_evaluations.push_front(response.evaluation());
+            if (first_learner) {
+              global_evaluations.push_front(response.evaluation());
+            }
           }
         });
 
@@ -272,6 +367,8 @@ private:
           RunTaskResponse response;
           learner_stub->RunTask(&context, request, &response);
         });
+
+        first_learner = false;
       }
 
       // Updates the community model.
@@ -296,12 +393,14 @@ private:
   // Controllers parameters.
   ControllerParams params_;
   uint8_t global_iteration_;
+  FedRuntimeMetadata metadata_;
   // Stores active learners execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
   absl::flat_hash_map<std::string, LearnerStub> learner_stubs_;
   std::mutex learners_mutex_;
   // Stores evaluation lineages
   absl::flat_hash_map<std::string, std::list<ModelEvaluation>> evaluations_;
+  std::list<ModelEvaluation> community_evaluations_;
   // Scaling function for computing the scaling factor of each learner.
   std::unique_ptr<ScalingFunction> scaler_;
   // Aggregation function to use for computing the community model.

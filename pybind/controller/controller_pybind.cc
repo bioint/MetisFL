@@ -57,8 +57,8 @@ void Wait(ServicerWrapper &wrapper) { wrapper.servicer->WaitService(); }
 void Shutdown(ServicerWrapper &wrapper) {
   std::cout << "received shutdown signal.." << std::endl;
   wrapper.servicer->StopService();
-  wrapper.servicer = nullptr;
-  wrapper.controller = nullptr;
+  //wrapper.servicer = nullptr;
+  //wrapper.controller = nullptr;
 }
 
 } // namespace projectmetis::controller

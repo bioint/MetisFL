@@ -26,6 +26,8 @@ proto_library(
     srcs = ["metis.proto"],
     deps = [
         ":model_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:duration_proto",
     ],
 )
 
