@@ -281,6 +281,8 @@ private:
 
       ::grpc::ClientContext context;
       RunTaskResponse response;
+
+      // TODO(aasghar) Need to implement logic, when the learner is behaving as a server, and controller needs to connect.
       learner_stub->RunTask(&context, request, &response);
     });
   }

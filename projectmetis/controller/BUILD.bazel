@@ -70,6 +70,7 @@ cc_library(
     name = "controller_servicer",
     srcs = ["controller_servicer.cc"],
     hdrs = ["controller_servicer.h"],
+    data = ["//resources:ssl_pem"],
     deps = [
         ":controller",
         "//projectmetis/proto:controller_cc_grpc",

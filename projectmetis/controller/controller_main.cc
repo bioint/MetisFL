@@ -56,6 +56,10 @@ int main(int argc, char **argv) {
     server_entity {
       hostname: "0.0.0.0"
       port: 50051
+      ssl_config {
+            server_key: "/resources/ssl/server-key.pem"
+            server_cert: "/resources/ssl/server-cert.pem"
+        }
     }
     global_model_specs {
       learners_participation_ratio: 1

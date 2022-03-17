@@ -1,0 +1,7 @@
+
+filegroup(
+    name = "ssl_pem",
+    srcs = ["ssl/server-key.pem",
+            "ssl/server-cert.pem"],
+    visibility = ["//visibility:public"],
+)

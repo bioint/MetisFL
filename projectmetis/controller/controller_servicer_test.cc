@@ -70,6 +70,11 @@ class ControllerServicerImplTest : public ::testing::Test {
 TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyRequest) {
   GetParticipatingLearnersRequest req_;
   GetParticipatingLearnersResponse res_;
+
+  EXPECT_CALL(controller_, GetLearners())
+        .Times(Exactly(1))
+        .WillOnce(Return(std::vector<LearnerDescriptor>()));
+
   auto status = service_->GetParticipatingLearners(&ctx_, &req_, &res_);
 
   EXPECT_TRUE(status.ok());
@@ -114,7 +119,7 @@ TEST_F(ControllerServicerImplTest, JoinFederation_EmptyRequest) {
   JoinFederationResponse res_;
   auto status = service_->JoinFederation(&ctx_, &req_, &res_);
 
-  EXPECT_FALSE(status.ok());
+  EXPECT_EQ(status.error_code(), grpc::StatusCode::INVALID_ARGUMENT);
 }
 
 // NOLINTNEXTLINE
@@ -237,6 +242,164 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerInvalidCredentials) {
   auto status = service_->LeaveFederation(&ctx_, &req, &res);
   EXPECT_FALSE(status.ok());
   EXPECT_FALSE(res.ack().status());
+}
+
+// NOLINTNEXTLINE
+TEST_F(ControllerServicerImplTest, GetEvaluationLineage_RequestIsNullptr){
+
+  GetLocalModelEvaluationLineageRequest request;
+  GetLocalModelEvaluationLineageResponse response;
+
+  auto status = service_->GetLocalModelEvaluationLineage(&ctx_, nullptr, &response);
+
+  EXPECT_EQ(status.error_code(), grpc::StatusCode::INVALID_ARGUMENT);
+}
+
+// TODO(aasghar) Need to make the tests more robust with respect to ModelEvaluation values.
+TEST_F(ControllerServicerImplTest, GetEvaluationLineage_EvaluationLineage) {
+
+  LearnerState learnerState = ParseTextOrDie<LearnerState>(kLearnerState);
+  const LearnerDescriptor &learnerDescriptor = learnerState.learner();
+  std::string learner_id = learnerDescriptor.id();
+  GetLocalModelEvaluationLineageRequest request;
+  GetLocalModelEvaluationLineageResponse response;
+
+  // We are testing without initializing the request object with wildcard values defined by ::testing::_
+  ON_CALL(controller_, GetEvaluationLineage(learner_id, ::testing::_))
+    .WillByDefault(Return(std::vector<ModelEvaluation>()));
+
+  auto status = service_->GetLocalModelEvaluationLineage(&ctx_, &request, &response);
+
+  EXPECT_EQ(status.error_code(),grpc::StatusCode::OK);
+  EXPECT_TRUE((*response.mutable_learner_evaluations()).empty());
+}
+
+// TODO(aasghar) Could make the tests more robust with respect to ModelEvaluation values.
+TEST_F(ControllerServicerImplTest, GetCommunityEvaluationLineage_EvaluationLineage) {
+
+
+  GetCommunityModelEvaluationLineageRequest request;
+  GetCommunityModelEvaluationLineageResponse response;
+
+  request.set_num_backtracks(1);
+  // We are testing without initializing the request object. Passing wildcard values defined by ::testing::_
+  EXPECT_CALL(controller_, GetEvaluationLineage(::testing::_))
+        .Times(Exactly(1))
+        .WillOnce(Return(std::vector<ModelEvaluation>()));
+
+  auto status = service_->GetCommunityModelEvaluationLineage(&ctx_, &request, &response);
+
+  EXPECT_EQ(status.error_code(),grpc::StatusCode::OK);
+  ASSERT_TRUE((*response.mutable_evaluations()).IsInitialized());
+}
+
+// TODO(aasghar) Can make the test more useful by initializing the request object.
+TEST_F(ControllerServicerImplTest, MarkTaskCompleted_ReturnOk){
+
+  MarkTaskCompletedRequest request;
+  MarkTaskCompletedResponse response;
+
+  // We are testing without initializing the request object. Passing wildcard values defined by ::testing::_
+  ON_CALL(controller_, LearnerCompletedTask(::testing::_, ::testing::_, ::testing::_))
+            .WillByDefault(Return(absl::OkStatus()));
+
+  auto status = service_->MarkTaskCompleted(&ctx_, &request, &response);
+
+  EXPECT_TRUE(status.ok());
+
+}
+
+// TODO(aasghar) Can make the test more useful by initializing the request object.
+TEST_F(ControllerServicerImplTest, MarkTaskCompleted_ReturnError){
+
+  MarkTaskCompletedRequest request;
+  MarkTaskCompletedResponse response;
+
+  // We are testing without initializing the request object. Passing wildcard values defined by ::testing::_
+  ON_CALL(controller_, LearnerCompletedTask(::testing::_, ::testing::_, ::testing::_))
+            .WillByDefault(Return(absl::NotFoundError("Learner does not exist.")));
+
+  auto status = service_->MarkTaskCompleted(&ctx_, &request, &response);
+
+  EXPECT_FALSE(status.ok());
+
+}
+TEST_F(ControllerServicerImplTest, StartService_WithSSL){
+
+  projectmetis::ControllerParams params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
+    server_entity {
+      hostname: "0.0.0.0"
+      port: 50051
+      ssl_config {
+            server_key: "/resources/ssl/server-key.pem"
+            server_cert: "/resources/ssl/server-cert.pem"
+        }
+    }
+    global_model_specs {
+      learners_participation_ratio: 1
+      aggregation_rule: FED_AVG
+    }
+    communication_specs {
+      protocol: SYNCHRONOUS
+    }
+    model_hyperparams {
+      batch_size: 1
+      epochs: 1
+      optimizer {
+        vanilla_sgd {
+          learning_rate: 0.05
+          L2_reg: 0.001
+        }
+      }
+      percent_validation: 0
+    }
+    )pb2");
+
+  EXPECT_CALL(controller_, GetParams)
+            .Times(Exactly(2))
+            .WillRepeatedly(::testing::ReturnRef(params));
+
+  service_->StartService();
+  bool is_enabled = service_->GetController()->GetParams().server_entity().has_ssl_config();
+
+  ASSERT_TRUE(is_enabled);
+}
+
+TEST_F(ControllerServicerImplTest, StartService_WithoutSSL){
+
+  projectmetis::ControllerParams params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
+    server_entity {
+      hostname: "0.0.0.0"
+      port: 50051
+    }
+    global_model_specs {
+      learners_participation_ratio: 1
+      aggregation_rule: FED_AVG
+    }
+    communication_specs {
+      protocol: SYNCHRONOUS
+    }
+    model_hyperparams {
+      batch_size: 1
+      epochs: 1
+      optimizer {
+        vanilla_sgd {
+          learning_rate: 0.05
+          L2_reg: 0.001
+        }
+      }
+      percent_validation: 0
+    }
+  )pb2");
+
+  EXPECT_CALL(controller_, GetParams)
+            .Times(Exactly(2))
+            .WillRepeatedly(::testing::ReturnRef(params));
+
+  service_->StartService();
+  bool is_enabled = service_->GetController()->GetParams().server_entity().has_ssl_config();
+
+  ASSERT_FALSE(is_enabled);
 }
 
 } // namespace

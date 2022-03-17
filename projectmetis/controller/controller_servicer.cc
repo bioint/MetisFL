@@ -43,16 +43,58 @@ using ::grpc::StatusCode;
 class ServicerBase {
 public:
   template <class Service>
-  void Start(const std::string &hostname, uint32_t port, Service *service) {
-    const auto server_address = absl::StrCat(hostname, ":", port);
+  void Start(const ServerEntity &server_entity, Service *service) {
+    const auto server_address = absl::StrCat(server_entity.hostname(), ":", server_entity.port());
 
     grpc::EnableDefaultHealthCheckService(true);
     grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
     ServerBuilder builder;
+    std::shared_ptr<grpc::ServerCredentials> creds;
+
+    bool read_ssl = false;
+
+    /*! Read the server certificate & server key
+     * and enable SSL accordingly. */
+    if (!server_entity.ssl_config().server_cert().empty()
+            && !server_entity.ssl_config().server_key().empty()) {
+                read_ssl = true;
+    }
+
+    if (read_ssl) {
+      std::string server_cert;
+      std::string server_key;
+      // TODO(aasghar) Understand how we can handle the SSL certificates if passed as commandline argument.
+      std::string abs_path = std::filesystem::current_path();
+      std::string temp_cert  = abs_path + server_entity.ssl_config().server_cert();
+      std::string temp_key =  abs_path + server_entity.ssl_config().server_key();
+
+      if (read_and_parse_file(server_cert, temp_cert) == -1) {
+          std::cerr << "Error Reading Server Cert: " << server_entity.ssl_config().server_cert() << std::endl;
+          std::cerr << "Exiting Program..." << std::endl;
+          exit(1);
+      }
+
+      if (read_and_parse_file(server_key, temp_key) == -1) {
+          std::cerr << "Error Reading Key Cert: " << server_entity.ssl_config().server_key() << std::endl;
+          std::cerr << "Exiting Program..." << std::endl;
+          exit(1);
+      }
+
+      std::cout << "SSL enabled" << std::endl;
+      grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp = {server_key, server_cert};
+      grpc::SslServerCredentialsOptions ssl_opts;
+      ssl_opts.pem_root_certs = "";
+      ssl_opts.pem_key_cert_pairs.push_back(pkcp);
+      creds = grpc::SslServerCredentials(ssl_opts);
+
+    } else {
+      std::cout << "SSL disabled" << std::endl;
+      creds = grpc::InsecureServerCredentials();
+    }
 
     // Listens on the given address without any authentication mechanism.
-    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    builder.AddListeningPort(server_address, creds);
 
     // Registers "service" as the instance through which we'll communicate with
     // clients. In this case it corresponds to an *synchronous* service.
@@ -86,6 +128,23 @@ public:
 
 protected:
   std::unique_ptr<Server> server_;
+private:
+  //Reads a file from disk that contains the key and certificate information
+  //and returns the certificate and a referenced argument, or an error if file
+  //is not being opened
+  int read_and_parse_file(std::string &return_cert, std::string file_name){
+    std::ifstream _file;
+    _file.open(file_name);
+
+    // Manage handling in case the certificates are not generated.
+    std::stringstream buffer;
+    if (_file.is_open()){
+        buffer << _file.rdbuf();
+        return_cert = buffer.str();
+        return 1;
+      }
+    return -1;
+  }
 };
 
 class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
@@ -99,10 +158,8 @@ public:
   const Controller *GetController() const override { return controller_; }
 
   void StartService() override {
-    const auto &params = controller_->GetParams();
-
-    Start(params.server_entity().hostname(), params.server_entity().port(),
-          this);
+      const auto &params = controller_->GetParams();
+      Start(params.server_entity(),this);
   }
 
   void WaitService() override { Wait(); }

@@ -17,6 +17,14 @@ message ServerEntity {
 
   // The server port that the service is running on.
   uint32 port = 2;
+
+  // For enabling https between the learners and controller
+  SSLConfig ssl_config = 3;
+}
+
+message SSLConfig {
+  string server_key = 1;
+  string server_cert = 2;
 }
 
 //////////////

@@ -24,6 +24,9 @@
 #define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_SERVICER_H_
 
 #include <memory>
+#include <sstream>
+#include <fstream>
+#include <filesystem>
 
 #include "projectmetis/controller/controller.h"
 #include "projectmetis/proto/controller.grpc.pb.h"

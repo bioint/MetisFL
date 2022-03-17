@@ -50,6 +50,26 @@ class MockController : public Controller {
               LearnerCompletedTask,
               (const std::string &learner_id, const std::string &token, const CompletedLearningTask &task),
               (override));
+  MOCK_METHOD(std::vector<ModelEvaluation>,
+              GetEvaluationLineage,
+              (const std::string &learner_id, uint32_t num_steps),
+              (override));
+  MOCK_METHOD(std::vector<ModelEvaluation>,
+              GetEvaluationLineage,
+              (uint32_t num_steps),
+              (override));
+  MOCK_METHOD(FedRuntimeMetadata&,
+              RuntimeMetadata,
+              (),
+              (const, override));
+  MOCK_METHOD(absl::Status,
+              ReplaceCommunityModel,
+              (const FederatedModel& model),
+              (override));
+  MOCK_METHOD(FederatedModel&,
+              CommunityModel,
+              (),
+              (const, override));
 };
 
 } // namespace projectmetis::controller
