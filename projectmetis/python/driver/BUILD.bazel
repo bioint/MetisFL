@@ -1,22 +1,17 @@
 package(default_visibility = ["//visibility:public"])
 
-load("@python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_library", "py_binary")
 
 # Generates controller executable binary.
 py_library(
     name = "driver_py_lib",
     srcs = [
-        "driver_controller_client.py",
-        "driver_learner_client.py",
         "driver_session.py",
     ],
     srcs_version = "PY3",
     deps = [
         "//projectmetis/python/logging:logging_py_lib",
         "//projectmetis/python/utils:utils_py_lib",
-        requirement("fabric"),
-        requirement("Pebble"),
     ],
 )
 
@@ -31,9 +26,10 @@ py_binary(
     python_version = "PY3",
     legacy_create_init = False,
     deps = [
-        "//projectmetis/python/logging:logging_py_lib",
-        "//pybind/controller:controller_py_lib",
         "//projectmetis/proto:controller_py_grpc",
+        "//projectmetis/python/logging:logging_py_lib",
+        "//projectmetis/python/utils:utils_py_lib",
+        "//pybind/controller:controller_py_lib",
     ],
 )
 
@@ -52,6 +48,5 @@ py_binary(
         "//projectmetis/python/learner:learner_py_lib",
         "//projectmetis/python/models:models_py_lib",
         "//projectmetis/python/models/pytorch:models_pytorch_py_lib",
-        requirement("numpy"),
     ]
 )

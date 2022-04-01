@@ -22,8 +22,8 @@ message TensorSpec {
     DOUBLE = 4;
   }
 
-  // (Optional) The data type this tensor holds; may be used for casting the
-  // values to a specific type.
+  // (Optional) The data type this tensor holds; may be used for
+  // casting the values to a specific type.
   DType dtype = 3;
 }
 

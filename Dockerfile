@@ -18,27 +18,34 @@ SHELL ["/bin/bash", "--login", "-c"]
 RUN cd /etc/yum.repos.d/ && { curl -O https://copr.fedorainfracloud.org/coprs/vbatts/bazel/repo/epel-7/vbatts-bazel-epel-7.repo; cd -; }
 RUN yum -y install bazel4
 
-WORKDIR $PROJECT_HOME
-COPY . .
-
-# Since we copy the entire project, we need to clear any pre-existing
-# python configuration inside python/metisvenv (default working dir: $PROJECT_HOME)
-# else python will not be properly configured inside the image. Also need to install
-# the python development tools using python2*/build or python3*/build based on version.
-# Copy all ProjectMetis content.
-RUN rm -rf python/metisvenv
+# Download a python interpreter for the image.
 RUN yum -y module install python38/build
 RUN alternatives --set python /usr/bin/python3.8
-RUN /usr/bin/python3.8 -m venv python/metisvenv
 
 # Final stage - yum clean up.
 RUN yum clean all && rm -rf /var/cache/yum
 
+# METIS configuration.
+WORKDIR $PROJECT_HOME
+COPY . .
+
+# Run project configuration from root directory.
+RUN chmod +x ./configure && ./configure
+
 # Build all core projectmetis modules before publishing the docker image.
 ##RUN bazel query //... | grep -i -e "//encryption" | xargs bazel build
 #RUN bazel query //... | grep -i -e "//projectmetis" | xargs bazel build
+#RUN bazel query //... | grep -i -e "//projectmetis" | xargs bazel --output_user_root=/tmp/metis/bazel build
 #RUN bazel --output_user_root=/tmp/metis/bazel build //...
-RUN bazel --output_user_root=/tmp/metis/bazel run //projectmetis/python/driver:initialize_controller
+#RUN bazel --output_user_root=/tmp/metis/bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
+#RUN bazel --output_user_root=/tmp/metis/bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_learner
+#RUN bazel --output_user_root=/tmp/bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
+#RUN bazel --output_user_root=/tmp/bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_learner
+#RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
+#RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_learner
+#RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
+RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
+RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_learner
 #RUN bazel --output_user_root=/tmp/metis/bazel run //projectmetis/python/driver:initialize_learner
 #RUN bazel --output_user_root=/tmp/metis/bazel build --disk_cache=/tmp/metis/bazel //projectmetis/python/driver:initialize_learner
 #RUN cd /$PROJECT_HOME

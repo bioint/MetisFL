@@ -34,8 +34,9 @@ class PyTorchModelOps(ModelOps):
     def get_model_weights(self, *args, **kwargs):
         pass
 
-    def train_model(self, dataset: ModelDataset = None, total_steps=100,
-                    batch_size=100, verbose=False, *args, **kwargs):
+    def train_model(self, train_dataset: ModelDataset, total_steps=100,
+                    batch_size=100, validation_dataset: ModelDataset = None,
+                    verbose=False, *args, **kwargs):
         pass
 
     def evaluate_model(self, dataset: ModelDataset = None, batch_size=100,

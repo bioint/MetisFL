@@ -4,7 +4,7 @@ import sys
 
 from pybind.controller.controller_instance import ControllerInstance
 from pybind.controller.demo import utils
-from projectmetis.core.python.logging.metis_logger import MetisLogger
+from projectmetis.python.logging.metis_logger import MetisLogger
 
 if __name__ == "__main__":
     MetisLogger.info('\n'.join(os.environ['PYTHONPATH'].split(':')))

@@ -1,7 +1,6 @@
 load("@rules_foreign_cc//foreign_cc:cmake.bzl", "cmake")
 load("@rules_cc//cc:defs.bzl", "cc_library", "cc_binary", "cc_import")
 load("@rules_python//python:defs.bzl", "py_library", "py_binary")
-load("@python_deps//:requirements.bzl", "requirement")
 load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 
 package(default_visibility = ["//visibility:public"])
@@ -94,7 +93,6 @@ py_binary(
     python_version = "PY3",
     legacy_create_init = False,
     deps = [
-        requirement("numpy"),
         ":shelfi_fhe_demo"
     ],
 )

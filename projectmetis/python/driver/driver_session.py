@@ -1,245 +1,105 @@
+import abc
+import datetime
 import queue
 import os
-import random
-import string
+import statistics
 import tarfile
 import time
 
 import projectmetis.python.utils.proto_messages_factory as proto_messages_factory
 
 from fabric import Connection
-from pebble import ProcessPool
+from google.protobuf.json_format import MessageToDict
+from pebble import ThreadPool
+from projectmetis.python.utils.grpc_controller_client import GRPCControllerClient
+from projectmetis.python.utils.grpc_learner_client import GRPCLearnerClient
+from projectmetis.python.logging.metis_logger import MetisLogger
+from projectmetis.python.utils.bazel_services_factory import BazelMetisServicesCmdFactory
+from projectmetis.python.utils.docker_services_factory import DockerMetisServicesCmdFactory
 from projectmetis.python.utils.fedenv_parser import FederationEnvironment
-from projectmetis.python.driver.driver_learner_client import DriverLearnerClient
-from projectmetis.python.driver.driver_controller_client import DriverControllerClient
 
 
-class MetisDockerServicesCmdFactory(object):
-
-    def __init__(self,
-                 port,
-                 host_tmp_volume="/tmp/metis",
-                 container_tmp_volume="/tmp/metis",
-                 host_crypto_params_volume="/Users/Dstrip/CLionProjects/projectmetis-rc/resources/shelfi_cryptoparams",
-                 container_crypto_params_volume="/metis/cryptoparams",
-                 projectmetis_docker_image="projectmetis_rockylinux_8:0.0.1",
-                 container_name=None,
-                 cuda_devices=None):
-
-        self.container_name = container_name
-        if self.container_name is None:
-            self.container_name = ''.join(random.SystemRandom().choice(
-                string.ascii_uppercase + string.digits) for _ in range(10))
-
-        self.cuda_devices = cuda_devices
-        if self.cuda_devices is None:
-            self.cuda_devices = []
-
-        self.docker_template_cmd = \
-            "docker run " \
-            "-p {port}:{port} " \
-            "-v {host_tmp_volume}:{container_tmp_volume} " \
-            "-v {host_crypto_params_volume}:{container_crypto_params_volume} " \
-            "--name {container_name} " \
-            "--gpus '{gpu_devices}' " \
-            "{projectmetis_docker_image} ".format(
-                port=port,
-                host_tmp_volume=host_tmp_volume,
-                container_tmp_volume=container_tmp_volume,
-                host_crypto_params_volume=host_crypto_params_volume,
-                container_name=self.container_name,
-                container_crypto_params_volume=container_crypto_params_volume,
-                gpu_devices=','.join(self.cuda_devices),
-                projectmetis_docker_image=projectmetis_docker_image)
-
-    def docker_bazel_init_controller(self, *args, **kwargs):
-        return self.docker_template_cmd + " " + MetisBazelServicesCmdFactory.bazel_init_controller_target(**kwargs)
-
-    def docker_bazel_init_learner(self, *args, **kwargs):
-        return self.docker_template_cmd + " " + MetisBazelServicesCmdFactory.bazel_init_learner_target(**kwargs)
-
-
-class MetisBazelServicesCmdFactory(object):
-
-    @classmethod
-    def bazel_init_controller_target(cls,
-                                     output_user_root,
-                                     hostname,
-                                     port,
-                                     aggregation_rule,
-                                     participation_ratio,
-                                     protocol,
-                                     model_hyperparameters_pb):
-        bazel_cmd = \
-            "bazel " \
-            "--output_user_root={output_user_root} " \
-            "run -- //projectmetis/python/driver:initialize_controller " \
-            "--controller_hostname=\"{hostname}\" " \
-            "--controller_port={port} " \
-            "--aggregation_rule=\"{aggregation_rule}\" " \
-            "--learners_participation_ratio={participation_ratio} " \
-            "--communication_protocol=\"{protocol}\" " \
-            "--model_hyperparameters_protobuff=\"{model_hyperparameters_pb}\" ".format(
-                output_user_root=output_user_root, hostname=hostname, port=port,
-                aggregation_rule=aggregation_rule, participation_ratio=participation_ratio,
-                protocol=protocol, model_hyperparameters_pb=model_hyperparameters_pb)
-        return bazel_cmd
-
-    @classmethod
-    def bazel_init_learner_target(cls,
-                                  output_user_root,
-                                  learner_hostname,
-                                  learner_port,
-                                  controller_hostname,
-                                  controller_port,
-                                  model_definition,
-                                  train_dataset,
-                                  train_dataset_recipe,
-                                  validation_dataset="",
-                                  test_dataset="",
-                                  validation_dataset_recipe="",
-                                  test_dataset_recipe="",
-                                  neural_engine="keras"):
-        bazel_cmd = \
-            "bazel " \
-            "--output_user_root={output_user_root} " \
-            "run -- //projectmetis/python/driver:initialize_learner " \
-            "--neural_engine=\"{neural_engine}\" " \
-            "--learner_hostname=\"{learner_hostname}\" " \
-            "--learner_port={learner_port} " \
-            "--controller_hostname=\"{controller_hostname}\" " \
-            "--controller_port={controller_port} " \
-            "--model_definition=\"{model_definition}\" " \
-            "--train_dataset=\"{train_dataset}\" " \
-            "--validation_dataset=\"{validation_dataset}\" " \
-            "--test_dataset=\"{test_dataset}\" " \
-            "--train_dataset_recipe=\"{train_dataset_recipe}\" " \
-            "--validation_dataset_recipe=\"{validation_dataset_recipe}\" " \
-            "--test_dataset_recipe=\"{test_dataset_recipe}\"".format(
-                output_user_root=output_user_root,
-                neural_engine=neural_engine,
-                learner_hostname=learner_hostname,
-                learner_port=learner_port,
-                controller_hostname=controller_hostname,
-                controller_port=controller_port,
-                model_definition=model_definition,
-                train_dataset=train_dataset,
-                validation_dataset=validation_dataset,
-                test_dataset=test_dataset,
-                train_dataset_recipe=train_dataset_recipe,
-                validation_dataset_recipe=validation_dataset_recipe,
-                test_dataset_recipe=test_dataset_recipe)
-        return bazel_cmd
-
-
-class DriverSession(object):
+class DriverSessionBase(object):
 
     def __init__(self, federation_environment_fp, nn_engine, model_definition_dir,
                  train_dataset_recipe_fp, validation_dataset_recipe_fp="", test_dataset_recipe_fp=""):
         self.federation_environment = FederationEnvironment(federation_environment_fp)
+
+        self.num_participating_learners = len(self.federation_environment.learners.learners)
         self.nn_engine = nn_engine
-        self.model_definition_dir = model_definition_dir
+        self.model_definition_tar_fp = self._make_tarfile(
+            output_filename="model_definition",
+            source_dir=model_definition_dir)
         self.train_dataset_recipe_fp = train_dataset_recipe_fp
         self.validation_dataset_recipe_fp = validation_dataset_recipe_fp
         self.test_dataset_recipe_fp = test_dataset_recipe_fp
 
-        # Total number of workers is based on the number of participating learners and one for the controller.
-        self.max_workers = len(self.federation_environment.learners.learners) + 1
-        self._executor = ProcessPool(max_workers=self.max_workers)
-        # We use a Last-In-First out queue because when we initialize the federation, we start by firstly
-        # initializing the controller and then every other learner. Similarly, when we need to shutdown
-        # the federation, we start by shutting down first the learners and finally the controller.
-        self._executor_tasks_q = queue.LifoQueue(maxsize=self.max_workers)
+        self._executor = ThreadPool()
+        self._executor_controller_tasks_q = queue.LifoQueue(maxsize=0)
+        self._executor_learners_tasks_q = queue.LifoQueue(maxsize=0)
+        self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
+        self._driver_learner_grpc_clients = self._create_driver_learner_grpc_clients()
+        # This field is populated at different stages of the entire federated training lifecycle.
+        self._federation_statistics = dict()
 
     def __getstate__(self):
         """
         Python needs to pickle the entire object, including its instance variables.
         Since one of these variables is the Pool object itself, the entire object cannot be pickled.
         We need to remove the Pool() variable from the object state in order to use the pool_task.
+        The same holds for the gprc clients, which use a futures thread pool under the hood.
         See also: https://stackoverflow.com/questions/25382455
         """
         self_dict = self.__dict__.copy()
         del self_dict['_executor']
-        del self_dict['_executor_tasks_q']
+        del self_dict['_executor_controller_tasks_q']
+        del self_dict['_executor_learners_tasks_q']
+        del self_dict['_driver_controller_grpc_client']
+        del self_dict['_driver_learner_grpc_clients']
         return self_dict
 
-    def _tarify_directory(self, input_directory, output_filename):
-        output_filename = "{}.tar.gz".format(output_filename)
-        with tarfile.open(output_filename, "w:gz") as tar:
-            tar.add(input_directory, arcname=os.path.basename(input_directory))
-        return output_filename
-
-    def _init_controller(self):
-        # dev_cmd_factory = MetisDockerServicesCmdFactory(
-        #     port=self.federation_environment.controller.grpc_servicer.port)
-        dev_cmd_factory = MetisBazelServicesCmdFactory()
-        # controller_container_name = dev_cmd_factory.container_name
-        fabric_connection_config = self.federation_environment.controller \
-            .connection_configs.get_fabric_connection_config()
-        # TODO This must be removed when running with docker. Makes sense
-        #  only when running localhost to change directory and run bazel.
-        metis_home = "/Users/Dstrip/CLionProjects/projectmetis-rc/"
-        remote_bazel_output_user_root = "/tmp/metis/bazel"
-        remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc"
-        optimizer_pb = self.federation_environment.local_model_config.optimizer_config.optimizer_pb
-        model_hyperparameters_pb = proto_messages_factory.MetisProtoMessages\
-            .construct_controller_modelhyperparams_pb(
-                batch_size=self.federation_environment.local_model_config.batch_size,
-                epochs=self.federation_environment.local_model_config.local_epochs,
-                optimizer_pb=optimizer_pb,
-                percent_validation=self.federation_environment.local_model_config.validation_percentage)
-        model_hyperparameters_pb_serialized = model_hyperparameters_pb.SerializeToString()
-        init_controller_cmd = dev_cmd_factory.bazel_init_controller_target(
-                output_user_root=remote_bazel_output_user_root,
+    def _create_driver_controller_grpc_client(self):
+        controller_server_entity_pb = \
+            proto_messages_factory.MetisProtoMessages.construct_server_entity_pb(
                 hostname=self.federation_environment.controller.connection_configs.hostname,
-                port=self.federation_environment.controller.grpc_servicer.port,
-                aggregation_rule=self.federation_environment.global_model_config.aggregation_function,
-                participation_ratio=self.federation_environment.global_model_config.participation_ratio,
-                protocol=self.federation_environment.communication_protocol,
-                model_hyperparameters_pb=model_hyperparameters_pb_serialized)
-        print(init_controller_cmd, flush=True)
-        connection = Connection(**fabric_connection_config)
-        # Problem with fabric is that every command runs on non-interactive mode and therefore the $PATH that might
-        # be set for a particular user might not be visible while running the command. A workaround is to always
-        # source the respective bash_environment files.
-        connection.run("{}; cd {}; {}".format(
-            remote_source_path, metis_home, init_controller_cmd))
-        connection.close()
+                port=self.federation_environment.controller.grpc_servicer.port)
+        return GRPCControllerClient(controller_server_entity_pb, max_workers=1)
 
-    def _init_learner(self, learner_instance, controller_instance):
-        fabric_connection_config = learner_instance.connection_configs.get_fabric_connection_config()
-        connection = Connection(**fabric_connection_config)
+    def _create_driver_learner_grpc_clients(self):
+        grpc_clients = {}
+        for learner_instance in self.federation_environment.learners.learners:
+            learner_server_entity_pb = \
+                proto_messages_factory.MetisProtoMessages.construct_server_entity_pb(
+                    hostname=learner_instance.connection_configs.hostname,
+                    port=learner_instance.grpc_servicer.port)
+            grpc_clients[learner_instance.learner_id] = \
+                GRPCLearnerClient(learner_server_entity_pb, max_workers=1)
+        return grpc_clients
 
-        # Problem with fabric is that every command runs on non-interactive mode and therefore the $PATH that might
-        # be set for a particular user might not be visible while running the command. A workaround is to always
-        # source the respective bash_environment files.
-        # TODO This must be removed when running with docker. Makes sense
-        #  only when running localhost to change directory and run bazel.
-        metis_home = "/Users/Dstrip/CLionProjects/projectmetis-rc/"
+    def _init_controller_bazel_cmd(self):
+        optimizer_pb = self.federation_environment.local_model_config.optimizer_config.optimizer_pb
+        model_hyperparameters_pb = proto_messages_factory.MetisProtoMessages \
+            .construct_controller_modelhyperparams_pb(
+             batch_size=self.federation_environment.local_model_config.batch_size,
+             epochs=self.federation_environment.local_model_config.local_epochs,
+             optimizer_pb=optimizer_pb,
+             percent_validation=self.federation_environment.local_model_config.validation_percentage)
+        model_hyperparameters_pb_serialized = model_hyperparameters_pb.SerializeToString()
+        bazel_init_controller_cmd = BazelMetisServicesCmdFactory().bazel_init_controller_target(
+             hostname=self.federation_environment.controller.connection_configs.hostname,
+             port=self.federation_environment.controller.grpc_servicer.port,
+             aggregation_rule=self.federation_environment.global_model_config.aggregation_function,
+             participation_ratio=self.federation_environment.global_model_config.participation_ratio,
+             protocol=self.federation_environment.communication_protocol.name,
+             model_hyperparameters_pb=model_hyperparameters_pb_serialized)
+        return bazel_init_controller_cmd
+
+    def _init_learner_bazel_cmd(self, learner_instance, controller_instance):
         model_def_name = "model_definition"
-        remote_bazel_output_user_root = "/tmp/metis/bazel"
         remote_metis_model_path = "/tmp/metis/model_learner_{}".format(learner_instance.grpc_servicer.port)
         remote_model_def_path = os.path.join(remote_metis_model_path, model_def_name)
-        remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc"
 
-        connection.run("mkdir -p {}".format(remote_metis_model_path))
-        # Place/Copy model definition and dataset recipe files from the driver to the remote host.
-        # Model definition compress, ship, decompress.
-        model_definition_tar_fp = self._tarify_directory(
-            input_directory=self.model_definition_dir,
-            output_filename=model_def_name)
-        connection.put(model_definition_tar_fp, remote_metis_model_path)
-        connection.run("cd {}; tar -xvf {}".format(remote_metis_model_path, model_definition_tar_fp))
-        # Data recipes.
-        connection.put(self.train_dataset_recipe_fp, remote_metis_model_path)
-        connection.put(self.validation_dataset_recipe_fp, remote_metis_model_path)
-        connection.put(self.test_dataset_recipe_fp, remote_metis_model_path)
-
-        # dev_cmd_factory = MetisDockerServicesCmdFactory(port=learner_instance.grpc_servicer.port,
-        #                                                 cuda_devices=learner_instance.cuda_devices)
-        dev_cmd_factory = MetisBazelServicesCmdFactory()
-        init_learner_cmd = dev_cmd_factory.bazel_init_learner_target(
-            output_user_root=remote_bazel_output_user_root,
+        init_learner_cmd = BazelMetisServicesCmdFactory().bazel_init_learner_target(
             learner_hostname=learner_instance.connection_configs.hostname,
             learner_port=learner_instance.grpc_servicer.port,
             controller_hostname=controller_instance.connection_configs.hostname,
@@ -248,15 +108,48 @@ class DriverSession(object):
             train_dataset=learner_instance.dataset_configs.train_dataset_path,
             validation_dataset=learner_instance.dataset_configs.validation_dataset_path,
             test_dataset=learner_instance.dataset_configs.test_dataset_path,
-            train_dataset_recipe=os.path.join(remote_metis_model_path, self.train_dataset_recipe_fp),
-            validation_dataset_recipe=os.path.join(remote_metis_model_path, self.validation_dataset_recipe_fp),
-            test_dataset_recipe=os.path.join(remote_metis_model_path, self.test_dataset_recipe_fp,),
+            train_dataset_recipe=os.path.join(remote_metis_model_path, self.train_dataset_recipe_fp.split("/")[-1]),
+            validation_dataset_recipe=os.path.join(remote_metis_model_path,
+                                                   self.validation_dataset_recipe_fp.split("/")[-1]),
+            test_dataset_recipe=os.path.join(remote_metis_model_path, self.test_dataset_recipe_fp.split("/")[-1]),
             neural_engine=self.nn_engine)
-        connection.run("{}; cd {}; {}".format(
-            remote_source_path, metis_home, init_learner_cmd))
-        connection.close()
+        return init_learner_cmd
 
-    def initialize_federation(self):
+    def _make_tarfile(self, output_filename, source_dir):
+        output_filename = "{}.tar.gz".format(output_filename)
+        with tarfile.open(output_filename, "w:gz") as tar:
+            tar.add(source_dir, arcname=os.path.basename(source_dir))
+        return output_filename
+
+    def _ship_model(self, model_weights):
+        self._driver_controller_grpc_client.replace_community_model(
+            num_contributors=self.num_participating_learners,
+            model_weights=model_weights)
+
+    def _shutdown(self):
+        # Collect all statistics related to learners before sending the shutdown signal.
+        self._collect_local_statistics()
+        # Send shutdown signal to all learners in a Round-Robin fashion.
+        for learner_id, grpc_client in self._driver_learner_grpc_clients.items():
+            # We give a bit more time in between requests since some of the learners
+            # may be processing pending tasks and may need to wrap up their ongoing workload.
+            grpc_client.shutdown_learner(request_retries=2, request_timeout=30, block=False)
+        # Blocking-call, wait for learners shutdown acknowledgment.
+        for learner_id, grpc_client in self._driver_learner_grpc_clients.items():
+            grpc_client.shutdown()
+
+        # Collect all statistics related to the global execution before sending the shutdown signal.
+        self._collect_global_statistics()
+
+        # Similar to the learners, we also give a bit more time in between requests to
+        # the controller since in needs to wrap pending tasks submitted by the learners.
+        self._driver_controller_grpc_client.shutdown_controller(request_retries=2, request_timeout=30, block=True)
+        self._driver_controller_grpc_client.shutdown()
+
+        self._executor.close()
+        self._executor.join()
+
+    def initialize_federation(self, model_weights):
         """
         This func will create N number of processes/workers to create the federation
         environment. One process for the controller and every other learner.
@@ -265,52 +158,285 @@ class DriverSession(object):
         lagging time till the federation controller is live so that every learner can
         connect to it.
         """
+        # TODO If we need to test the pipeline we force a future return here, i.e., controller_future.result()
+        # The following initialization futures are always running (status=running)
+        # since we need to keep the connections open in order to retrieve logs
+        # regarding the execution progress of the federation.
         controller_future = self._executor.schedule(function=self._init_controller)
-        self._executor_tasks_q.put(controller_future)
-        # TODO We need to add driver-controller ping, so that we know when the controller is up
-        #  so to start registering the learners. Maybe by pinging the
-        #  CheckHealthStatus grpc endpoint?
-        for learner_instance in self.federation_environment.learners.learners:
-            learner_future = self._executor.schedule(
-                function=self._init_learner,
-                args=(learner_instance,
-                      self.federation_environment.controller))
-            self._executor_tasks_q.put(learner_future)
+        self._executor_controller_tasks_q.put(controller_future)
+        if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=3, block=True):
+            self._ship_model(model_weights=model_weights)
+            for learner_instance in self.federation_environment.learners.learners:
+                learner_future = self._executor.schedule(
+                    function=self._init_learner,
+                    args=(learner_instance,
+                          self.federation_environment.controller))
+                # TODO If we need to test the pipeline we can force a future return here, i.e., learner_future.result()
+                self._executor_learners_tasks_q.put(learner_future)
+
+    def _collect_local_statistics(self):
+        learners_pb = self._driver_controller_grpc_client.get_participating_learners()
+        learners_collection = learners_pb.learner
+        learners_id = [learner.id for learner in learners_collection]
+        learners_descriptors_dict = MessageToDict(learners_pb,
+                                                  preserving_proto_field_name=True)
+        learners_results = self._driver_controller_grpc_client \
+            .get_local_task_lineage(-1, learners_id)
+        learners_results_dict = MessageToDict(learners_results,
+                                              preserving_proto_field_name=True)
+        self._federation_statistics["learners_descriptor"] = learners_descriptors_dict
+        self._federation_statistics["learners_models_results"] = learners_results_dict
+
+    def _collect_global_statistics(self):
+        runtime_metadata_pb = self._driver_controller_grpc_client \
+            .get_runtime_metadata(num_backtracks=0)
+        runtime_metadata_dict = MessageToDict(runtime_metadata_pb,
+                                              preserving_proto_field_name=True)
+        community_results = self._driver_controller_grpc_client \
+            .get_community_model_evaluation_lineage(-1)
+        community_results_dict = MessageToDict(community_results,
+                                               preserving_proto_field_name=True)
+        self._federation_statistics["federation_runtime_metadata"] = runtime_metadata_dict
+        self._federation_statistics["community_model_results"] = community_results_dict
+
+    def get_federation_statistics(self):
+        return self._federation_statistics
+
+    def monitor_federation(self, request_every_secs=10):
+        federation_rounds_cutoff = self.federation_environment.termination_signals.federation_rounds
+        communication_protocol = self.federation_environment.communication_protocol
+        execution_time_cutoff_mins = self.federation_environment.termination_signals.execution_time_cutoff_mins
+        metric_cutoff_score = self.federation_environment.termination_signals.metric_cutoff_score
+        evaluation_metric = self.federation_environment.evaluation_metric
+
+        def monitor_termination_signals():
+            # measuring elapsed wall-clock time
+            st = datetime.datetime.now()
+            signal_not_reached = True
+            while signal_not_reached:
+                # ping controller for latest execution stats
+                time.sleep(request_every_secs)
+
+                metadata_pb = self._driver_controller_grpc_client \
+                    .get_runtime_metadata(num_backtracks=0).metadata
+
+                # First condition is to check if we reached the desired
+                # number of federation rounds for synchronous execution.
+                if communication_protocol.is_synchronous:
+                    if len(metadata_pb) > 0:
+                        current_global_iteration = max([m.global_iteration for m in metadata_pb])
+                        if current_global_iteration > federation_rounds_cutoff:
+                            MetisLogger.info("Exceeded federation rounds cutoff point. Exiting ...")
+                            signal_not_reached = False
+
+                community_results = self._driver_controller_grpc_client \
+                    .get_community_model_evaluation_lineage(-1)
+                # Need to materialize the iterator in order to get all community results.
+                community_results = [x for x in community_results.community_evaluation]
+
+                # Second condition is to check if we reached the
+                # desired evaluation score in the test set.
+                for res in community_results:
+                    test_set_scores = []
+                    # Since we evaluate the community model across all learners,
+                    # we need to measure the average performance across the test sets.
+                    for learner_id, evaluations in res.evaluations.items():
+                        if evaluation_metric in evaluations.test_evaluation.metric_values:
+                            test_score = evaluations.test_evaluation.metric_values[evaluation_metric]
+                            test_set_scores.append(float(test_score))
+                    if test_set_scores:
+                        mean_test_score = sum(test_set_scores) / len(test_set_scores)
+                        if mean_test_score >= metric_cutoff_score:
+                            MetisLogger.info("Exceeded evaluation metric cutoff score. Exiting ...")
+                            signal_not_reached = False
+
+                # Third condition is to check if we reached the
+                # desired execution time cutoff point.
+                et = datetime.datetime.now()
+                diff_mins = (et - st).seconds / 60
+                if diff_mins > execution_time_cutoff_mins:
+                    MetisLogger.info("Exceeded execution time cutoff minutes. Exiting ...")
+                    signal_not_reached = False
+
+        monitor_termination_signals()
+        return
+
+    @abc.abstractmethod
+    def _init_controller(self):
+        pass
+
+    @abc.abstractmethod
+    def _init_learner(self, learner_instance, controller_instance):
+        pass
+
+
+class DriverSession(DriverSessionBase):
+
+    def __init__(self, federation_environment_fp, nn_engine, model_definition_dir,
+                 train_dataset_recipe_fp, validation_dataset_recipe_fp="", test_dataset_recipe_fp=""):
+        super(DriverSession, self).__init__(
+            federation_environment_fp, nn_engine, model_definition_dir,
+            train_dataset_recipe_fp, validation_dataset_recipe_fp, test_dataset_recipe_fp)
+
+        # When initializing a normal DriverSession execution takes place using Bazel and therefore we need to make sure
+        # that the MetisHome path is defined for every participating learner in the federation so that we can navigate
+        # to the home path that contains the Bazel WORKSPACE.bzl file and proceed with the initialization of the
+        # learners and controller instances.
+        assert self.federation_environment.controller.project_home is not None and \
+               all([learner.project_home is not None for learner in self.federation_environment.learners.learners])
+
+    def _init_controller(self):
+        fabric_connection_config = self.federation_environment.controller \
+            .connection_configs.get_fabric_connection_config()
+        remote_on_login = self.federation_environment.controller.connection_configs.on_login
+        if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
+            remote_on_login = remote_on_login[:-1]
+        connection = Connection(**fabric_connection_config)
+        # We do not use asynchronous or disown, since we want the remote subprocess to return standard (error) output.
+        # see also, https://github.com/pyinvoke/invoke/blob/master/invoke/runners.py#L109
+        init_cmd = "{} && cd {} && {}".format(
+            remote_on_login,
+            self.federation_environment.controller.project_home,
+            self._init_controller_bazel_cmd())
+        MetisLogger.info("Running init cmd to controller host: {}".format(init_cmd))
+        connection.run(init_cmd)
+        connection.close()
+        return
+
+    def _init_learner(self, learner_instance, controller_instance):
+        fabric_connection_config = \
+            learner_instance.connection_configs.get_fabric_connection_config()
+        connection = Connection(**fabric_connection_config)
+        # We do not use asynchronous or disown, since we want the remote subprocess to return standard (error) output.
+        remote_metis_model_path = "/tmp/metis/model_learner_{}".format(learner_instance.grpc_servicer.port)
+        # Delete existing directory if it exists, then recreate it.
+        connection.run("rm -rf {}".format(remote_metis_model_path))
+        connection.run("mkdir -p {}".format(remote_metis_model_path))
+        # Place/Copy model definition and dataset recipe files from the driver to the remote host.
+        # Model definition ship .gz file and decompress it.
+        connection.put(self.model_definition_tar_fp, remote_metis_model_path)
+        connection.put(self.train_dataset_recipe_fp, remote_metis_model_path)
+        connection.put(self.validation_dataset_recipe_fp, remote_metis_model_path)
+        connection.put(self.test_dataset_recipe_fp, remote_metis_model_path)
+
+        # Fabric runs every command on a non-interactive mode and therefore the $PATH that might be set for a
+        # running user might not be visible while running the command. A workaround is to always
+        # source the respective bash_environment files.
+        cuda_devices_str = ""
+        if learner_instance.cuda_devices is not None and len(learner_instance.cuda_devices) > 0:
+            cuda_devices_str = "export CUDA_VISIBLE_DEVICES=\"{}\" " \
+                .format(",".join([str(c) for c in learner_instance.cuda_devices]))
+        remote_on_login = learner_instance.connection_configs.on_login
+        if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
+            remote_on_login = remote_on_login[:-1]
+        # Untar model definition zipped file.
+        connection.run("cd {}; tar -xvzf {}".format(
+            remote_metis_model_path,
+            self.model_definition_tar_fp))
+        init_cmd = "{} && {} && cd {} && {}".format(
+            remote_on_login,
+            cuda_devices_str,
+            learner_instance.project_home,
+            self._init_learner_bazel_cmd(learner_instance, controller_instance))
+        MetisLogger.info("Running init cmd to learner host: {}".format(init_cmd))
+        connection.run(init_cmd)
+        connection.close()
+        return
 
     def shutdown_federation(self):
-        # Shutdown learners, controller, docker containers
+        self._shutdown()
+
+
+class DriverSessionDocker(DriverSessionBase):
+
+    def __init__(self, federation_environment_fp, nn_engine, model_definition_dir,
+                 train_dataset_recipe_fp, validation_dataset_recipe_fp="", test_dataset_recipe_fp=""):
+        super(DriverSessionDocker, self).__init__(
+            federation_environment_fp, nn_engine, model_definition_dir,
+            train_dataset_recipe_fp, validation_dataset_recipe_fp, test_dataset_recipe_fp)
+
+        # When initializing DriverSession based on Docker, we need to make sure that a docker image is provided so
+        # that it can be used to trigger the initialization of the controller and learner instances.
+        assert self.federation_environment.docker.docker_image is not None
+
+        self.controller_containers = dict()
+        self.learner_containers = dict()
+
+    def _init_controller(self):
+        docker_cmd_factory = DockerMetisServicesCmdFactory()
+        controller_id = "{}:{}".format(
+            self.federation_environment.controller.connection_configs.hostname,
+            self.federation_environment.controller.grpc_servicer.port)
+        self.controller_containers[controller_id] = docker_cmd_factory.container_name
+        docker_init_container = \
+            docker_cmd_factory.init_container(
+                port=self.federation_environment.controller.grpc_servicer.port,
+                docker_image=self.federation_environment.docker.docker_image)
+        init_container = docker_init_container + " /bin/bash -c \"{}; {}\"".format(
+            "source /opt/rh/gcc-toolset-9/enable", self._init_controller_bazel_cmd())
+        print(init_container, flush=True)
+        fabric_connection_config = self.federation_environment.controller \
+            .connection_configs.get_fabric_connection_config()
+        remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc "
+        connection = Connection(**fabric_connection_config)
+        connection.run("{};{}".format(remote_source_path, docker_init_container))
+        connection.close()
+        return
+
+    def _init_learner(self, learner_instance, controller_instance):
+        docker_cmd_factory = DockerMetisServicesCmdFactory()
+        learner_id = "{}:{}".format(
+            learner_instance.connection_configs.hostname,
+            learner_instance.grpc_servicer.port)
+        self.learner_containers[learner_id] = docker_cmd_factory.container_name
+        docker_init_container = \
+            docker_cmd_factory.init_container(
+                port=learner_instance.grpc_servicer.port,
+                docker_image=self.federation_environment.docker.docker_image,
+                cuda_devices=learner_instance.cuda_devices)
+        init_container = docker_init_container + " /bin/bash -c \"{}; {}\"".format(
+            "source /opt/rh/gcc-toolset-9/enable", self._init_controller_bazel_cmd())
+        print(docker_init_container, flush=True)
+        fabric_connection_config = self.federation_environment.controller \
+            .connection_configs.get_fabric_connection_config()
+        remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc "
+        connection = Connection(**fabric_connection_config)
+        connection.run("{};{}".format(remote_source_path, init_container))
+        connection.close()
+        return
+
+    def shutdown_federation(self):
+        self._shutdown()
+
         for learner_instance in self.federation_environment.learners.learners:
-            learner_server_entity_pb = \
-                proto_messages_factory.MetisProtoMessages.construct_server_entity_pb(
-                    hostname=learner_instance.connection_configs.hostname,
-                    port=learner_instance.grpc_servicer.port)
-            DriverLearnerClient(learner_server_entity_pb).shutdown_learner()
-        # TODO sleep needs to be removed!
-        time.sleep(10)
-        controller_server_entity_pb = \
-            proto_messages_factory.MetisProtoMessages.construct_server_entity_pb(
-                hostname=self.federation_environment.controller.connection_configs.hostname,
-                port=self.federation_environment.controller.grpc_servicer.port)
-        DriverControllerClient(controller_server_entity_pb).shutdown_controller()
+            learner_id = "{}:{}".format(
+                learner_instance.connection_configs.hostname,
+                learner_instance.grpc_servicer.port)
+            docker_cmd_factory = DockerMetisServicesCmdFactory(self.learner_containers[learner_id])
+            stop_container = docker_cmd_factory.stop_container()
+            rm_container = docker_cmd_factory.rm_container()
+            fabric_connection_config = self.federation_environment.controller \
+                .connection_configs.get_fabric_connection_config()
+            remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc "
+            connection = Connection(**fabric_connection_config)
+            connection.run("{};{} && {} ".format(
+                remote_source_path,
+                stop_container,
+                rm_container))
+            connection.close()
 
-        while not self._executor_tasks_q.empty():
-            # Blocking retrieval of pebble.ProcessFuture from queue.
-            self._executor_tasks_q.get().result()
-        self._executor.close()
-        self._executor.join()
-
-    def monitor_federation(self):
-        federation_rounds = self.federation_environment.termination_signals.federation_rounds
-        exec_time_cutoff = self.federation_environment.termination_signals.execution_cutoff_time_mins
-        exec_score_cutoff = self.federation_environment.termination_signals.execution_cutoff_score
-
-        # measuring elapsed wall-clock time
-        ts = time.time()
-        while True:
-            # ping controller for latest execution stats
-            time.sleep(1)
-            es = time.time()
-            diff_mins = (es - ts) / 60
-            if diff_mins >= exec_time_cutoff:
-                self.shutdown_federation()
-                break
+        controller_id = "{}:{}".format(
+            self.federation_environment.controller.connection_configs.hostname,
+            self.federation_environment.controller.grpc_servicer.port)
+        docker_cmd_factory = DockerMetisServicesCmdFactory(self.controller_containers[controller_id])
+        stop_container = docker_cmd_factory.stop_container()
+        rm_container = docker_cmd_factory.rm_container()
+        fabric_connection_config = self.federation_environment.controller \
+            .connection_configs.get_fabric_connection_config()
+        remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc "
+        connection = Connection(**fabric_connection_config)
+        connection.run("{};{} && {} ".format(
+            remote_source_path,
+            stop_container,
+            rm_container))
+        connection.close()

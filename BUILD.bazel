@@ -1,6 +1,16 @@
 package(default_visibility = ["//visibility:public"])
 
-exports_files(["LICENSE"])
+exports_files([
+    "LICENSE",
+    "configure",
+    "configure.py",
+])
+
+filegroup(
+    name = "configuration_files",
+    srcs = glob(["configure, configure.py"]),
+    visibility = ["//visibility:public"]
+)
 
 config_setting(
     name = "windows",

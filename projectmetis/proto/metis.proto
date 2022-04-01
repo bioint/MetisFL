@@ -4,7 +4,6 @@ package projectmetis;
 import "projectmetis/proto/model.proto";
 
 import "google/protobuf/timestamp.proto";
-//import "google/protobuf/duration.proto";
 
 /////////////
 // Generic //
@@ -31,7 +30,6 @@ message SSLConfig {
 // Learning //
 //////////////
 
-// Dataset specification.
 message DatasetSpec {
   uint32 num_training_examples = 1;
   uint32 num_validation_examples = 2;
@@ -56,10 +54,12 @@ message DatasetSpec {
     ClassificationDatasetSpec training_classification_spec = 4;
     RegressionDatasetSpec training_regression_spec = 5;
   }
+
   oneof validation_dataset_spec {
     ClassificationDatasetSpec validation_classification_spec = 6;
     RegressionDatasetSpec validation_regression_spec = 7;
   }
+
   oneof test_dataset_spec {
     ClassificationDatasetSpec test_classification_spec = 8;
     RegressionDatasetSpec test_regression_spec = 9;
@@ -67,56 +67,60 @@ message DatasetSpec {
 }
 
 message LearningTask {
+  // Records the id of the global iteration, i.e., id of the community model sent to the learner for local training.
+  uint32 global_iteration = 1;
   // This reflects the number of local steps the learner needs to perform.
   // It is similar to epochs if we take |num_training_examples| / batch_size.
-  uint32 num_local_updates = 1;
+  uint32 num_local_updates = 2;
 
-  float training_dataset_percentage_for_stratified_validation = 2;
-
-  // TODO: We need to define the metrics we expect the learner to return. This
-  //  should be similar to the evaluation field in message `learner.EvaluateModelRequest`.
+  float training_dataset_percentage_for_stratified_validation = 3;
+  EvaluationMetrics metrics = 4;
 }
 
 message CompletedLearningTask {
   // This is the model trained by the learner locally.
   Model model = 1;
 
-  // These are the basic metadata sent by the learner to the controller whenever
-  // a locally assigned training task is complete.
+  // These are the basic metadata sent by the learner to the
+  // controller whenever a locally assigned training task is complete.
   TaskExecutionMetadata execution_metadata = 2;
 
-  // These are additional metadata sent by the learner to the controller.
-  // TODO No structured response yet, but in a future release this should follow
+  // TODO These are additional metadata sent by the learner to the controller.
+  //  No structured response yet, but in a future release this should follow
   //  a specific format.
   string aux_metadata = 3;
 }
 
 message TaskExecutionMetadata {
-  // TODO: For every training, validation, and test score below, we need to
-  //  define the metrics we expect the learner to return. These metrics should
-  //  be the ones defined in the evaluation field of message `common.LearningTask.evaluation`.
+  // Records the id of the global iteration, i.e., id of the global task or of the received community model.
+  // Need it for bookkeeping when contacting the controller the completed local task.
+  uint32 global_iteration = 1;
 
-  // A list with all training evaluations across all epochs.
-  repeated EpochEvaluation training_scores = 1;
-
-  // A list with all validation evaluations across all epochs.
-  repeated EpochEvaluation validation_scores = 2;
-
-  // A list of all test evaluations across all epochs.
-  repeated EpochEvaluation test_scores = 3;
+  TaskEvaluation task_evaluation = 2;
 
   // Learner may perform partial epochs, thus the float data type.
-  float completed_epochs = 4;
+  float completed_epochs = 3;
 
-  uint32 completed_batches = 5;
+  uint32 completed_batches = 4;
 
-  uint32 batch_size = 6;
+  uint32 batch_size = 5;
 
   // Time-per-epoch in milliseconds.
-  float processing_ms_per_epoch = 7;
+  float processing_ms_per_epoch = 6;
 
   // Time-per-batch in milliseconds.
-  float processing_ms_per_batch = 8;
+  float processing_ms_per_batch = 7;
+}
+
+message TaskEvaluation {
+  // A list with all training evaluations across all epochs.
+  repeated EpochEvaluation training_evaluation = 1;
+
+  // A list with all validation evaluations across all epochs.
+  repeated EpochEvaluation validation_evaluation = 2;
+
+  // A list of all test evaluations across all epochs.
+  repeated EpochEvaluation test_evaluation = 3;
 }
 
 message EpochEvaluation {
@@ -125,28 +129,40 @@ message EpochEvaluation {
   // id as it progresses its training.
   uint32 epoch_id = 1;
 
-  // The associated score of the epoch.
-  // This could be any numeric value, such as accuracy and f1-score in
-  // classification and MSE in regression tasks.
-  float epoch_score = 2;
+  ModelEvaluation model_evaluation = 2;
+}
 
-  // Loss value of each evaluation.
-  float epoch_loss = 3;
+message EvaluationMetrics {
+  repeated string metric = 1;
 }
 
 message ModelEvaluation {
-  // Need to return the key-value formatted value FOR NOW! That is for every
-  // string metric passed through the EvaluateModelRequest endpoint we reply a
-  // <metric, value> collection.
-  map<string, string> metric_values = 1;
-
   // TODO: Not sure if we need a simple json response or scores! For instance,
   //       we might need additional metrics such as confusion matrices...
+
+  // FOR NOW, we need to return the key-value formatted value! That is for every
+  // string metric passed through the EvaluationMetrics object we reply with a
+  // <metric, value> collection.
+  map<string, string> metric_values = 1;
 }
 
 // Wrapper for multiple model evaluations.
 message ModelEvaluations {
-  repeated ModelEvaluation evaluation = 1;
+  ModelEvaluation training_evaluation = 1;
+  ModelEvaluation validation_evaluation = 2;
+  ModelEvaluation test_evaluation = 3;
+}
+
+message LocalTasksMetadata {
+  repeated TaskExecutionMetadata task_metadata = 1;
+}
+
+message CommunityModelEvaluation {
+  // Records the id of the global iteration, i.e., id of the community model being evaluated.
+  uint32 global_iteration = 1;
+  // A HashMap with learner as the key and the evaluation of the
+  // community model on its local datasets as the value.
+  map<string, ModelEvaluations> evaluations = 2;
 }
 
 message Hyperparameters {
@@ -160,22 +176,20 @@ message Hyperparameters {
 
 message ControllerParams {
   ServerEntity server_entity = 1;
-
   GlobalModelSpecs global_model_specs = 2;
-
   CommunicationSpecs communication_specs = 3;
 
-  // TODO Remove this, we do not need them anymore here! Driver Logic!
-  int32 federated_execution_cutoff_mins = 4;
-
-  float federated_execution_cutoff_score = 5;
-
   message ModelHyperparams {
+
     // TODO Shall we replace (batch_size, optimizer) with Hyperparameters message?
     uint32 batch_size = 1;
+
     uint32 epochs = 2;
+
     OptimizerConfig optimizer = 3;
-    // TODO Need to figure out, if this quantity will be used as part of the aggregation scheme or as part of the actual validation evaluation.
+
+    // TODO Need to figure out, if this quantity will be used as part of the aggregation scheme or
+    //  as part of the actual validation evaluation.
     float percent_validation = 4;
   }
 
@@ -187,9 +201,7 @@ message GlobalModelSpecs {
     UNKNOWN = 0;
     FED_AVG = 1;
   }
-
   AggregationRule aggregation_rule = 1;
-
   float learners_participation_ratio = 2;
 }
 
@@ -200,7 +212,6 @@ message CommunicationSpecs {
     ASYNCHRONOUS = 2;
     // TODO: add support for more protocols, e.g., semi-sync
   }
-
   Protocol protocol = 1;
 }
 
@@ -212,21 +223,17 @@ message LearnerDescriptor {
 }
 
 message LearnerState {
-  // Describes the learner. It also includes the generated authorization token
-  // for the learner.
+  // Describes the learner. It also includes the generated authorization token for the learner.
   LearnerDescriptor learner = 1;
 
   // Learner's model lineage.
-  repeated Model model = 3;
+  repeated Model model = 2;
 }
 
-message FedRuntimeMetadata {
+message FederatedTaskRuntimeMetadata {
   uint32 global_iteration = 1;
-
   google.protobuf.Timestamp started_at = 2;
-
-  google.protobuf.Timestamp last_iteration_started_at = 3;
-  google.protobuf.Timestamp last_iteration_finished_at = 4;
-
-  google.protobuf.Timestamp current_iteration_started_at = 5;
+  google.protobuf.Timestamp completed_at = 3;
+  repeated string assigned_to_learner_id = 4;
+  repeated string completed_by_learner_id = 5;
 }

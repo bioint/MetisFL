@@ -20,6 +20,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+#include <future>
 #include <memory>
 #include <utility>
 
@@ -31,6 +32,7 @@
 #include "projectmetis/controller/controller_servicer.h"
 #include "projectmetis/proto/controller.grpc.pb.h"
 #include "projectmetis/proto/metis.pb.h"
+#include "projectmetis/core/thread_pool.h"
 
 namespace projectmetis::controller {
 namespace {
@@ -112,10 +114,8 @@ public:
     if (server_ == nullptr) {
       return;
     }
-
     server_->Shutdown();
-    //server_ = nullptr;
-    std::cout << "Controller has shut down" << std::endl;
+    std::cout << "Controller shut down." << std::endl;
   }
 
   void Wait() {
@@ -150,7 +150,7 @@ private:
 class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
 public:
   explicit ControllerServicerImpl(Controller *controller)
-      : controller_(controller) {
+      : pool_(1), controller_(controller) {
     GOOGLE_CHECK_NOTNULL(controller_);
   }
 
@@ -180,19 +180,17 @@ public:
     const auto lineage = controller_->GetEvaluationLineage(
         request->num_backtracks());
 
-    ModelEvaluations evaluations;
     for (const auto &evaluation : lineage) {
-      *evaluations.add_evaluation() = evaluation;
+      *response->add_community_evaluation() = evaluation;
     }
 
-    *response->mutable_evaluations() = evaluations;
     return Status::OK;
   }
 
-  Status GetLocalModelEvaluationLineage(
+  Status GetLocalTaskLineage(
       ServerContext *context,
-      const GetLocalModelEvaluationLineageRequest *request,
-      GetLocalModelEvaluationLineageResponse *response) override {
+      const GetLocalTaskLineageRequest *request,
+      GetLocalTaskLineageResponse *response) override {
     // Captures unexpected behavior.
     if (request == nullptr || response == nullptr) {
       return {StatusCode::INVALID_ARGUMENT,
@@ -200,15 +198,34 @@ public:
     }
 
     for (const auto &learner_id : request->learner_ids()) {
-      const auto lineage = controller_->GetEvaluationLineage(
+      const auto lineage = controller_->GetLocalTaskLineage(
           learner_id, request->num_backtracks());
 
-      ModelEvaluations evaluations;
-      for (const auto &evaluation : lineage) {
-        *evaluations.add_evaluation() = evaluation;
+      LocalTasksMetadata learner_tasks_metadata;
+      for (const auto &task_meta : lineage) {
+        *learner_tasks_metadata.add_task_metadata() = task_meta;
       }
+      (*response->mutable_learner_task())[learner_id] = learner_tasks_metadata;
+    }
 
-      (*response->mutable_learner_evaluations())[learner_id] = evaluations;
+    return Status::OK;
+  }
+
+  Status GetRuntimeMetadataLineage(
+      ServerContext *context,
+      const GetRuntimeMetadataLineageRequest *request,
+      GetRuntimeMetadataLineageResponse *response) override {
+    // Captures unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
+    }
+
+    const auto lineage = controller_->GetRuntimeMetadataLineage(
+        request->num_backtracks());
+
+    for (const auto &metadata : lineage) {
+      *response->add_metadata() = metadata;
     }
 
     return Status::OK;
@@ -223,19 +240,33 @@ public:
               "Request and response cannot be empty."};
     }
 
-    // Creates LearnerEntity response collection.
+    // Creates LearnerDescriptor response collection that only
+    // contains the learner's id and dataset specifications.
     for (const auto &learner : controller_->GetLearners()) {
-      std::cout << learner.DebugString() << std::endl;
-      *response->add_server_entity() = learner.service_spec();
+      LearnerDescriptor learner_descriptor;
+      *learner_descriptor.mutable_id() = learner.id();
+      *learner_descriptor.mutable_dataset_spec() = learner.dataset_spec();
+      *response->add_learner() = learner_descriptor;
     }
 
     return Status::OK;
   }
 
-  Status GetRuntimeMetadata(ServerContext *context,
-                            const GetRuntimeMetadataRequest *request,
-                            GetRuntimeMetadataResponse *response) override {
-    *response->mutable_metadata() = controller_->RuntimeMetadata();
+  Status GetServicesHealthStatus(
+      ServerContext *context, const GetServicesHealthStatusRequest *request,
+      GetServicesHealthStatusResponse *response) override {
+    // Captures unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
+    }
+    // TODO (canastas) Controller instance is never run. Here, we need to
+    //  capture the heartbeat of all the underlying controller services.
+    if (controller_ != nullptr) {
+      (*response->mutable_services_status())["controller"] = true;
+    } else {
+      (*response->mutable_services_status())["controller"] = false;
+    }
     return Status::OK;
   }
 
@@ -260,9 +291,14 @@ public:
 
     if (!learner_or.ok()) {
       response->mutable_ack()->set_status(false);
-      // Returns the internal status error message as servicer's status message.
-      return {StatusCode::ALREADY_EXISTS,
-              std::string(learner_or.status().message())};
+      switch (learner_or.status().code()) {
+      case absl::StatusCode::kAlreadyExists:
+        return {StatusCode::ALREADY_EXISTS,
+                std::string(learner_or.status().message())};
+      default:
+        return {StatusCode::INVALID_ARGUMENT,
+                std::string(learner_or.status().message())};
+      }
     } else {
       response->mutable_ack()->set_status(true);
 
@@ -307,6 +343,11 @@ public:
   Status MarkTaskCompleted(ServerContext *context,
                            const MarkTaskCompletedRequest *request,
                            MarkTaskCompletedResponse *response) override {
+    // Captures unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
+    }
     const auto status = controller_->LearnerCompletedTask(
         request->learner_id(), request->auth_token(), request->task());
     if (!status.ok()) {
@@ -333,6 +374,11 @@ public:
   ReplaceCommunityModel(ServerContext *context,
                         const ReplaceCommunityModelRequest *request,
                         ReplaceCommunityModelResponse *response) override {
+    // Captures unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
+    }
     auto status = controller_->ReplaceCommunityModel(request->model());
     if (status.ok()) {
       response->mutable_ack()->set_status(true);
@@ -344,12 +390,19 @@ public:
 
   Status ShutDown(ServerContext *context, const ShutDownRequest *request,
                   ShutDownResponse *response) override {
+    // Captures unexpected behavior.
+    if (request == nullptr || response == nullptr) {
+      return {StatusCode::INVALID_ARGUMENT,
+              "Request and response cannot be empty."};
+    }
     response->mutable_ack()->set_status(true);
-    this->StopService();
+    pool_.push_task([this] {this->StopService();});
     return Status::OK;
   }
 
 private:
+  // Thread pool for async tasks.
+  thread_pool pool_;
   Controller *controller_;
 };
 } // namespace

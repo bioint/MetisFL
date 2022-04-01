@@ -4,6 +4,7 @@ from projectmetis.python.learner.learner import Learner
 from projectmetis.python.learner.learner_servicer import LearnerServicer
 from projectmetis.python.utils.proto_messages_factory import MetisProtoMessages
 
+from projectmetis.python.logging.metis_logger import MetisLogger
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -83,15 +84,8 @@ if __name__ == "__main__":
     learner_servicer = LearnerServicer(
         learner=learner,
         learner_server_entity=learner_server_entity_pb,
-        servicer_workers=10)
-    # Contact controller and join the federation.
-    learner.join_federation()
-    # Initialize learner servicer for receiving train/evaluate/inference tasks.
+        servicer_workers=5)
+    # First, initialize learner servicer for receiving train/evaluate/inference tasks.
     learner_servicer.init_servicer()
-    # Block servicer till SIGTERM is triggered.
+    # Second, block the servicer till a shutdown request is issued and no more requests are received.
     learner_servicer.wait_servicer()
-    # Remove learner from the federation.
-    learner.leave_federation()
-    # Release all learner resources.
-    learner.shutdown(graceful=False)
-

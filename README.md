@@ -1,6 +1,7 @@
-## Prerequisites
+## Standalone (Docker-Free) Prerequisites
 - Install googletest (MacOS as `brew install googletest`)
 - Install protobuf (MacOS as `brew install protobuf`)
+- Run ./configure script 
 
 ## Bazel CLion comments 
 If project files are not identifiable then you need to sync Bazel. To do so:

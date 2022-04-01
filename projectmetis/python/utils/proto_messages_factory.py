@@ -6,6 +6,23 @@ from projectmetis.proto import controller_pb2, learner_pb2, model_pb2, metis_pb2
 class ControllerServiceProtoMessages(object):
 
     @classmethod
+    def construct_get_community_model_evaluation_lineage_request_pb(cls, num_backtracks):
+        return controller_pb2.GetCommunityModelEvaluationLineageRequest(num_backtracks=num_backtracks)
+
+    @classmethod
+    def construct_get_local_task_lineage_request_pb(cls, num_backtracks, learner_ids):
+        return controller_pb2.GetLocalTaskLineageRequest(num_backtracks=num_backtracks,
+                                                         learner_ids=learner_ids)
+
+    @classmethod
+    def construct_get_runtime_metadata_lineage_request_pb(cls, num_backtracks):
+        return controller_pb2.GetRuntimeMetadataLineageRequest(num_backtracks=num_backtracks)
+
+    @classmethod
+    def construct_get_participating_learners_request_pb(cls):
+        return controller_pb2.GetParticipatingLearnersRequest()
+
+    @classmethod
     def construct_join_federation_request_pb(cls, server_entity_pb, local_dataset_spec_pb):
         return controller_pb2.JoinFederationRequest(server_entity=server_entity_pb,
                                                     local_dataset_spec=local_dataset_spec_pb)
@@ -20,12 +37,18 @@ class ControllerServiceProtoMessages(object):
                                                        auth_token=auth_token,
                                                        task=completed_learning_task_pb)
 
+    @classmethod
+    def construct_replace_community_model_request_pb(cls, federated_model_pb):
+        assert isinstance(federated_model_pb, model_pb2.FederatedModel)
+        return controller_pb2.ReplaceCommunityModelRequest(model=federated_model_pb)
+
 
 class LearnerServiceProtoMessages(object):
 
     @classmethod
-    def construct_evaluate_model_request_pb(cls, model, batch_size,
-                                            eval_train, eval_test, eval_valid, metrics=None):
+    def construct_evaluate_model_request_pb(cls, model=None, batch_size=None, eval_train=None,
+                                            eval_test=None, eval_valid=None, metrics_pb=None):
+        assert isinstance(metrics_pb, metis_pb2.EvaluationMetrics)
         evaluation_dataset = []
         if eval_train:
             evaluation_dataset.append(
@@ -36,19 +59,16 @@ class LearnerServiceProtoMessages(object):
         if eval_valid:
             evaluation_dataset.append(
                 learner_pb2.EvaluateModelRequest.dataset_to_eval.VALIDATION)
-        if metrics is None:
-            metrics = []
-        if not isinstance(metrics, list):
-            metrics = [metrics]
         return learner_pb2.EvaluateModelRequest(
-            model=model, batch_size=batch_size, evaluation_dataset=evaluation_dataset, metrics=metrics)
+            model=model, batch_size=batch_size, evaluation_dataset=evaluation_dataset, metrics=metrics_pb)
 
     @classmethod
-    def construct_evaluate_model_response_pb(cls, evaluation_pb):
-        return learner_pb2.EvaluateModelResponse(evaluation=evaluation_pb)
+    def construct_evaluate_model_response_pb(cls, evaluation_pb=None):
+        assert isinstance(evaluation_pb, metis_pb2.ModelEvaluations)
+        return learner_pb2.EvaluateModelResponse(evaluations=evaluation_pb)
 
     @classmethod
-    def construct_run_task_request_pb(cls, federated_model_pb, learning_task_pb, hyperparameters_pb):
+    def construct_run_task_request_pb(cls, federated_model_pb=None, learning_task_pb=None, hyperparameters_pb=None):
         assert isinstance(federated_model_pb, model_pb2.FederatedModel) \
                and isinstance(learning_task_pb, metis_pb2.LearningTask) \
                and isinstance(hyperparameters_pb, metis_pb2.Hyperparameters)
@@ -58,9 +78,10 @@ class LearnerServiceProtoMessages(object):
             hyperparameters=hyperparameters_pb)
 
     @classmethod
-    def construct_run_task_response_pb(cls, ack_pb):
+    def construct_run_task_response_pb(cls, ack_pb=None):
         assert isinstance(ack_pb, service_common_pb2.Ack)
         return learner_pb2.RunTaskResponse(ack=ack_pb)
+
 
 class MetisProtoMessages(object):
 
@@ -115,10 +136,11 @@ class MetisProtoMessages(object):
         return regression_specs
 
     @classmethod
-    def construct_learning_task_pb(cls, num_local_updates, validation_dataset_pct):
+    def construct_learning_task_pb(cls, num_local_updates, validation_dataset_pct, metrics=None):
         return metis_pb2.LearningTask(
             num_local_updates=num_local_updates,
-            training_dataset_percentage_for_stratified_validation=validation_dataset_pct)
+            training_dataset_percentage_for_stratified_validation=validation_dataset_pct,
+            metrics=metrics)
 
     @classmethod
     def construct_completed_learning_task_pb(cls, model_pb, task_execution_metadata_pb, aux_metadata):
@@ -128,17 +150,15 @@ class MetisProtoMessages(object):
 
     @classmethod
     def construct_task_execution_metadata_pb(cls,
-                                             epoch_training_evaluations_pb,
-                                             epoch_validation_evaluations_pb,
-                                             epoch_test_evaluations_pb,
+                                             global_iteration,
+                                             task_evaluation_pb,
                                              completed_epochs,
                                              completed_batches,
                                              batch_size,
                                              processing_ms_per_epoch,
                                              processing_ms_per_batch):
-        return metis_pb2.TaskExecutionMetadata(training_scores=epoch_training_evaluations_pb,
-                                               validation_scores=epoch_validation_evaluations_pb,
-                                               test_scores=epoch_test_evaluations_pb,
+        return metis_pb2.TaskExecutionMetadata(global_iteration=global_iteration,
+                                               task_evaluation=task_evaluation_pb,
                                                completed_epochs=completed_epochs,
                                                completed_batches=completed_batches,
                                                batch_size=batch_size,
@@ -146,10 +166,25 @@ class MetisProtoMessages(object):
                                                processing_ms_per_batch=processing_ms_per_batch)
 
     @classmethod
-    def construct_epoch_evaluation_pb(cls, epoch_id, epoch_score, epoch_loss):
+    def construct_task_evaluation_pb(cls, epoch_training_evaluations_pbs,
+                                     epoch_validation_evaluations_pbs=None,
+                                     epoch_test_evaluations_pbs=None):
+        return metis_pb2.TaskEvaluation(training_evaluation=epoch_training_evaluations_pbs,
+                                        validation_evaluation=epoch_validation_evaluations_pbs,
+                                        test_evaluation=epoch_test_evaluations_pbs)
+
+    @classmethod
+    def construct_epoch_evaluation_pb(cls, epoch_id, model_evaluation_pb):
         return metis_pb2.EpochEvaluation(epoch_id=epoch_id,
-                                         epoch_score=epoch_score,
-                                         epoch_loss=epoch_loss)
+                                         model_evaluation=model_evaluation_pb)
+
+    @classmethod
+    def construct_evaluation_metrics_pb(cls, metrics=None):
+        if metrics is None:
+            metrics = [""]
+        if not isinstance(metrics, list):
+            metrics = [metrics]
+        return metis_pb2.EvaluationMetrics(metric=metrics)
 
     @classmethod
     def construct_model_evaluation_pb(cls, metric_values=None):
@@ -158,8 +193,10 @@ class MetisProtoMessages(object):
         return metis_pb2.ModelEvaluation(metric_values=metric_values)
 
     @classmethod
-    def construct_model_evaluations_pb(cls, model_evaluations_pb):
-        return metis_pb2.ModelEvaluations(evaluation=model_evaluations_pb)
+    def construct_model_evaluations_pb(cls, training_evaluation_pb, validation_evaluation_pb, test_evaluation_pb):
+        return metis_pb2.ModelEvaluations(training_evaluation=training_evaluation_pb,
+                                          validation_evaluation=validation_evaluation_pb,
+                                          test_evaluation=test_evaluation_pb)
 
     @classmethod
     def construct_hyperparameters_pb(cls, batch_size, optimizer_config_pb):
@@ -263,6 +300,15 @@ class ServiceCommonProtoMessages(object):
     @classmethod
     def construct_ack_pb(cls, status, google_timestamp, message=None):
         return service_common_pb2.Ack(status=status, timestamp=google_timestamp, message=message)
+
+    @classmethod
+    def construct_get_services_health_status_request_pb(cls):
+        return service_common_pb2.GetServicesHealthStatusRequest()
+
+    @classmethod
+    def construct_get_services_health_status_response_pb(cls, services_status):
+        assert isinstance(services_status, dict)
+        return service_common_pb2.GetServicesHealthStatusResponse(services_status=services_status)
 
     @classmethod
     def construct_shutdown_request_pb(cls):

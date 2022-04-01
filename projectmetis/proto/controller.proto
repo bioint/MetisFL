@@ -7,41 +7,41 @@ import "projectmetis/proto/service_common.proto";
 
 service ControllerService {
 
-  // Unary RPC. Retrieve community models' metadata related to the models' evaluation.
+  // Unary RPC. Retrieves community models' metadata related to the models' evaluation.
   rpc GetCommunityModelEvaluationLineage (GetCommunityModelEvaluationLineageRequest) returns (GetCommunityModelEvaluationLineageResponse) {}
 
-  // Unary RPC. Controller replies with community models (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
+  // Unary RPC. Controller replies with community models
+  // (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
   rpc GetCommunityModelLineage (GetCommunityModelLineageRequest) returns (GetCommunityModelLineageResponse) {}
 
-  // Unary RPC. Retrieve learners local models' metadata related to the models'
-  // evaluation (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
-  rpc GetLocalModelEvaluationLineage (GetLocalModelEvaluationLineageRequest) returns (GetLocalModelEvaluationLineageResponse) {}
-
-  // Unary RPC. Retrieve most recent and historically trained learners local models (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
+  // Unary RPC. Retrieves most recent and historically trained learners local models
+  // (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
   rpc GetLearnerLocalModelLineage (GetLearnerLocalModelLineageRequest) returns (GetLearnerLocalModelLineageResponse) {}
 
-  // Unary RPC. Retrieve a collection of all participating learners in the
-  // federation.
+  // Unary RPC. Retrieves learners local models' metadata related to the models'
+  // evaluation (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
+  rpc GetLocalTaskLineage (GetLocalTaskLineageRequest) returns (GetLocalTaskLineageResponse) {}
+
+  // Unary RPC. Replies with runtime metadata related to the
+  // federation environment (e.g., number of community update requests).
+  rpc GetRuntimeMetadataLineage (GetRuntimeMetadataLineageRequest) returns (GetRuntimeMetadataLineageResponse) {}
+
+  // Unary RPC. Retrieves a collection of all participating learners in the federation.
   rpc GetParticipatingLearners (GetParticipatingLearnersRequest) returns (GetParticipatingLearnersResponse) {}
 
-  // Unary RPC. Controller replies with runtime metadata related to the federation environment (e.g., number of community update requests).
-  rpc GetRuntimeMetadata (GetRuntimeMetadataRequest) returns (GetRuntimeMetadataResponse) {}
-
-  // Unary RPC. Controller replies with the health status (beat) of its internal services.
+  // Unary RPC. Replies with the health status (beat) of its internal services.
   rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
 
-  // Unary RPC. A new participating learner asks the controller to join the
-  // federation.
+  // Unary RPC. A new participating learner asks the controller to join the federation.
   rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
 
-  // Unary RPC. An existing learner informs the controller that it leaves the
-  // federation.
+  // Unary RPC. An existing learner informs the controller that it leaves the federation.
   rpc LeaveFederation (LeaveFederationRequest) returns (LeaveFederationResponse) {}
 
-  // Unary RPC. Controller receives the local model of a learner when it
-  // completes its (locally) assigned task.
+  // Unary RPC. Receives the local model of a learner when it completes its (locally) assigned task.
   rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (MarkTaskCompletedResponse) {}
 
+  // Unary RPC. Receives a new model to replace the current community model.
   rpc ReplaceCommunityModel (ReplaceCommunityModelRequest) returns (ReplaceCommunityModelResponse) {}
 
   // Shuts down the controller service and clears any resources.
@@ -49,63 +49,81 @@ service ControllerService {
 }
 
 message GetCommunityModelEvaluationLineageRequest {
-  // Refer to the number of evaluation request rounds that we need to re-track.
-  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and
-  // num-1 latest community models evaluations.
+  // Refers to the number of evaluation request rounds that we need to re-track.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest community models evaluations.
   int32 num_backtracks = 1;
 }
 
 message GetCommunityModelEvaluationLineageResponse {
-  ModelEvaluations evaluations = 1;
-  // Endpoint response is possible to contain two separate evaluations:
-  //  1. Evaluation on datasets held exclusively by the controller (e.g. global test dataset).
-  //  2. Evaluation on datasets held exclusively by the learners (e.g. local train/validation/test dataset).
-  //string json_evaluation_lineage_response = 1; // TODO No structured response yet, but in a future release this should follow a specific format.
+  // A list of HashMaps where each position in the list refers to a community model
+  // and the HashMap contains the evaluation of the community model across the learners
+  // on their local private datasets (train/val/test).
+  repeated CommunityModelEvaluation community_evaluation = 1;
 }
 
 message GetCommunityModelLineageRequest {
-  int32 num_backtracks = 1; // Number of models that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest community models.
+  // Number of models that we need to re-track. If non-positive (x <= 0): reply all,
+  // otherwise (x>0) reply current and num-1 latest community models.
+  int32 num_backtracks = 1;
 }
 
 message GetCommunityModelLineageResponse {
-  repeated FederatedModel federated_models = 1; // Reply a sequence of models.
+  // Replies a sequence of models.
+  repeated FederatedModel federated_models = 1;
 }
 
-message GetLocalModelEvaluationLineageRequest {
-  // Refer to the number of evaluation request rounds that we need to re-track.
+message GetLocalTaskLineageRequest {
+  // Refers to the number of local tasks that we need to re-track.
   // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and
   // num-1 latest learners' local models evaluations.
-  uint32 num_backtracks = 1;
+  int32 num_backtracks = 1;
 
-  // Retrieve the num_backtracks evaluations for every learner that exists in
-  // the provided LearnerEntity collection.
+  // Retrieves the num_backtracks evaluations for every learner
+  // that exists in the provided LearnerEntity collection.
   repeated string learner_ids = 2;
 }
 
-message GetLocalModelEvaluationLineageResponse {
-  map<string, ModelEvaluations> learner_evaluations = 1;
+message GetLocalTaskLineageResponse {
+  // A HashMap containing the evaluation of the locally trained model (i.e., result of run task)
+  // of each learner on its local private datasets (train/val/test) and other metadata related
+  // to the locally completed training task.
+  map<string, LocalTasksMetadata> learner_task = 1;
 }
 
 message GetLearnerLocalModelLineageRequest {
-  int32 num_backtracks = 1; // Refer to the number of local models that we need to re-track. If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models.
-  repeated ServerEntity server_entity = 2; // Retrieve the num_backtracks local models for every learner that exists in the provided LearnerEntity collection.
+  // Refers to the number of local models that we need to re-track.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models.
+  int32 num_backtracks = 1;
+
+  // Retrieves the num_backtracks local models for every learner that exists in the provided LearnerEntity collection.
+  repeated ServerEntity server_entity = 2;
 }
 
 message GetLearnerLocalModelLineageResponse {
-  repeated LearnerLocalModelResponse learner_local_model = 1; // Reply a sequence of LocalModelResponses. One record for each requested learner: [ (LearnerEntity, [LocalModel1, LocalModel2, ...]), (,[]), ... ]
+  // Replies a sequence of LocalModelResponses. One record for each requested learner:
+  // [ (LearnerEntity, [LocalModel1, LocalModel2, ...]), (,[]), ... ].
+  repeated LearnerLocalModelResponse learner_local_model = 1;
+}
+
+message GetRuntimeMetadataLineageRequest {
+  // Refers to the number of runtime metadata we need to request for / retrack.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest runtime metadata.
+  int32 num_backtracks = 1;
+}
+
+message GetRuntimeMetadataLineageResponse {
+  repeated FederatedTaskRuntimeMetadata metadata = 1;
+  // TODO No structured response yet, but in a future release this should follow a specific format.
+  string json_metadata = 2;
 }
 
 message GetParticipatingLearnersRequest {}
 
 message GetParticipatingLearnersResponse {
-  repeated ServerEntity server_entity = 1; // Return a collection with all the participating learners in the federation.
-}
-
-message GetRuntimeMetadataRequest {}
-
-message GetRuntimeMetadataResponse {
-  FedRuntimeMetadata metadata = 1;
-  string json_metadata = 2; // TODO No structured response yet, but in a future release this should follow a specific format.
+  // Returns a collection with all the participating learners in the federation.
+  // Even though the response is a collection of LearnerDescriptor type, for security
+  // reasons the controller only populates the learner id and dataset specifications fields.
+  repeated LearnerDescriptor learner = 1;
 }
 
 message JoinFederationRequest {
@@ -150,8 +168,7 @@ message LeaveFederationResponse {
 }
 
 message ReplaceCommunityModelRequest {
-  // TODO: Require some some of auth to ensure that whoever is replacing the model, e.g., a driver
-  // is authorized to do so.
+  // TODO: Require some sort of auth to ensure that whoever is replacing the model, e.g., driver, is authorized to do so.
   FederatedModel model = 1;
 }
 

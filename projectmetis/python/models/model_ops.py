@@ -3,7 +3,7 @@ import abc
 import numpy as np
 
 from projectmetis.python.models.model_dataset import ModelDataset
-from projectmetis.proto import model_pb2
+from projectmetis.proto import metis_pb2, model_pb2
 
 
 class ModelOps(object):
@@ -53,7 +53,8 @@ class ModelOps(object):
         pass
 
     @abc.abstractmethod
-    def set_model_weights(self, weights=None, *args, **kwargs):
+    def set_model_weights(self, weights_names: [str], weights_trainable: [bool], weights_values: [np.ndarray([])],
+                          *args, **kwargs):
         pass
 
     @abc.abstractmethod
@@ -61,17 +62,19 @@ class ModelOps(object):
         pass
 
     @abc.abstractmethod
-    def train_model(self, dataset: ModelDataset = None, total_steps=100,
-                    batch_size=100, verbose=False, *args, **kwargs):
+    def train_model(self, train_dataset: ModelDataset, learning_task_pb: metis_pb2.LearningTask,
+                    hyperparameters_pb: metis_pb2.Hyperparameters, validation_dataset: ModelDataset = None,
+                    test_dataset: ModelDataset = None, verbose=False,
+                    *args, **kwargs) -> metis_pb2.CompletedLearningTask:
         pass
 
     @abc.abstractmethod
-    def evaluate_model(self, dataset: ModelDataset = None, batch_size=100,
-                       metrics=None, verbose=False, *args, **kwargs):
+    def evaluate_model(self, dataset: ModelDataset, batch_size=100,
+                       metrics=None, verbose=False, *args, **kwargs) -> metis_pb2.ModelEvaluation:
         pass
 
     @abc.abstractmethod
-    def infer_model(self, dataset: ModelDataset = None, batch_size=100, *args, **kwargs):
+    def infer_model(self, dataset: ModelDataset, batch_size=100, *args, **kwargs):
         pass
 
     @abc.abstractmethod

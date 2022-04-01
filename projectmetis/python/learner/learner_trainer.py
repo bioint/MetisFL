@@ -3,22 +3,23 @@ from projectmetis.python.models.model_dataset import ModelDataset
 
 class LearnerTrainer(object):
 
-    def __init__(self, model_ops_fn):
+    def __init__(self, model_ops_fn, model_pb):
+        """
+        The initial state of the model for every other trainer instance is unique. Therefore,
+        we initialize the model once during the trainer object construction time.
+        :param model_ops_fn:
+        :param model_pb:
+        """
         self._model_ops = model_ops_fn()
+        self.model_pb = model_pb
+        self.weights_names, self.weights_trainable, self.weights_values = \
+            self._model_ops.get_model_weights_from_variables_pb(self.model_pb.variables)
+        if len(self.weights_values) > 0:
+            self._model_ops.set_model_weights(self.weights_names, self.weights_trainable, self.weights_values)
 
-    def train_model(self, dataset: ModelDataset, learning_task_pb, hyperparameters_pb,
-                    model_pb, verbose=False, *args, **kwargs):
-        num_updates = learning_task_pb.num_local_updates
-        batch_size = hyperparameters_pb.batch_size
-        variables_pb = model_pb.variables
-        var_names, var_trainables, var_nps = \
-            self._model_ops.get_model_weights_from_variables_pb(variables_pb)
-        optimizer = self._model_ops.construct_optimizer(
-            optimizer_config_pb=hyperparameters_pb.optimizer)
-        # TODO Compile model with new optimizer
-        # Assign new model weights after model compilation.
-        if len(var_nps) > 0:
-            self._model_ops.set_model_weights(var_nps)
-        training_res = self._model_ops.train_model(dataset, num_updates, batch_size, verbose)
-        trained_model = self._model_ops.get_model_weights()
-        return training_res, trained_model
+    def train_model(self, train_dataset: ModelDataset, learning_task_pb, hyperparameters_pb,
+                    validation_dataset=None, test_dataset=None, verbose=False, *args, **kwargs):
+        completed_task_pb = self._model_ops\
+            .train_model(train_dataset, learning_task_pb, hyperparameters_pb,
+                         validation_dataset, test_dataset, verbose)
+        return completed_task_pb

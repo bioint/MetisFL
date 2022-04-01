@@ -57,9 +57,6 @@ class Controller {
   // Overwrites/replaces the community model with the provided.
   virtual absl::Status ReplaceCommunityModel(const FederatedModel& model) = 0;
 
-  ABSL_MUST_USE_RESULT
-  virtual const FedRuntimeMetadata& RuntimeMetadata() const = 0;
-
   // Attempts to add a new learner to the federation. If successful, a
   // LearnerState instance is returned. Otherwise, it returns null.
   virtual absl::StatusOr<LearnerDescriptor>
@@ -68,18 +65,22 @@ class Controller {
 
   // Removes a learner from the federation. If successful it returns OK.
   // Otherwise, it returns an error.
-  virtual absl::Status RemoveLearner(const std::string &learner_id,
-                                     const std::string &token) = 0;
+  virtual absl::Status
+  RemoveLearner(const std::string &learner_id, const std::string &token) = 0;
 
-  virtual absl::Status LearnerCompletedTask(const std::string &learner_id,
-                                            const std::string &token,
-                                            const CompletedLearningTask &task) = 0;
+  virtual absl::Status
+  LearnerCompletedTask(const std::string &learner_id,
+                       const std::string &token,
+                       const CompletedLearningTask &task) = 0;
 
-  virtual std::vector<ModelEvaluation>
+  virtual std::vector<FederatedTaskRuntimeMetadata>
+  GetRuntimeMetadataLineage(uint32_t num_steps) = 0;
+
+  virtual std::vector<CommunityModelEvaluation>
   GetEvaluationLineage(uint32_t num_steps) = 0;
 
-  virtual std::vector<ModelEvaluation>
-  GetEvaluationLineage(const std::string &learner_id, uint32_t num_steps) = 0;
+  virtual std::vector<TaskExecutionMetadata>
+  GetLocalTaskLineage(const std::string &learner_id, uint32_t num_steps) = 0;
 
 public:
   // Creates a new controller using the default implementation, i.e., in-memory.

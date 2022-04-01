@@ -5,8 +5,8 @@ import "google/protobuf/timestamp.proto";
 
 // Acknowledgment message.
 message Ack {
-  // Set to true if this acknowledges the successful completion of a request, or
-  // false otherwise.
+  // Set to true if this acknowledges the successful
+  // completion of a request, or false otherwise.
   bool status = 1;
 
   // Timestamp of the acknowledgement.
@@ -19,7 +19,8 @@ message Ack {
 message GetServicesHealthStatusRequest {}
 
 message GetServicesHealthStatusResponse {
-  map<string, bool> services_status = 1; // A Key-Value services status reply.
+  // A Key-Value services status reply.
+  map<string, bool> services_status = 1;
 }
 
 message ShutDownRequest {

@@ -1,3 +1,4 @@
+import signal
 import time
 
 from projectmetis.proto.metis_pb2 import ControllerParams
@@ -10,7 +11,6 @@ class ControllerInstance(object):
     def __init__(self):
         self.__service_wrapper = None
         self.__should_stop = False
-        pass
 
     def build_and_start(self, controller_params_pb):
         assert isinstance(controller_params_pb, ControllerParams)
@@ -24,9 +24,18 @@ class ControllerInstance(object):
         controller.Wait(self.__service_wrapper)
 
     def wait_until_signaled(self):
+
         if self.__service_wrapper is None:
             raise RuntimeError("Controller needs to be initialized.")
 
+        def sigint_handler(signum, frame):
+            self.shutdown()
+
+        # Registering signal termination/shutdown calls.
+        signal.signal(signal.SIGTERM, sigint_handler)
+        signal.signal(signal.SIGINT, sigint_handler)
+
+        # Infinite loop till shutdown signal is triggered.
         while not self.__should_stop:
             time.sleep(3)
 

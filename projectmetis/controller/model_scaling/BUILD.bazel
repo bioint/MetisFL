@@ -5,7 +5,7 @@ cc_library(
     srcs = ["dataset_size_scaler.cc"],
     hdrs = [
         "scaling_function.h",
-        "scalings.h",
+        "model_scaling.h",
         "dataset_size_scaler.h"
     ],
     deps = [

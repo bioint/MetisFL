@@ -8,18 +8,21 @@ class ModelDataset(object):
     Private Class. Users need to wrap their datasets as one of its subclasses.
     """
 
-    def __init__(self, x=np.array([]), y=np.array([]), size=0):
+    def __init__(self, dataset=None, x=None, y=None, size=0):
         """
         A ModelDataset is a wrapper over the model's train/test/validation dataset input and expected output.
         However, a ModelDataset could hold just the model input since it could be wrapper over a dataset, which we
         use it just for inference.
-        :param x: dataset input
-        :param y: dataset ground truth
+        :param dataset: dataset input
         :param size: total number of dataset records
         """
+        self._dataset = dataset
         self._x = x
         self._y = y
         self._size = size
+
+    def get_dataset(self, *args, **kwargs):
+        return self._dataset
 
     def get_x(self, *args, **kwargs):
         return self._x
@@ -37,8 +40,8 @@ class ModelDataset(object):
 
 class ModelDatasetClassification(ModelDataset):
 
-    def __init__(self, x=np.array([]), y=np.array([]), size=0, examples_per_class=None):
-        super(ModelDatasetClassification, self).__init__(x, y, size)
+    def __init__(self, dataset=None, size=0, x=None, y=None, examples_per_class=None):
+        super(ModelDatasetClassification, self).__init__(dataset, x, y, size)
         self.examples_per_class = examples_per_class
         if self.examples_per_class is None:
             self.examples_per_class = dict()
@@ -51,11 +54,11 @@ class ModelDatasetClassification(ModelDataset):
 
 class ModelDatasetRegression(ModelDataset):
 
-    def __init__(self, x=np.array([]), y=np.array([]), size=0,
-                 min_val=0.0, max_val=0.0,
+    def __init__(self, dataset=None, x=None, y=None,
+                 size=0, min_val=0.0, max_val=0.0,
                  mean_val=0.0, median_val=0.0,
                  mode_val=0.0, stddev_val=0.0):
-        super(ModelDatasetRegression, self).__init__(x, y, size)
+        super(ModelDatasetRegression, self).__init__(dataset, x, y, size)
         self.min_val = min_val
         self.max_val = max_val
         self.mean_val = mean_val

@@ -1,1 +1,0 @@
-METIS_VENV_PATH="python/metisvenv"

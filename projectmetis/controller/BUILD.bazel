@@ -38,6 +38,7 @@ cc_library(
         "//projectmetis/proto:learner_cc_grpc",
         "//projectmetis/controller/model_aggregation",
         "//projectmetis/controller/model_scaling",
+        "//projectmetis/controller/model_selection",
         "//projectmetis/controller/scheduling:task_schedulers",
         "//projectmetis/core:macros",
         "//projectmetis/core:thread_pool",

@@ -83,6 +83,9 @@ FederatedAverage::Aggregate(
     }
   }
 
+  // TODO(dstripelis) We could add support to aggregate only the trainable
+  //  weights. For now, we aggregate all matrices, but if we aggregate only the
+  //  trainable, then what should be the value of the non-trainable weights?
   // Aggregates the input models.
   for (const auto &pair : pairs) {
     const auto* model = pair.first;

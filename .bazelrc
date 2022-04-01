@@ -1,2 +1,4 @@
 build --action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
 build --cxxopt="--std=c++17"
+build --incompatible_strict_action_env=true
+run --incompatible_strict_action_env=true

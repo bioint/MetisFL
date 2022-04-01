@@ -1,7 +1,5 @@
 workspace(name = "projectmetis")
 
-load("//:GlobalVars.bzl", "METIS_VENV_PATH")
-
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Imports grpc.
 http_archive(
@@ -64,37 +62,34 @@ http_archive(
   urls = ["https://github.com/pybind/pybind11/archive/refs/tags/v2.8.0.tar.gz"],
 )
 
-# Configures MetisProject Python environment.
-new_local_repository(
-    name = "metis_python",
-    path = METIS_VENV_PATH,
-    build_file_content = """
-exports_files(["bin/python", "bin/python3"])
-filegroup(
-    name = "files",
-    srcs = glob(["**/*"],
-    exclude = ["* *", "**/* *"]),
-    visibility = ["//visibility:public"]
-)"""
-)
-
-# Registers Python toolchain setup.
-register_toolchains("//python:my_py_toolchain")
-
 # Imports Python rules.
 http_archive(
     name = "rules_python",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.3.0/rules_python-0.3.0.tar.gz",
-    sha256 = "934c9ceb552e84577b0faf1e5a2f0450314985b4d8712b2b70717dc679fdc01b",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.5.0/rules_python-0.5.0.tar.gz",
+    sha256 = "cd6730ed53a002c56ce4e2f396ba3b3be262fd7cb68339f0377a45e8227fe332",
 )
 
-load("@rules_python//python:pip.bzl", "pip_install")
-# Creates a central repo that knows about the python interpreter dependencies based on requirements.txt.
-pip_install(
-   name = "python_deps",
-   requirements = "//:requirements.txt",
-   python_interpreter_target = "@metis_python//:bin/python",
+# Imports Conda rules.
+http_archive(
+    name = "rules_conda",
+    sha256 = "9793f86162ec5cfb32a1f1f13f5bf776e2c06b243c4f1ee314b9ec870144220d",
+    url = "https://github.com/spietras/rules_conda/releases/download/0.1.0/rules_conda-0.1.0.zip"
 )
+
+load("@rules_conda//:defs.bzl", "conda_create", "load_conda", "register_toolchain")
+
+load_conda(
+    conda_version = "4.10.3",  # version of conda to download, default is 4.10.3
+    installer = "miniconda",  # which conda installer to download, either miniconda or miniforge, default is miniconda
+)
+
+conda_create(
+    name = "py3_env",
+    environment = "//python:conda_env.yaml",
+    quiet = False,
+)
+
+register_toolchain(py3_env = "py3_env")
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 # Imports Palisades library.
@@ -144,3 +139,17 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 # This sets up some common toolchains for building targets. For more details, please see
 # https://bazelbuild.github.io/rules_foreign_cc/0.4.0/flatten.html#rules_foreign_cc_dependencies
 rules_foreign_cc_dependencies()
+
+# Add boost library rule for future development.
+#http_archive(
+#    name = "boost",
+#    build_file_content = """
+#filegroup(
+#    name = "all",
+#    srcs = glob(["**"]),
+#    visibility = ["//visibility:public"])
+#""",
+#    strip_prefix = "boost_1_78_0",
+#    sha256 = "94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7",
+#    urls = ["https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz"],
+#)

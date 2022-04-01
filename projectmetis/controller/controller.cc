@@ -31,8 +31,9 @@
 
 #include "absl/memory/memory.h"
 #include "projectmetis/controller/controller_utils.h"
-#include "projectmetis/controller/model_aggregation/aggregations.h"
-#include "projectmetis/controller/model_scaling/scalings.h"
+#include "projectmetis/controller/model_aggregation/model_aggregation.h"
+#include "projectmetis/controller/model_scaling/model_scaling.h"
+#include "projectmetis/controller/model_selection/model_selection.h"
 #include "projectmetis/controller/scheduling/scheduling.h"
 #include "projectmetis/core/macros.h"
 #include "projectmetis/core/thread_pool.h"
@@ -49,18 +50,18 @@ public:
   ControllerDefaultImpl(ControllerParams params,
                         std::unique_ptr<ScalingFunction> scaler,
                         std::unique_ptr<AggregationFunction> aggregator,
-                        std::unique_ptr<Scheduler> scheduler)
+                        std::unique_ptr<Scheduler> scheduler,
+                        std::unique_ptr<Selector> selector)
       : params_(std::move(params)), global_iteration_(0), learners_(),
         learner_stubs_(), learners_mutex_(), scaler_(std::move(scaler)),
         aggregator_(std::move(aggregator)), scheduler_(std::move(scheduler)),
-        // TODO(canastas) needed to increase thread pool count to carry out
-        //  global iterations. Should the count be equal to the total number of
-        //  participating learners?
-        community_model_(), community_mutex_(), pool_(10) {}
+        selector_(std::move(selector)), community_model_(),
+        community_mutex_(), pool_(2) {}
 
   const ControllerParams &GetParams() const override { return params_; }
 
   std::vector<LearnerDescriptor> GetLearners() const override {
+    // TODO Shall we 'hide' authentication token from exposure?
     std::vector<LearnerDescriptor> learners;
     for (const auto &[key, learner_state] : learners_) {
       learners.push_back(learner_state.learner());
@@ -76,12 +77,12 @@ public:
 
   // TODO: add admin auth token support
   absl::Status ReplaceCommunityModel(const FederatedModel &model) override {
-    community_model_ = model;
+    // When replacing the federation model we only set the number of learners
+    // contributed to this model and the actual model. We do not replace the
+    // global iteration since it is updated exclusively by the controller.
+    community_model_.set_num_contributors(model.num_contributors());
+    *community_model_.mutable_model() = model.model();
     return absl::OkStatus();
-  }
-
-  const FedRuntimeMetadata &RuntimeMetadata() const override {
-    return metadata_;
   }
 
   absl::StatusOr<LearnerDescriptor>
@@ -95,7 +96,7 @@ public:
     // Validates number of train, validation and test examples. Train examples
     // must always be positive, while validation and test can be non-negative.
     if (dataset_spec.num_training_examples() <= 0) {
-      return absl::InvalidArgumentError("Invalid dataset spec provided.");
+      return absl::InvalidArgumentError("Learner training examples <= 0.");
     }
 
     // TODO(dstripelis) Condition to ping the hostname + port.
@@ -171,16 +172,56 @@ public:
                        const CompletedLearningTask &task) override {
     RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
+    // Records the id of the learner completed the task.
+    auto metadata_index = task.execution_metadata().global_iteration() - 1;
+    if (metadata_index < metadata_.size()) {
+      *metadata_.at(metadata_index).add_completed_by_learner_id() = learner_id;
+    }
+
     // Updates the learner's state.
     *learners_[learner_id].mutable_model()->Add() = task.model();
 
+    // Update learner collection with metrics from last completed training task.
+    if (!local_tasks_metadata_.contains(learner_id)) {
+      local_tasks_metadata_[learner_id] = std::list<TaskExecutionMetadata>();
+    }
+    local_tasks_metadata_[learner_id].push_front(task.execution_metadata());
+
     // Schedules next tasks if necessary.
+    // TODO(dstripelis) This needs to be executed asynchronously because
+    //  the last learner required to train a federation round (synchronous exec)
+    //  needs to wait for all tasks be scheduled before receiving
+    //  acknowledgement. Similarly for the case of asynchronous exec
+    //  (first-come-first-serve).
     ScheduleTasks(learner_id, task);
 
     return absl::OkStatus();
   }
 
-  std::vector<ModelEvaluation>
+  std::vector<FederatedTaskRuntimeMetadata>
+  GetRuntimeMetadataLineage(uint32_t num_steps) override {
+    if (metadata_.empty()) {
+      return {};
+    }
+
+    const auto &lineage = metadata_;
+
+    if (num_steps <= 0) {
+      return {lineage.begin(), lineage.end()};
+    }
+
+    std::vector<FederatedTaskRuntimeMetadata> lineage_head;
+    auto iter = lineage.begin();
+    while (lineage_head.size() < num_steps && iter != lineage.end()) {
+      lineage_head.push_back(*iter);
+      ++iter;
+    }
+
+    return lineage_head;
+
+  }
+
+  std::vector<CommunityModelEvaluation>
   GetEvaluationLineage(uint32_t num_steps) override {
     if (community_evaluations_.empty()) {
       return {};
@@ -192,7 +233,7 @@ public:
       return {lineage.begin(), lineage.end()};
     }
 
-    std::vector<ModelEvaluation> lineage_head;
+    std::vector<CommunityModelEvaluation> lineage_head;
     auto iter = lineage.begin();
     while (lineage_head.size() < num_steps && iter != lineage.end()) {
       lineage_head.push_back(*iter);
@@ -202,20 +243,20 @@ public:
     return lineage_head;
   }
 
-  std::vector<ModelEvaluation>
-  GetEvaluationLineage(const std::string &learner_id,
+  std::vector<TaskExecutionMetadata>
+  GetLocalTaskLineage(const std::string &learner_id,
                        uint32_t num_steps) override {
-    if (!evaluations_.contains(learner_id)) {
+    if (!local_tasks_metadata_.contains(learner_id)) {
       return {};
     }
 
-    const auto &lineage = evaluations_[learner_id];
+    const auto &lineage = local_tasks_metadata_[learner_id];
 
     if (num_steps <= 0) {
       return {lineage.begin(), lineage.end()};
     }
 
-    std::vector<ModelEvaluation> lineage_head;
+    std::vector<TaskExecutionMetadata> lineage_head;
     auto iter = lineage.begin();
     while (lineage_head.size() < num_steps && iter != lineage.end()) {
       lineage_head.push_back(*iter);
@@ -250,29 +291,150 @@ private:
       return;
     }
 
-    if (!metadata_.has_started_at()) {
-      *metadata_.mutable_started_at() = TimeUtil::GetCurrentTime();
+    if (metadata_.empty()) {
+      // When the very first local training task is scheduled, we need to
+      // increase the global iteration counter and create the first
+      // federation runtime metadata object.
+      FederatedTaskRuntimeMetadata meta = FederatedTaskRuntimeMetadata();
+      ++global_iteration_;
+      std::cout << "FedIteration: " << unsigned(global_iteration_) << std::endl;
+      meta.set_global_iteration(global_iteration_);
+      *meta.mutable_started_at() = TimeUtil::GetCurrentTime();
+      metadata_.emplace_back(meta);
     }
 
+    // Records the learner id to which the controller delegates the latest task.
+    *metadata_.back().add_assigned_to_learner_id() = learner_id;
+    auto &community_model = community_model_;
+
+    // Send initial training.
+    SendRunTask(learner_id, community_model);
+  }
+
+  void ScheduleTasks(const std::string &learner_id,
+                     const CompletedLearningTask &task) {
+    // Acquires a lock to avoid having multiple threads overwriting the learners
+    // data structures. The guard releases the mutex as soon as it goes out of
+    // scope so no need to manually release it in the code.
+    std::lock_guard<std::mutex> guard(learners_mutex_);
+    // TODO Maybe for global_iteration_ as well?
+
+    auto to_schedule =
+        scheduler_->ScheduleNext(learner_id, task, GetLearners());
+    if (!to_schedule.empty()) {
+      // Updates completion time of the just completed scheduled task.
+      auto task_global_iteration = task.execution_metadata().global_iteration();
+      auto metadata_index = task_global_iteration - 1;
+      if (metadata_index < metadata_.size()) {
+        *metadata_.at(metadata_index).mutable_completed_at() =
+            TimeUtil::GetCurrentTime();
+      }
+
+      // Select models that will participate in the community model.
+      auto to_select = selector_->Select(to_schedule, GetLearners());
+      // Computes the community model using models that have
+      // been selected by the model selector.
+      auto community_model = ComputeCommunityModel(to_select);
+      community_model.set_global_iteration(task_global_iteration);
+      // Updates the community model.
+      community_model_ = community_model;
+
+      // Creates an evaluation hash map container for the new community model.
+      CommunityModelEvaluation community_eval = CommunityModelEvaluation();
+      // Records the evaluation of the community model that was
+      // computed at the previously completed global iteration.
+      community_eval.set_global_iteration(task_global_iteration);
+      community_evaluations_.emplace_back(community_eval);
+
+      // Firstly, evaluate the community model across all scheduled learners.
+      for (const auto &to_schedule_id : to_schedule) {
+        // Send community model evaluation tasks to every learner. Each learner
+        // holds a different training, validation and test dataset and hence
+        // we need to evaluate the community model over each individual dataset.
+        SendEvaluationTask(to_schedule_id, community_model);
+      }
+      // Wait for all evaluation tasks to complete
+      // before starting a new global iteration.
+      pool_.wait_for_tasks();
+
+      // Increase global iteration counter to reflect the new scheduling round.
+      ++global_iteration_;
+      std::cout << "FedIteration: " << unsigned(global_iteration_) << std::endl;
+
+      // Creates a new federation runtime metadata
+      // object for the new scheduling round.
+      FederatedTaskRuntimeMetadata meta = FederatedTaskRuntimeMetadata();
+      meta.set_global_iteration(global_iteration_);
+      *meta.mutable_started_at() = TimeUtil::GetCurrentTime();
+      // Records the id of the learners to which
+      // the controller delegates the training task.
+      for (const auto &to_schedule_id : to_schedule) {
+        *meta.add_assigned_to_learner_id() = to_schedule_id;
+      }
+      metadata_.emplace_back(meta);
+
+      // Send training task to all scheduled learners.
+      for (const auto &to_schedule_id : to_schedule) {
+        // Send the new training task and add it to the pool.
+        SendRunTask(to_schedule_id, community_model);
+      }
+
+    }
+  }
+
+  void SendEvaluationTask(const std::string &learner_id,
+                          const FederatedModel &model) {
+    auto *learner_stub = learner_stubs_[learner_id].get();
+    auto &params = params_;
+
+    auto &model_evaluations_map = community_evaluations_.back();
+    pool_.push_task([model, learner_stub, learner_id, &params,
+                     &model_evaluations_map] {
+      EvaluateModelRequest request;
+      *request.mutable_model() = model.model();
+      request.set_batch_size(params.model_hyperparams().batch_size());
+      request.add_evaluation_dataset(EvaluateModelRequest::TRAINING);
+      request.add_evaluation_dataset(EvaluateModelRequest::VALIDATION);
+      request.add_evaluation_dataset(EvaluateModelRequest::TEST);
+
+      ::grpc::ClientContext context;
+      EvaluateModelResponse response;
+      auto status = learner_stub->EvaluateModel(&context, request, &response);
+      if (status.ok()) {
+        ModelEvaluations model_evaluations;
+        *model_evaluations.mutable_training_evaluation() =
+            response.evaluations().training_evaluation();
+        *model_evaluations.mutable_validation_evaluation() =
+            response.evaluations().validation_evaluation();
+        *model_evaluations.mutable_test_evaluation() =
+            response.evaluations().test_evaluation();
+        (*model_evaluations_map.mutable_evaluations())[learner_id] =
+            model_evaluations;
+      }
+    });
+  }
+
+  void SendRunTask(const std::string &learner_id, const FederatedModel &model) {
+    auto &params = params_;
+    auto global_iteration = global_iteration_;
     const auto &learner = learners_[learner_id].learner();
     auto *learner_stub = learner_stubs_[learner_id].get();
     const auto &dataset_spec = learner.dataset_spec();
 
-    auto &community_model = community_model_;
-
-    // Send initial training
-    auto &params = params_;
-    pool_.push_task([learner_stub, dataset_spec, community_model, &params] {
+    pool_.push_task([learner_stub, dataset_spec, model, global_iteration,
+                     &params] {
       RunTaskRequest request;
-      *request.mutable_federated_model() = community_model;
+      *request.mutable_federated_model() = model;
 
       auto *next_task = request.mutable_task();
+      next_task->set_global_iteration(global_iteration);
       const auto &model_params = params.model_hyperparams();
       uint32_t steps_per_epoch =
           dataset_spec.num_training_examples() / model_params.batch_size();
       next_task->set_num_local_updates(model_params.epochs() * steps_per_epoch);
       next_task->set_training_dataset_percentage_for_stratified_validation(
           model_params.percent_validation());
+      // TODO (dstripelis) Add evaluation metrics for the learning task.
 
       auto *hyperparams = request.mutable_hyperparameters();
       hyperparams->set_batch_size(model_params.batch_size());
@@ -287,104 +449,27 @@ private:
     });
   }
 
-  void ScheduleTasks(const std::string &learner_id,
-                     const CompletedLearningTask &task) {
-    // Acquires a lock to avoid having multiple threads overwriting the
-    // community model. The guard releases the mutex as soon as it goes out of
-    // scope so no need to manually release it in the code.
-    std::lock_guard<std::mutex> guard(community_mutex_);
+  FederatedModel
+  ComputeCommunityModel(const std::vector<std::string> &learners_ids) {
 
-    auto to_schedule =
-        scheduler_->ScheduleNext(learner_id, task, GetLearners());
-    if (!to_schedule.empty()) {
-      // Increases global step.
-      ++global_iteration_;
-      std::cout << "Global Iteration: " << unsigned(global_iteration_) << std::endl;
-
-      metadata_.set_global_iteration(global_iteration_);
-      *metadata_.mutable_last_iteration_started_at() = metadata_.current_iteration_started_at();
-      *metadata_.mutable_last_iteration_finished_at() = TimeUtil::GetCurrentTime();
-      *metadata_.mutable_current_iteration_started_at() = TimeUtil::GetCurrentTime();
-
-      auto community_model = ComputeCommunityModel();
-      community_model.set_global_iteration(global_iteration_);
-
-      // Schedule next iteration
-      bool first_learner = true;
-      for (const auto &to_schedule_id : to_schedule) {
-        const auto &learner = learners_[to_schedule_id].learner();
-        auto *learner_stub = learner_stubs_[to_schedule_id].get();
-        const auto &dataset_spec = learner.dataset_spec();
-        auto &params = params_;
-        // Send evaluation tasks.
-        if (!evaluations_.contains(to_schedule_id)) {
-          evaluations_[to_schedule_id] = std::list<ModelEvaluation>();
-        }
-
-        auto &local_evaluations = evaluations_[to_schedule_id];
-        auto &global_evaluations = community_evaluations_;
-        pool_.push_task([learner_stub, community_model, &local_evaluations,
-                         &global_evaluations, params, first_learner] {
-          EvaluateModelRequest request;
-          *request.mutable_model() = community_model.model();
-          request.set_batch_size(params.model_hyperparams().batch_size());
-          request.add_evaluation_dataset(EvaluateModelRequest::TRAINING);
-          request.add_evaluation_dataset(EvaluateModelRequest::VALIDATION);
-          request.add_evaluation_dataset(EvaluateModelRequest::TEST);
-          // TODO(stripeli): metrics??
-
-          ::grpc::ClientContext context;
-          EvaluateModelResponse response;
-          auto status =
-              learner_stub->EvaluateModel(&context, request, &response);
-
-          if (status.ok()) {
-            local_evaluations.push_front(response.evaluation());
-            if (first_learner) {
-              global_evaluations.push_front(response.evaluation());
-            }
-          }
-        });
-
-        // Send next training tasks.
-        pool_.push_task([learner_stub, dataset_spec, community_model, &params] {
-          RunTaskRequest request;
-          *request.mutable_federated_model() = community_model;
-
-          auto *next_task = request.mutable_task();
-          const auto &model_params = params.model_hyperparams();
-          uint32_t steps_per_epoch =
-              dataset_spec.num_training_examples() / model_params.batch_size();
-          next_task->set_num_local_updates(model_params.epochs() *
-                                           steps_per_epoch);
-          next_task->set_training_dataset_percentage_for_stratified_validation(
-              model_params.percent_validation());
-
-          auto *hyperparams = request.mutable_hyperparameters();
-          hyperparams->set_batch_size(model_params.batch_size());
-          *hyperparams->mutable_optimizer() =
-              params.model_hyperparams().optimizer();
-
-          ::grpc::ClientContext context;
-          RunTaskResponse response;
-          learner_stub->RunTask(&context, request, &response);
-        });
-
-        first_learner = false;
-      }
-
-      // Updates the community model.
-      community_model_ = community_model;
+    // Handles the case where the community model is requested for the
+    // first time and has the original (random) initialization state.
+    if (global_iteration_ < 2 && community_model_.IsInitialized()) {
+      return community_model_;
     }
-  }
 
-  FederatedModel ComputeCommunityModel() {
+    // TODO (dstripelis) Remove redundant copying.
+    absl::flat_hash_map<std::string, LearnerState> participating_states;
+    for (const auto &id : learners_ids) {
+
+      participating_states[id] = learners_.at(id);
+    }
     auto scaling_factors =
-        scaler_->ComputeScalingFactors(community_model_, learners_);
-    std::vector<std::pair<const Model*, double>> participating_models;
-    for (const auto &[id, state] : learners_) {
+        scaler_->ComputeScalingFactors(community_model_, participating_states);
+    std::vector<std::pair<const Model *, double>> participating_models;
+    for (const auto &[id, state] : participating_states) {
       const auto history_size = state.model_size();
-      const auto& latest_model = state.model(history_size - 1);
+      const auto &latest_model = state.model(history_size - 1);
       const auto scaling_factor = scaling_factors[id];
       participating_models.emplace_back(
           std::make_pair(&latest_model, scaling_factor));
@@ -394,21 +479,32 @@ private:
 
   // Controllers parameters.
   ControllerParams params_;
-  uint8_t global_iteration_;
-  FedRuntimeMetadata metadata_;
+  uint32_t global_iteration_;
+  // We store a collection of federated training metadata as training
+  // progresses related to the federation runtime environment. All
+  // insertions take place at the end of the structure and we want to
+  // randomly access positions in the structure. Hence, the vector container.
+  std::vector<FederatedTaskRuntimeMetadata> metadata_;
   // Stores active learners execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
   absl::flat_hash_map<std::string, LearnerStub> learner_stubs_;
   std::mutex learners_mutex_;
-  // Stores evaluation lineages
-  absl::flat_hash_map<std::string, std::list<ModelEvaluation>> evaluations_;
-  std::list<ModelEvaluation> community_evaluations_;
+  // Stores local models evaluation lineages.
+  absl::flat_hash_map<std::string, std::list<TaskExecutionMetadata>>
+      local_tasks_metadata_;
+  // Stores community models evaluation lineages. A community model might not
+  // get evaluated across all learners depending on the participation ratio and
+  // therefore we store sequentially the evaluations on every other learner.
+  // Insertions occur at the head of the structure, hence the use of list.
+  std::vector<CommunityModelEvaluation> community_evaluations_;
   // Scaling function for computing the scaling factor of each learner.
   std::unique_ptr<ScalingFunction> scaler_;
   // Aggregation function to use for computing the community model.
   std::unique_ptr<AggregationFunction> aggregator_;
   // Federated task scheduler.
   std::unique_ptr<Scheduler> scheduler_;
+  // Federated model selector.
+  std::unique_ptr<Selector> selector_;
   // Community model.
   FederatedModel community_model_;
   std::mutex community_mutex_;
@@ -428,7 +524,15 @@ std::unique_ptr<Scheduler> CreateScheduler(const CommunicationSpecs &specs) {
   if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS) {
     return absl::make_unique<SynchronousScheduler>();
   }
+  if (specs.protocol() == CommunicationSpecs::ASYNCHRONOUS) {
+    return absl::make_unique<AsynchronousScheduler>();
+  }
   throw std::runtime_error("unsupported scheduling policy.");
+}
+
+std::unique_ptr<Selector>
+CreateSelector() {
+  return absl::make_unique<ScheduledCardinality>();
 }
 
 } // namespace
@@ -437,7 +541,8 @@ std::unique_ptr<Controller> Controller::New(const ControllerParams &params) {
   return absl::make_unique<ControllerDefaultImpl>(
       params, absl::make_unique<DatasetSizeScaler>(),
       CreateAggregator(params.global_model_specs()),
-      CreateScheduler(params.communication_specs()));
+      CreateScheduler(params.communication_specs()),
+      CreateSelector());
 }
 
 } // namespace projectmetis::controller

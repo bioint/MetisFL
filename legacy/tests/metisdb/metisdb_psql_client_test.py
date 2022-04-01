@@ -1,1 +1,0 @@
-process_data_files(tblname, retrieve_data=True, no_of_examples=int(limit))

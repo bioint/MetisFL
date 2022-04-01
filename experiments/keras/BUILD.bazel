@@ -1,13 +1,12 @@
-load("@python_deps//:requirements.bzl", "requirement")
 load("@rules_python//python:defs.bzl", "py_binary")
 
 package(default_visibility = ["//visibility:public"])
 
 py_binary(
-    name = "brainage",
-    main = "brainage.py",
+    name = "neuroimaging",
+    main = "neuroimaging.py",
     srcs = [
-        "brainage.py",
+        "neuroimaging.py",
     ],
     srcs_version = "PY3",
     python_version = "PY3",
@@ -15,17 +14,12 @@ py_binary(
     data = [
         # To be able to load the federation environments .yaml files relative to the execution script.
         "//experiments/federation_environments_config:configuration_files",
-        "//experiments/keras/datasets/brainage:experiment_data",
+        "//experiments/keras/datasets/adni:experiment_data",
+        "//experiments/keras/datasets/ukbb:experiment_data",
     ],
     deps = [
         "//experiments/keras/models:keras_models_py_lib",
         "//projectmetis/python/driver:driver_py_lib",
-        requirement("cloudpickle"),
-        requirement("nibabel"),
-        requirement("numpy"),
-        requirement("pandas"),
-        requirement("scipy"),
-        requirement("tensorflow"),
     ],
 )
 
@@ -45,17 +39,14 @@ py_binary(
     deps = [
         "//experiments/keras/models:keras_models_py_lib",
         "//projectmetis/python/driver:driver_py_lib",
-        requirement("cloudpickle"),
-        requirement("numpy"),
-        requirement("tensorflow"),
     ],
 )
 
 py_binary(
-    name = "fashion_mnist",
-    main = "fashion_mnist.py",
+    name = "fashionmnist",
+    main = "fashionmnist.py",
     srcs = [
-        "fashion_mnist.py",
+        "fashionmnist.py",
     ],
     srcs_version = "PY3",
     python_version = "PY3",
@@ -67,8 +58,5 @@ py_binary(
     deps = [
         "//experiments/keras/models:keras_models_py_lib",
         "//projectmetis/python/driver:driver_py_lib",
-        requirement("cloudpickle"),
-        requirement("numpy"),
-        requirement("tensorflow"),
     ],
 )

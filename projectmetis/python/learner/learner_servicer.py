@@ -1,5 +1,5 @@
-import os
-import signal
+import grpc
+import threading
 
 import projectmetis.python.utils.proto_messages_factory as proto_factory
 
@@ -20,8 +20,9 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.servicer_workers = servicer_workers
         self.__community_models_received = 0
         self.__model_evaluation_requests = 0
+        self.__not_serving_event = threading.Event()  # event to stop serving inbound requests
+        self.__shutdown_event = threading.Event()  # event to stop all grpc related tasks
         self.__server = None
-        self.__pid = os.getpid()
 
     def init_servicer(self):
         self.__server = GRPCServerMaxMsgLength(max_workers=self.servicer_workers).server
@@ -29,60 +30,69 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.__server.add_insecure_port(self.learner.host_port_identifier())
         self.__server.start()
         MetisLogger.info("Initialized Learner Servicer {}".format(
-            self.learner.host_port_identifier()
-        ))
+            self.learner.host_port_identifier()))
+        # Learner asks controller to join the federation.
+        self.learner.join_federation()
 
     def wait_servicer(self):
-
-        def handle_sigterm(*_):
-            MetisLogger.info("Learner Servicer {} received shutdown signal.".format(
-                self.learner.host_port_identifier()))
-            # Shut down the server gracefully. Refuses new requests and waits for X seconds
-            # for existing requests to complete. Returns immediately, but returns a threading.Event() object.
-            all_rpcs_done_event = self.__server.stop(30)
-            # Wait on the on threading.Event() to avoid premature exit.
-            all_rpcs_done_event.wait(30)
-            MetisLogger.info("Learner Servicer {} shutdown.".format(
-                self.learner.host_port_identifier()))
-        signal.signal(signal.SIGTERM, handle_sigterm)
-        signal.signal(signal.SIGINT, handle_sigterm)
-
-        if self.__server is not None:
-            self.__server.wait_for_termination()
-        else:
-            raise RuntimeError("You need to first initialize LearnerServicer.")
+        self.__shutdown_event.wait()
+        self.__server.stop(None)
 
     def EvaluateModel(self, request, context):
+        if self.__not_serving_event.is_set():
+            # Returns not available status if the servicer cannot receive new requests.
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return proto_factory.LearnerServiceProtoMessages\
+                .construct_evaluate_model_response_pb()
+
+        MetisLogger.info("Learner Servicer {} received model evaluation task.".format(
+            self.learner.host_port_identifier()))
         self.__model_evaluation_requests += 1
         model_pb = request.model
         batch_size = request.batch_size
-        metrics = request.metrics
+        metrics_pb = request.metrics
         evaluation_dataset_pb = request.evaluation_dataset
         # Blocking execution. Learner evaluates received model on its local datasets.
-        eval_result = self.learner.run_evaluation_task(
-            model_pb, batch_size, evaluation_dataset_pb, metrics, verbose=True, block=True)
-        model_evaluation_pb = \
-            proto_factory.MetisProtoMessages.construct_model_evaluation_pb(eval_result)
+        model_evaluations_pb = self.learner.run_evaluation_task(
+            model_pb, batch_size, evaluation_dataset_pb, metrics_pb, verbose=True, block=True)
         evaluate_model_response_pb = \
-            proto_factory.LearnerServiceProtoMessages.construct_evaluate_model_response_pb(model_evaluation_pb)
+            proto_factory.LearnerServiceProtoMessages\
+            .construct_evaluate_model_response_pb(model_evaluations_pb)
         return evaluate_model_response_pb
 
     def GetServicesHealthStatus(self, request, context):
-        pass
+        if self.__not_serving_event.is_set():
+            # Returns not available status if the servicer cannot receive new requests.
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return proto_factory.ServiceCommonProtoMessages\
+                .construct_get_services_health_status_request_pb()
+
+        MetisLogger.info("Learner Servicer {} received a health status request.".format(
+            self.learner.host_port_identifier()))
+        services_status = {"server": self.__server is not None}
+        return proto_factory\
+            .ServiceCommonProtoMessages\
+            .construct_get_services_health_status_response_pb(services_status=services_status)
 
     def RunTask(self, request, context):
+        if self.__not_serving_event.is_set():
+            # Returns not available status if the servicer cannot receive new requests.
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return proto_factory.LearnerServiceProtoMessages\
+                .construct_run_task_response_pb()
+
+        MetisLogger.info("Learner Servicer {} received local training task.".format(
+            self.learner.host_port_identifier()))
         self.__community_models_received += 1
         federated_model = request.federated_model
         num_contributors = federated_model.num_contributors
         model_pb = federated_model.model
         learning_task_pb = request.task
         hyperparameters_pb = request.hyperparameters
-
         # Non-Blocking execution. Learner trains received task in the background and sends
         # the newly computed local model to the controller upon task completion.
         is_task_submitted = self.learner.run_learning_task(
             learning_task_pb, hyperparameters_pb, model_pb, verbose=True, block=False)
-
         ack_pb = proto_factory.ServiceCommonProtoMessages.construct_ack_pb(
             status=is_task_submitted,
             google_timestamp=Timestamp().GetCurrentTime(),
@@ -92,8 +102,20 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         return run_task_response_pb
 
     def ShutDown(self, request, context):
-        # Issue termination signal
-        os.kill(self.__pid, signal.SIGTERM)
+        MetisLogger.info("Learner Servicer {} received shutdown request.".format(
+            self.learner.host_port_identifier()))
+        # First, stop accepting new incoming requests.
+        self.__not_serving_event.set()
+        # Second, trigger a shutdown signal to learner's underlying execution engine
+        # to release all resources and reply any pending tasks to the controller.
+        self.learner.shutdown(graceful=False)
+        # Third, remove the learner from the federation.
+        self.learner.leave_federation()
+        # Fourth, issue servicer termination signal.
+        # Reason we do this as the final step is because we want to the learner
+        # to have completely shutdown its resources because if not it means it
+        # is still alive and we cannot guarantee a proper shutdown.
+        self.__shutdown_event.set()
         ack_pb = proto_factory.ServiceCommonProtoMessages.construct_ack_pb(
             status=True,
             google_timestamp=Timestamp().GetCurrentTime(),

@@ -1,9 +1,9 @@
 import argparse
-import signal
 
 import projectmetis.proto.metis_pb2 as metis_pb2
 
 from projectmetis.python.logging.metis_logger import MetisLogger
+from projectmetis.python.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from pybind.controller.controller_instance import ControllerInstance
 
 if __name__ == "__main__":
@@ -40,11 +40,15 @@ if __name__ == "__main__":
     # If the given protobuff is None then we assign it an empty bytes object.
     # We then use it to initialize ControllerParams.ModelHyperparams() object.
     model_hyperparameters_protobuff = args.model_hyperparameters_protobuff
-    if model_hyperparameters_protobuff is None:
-        model_hyperparameters_protobuff = "b''"
-    model_hyperparameters_protobuff = eval(model_hyperparameters_protobuff)
-    model_hyperparams = metis_pb2.ControllerParams.ModelHyperparams()
-    model_hyperparams.ParseFromString(model_hyperparameters_protobuff)
+    if model_hyperparameters_protobuff is not None:
+        model_hyperparams = metis_pb2.ControllerParams.ModelHyperparams()
+        model_hyperparameters_protobuff = eval(model_hyperparameters_protobuff)
+        model_hyperparams.ParseFromString(model_hyperparameters_protobuff)
+    else:
+        model_hyperparams = MetisProtoMessages.construct_controller_modelhyperparams_pb(
+            batch_size=50, epochs=4, percent_validation=0.0,
+            optimizer_pb=ModelProtoMessages.construct_optimizer_config_pb(
+                ModelProtoMessages.construct_vanilla_sgd_optimizer_pb(learning_rate=0.01)))
 
     controller_params = metis_pb2.ControllerParams(
         server_entity=metis_pb2.ServerEntity(
@@ -63,8 +67,4 @@ if __name__ == "__main__":
     controller_instance = ControllerInstance()
     controller_instance.build_and_start(controller_params)
 
-    def sigint_handler(signum, frame):
-        controller_instance.shutdown()
-
-    signal.signal(signal.SIGINT, sigint_handler)
-    controller_instance.wait_until_signaled()
+    controller_instance.wait()
