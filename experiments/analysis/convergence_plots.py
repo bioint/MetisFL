@@ -56,9 +56,10 @@ def plot_rounds_convergence(files, metric="accuracy"):
             if len(iteration_performances) > 0:
                 iteration_performance = np.mean(iteration_performances)
                 global_model_test_performances.append(iteration_performance)
+        global_iterations_index = global_iterations_index[:len(global_model_test_performances)]
         global_iterations_ts = global_iterations_ts[:len(global_model_test_performances)]
         print(global_model_test_performances)
-        ax.plot(global_iterations_ts, global_model_test_performances, label=line_label)
+        ax.plot(global_iterations_index, global_model_test_performances, label=line_label)
 
         for learner_id, learner_values in learners_task_results.items():
             tasks_metadata = list(learner_values['task_metadata'])
@@ -84,9 +85,9 @@ def plot_rounds_convergence(files, metric="accuracy"):
 
             # ax.plot(global_iterations_ts, tasks_test_evaluation_sorted, label=learner_id)
 
-    # ax.plot(global_iterations_ts, len(global_iterations_ts) * [2.895984411239624],
-    #         linestyle="solid", color='crimson',
-    #         linewidth=2, label="Centralized")
+    ax.plot(global_iterations_ts, len(global_iterations_ts) * [2.895984411239624],
+            linestyle="solid", color='crimson',
+            linewidth=2, label="Centralized")
 
     fig.legend()
     return fig

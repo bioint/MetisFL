@@ -20,14 +20,13 @@ class BrainAge2DCNN(ModelDef):
         super(BrainAge2DCNN, self).__init__()
 
     def get_model(self):
-
         def conv_block(inputs, num_filters, name):
             inputs = tf.keras.layers.Conv2D(
                 num_filters, 3, strides=1, padding="same", name=name + "_conv")(inputs)
             # inputs = tf.keras.layers.BatchNormalization(
             # axis=[0, 3], name=name + "_batch_norm", center=True, scale=True)(inputs)
             inputs = tf.keras.layers.BatchNormalization(
-                axis=[0, 3], name=name + "_batch_norm", center=False, scale=False)(inputs)
+                axis=[0, 3], name=name + "_batch_norm", center=False, scale=False)(inputs, training=True)
             inputs = tf.keras.layers.MaxPooling2D(2, strides=2, padding="valid", name=name + "_max_pool")(inputs)
             inputs = tf.keras.layers.ReLU(name=name + "_relu")(inputs)
             return inputs
@@ -45,12 +44,13 @@ class BrainAge2DCNN(ModelDef):
             x = tf.keras.layers.Conv2D(
                 64, 1, strides=1, name="post_conv1")(x)
             # x = tf.keras.layers.BatchNormalization(center=True, scale=True)(x)
-            x = tf.keras.layers.BatchNormalization(name="post_batch_norm", axis=[0, 3], center=False, scale=False)(x)
+            x = tf.keras.layers.BatchNormalization(
+                name="post_batch_norm", axis=[0, 3], center=False, scale=False)(x, training=True)
             x = tf.keras.layers.ReLU(name="post_relu")(x)
             x = tf.keras.layers.AveragePooling2D(pool_size=(3, 2))(x)
 
             # Default rate: 0.5
-            # x = tf.layers.dropout(x, training=True, name="drop")
+            # x = tf.keras.layers.Dropout(0.5)(x, training=True)
             x = tf.keras.layers.Conv2D(
                 32, 1, strides=1, name="post_conv2")(x)
             return tf.squeeze(x)
@@ -99,19 +99,18 @@ class BrainAge3DCNN(ModelDef):
         super(BrainAge3DCNN, self).__init__()
 
     def get_model(self, *args, **kwargs):
-
         def conv_block(inputs, num_filters, scope):
             inputs = tf.keras.layers.Conv3D(num_filters, 3, strides=1, padding="same", name=scope + "_conv")(inputs)
             # since we use BatchNorm as InstanceNorm, we need to keep training=True
-            # inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs, training=True)
-            inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs)
+            inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs, training=True)
+            # inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs)
             inputs = tf.keras.layers.MaxPooling3D(2, strides=2, padding="valid", name=scope + "_max_pool")(inputs)
             inputs = tf.nn.relu(inputs, name=scope + "_relu")
             return inputs
 
         # Series of conv blocks
-        inputs = conv_block(self.original_input, 32,  "conv_block1")
-        inputs = conv_block(inputs, 64,  "conv_block2")
+        inputs = conv_block(self.original_input, 32, "conv_block1")
+        inputs = conv_block(inputs, 64, "conv_block2")
         inputs = conv_block(inputs, 128, "conv_block3")
         inputs = conv_block(inputs, 256, "conv_block4")
         inputs = conv_block(inputs, 256, "conv_block5")
@@ -119,8 +118,8 @@ class BrainAge3DCNN(ModelDef):
         inputs = tf.keras.layers.Conv3D(
             64, 1, strides=1, name="post_conv1")(inputs)
         # since we use BatchNorm as InstanceNorm, we need to keep training=True
-        # inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs, training=True)
-        inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs)
+        inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs, training=True)
+        # inputs = tf.keras.layers.BatchNormalization(center=False, scale=False, axis=[0, 4])(inputs)
         inputs = tf.nn.relu(inputs, name="post_relu")
         inputs = tf.keras.layers.AveragePooling3D(pool_size=(2, 3, 2))(inputs)
 

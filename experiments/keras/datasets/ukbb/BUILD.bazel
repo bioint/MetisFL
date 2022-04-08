@@ -1,0 +1,5 @@
+filegroup(
+    name = "experiment_data",
+    srcs = glob(["*.csv", "dummy_data/*/*.gz"]),
+    visibility = ["//:__subpackages__"]
+)
