@@ -59,7 +59,7 @@ def plot_rounds_convergence(files, metric="accuracy"):
         global_iterations_index = global_iterations_index[:len(global_model_test_performances)]
         global_iterations_ts = global_iterations_ts[:len(global_model_test_performances)]
         print(global_model_test_performances)
-        ax.plot(global_iterations_index, global_model_test_performances, label=line_label)
+        ax.plot(global_iterations_ts, global_model_test_performances, label=line_label)
 
         for learner_id, learner_values in learners_task_results.items():
             tasks_metadata = list(learner_values['task_metadata'])
@@ -85,6 +85,8 @@ def plot_rounds_convergence(files, metric="accuracy"):
 
             # ax.plot(global_iterations_ts, tasks_test_evaluation_sorted, label=learner_id)
 
+    # 3d model centralized: 2.694456259
+    # 2d model centralized: 2.667021116
     ax.plot(global_iterations_ts, len(global_iterations_ts) * [2.895984411239624],
             linestyle="solid", color='crimson',
             linewidth=2, label="Centralized")
@@ -97,9 +99,9 @@ if __name__ == "__main__":
     # plot_rounds_convergence(
     #     "/private/var/tmp/_bazel_Dstrip/6e1f0333b1e46ed6aeb019f1648d0665/execroot/projectmetis/bazel-out/darwin-fastbuild/bin/experiments/keras/fashionmnist.runfiles/projectmetis/experiments/keras/experiment.json",
     #     metric="accuracy")
-    # files = glob.glob("/Users/Dstrip/CLionProjects/projectmetis-rc/experiments/execution_logs/brainage*")
+    # files = glob.glob("/Users/Dstrip/CLionProjects/projectmetis-rc/experiments/execution_logs/brainage/federated/3dmodel/*3D*")
     files = glob.glob("/Users/Dstrip/Downloads/experiment.json")
-    fig = plot_rounds_convergence(files, metric="accuracy")
+    fig = plot_rounds_convergence(files, metric="mae")
     pdf_out = "/Users/Dstrip/CLionProjects/projectmetis-rc/experiments/analysis/{}.pdf".format('Policies Convergence')
     pdfpages1 = PdfPages(pdf_out)
     pdfpages1.savefig(figure=fig, bbox_inches='tight')

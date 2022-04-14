@@ -174,6 +174,9 @@ public:
 
     // Records the id of the learner completed the task.
     auto metadata_index = task.execution_metadata().global_iteration() - 1;
+    if (metadata_index < 0) {
+      metadata_index = 0;
+    }
     if (metadata_index < metadata_.size()) {
       *metadata_.at(metadata_index).add_completed_by_learner_id() = learner_id;
     }
@@ -325,6 +328,9 @@ private:
       // Updates completion time of the just completed scheduled task.
       auto task_global_iteration = task.execution_metadata().global_iteration();
       auto metadata_index = task_global_iteration - 1;
+      if (metadata_index < 0) {
+        metadata_index = 0;
+      }
       if (metadata_index < metadata_.size()) {
         *metadata_.at(metadata_index).mutable_completed_at() =
             TimeUtil::GetCurrentTime();
@@ -468,8 +474,11 @@ private:
         scaler_->ComputeScalingFactors(community_model_, participating_states);
     std::vector<std::pair<const Model *, double>> participating_models;
     for (const auto &[id, state] : participating_states) {
-      const auto history_size = state.model_size();
-      const auto &latest_model = state.model(history_size - 1);
+      auto history_size = state.model_size() - 1;
+      if (history_size < 0) {
+        history_size = 0;
+      }
+      const auto &latest_model = state.model(history_size);
       const auto scaling_factor = scaling_factors[id];
       participating_models.emplace_back(
           std::make_pair(&latest_model, scaling_factor));

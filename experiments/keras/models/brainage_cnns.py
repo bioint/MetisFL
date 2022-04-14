@@ -14,7 +14,7 @@ class BrainAge2DCNN(ModelDef):
     # 5. Maxpool (3x3)
 
     # Model def
-    def __init__(self, learning_rate=5e-5, batch_size=1):
+    def __init__(self, learning_rate=5e-4, batch_size=1):
         self.original_input = tf.keras.layers.Input(shape=(91, 109, 91), batch_size=batch_size, name='input')
         self.learning_rate = learning_rate
         super(BrainAge2DCNN, self).__init__()
