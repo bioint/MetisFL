@@ -8,7 +8,7 @@ class BazelMetisServicesCmdFactory(object):
                                      port,
                                      aggregation_rule,
                                      participation_ratio,
-                                     protocol,
+                                     protocol_pb,
                                      model_hyperparameters_pb):
         bazel_cmd = \
             "bazel " \
@@ -19,10 +19,10 @@ class BazelMetisServicesCmdFactory(object):
             "--controller_port={port} " \
             "--aggregation_rule=\"{aggregation_rule}\" " \
             "--learners_participation_ratio={participation_ratio} " \
-            "--communication_protocol=\"{protocol}\" " \
+            "--communication_protocol_protobuff=\"{protocol_pb}\" " \
             "--model_hyperparameters_protobuff=\"{model_hyperparameters_pb}\" ".format(
                 hostname=hostname, port=port, aggregation_rule=aggregation_rule,
-                participation_ratio=participation_ratio, protocol=protocol,
+                participation_ratio=participation_ratio, protocol_pb=protocol_pb,
                 model_hyperparameters_pb=model_hyperparameters_pb)
         return bazel_cmd
 

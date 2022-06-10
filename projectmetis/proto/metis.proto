@@ -66,6 +66,11 @@ message DatasetSpec {
   }
 }
 
+message LearningTaskTemplate {
+  // This reflects the number of local steps the learner needs to perform.
+  uint32 num_local_updates = 1;
+}
+
 message LearningTask {
   // Records the id of the global iteration, i.e., id of the community model sent to the learner for local training.
   uint32 global_iteration = 1;
@@ -210,9 +215,16 @@ message CommunicationSpecs {
     UNKNOWN = 0;
     SYNCHRONOUS = 1;
     ASYNCHRONOUS = 2;
-    // TODO: add support for more protocols, e.g., semi-sync
+    SEMI_SYNCHRONOUS = 3;
   }
   Protocol protocol = 1;
+  ProtocolSpecs protocol_specs = 2;
+}
+
+message ProtocolSpecs {
+  // Parameters specific to the semi-synchronous protocol.
+  int32 semi_sync_lambda = 1;
+  bool semi_sync_recompute_num_updates = 2;
 }
 
 message LearnerDescriptor {

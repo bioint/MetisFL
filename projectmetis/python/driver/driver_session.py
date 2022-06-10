@@ -77,6 +77,11 @@ class DriverSessionBase(object):
         return grpc_clients
 
     def _init_controller_bazel_cmd(self):
+        protocol_pb = proto_messages_factory.MetisProtoMessages.construct_communication_specs_pb(
+            protocol=self.federation_environment.communication_protocol.name,
+            semi_sync_lambda=self.federation_environment.communication_protocol.semi_synchronous_lambda,
+            semi_sync_recompute_num_updates=self.federation_environment.communication_protocol.semi_sync_recompute_num_updates)
+        protocol_pb_serialized = protocol_pb.SerializeToString()
         optimizer_pb = self.federation_environment.local_model_config.optimizer_config.optimizer_pb
         model_hyperparameters_pb = proto_messages_factory.MetisProtoMessages \
             .construct_controller_modelhyperparams_pb(
@@ -90,7 +95,7 @@ class DriverSessionBase(object):
              port=self.federation_environment.controller.grpc_servicer.port,
              aggregation_rule=self.federation_environment.global_model_config.aggregation_function,
              participation_ratio=self.federation_environment.global_model_config.participation_ratio,
-             protocol=self.federation_environment.communication_protocol.name,
+             protocol_pb=protocol_pb_serialized,
              model_hyperparameters_pb=model_hyperparameters_pb_serialized)
         return bazel_init_controller_cmd
 
@@ -222,7 +227,7 @@ class DriverSessionBase(object):
 
                 # First condition is to check if we reached the desired
                 # number of federation rounds for synchronous execution.
-                if communication_protocol.is_synchronous:
+                if communication_protocol.is_synchronous or communication_protocol.is_semi_synchronous:
                     if len(metadata_pb) > 0:
                         current_global_iteration = max([m.global_iteration for m in metadata_pb])
                         if current_global_iteration > federation_rounds_cutoff:

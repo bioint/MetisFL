@@ -216,6 +216,22 @@ class MetisProtoMessages(object):
                                                            optimizer=optimizer_pb,
                                                            percent_validation=percent_validation)
 
+    @classmethod
+    def construct_communication_specs_pb(cls, protocol, semi_sync_lambda, semi_sync_recompute_num_updates):
+        if protocol.upper() == "SYNCHRONOUS":
+            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SYNCHRONOUS
+        elif protocol.upper() == "ASYNCHRONOUS":
+            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.ASYNCHRONOUS
+        elif protocol.upper() == "SEMI_SYNCHRONOUS":
+            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SEMI_SYNCHRONOUS
+        else:
+            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.UNKNOWN
+
+        return metis_pb2.CommunicationSpecs(protocol=protocol_pb,
+                                            protocol_specs=metis_pb2.ProtocolSpecs(
+                                                semi_sync_lambda=semi_sync_lambda,
+                                                semi_sync_recompute_num_updates=semi_sync_recompute_num_updates))
+
 
 class ModelProtoMessages(object):
 

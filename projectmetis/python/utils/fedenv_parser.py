@@ -20,9 +20,16 @@ class TerminationSignals(object):
 class CommunicationProtocol(object):
 
     def __init__(self, communication_protocol):
-        self.name = communication_protocol
-        self.is_synchronous = communication_protocol == "SYNCHRONOUS"
-        self.is_asynchronous = communication_protocol == "ASYNCHRONOUS"
+        self.name = communication_protocol.get("Name")
+        self.is_asynchronous = self.name == "ASYNCHRONOUS"
+        self.is_synchronous = self.name == "SYNCHRONOUS"
+        self.is_semi_synchronous = self.name == "SEMI_SYNCHRONOUS"
+        self.specifications = communication_protocol.get("Specifications", None)
+        self.semi_synchronous_lambda, self.semi_sync_recompute_num_updates = None, None
+        if "SemiSynchronousLambda" in self.specifications:
+            self.semi_synchronous_lambda = self.specifications.get("SemiSynchronousLambda")
+        if "SemiSynchronousRecomputeSteps" in self.specifications:
+            self.semi_sync_recompute_num_updates = self.specifications.get("SemiSynchronousRecomputeSteps")
 
 
 class GlobalModelConfig(object):

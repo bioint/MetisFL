@@ -47,16 +47,16 @@ using google::protobuf::util::TimeUtil;
 
 class ControllerDefaultImpl : public Controller {
 public:
-  ControllerDefaultImpl(ControllerParams params,
+  ControllerDefaultImpl(ControllerParams &&params,
                         std::unique_ptr<ScalingFunction> scaler,
                         std::unique_ptr<AggregationFunction> aggregator,
                         std::unique_ptr<Scheduler> scheduler,
                         std::unique_ptr<Selector> selector)
       : params_(std::move(params)), global_iteration_(0), learners_(),
-        learner_stubs_(), learners_mutex_(), scaler_(std::move(scaler)),
-        aggregator_(std::move(aggregator)), scheduler_(std::move(scheduler)),
-        selector_(std::move(selector)), community_model_(),
-        community_mutex_(), pool_(2) {}
+        learner_stubs_(), learner_task_templates_(), learners_mutex_(),
+        scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
+        scheduler_(std::move(scheduler)), selector_(std::move(selector)),
+        community_model_(), community_mutex_(), pool_(2) {}
 
   const ControllerParams &GetParams() const override { return params_; }
 
@@ -77,6 +77,7 @@ public:
 
   // TODO: add admin auth token support
   absl::Status ReplaceCommunityModel(const FederatedModel &model) override {
+    std::lock_guard<std::mutex> guard(community_mutex_);
     // When replacing the federation model we only set the number of learners
     // contributed to this model and the actual model. We do not replace the
     // global iteration since it is updated exclusively by the controller.
@@ -104,7 +105,7 @@ public:
     // Generates learner id.
     const std::string learner_id = GenerateLearnerId(server_entity);
 
-    // Acquires a lock to avoid having multiple threads overwriting the learners
+    // Acquires a lock to avoid having multiple threads overwriting the learners'
     // data structures. The guard releases the mutex as soon as it goes out of
     // scope so no need to manually release it in the code.
     std::lock_guard<std::mutex> guard(learners_mutex_);
@@ -128,8 +129,16 @@ public:
     LearnerState learner_state;
     *learner_state.mutable_learner() = learner;
 
+    // Creates default task template.
+    LearningTaskTemplate task_template;
+    uint32_t steps_per_epoch = dataset_spec.num_training_examples() /
+                               params_.model_hyperparams().batch_size();
+    task_template.set_num_local_updates(params_.model_hyperparams().epochs() *
+                                        steps_per_epoch);
+
     // Registers learner.
     learners_[learner_id] = learner_state;
+    learner_task_templates_[learner_id] = task_template;
 
     // Opens gRPC channel with learner.
     auto target =
@@ -158,6 +167,7 @@ public:
     if (it != learners_.end()) {
       if (it->second.learner().auth_token() == token) {
         learners_.erase(it);
+        learner_task_templates_.erase(learner_id);
         return absl::OkStatus();
       } else {
         return absl::UnauthenticatedError("Learner token is wrong.");
@@ -173,8 +183,9 @@ public:
     RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
     // Assign a non-negative value to the metadata index.
-    auto metadata_index = (task.execution_metadata().global_iteration() == 0)
-        ? 0 : task.execution_metadata().global_iteration()-1;
+    auto task_global_iteration = task.execution_metadata().global_iteration();
+    auto metadata_index =
+        task_global_iteration == 0 ? 0 : task_global_iteration - 1;
     // Records the id of the learner completed the task.
     if (not metadata_.empty() && metadata_index < metadata_.size()) {
       *metadata_.at(metadata_index).add_completed_by_learner_id() = learner_id;
@@ -189,12 +200,16 @@ public:
     }
     local_tasks_metadata_[learner_id].push_front(task.execution_metadata());
 
-    // Schedules next tasks if necessary.
-    // TODO(dstripelis) This needs to be executed asynchronously because
-    //  the last learner required to train a federation round (synchronous exec)
-    //  needs to wait for all tasks be scheduled before receiving
-    //  acknowledgement. Similarly for the case of asynchronous exec
-    //  (first-come-first-serve).
+    // Schedules next tasks if necessary. We call ScheduleTasks() asynchronously
+    // because during synchronous execution, the learner who completed its local
+    // training task the last within a federation round will have to wait for
+    // all the rest of training tasks to be scheduled before it can receive an
+    // acknowledgement by the controller for its completed task. Put it simply,
+    // the learner who completed its task the last within a round will have to
+    // keep a connection open with the controller, till the controller schedules
+    // all necessary training tasks for the next federation round.
+//    pool_.push_task(
+//        [this, learner_id, task] { ScheduleTasks(learner_id, task); });
     ScheduleTasks(learner_id, task);
 
     return absl::OkStatus();
@@ -220,7 +235,6 @@ public:
     }
 
     return lineage_head;
-
   }
 
   std::vector<CommunityModelEvaluation>
@@ -247,7 +261,7 @@ public:
 
   std::vector<TaskExecutionMetadata>
   GetLocalTaskLineage(const std::string &learner_id,
-                       uint32_t num_steps) override {
+                      uint32_t num_steps) override {
     if (!local_tasks_metadata_.contains(learner_id)) {
       return {};
     }
@@ -327,8 +341,8 @@ private:
       // Updates completion time of the just completed scheduled task.
       auto task_global_iteration = task.execution_metadata().global_iteration();
       // Assign a non-negative value to the metadata index.
-      auto metadata_index = (task_global_iteration == 0)
-          ? 0 : task_global_iteration - 1;
+      auto metadata_index =
+          (task_global_iteration == 0) ? 0 : task_global_iteration - 1;
       if (not metadata_.empty() && metadata_index < metadata_.size()) {
         *metadata_.at(metadata_index).mutable_completed_at() =
             TimeUtil::GetCurrentTime();
@@ -377,12 +391,56 @@ private:
       }
       metadata_.emplace_back(meta);
 
+      UpdateLearnersTaskTemplates(to_schedule);
+
       // Send training task to all scheduled learners.
       for (const auto &to_schedule_id : to_schedule) {
         // Send the new training task and add it to the pool.
         SendRunTask(to_schedule_id, community_model);
       }
+    }
+  }
 
+  void UpdateLearnersTaskTemplates(std::vector<std::string> &learners) {
+    // If we are running in a semi-synchronous setting, we need to update the
+    // task templates based on the execution times of the previous global
+    // iteration.
+    const auto &communication_specs = params_.communication_specs();
+    const auto &protocol_specs = communication_specs.protocol_specs();
+    // We check if it is the 2nd global_iteration_, because the 1st
+    // global_iteration_ refers to the very first initially scheduled task.
+    if (communication_specs.protocol() ==
+        CommunicationSpecs::SEMI_SYNCHRONOUS &&
+        (global_iteration_ == 2 ||
+            protocol_specs.semi_sync_recompute_num_updates())) {
+      // Finds the slowest learner.
+      // float ms_per_batch_slowest = std::numeric_limits<float>::min();
+      float ms_per_epoch_slowest = std::numeric_limits<float>::min();
+      for (const auto &learner_id : learners) {
+        const auto &metadata = local_tasks_metadata_[learner_id].front();
+        // if (metadata.processing_ms_per_batch() > ms_per_batch_slowest) {
+        //   ms_per_batch_slowest = metadata.processing_ms_per_batch();
+        // }
+        if (metadata.processing_ms_per_epoch() > ms_per_epoch_slowest) {
+          ms_per_epoch_slowest = metadata.processing_ms_per_epoch();
+        }
+      }
+
+      // Calculates the allowed time for training.
+      float t_max = static_cast<float>(
+          protocol_specs.semi_sync_lambda()) *
+          ms_per_epoch_slowest;
+
+      // Updates the task templates based on the slowest learner.
+      for (const auto &learner_id : learners) {
+        const auto &metadata = local_tasks_metadata_[learner_id].front();
+
+        int num_local_updates =
+            std::ceil(t_max / metadata.processing_ms_per_batch());
+
+        auto &task_template = learner_task_templates_[learner_id];
+        task_template.set_num_local_updates(num_local_updates);
+      }
     }
   }
 
@@ -423,19 +481,19 @@ private:
     auto global_iteration = global_iteration_;
     const auto &learner = learners_[learner_id].learner();
     auto *learner_stub = learner_stubs_[learner_id].get();
+    const auto &task_template = learner_task_templates_[learner_id];
     const auto &dataset_spec = learner.dataset_spec();
 
-    pool_.push_task([learner_stub, dataset_spec, model, global_iteration,
-                     &params] {
+    pool_.push_task([learner_stub, task_template, dataset_spec, model,
+                     global_iteration, &params] {
       RunTaskRequest request;
       *request.mutable_federated_model() = model;
 
       auto *next_task = request.mutable_task();
       next_task->set_global_iteration(global_iteration);
       const auto &model_params = params.model_hyperparams();
-      uint32_t steps_per_epoch =
-          dataset_spec.num_training_examples() / model_params.batch_size();
-      next_task->set_num_local_updates(model_params.epochs() * steps_per_epoch);
+      next_task->set_num_local_updates(
+          task_template.num_local_updates()); // get from task template.
       next_task->set_training_dataset_percentage_for_stratified_validation(
           model_params.percent_validation());
       // TODO (dstripelis) Add evaluation metrics for the learning task.
@@ -448,7 +506,8 @@ private:
       ::grpc::ClientContext context;
       RunTaskResponse response;
 
-      // TODO(aasghar) Need to implement logic, when the learner is behaving as a server, and controller needs to connect.
+      // TODO(aasghar) Need to implement logic, when the learner is behaving as
+      // a server, and controller needs to connect.
       learner_stub->RunTask(&context, request, &response);
     });
   }
@@ -465,7 +524,6 @@ private:
     // TODO (dstripelis) Remove redundant copying.
     absl::flat_hash_map<std::string, LearnerState> participating_states;
     for (const auto &id : learners_ids) {
-
       participating_states[id] = learners_.at(id);
     }
     auto scaling_factors =
@@ -494,6 +552,8 @@ private:
   // Stores active learners execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
   absl::flat_hash_map<std::string, LearnerStub> learner_stubs_;
+  absl::flat_hash_map<std::string, LearningTaskTemplate>
+      learner_task_templates_;
   std::mutex learners_mutex_;
   // Stores local models evaluation lineages.
   absl::flat_hash_map<std::string, std::list<TaskExecutionMetadata>>
@@ -527,7 +587,8 @@ CreateAggregator(const GlobalModelSpecs &specs) {
 }
 
 std::unique_ptr<Scheduler> CreateScheduler(const CommunicationSpecs &specs) {
-  if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS) {
+  if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS ||
+      specs.protocol() == CommunicationSpecs::SEMI_SYNCHRONOUS) {
     return absl::make_unique<SynchronousScheduler>();
   }
   if (specs.protocol() == CommunicationSpecs::ASYNCHRONOUS) {
@@ -536,8 +597,7 @@ std::unique_ptr<Scheduler> CreateScheduler(const CommunicationSpecs &specs) {
   throw std::runtime_error("unsupported scheduling policy.");
 }
 
-std::unique_ptr<Selector>
-CreateSelector() {
+std::unique_ptr<Selector> CreateSelector() {
   return absl::make_unique<ScheduledCardinality>();
 }
 
@@ -545,10 +605,9 @@ CreateSelector() {
 
 std::unique_ptr<Controller> Controller::New(const ControllerParams &params) {
   return absl::make_unique<ControllerDefaultImpl>(
-      params, absl::make_unique<DatasetSizeScaler>(),
+      ControllerParams(params), absl::make_unique<DatasetSizeScaler>(),
       CreateAggregator(params.global_model_specs()),
-      CreateScheduler(params.communication_specs()),
-      CreateSelector());
+      CreateScheduler(params.communication_specs()), CreateSelector());
 }
 
 } // namespace projectmetis::controller
