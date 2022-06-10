@@ -37,6 +37,7 @@ py_binary(
         "//experiments/federation_environments_config:configuration_files",
     ],
     deps = [
+        "//experiments/utils:experiments_utils_py_lib",
         "//experiments/keras/models:keras_models_py_lib",
         "//projectmetis/python/driver:driver_py_lib",
     ],
@@ -54,8 +55,10 @@ py_binary(
     data = [
         # To be able to load the federation environments .yaml files relative to the execution script.
         "//experiments/federation_environments_config:configuration_files",
+        "//experiments/keras/datasets/fashionmnist:experiment_data",
     ],
     deps = [
+        "//experiments/utils:experiments_utils_py_lib",
         "//experiments/keras/models:keras_models_py_lib",
         "//projectmetis/python/driver:driver_py_lib",
     ],

@@ -217,7 +217,7 @@ class MetisProtoMessages(object):
                                                            percent_validation=percent_validation)
 
     @classmethod
-    def construct_communication_specs_pb(cls, protocol, semi_sync_lambda, semi_sync_recompute_num_updates):
+    def construct_communication_specs_pb(cls, protocol, semi_sync_lambda=None, semi_sync_recompute_num_updates=None):
         if protocol.upper() == "SYNCHRONOUS":
             protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SYNCHRONOUS
         elif protocol.upper() == "ASYNCHRONOUS":

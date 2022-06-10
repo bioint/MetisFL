@@ -21,10 +21,11 @@ from projectmetis.python.utils.fedenv_parser import FederationEnvironment
 
 class DriverSessionBase(object):
 
-    def __init__(self, federation_environment_fp, nn_engine, model_definition_dir,
+    def __init__(self, fed_env, nn_engine, model_definition_dir,
                  train_dataset_recipe_fp, validation_dataset_recipe_fp="", test_dataset_recipe_fp=""):
-        self.federation_environment = FederationEnvironment(federation_environment_fp)
-
+        # If the provided federation environment is not a `FederationEnvironment` object then construct it.
+        self.federation_environment = \
+            fed_env if isinstance(fed_env, FederationEnvironment) else FederationEnvironment(fed_env)
         self.num_participating_learners = len(self.federation_environment.learners.learners)
         self.nn_engine = nn_engine
         self.model_definition_tar_fp = self._make_tarfile(
@@ -277,18 +278,11 @@ class DriverSessionBase(object):
 
 class DriverSession(DriverSessionBase):
 
-    def __init__(self, federation_environment_fp, nn_engine, model_definition_dir,
+    def __init__(self, fed_env, nn_engine, model_definition_dir,
                  train_dataset_recipe_fp, validation_dataset_recipe_fp="", test_dataset_recipe_fp=""):
         super(DriverSession, self).__init__(
-            federation_environment_fp, nn_engine, model_definition_dir,
+            fed_env, nn_engine, model_definition_dir,
             train_dataset_recipe_fp, validation_dataset_recipe_fp, test_dataset_recipe_fp)
-
-        # When initializing a normal DriverSession execution takes place using Bazel and therefore we need to make sure
-        # that the MetisHome path is defined for every participating learner in the federation so that we can navigate
-        # to the home path that contains the Bazel WORKSPACE.bzl file and proceed with the initialization of the
-        # learners and controller instances.
-        assert self.federation_environment.controller.project_home is not None and \
-               all([learner.project_home is not None for learner in self.federation_environment.learners.learners])
 
     def _init_controller(self):
         fabric_connection_config = self.federation_environment.controller \
@@ -354,10 +348,10 @@ class DriverSession(DriverSessionBase):
 
 class DriverSessionDocker(DriverSessionBase):
 
-    def __init__(self, federation_environment_fp, nn_engine, model_definition_dir,
+    def __init__(self, fed_env, nn_engine, model_definition_dir,
                  train_dataset_recipe_fp, validation_dataset_recipe_fp="", test_dataset_recipe_fp=""):
         super(DriverSessionDocker, self).__init__(
-            federation_environment_fp, nn_engine, model_definition_dir,
+            fed_env, nn_engine, model_definition_dir,
             train_dataset_recipe_fp, validation_dataset_recipe_fp, test_dataset_recipe_fp)
 
         # When initializing DriverSession based on Docker, we need to make sure that a docker image is provided so

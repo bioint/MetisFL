@@ -26,10 +26,9 @@ class CommunicationProtocol(object):
         self.is_semi_synchronous = self.name == "SEMI_SYNCHRONOUS"
         self.specifications = communication_protocol.get("Specifications", None)
         self.semi_synchronous_lambda, self.semi_sync_recompute_num_updates = None, None
-        if "SemiSynchronousLambda" in self.specifications:
-            self.semi_synchronous_lambda = self.specifications.get("SemiSynchronousLambda")
-        if "SemiSynchronousRecomputeSteps" in self.specifications:
-            self.semi_sync_recompute_num_updates = self.specifications.get("SemiSynchronousRecomputeSteps")
+        if self.specifications and self.is_semi_synchronous:
+            self.semi_synchronous_lambda = self.specifications.get("SemiSynchronousLambda", None)
+            self.semi_sync_recompute_num_updates = self.specifications.get("SemiSynchronousRecomputeSteps", None)
 
 
 class GlobalModelConfig(object):
@@ -92,7 +91,8 @@ class OptimizerConfig(object):
 class Controller(object):
 
     def __init__(self, controller_map):
-        self.project_home = controller_map.get("ProjectHome", None)
+        self.project_home = controller_map.get("ProjectHome", "")
+        assert self.project_home, "Need to define ProjectHome for controller."
         self.connection_configs = ConnectionConfigs(controller_map.get("ConnectionConfigs"))
         self.grpc_servicer = GRPCServicer(controller_map.get("GRPCServicer"))
 
@@ -121,7 +121,8 @@ class Learner(object):
 
     def __init__(self, learner_def_map):
         self.learner_id = learner_def_map.get("LearnerID")
-        self.project_home = learner_def_map.get("ProjectHome", None)
+        self.project_home = learner_def_map.get("ProjectHome", "")
+        assert self.project_home, "Need to define ProjectHome for learner: {}.".format(self.learner_id)
         self.connection_configs = ConnectionConfigs(learner_def_map.get("ConnectionConfigs"))
         self.grpc_servicer = GRPCServicer(learner_def_map.get('GRPCServicer'))
         self.cuda_devices = learner_def_map.get('CudaDevices', [])
@@ -134,6 +135,11 @@ class ConnectionConfigs(object):
         self.hostname = connection_configs_map.get("Hostname", "localhost")
         self.username = connection_configs_map.get("Username", "")
         self.password = connection_configs_map.get("Password", "")
+        # make sure that we do have connection credentials
+        # in order to establish local/remote session.
+        assert self.username, "Need to define username."
+        assert self.password, "Need to define password."
+
         self.key_filename = connection_configs_map.get("KeyFilename", "")
         self.passphrase = connection_configs_map.get("Passphrase", "")
         self.on_login = connection_configs_map.get("OnLogin", "clear")
@@ -180,10 +186,10 @@ class FederationEnvironment(object):
     def __init__(self, federation_environment_config_fp):
         # Read YAML Configs.
         fstream = open(federation_environment_config_fp).read()
-        loaded_stream = yaml.load(fstream, Loader=yaml.SafeLoader)
+        self.loaded_stream = yaml.load(fstream, Loader=yaml.SafeLoader)
 
-        federation_environment = loaded_stream.get("FederationEnvironment")
-        self.docker = Docker(federation_environment.get("DockerImage"))
+        federation_environment = self.loaded_stream.get("FederationEnvironment")
+        self.docker = Docker(federation_environment.get("Docker"))
         self.termination_signals = TerminationSignals(federation_environment.get("TerminationSignals"))
         self.evaluation_metric = federation_environment.get("EvaluationMetric")
         self.communication_protocol = CommunicationProtocol(federation_environment.get("CommunicationProtocol"))
