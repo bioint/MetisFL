@@ -21,13 +21,16 @@ if __name__ == "__main__":
     parser.add_argument("-r", "--learners_participation_ratio", type=float,
                         default=1.0,
                         help="what is the ratio of participating learners to the community model")
-    parser.add_argument("-m", "--communication_protocol_protobuff", type=str,
+    parser.add_argument("-m", "--communication_specs_protobuff", type=str,
                         default=None,
                         help="what is the communication protocol for aggregating local models "
                              "(i.e., synchronous, asynchronous, semi_synchronous) and its specifications.")
     parser.add_argument("-y", "--model_hyperparameters_protobuff", type=str,
                         default=None,
                         help="A serialized Model Hyperparameters protobuf message.")
+    parser.add_argument("-f", "--fhe_scheme_protobuff", type=str,
+                        default=None,
+                        help="A serialized FHE Scheme protobuf message.")
     args = parser.parse_args()
 
     controller_hostname = args.controller_hostname
@@ -38,14 +41,14 @@ if __name__ == "__main__":
     # Parse serialized model hyperparameters object, 'recover' bytes object
     # If the given protobuff is None then we assign it an empty bytes object.
     # Use parsed protobuff to initialize Metis.CommunicationSpecs() object.
-    if args.communication_protocol_protobuff is not None:
-        communication_specs_protobuff = eval(args.communication_protocol_protobuff)
+    if args.communication_specs_protobuff is not None:
+        communication_specs_protobuff = eval(args.communication_specs_protobuff)
         communication_specs = metis_pb2.CommunicationSpecs()
         communication_specs.ParseFromString(communication_specs_protobuff)
     else:
         communication_specs = MetisProtoMessages.construct_communication_specs_pb(protocol="SYNCHRONOUS",
                                                                                   semi_sync_lambda=None,
-                                                                                  semi_sync_recompute_num_updates=False)
+                                                                                  semi_sync_recompute_num_updates=None)
 
     # Use parsed protobuff to initialize ControllerParams.ModelHyperparams() object.
     if args.model_hyperparameters_protobuff is not None:
@@ -58,6 +61,13 @@ if __name__ == "__main__":
             optimizer_pb=ModelProtoMessages.construct_optimizer_config_pb(
                 ModelProtoMessages.construct_vanilla_sgd_optimizer_pb(learning_rate=0.01)))
 
+    if args.fhe_scheme_protobuff is not None:
+        fhe_scheme_protobuff = eval(args.fhe_scheme_protobuff)
+        fhe_scheme = metis_pb2.FHEScheme()
+        fhe_scheme.ParseFromString(fhe_scheme_protobuff)
+    else:
+        fhe_scheme = MetisProtoMessages.construct_fhe_scheme_pb(enabled=False)
+
     controller_params = metis_pb2.ControllerParams(
         server_entity=metis_pb2.ServerEntity(
             hostname=controller_hostname,
@@ -67,7 +77,8 @@ if __name__ == "__main__":
             learners_participation_ratio=learners_participation_ratio,
         ),
         communication_specs=communication_specs,
-        model_hyperparams=model_hyperparams)
+        model_hyperparams=model_hyperparams,
+        fhe_scheme=fhe_scheme)
 
     MetisLogger.info("Controller Parameters: \"\"\"{}\"\"\"".format(controller_params))
     controller_instance = ControllerInstance()

@@ -45,6 +45,15 @@ message IntTensor {
   repeated int32 values = 2;
 }
 
+// Tensor storing double values.
+message CiphertextTensor {
+  // Tensor metadata.
+  TensorSpec spec = 1;
+
+  // Bytes (encrypted) representation of the array.
+  bytes values = 2;
+}
+
 //////////////////////////
 // Model Representation //
 //////////////////////////
@@ -62,6 +71,7 @@ message Model {
     oneof tensor {
       IntTensor int_tensor = 3;
       DoubleTensor double_tensor = 4;
+      CiphertextTensor ciphertext_tensor = 5;
     }
   }
 

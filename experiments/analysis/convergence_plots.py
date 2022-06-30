@@ -7,26 +7,127 @@ import numpy as np
 from datetime import datetime
 from matplotlib.backends.backend_pdf import PdfPages
 
+
 def convert_to_timestamp(t):
     return datetime.strptime(t, '%Y-%m-%dT%H:%M:%SZ').timestamp()
 
 
-def plot_rounds_convergence(files, metric="accuracy"):
+def plot_brainage_convergence(files, metric="mae", show_global_models_exchanged=False, show_processing_time=False):
 
+    BRAINAGE_DATA_DISTRIBUTIONS_IDENTIFIERS = [
+        "uniform_iid", "uniform_noniid",
+        "skewed135_iid", "skewed135_noniid"
+    ]
+    BRAINAGE_DATA_DISTRIBUTIONS_IDENTIFIERS_SUBPLOTS_TITLES = [
+        "Uniform & IID", "Uniform & Non-IID",
+        "Skewed & IID", "Skewed & Non-IID"
+    ]
+    BRAINAGE_DATA_DISTRIBUTIONS_IDENTIFIERS_AXIS_PLACEHOLDERS = [
+        (0, 0), (0, 1),
+        (1, 0), (1, 1)
+    ]
+
+    fig, ax = plt.subplots(nrows=2, ncols=2, figsize=(24, 16))
+    fig.subplots_adjust(bottom=0.2, wspace=0.1, hspace=0.3)
+
+    plt.rcParams['axes.titlesize'] = 32
+
+    for environment_idx, (dist_id, subplot_ttl, axis_ph) in \
+        enumerate(zip(BRAINAGE_DATA_DISTRIBUTIONS_IDENTIFIERS,
+                      BRAINAGE_DATA_DISTRIBUTIONS_IDENTIFIERS_SUBPLOTS_TITLES,
+                      BRAINAGE_DATA_DISTRIBUTIONS_IDENTIFIERS_AXIS_PLACEHOLDERS)):
+        print(environment_idx, dist_id, subplot_ttl, axis_ph)
+        ax[axis_ph].set_title(subplot_ttl)
+        ax[axis_ph].grid(True)
+        ax[axis_ph].set_ylim(2.5, 6.5)
+        ax[axis_ph].tick_params(labelsize=32)
+
+        x_axis, y_axis = [], []
+        for file in files:
+            if dist_id in file:
+                print(dist_id, file, flush=True)
+                json_data = json.load(open(file, "r"))
+                federation_runtime_metadata = json_data["federation_runtime_metadata"]["metadata"]
+                completed_global_iterations = \
+                    [(iteration["global_iteration"], convert_to_timestamp(iteration["completed_at"]))
+                     for iteration in federation_runtime_metadata if "completed_at" in iteration]
+                global_iterations_sorted = sorted(completed_global_iterations, key=lambda x: x[1])  # sort by timestamp
+                initial_timestamp = global_iterations_sorted[0][1]
+                # print([x[1]-initial_timestamp for x in global_iterations_sorted[1:]], flush=True)
+                # default is seconds - /60 to minutes
+                global_iterations = [(x[0], x[1] - initial_timestamp) for x in global_iterations_sorted]
+                global_iterations_index = [x[0] for x in global_iterations]
+                global_iterations_ts = [x[1] for x in global_iterations]
+
+                community_evaluations = json_data["community_model_results"]["community_evaluation"]
+
+                global_model_test_performances = []
+                for iter_id, ts in global_iterations:
+                    iteration_performances = []
+                    for evaluation in community_evaluations:
+                        global_iteration_id = evaluation["global_iteration"]
+                        if iter_id == global_iteration_id and "evaluations" in evaluation:
+                            evaluations = evaluation["evaluations"]
+                            for learner_id, learner_evaluation in evaluations.items():
+                                iteration_performances.append(
+                                    float(learner_evaluation["test_evaluation"]["metric_values"][metric]))
+                    if len(iteration_performances) > 0:
+                        iteration_performance = np.mean(iteration_performances)
+                        global_model_test_performances.append(iteration_performance)
+                global_iterations_index = global_iterations_index[:len(global_model_test_performances)]
+                global_iterations_ts = [x for x in global_iterations_ts if x <= 20000]
+
+                if show_global_models_exchanged:
+                    x_axis, y_axis = global_iterations_index, global_model_test_performances[
+                                                              :len(global_iterations_index)]
+                elif show_processing_time:
+                    x_axis, y_axis = global_iterations_ts, global_model_test_performances[:len(global_iterations_ts)]
+                line_label = None
+                linestyle = "solid"
+                if "_AsyncFedAvg_" in file:
+                    line_label = "AsyncFedAvg"
+                    color = "orange"
+                elif "_SyncFedAvg_" in file:
+                    line_label = "Sync"
+                    color = "darkblue"
+                elif "_SemiSyncFedAvg_" in file:
+                    lambda_val = int(file.split("_lambda")[1].split("_")[0])
+                    if lambda_val == 2:
+                        color = "dodgerblue"
+                    elif lambda_val == 4:
+                        color = "forestgreen"
+                    line_label = "SemiSync ($\lambda={}$)".format(lambda_val)
+                    linestyle = "dashed"
+
+                if environment_idx != 0:
+                    line_label = None
+                ax[axis_ph].plot(x_axis, y_axis, linestyle=linestyle, linewidth=4, label=line_label, color=color)
+
+        # 3d model centralized: 2.694456259
+        # 2d model centralized: 2.667021116
+        line_label = None
+        if environment_idx == 0:
+            line_label = "Centralized"
+        ax[axis_ph].plot(x_axis, len(x_axis) * [2.694456259],
+                         linestyle="solid", color='crimson',
+                         linewidth=4, label=line_label)
+
+    fig.text(0.09, 0.5, 'MAE', ha='center', va='center', rotation='vertical', fontsize=32)
+    if show_processing_time:
+        fig.text(0.5, 0.14, 'Processing Time(secs)', ha='center', va='center', fontsize=32)
+    if show_global_models_exchanged:
+        fig.text(0.5, 0.14, '# Global Models Exchanged', ha='center', va='center', fontsize=32)
+
+    fig.legend(loc='lower center', fancybox=False, shadow=False, fontsize=32, ncol=3)
+    return fig
+
+
+def plot_rounds_convergence(files, metric="accuracy"):
     fig, ax = plt.subplots(nrows=1, ncols=1)
 
     for file in files:
 
         line_label = "global model"
-        if "uniform_iid" in file:
-            line_label = "Uni-IID"
-        if "uniform_noniid" in file:
-            line_label = "Uni-NonIID"
-        if "skewed_iid" in file:
-            line_label = "Ske-IID"
-        if "skewed_noniid" in file:
-            line_label = "Ske-NonIID"
-
         print(file, flush=True)
         json_data = json.load(open(file, "r"))
         federation_runtime_metadata = json_data["federation_runtime_metadata"]["metadata"]
@@ -35,9 +136,9 @@ def plot_rounds_convergence(files, metric="accuracy"):
              for iteration in federation_runtime_metadata if "completed_at" in iteration]
         global_iterations_sorted = sorted(completed_global_iterations, key=lambda x: x[1])  # sort by timestamp
         initial_timestamp = global_iterations_sorted[0][1]
-        print([x[1]-initial_timestamp for x in global_iterations_sorted[1:]], flush=True)
+        print([x[1] - initial_timestamp for x in global_iterations_sorted[1:]], flush=True)
         # default is seconds - /60 to minutes
-        global_iterations = [(x[0], x[1]-initial_timestamp) for x in global_iterations_sorted]
+        global_iterations = [(x[0], x[1] - initial_timestamp) for x in global_iterations_sorted]
         global_iterations_index = [x[0] for x in global_iterations]
         global_iterations_ts = [x[1] for x in global_iterations]
 
@@ -52,7 +153,8 @@ def plot_rounds_convergence(files, metric="accuracy"):
                 if iter_id == global_iteration_id and "evaluations" in evaluation:
                     evaluations = evaluation["evaluations"]
                     for learner_id, learner_evaluation in evaluations.items():
-                        iteration_performances.append(float(learner_evaluation["test_evaluation"]["metric_values"][metric]))
+                        iteration_performances.append(
+                            float(learner_evaluation["test_evaluation"]["metric_values"][metric]))
             if len(iteration_performances) > 0:
                 iteration_performance = np.mean(iteration_performances)
                 global_model_test_performances.append(iteration_performance)

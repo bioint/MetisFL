@@ -507,7 +507,7 @@ private:
       RunTaskResponse response;
 
       // TODO(aasghar) Need to implement logic, when the learner is behaving as
-      // a server, and controller needs to connect.
+      //  a server, and controller needs to connect.
       learner_stub->RunTask(&context, request, &response);
     });
   }
@@ -579,9 +579,12 @@ private:
 };
 
 std::unique_ptr<AggregationFunction>
-CreateAggregator(const GlobalModelSpecs &specs) {
+CreateAggregator(const GlobalModelSpecs &specs, const FHEScheme &fhe_scheme) {
   if (specs.aggregation_rule() == GlobalModelSpecs::FED_AVG) {
     return absl::make_unique<FederatedAverage>();
+  }
+  if (specs.aggregation_rule() == GlobalModelSpecs::PWA) {
+    return absl::make_unique<PWA>(fhe_scheme);
   }
   throw std::runtime_error("unsupported aggregation rule.");
 }
@@ -606,7 +609,7 @@ std::unique_ptr<Selector> CreateSelector() {
 std::unique_ptr<Controller> Controller::New(const ControllerParams &params) {
   return absl::make_unique<ControllerDefaultImpl>(
       ControllerParams(params), absl::make_unique<DatasetSizeScaler>(),
-      CreateAggregator(params.global_model_specs()),
+      CreateAggregator(params.global_model_specs(), params.fhe_scheme()),
       CreateScheduler(params.communication_specs()), CreateSelector());
 }
 

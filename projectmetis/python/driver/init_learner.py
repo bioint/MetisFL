@@ -1,5 +1,7 @@
 import argparse
 
+import projectmetis.proto.metis_pb2 as metis_pb2
+
 from projectmetis.python.learner.learner import Learner
 from projectmetis.python.learner.learner_servicer import LearnerServicer
 from projectmetis.python.utils.proto_messages_factory import MetisProtoMessages
@@ -44,6 +46,9 @@ if __name__ == "__main__":
     parser.add_argument("-z", "--test_dataset_recipe", type=str,
                         default="",
                         help="validation dataset recipe")
+    parser.add_argument("-f", "--fhe_scheme_protobuff", type=str,
+                        default=None,
+                        help="A serialized FHE Scheme protobuf message.")
 
     args = parser.parse_args()
 
@@ -66,12 +71,20 @@ if __name__ == "__main__":
     test_dataset_filepath = args.test_dataset
     test_dataset_recipe_fp_pkl = args.test_dataset_recipe
 
+    if args.fhe_scheme_protobuff is not None:
+        fhe_scheme_protobuff = eval(args.fhe_scheme_protobuff)
+        fhe_scheme = metis_pb2.FHEScheme()
+        fhe_scheme.ParseFromString(fhe_scheme_protobuff)
+    else:
+        fhe_scheme = MetisProtoMessages.construct_fhe_scheme_pb(enabled=False)
+
     learner_credentials_fp = "/tmp/metis/learner_{}_credentials/".format(learner_port)
     learner_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(learner_hostname, learner_port)
     controller_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(controller_hostname, controller_port)
     learner = Learner(
         learner_server_entity=learner_server_entity_pb,
         controller_server_entity=controller_server_entity_pb,
+        fhe_scheme=fhe_scheme,
         nn_engine=nn_engine,
         model_fp=model_filepath,
         train_dataset_fp=train_dataset_filepath,

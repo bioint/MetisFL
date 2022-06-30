@@ -1,4 +1,11 @@
-build --action_env=BAZEL_USE_CPP_ONLY_TOOLCHAIN=1
-build --cxxopt="--std=c++17"
+build --action_env=BAZEL_CXXOPTS=-std=c++17
+build -c opt
+build --copt "-Wno-sign-compare"
+build --copt "-Wno-comment"
+build --cxxopt "-std=c++17"
+build --host_copt "-Wno-sign-compare"
+build --host_copt "-Wno-comment"
+build --host_cxxopt=-std=c++17
 build --incompatible_strict_action_env=true
+build --incompatible_enable_cc_toolchain_resolution
 run --incompatible_strict_action_env=true

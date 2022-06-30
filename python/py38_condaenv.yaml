@@ -30,7 +30,7 @@ dependencies:
   - scikit-learn
   - SQLAlchemy
   - tensorboard
-  - tensorflow=2.6
+  - tensorflow=2.6.2
   - termcolor
   - threadpoolctl
   - urllib3

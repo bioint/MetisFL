@@ -11,6 +11,7 @@ py_library(
         "fashion_mnist_fc.py",
         "imdb_lstm.py",
         "melanoma_fc.py",
+        "mnist_fc.py",
     ],
     srcs_version = "PY3",
     deps = [

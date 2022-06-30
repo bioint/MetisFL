@@ -9,10 +9,14 @@ ENV PROJECT_HOME=/projectmetis-rc
 RUN yum -y update
 RUN yum -y groupinstall "Development Tools"
 
+RUN yum -y install cmake3
+RUN yum -y install autoconf
+
 # Downaload and Set Devtoolset-9 for Palisades compilation.
 RUN yum -y install gcc-toolset-9-gcc gcc-toolset-9-gcc-c++
 RUN echo "source /opt/rh/gcc-toolset-9/enable" >> /etc/bashrc
 SHELL ["/bin/bash", "--login", "-c"]
+RUN export CC=/opt/rh/devtoolset-9/root/usr/bin/gcc
 
 # Download .repo file for bazel installation.
 RUN cd /etc/yum.repos.d/ && { curl -O https://copr.fedorainfracloud.org/coprs/vbatts/bazel/repo/epel-7/vbatts-bazel-epel-7.repo; cd -; }
@@ -30,7 +34,11 @@ WORKDIR $PROJECT_HOME
 COPY . .
 
 # Run project configuration from root directory.
-RUN chmod +x ./configure && ./configure
+RUN chmod +x ./configure.sh && ./configure.sh
+
+#RUN bazel query //... | xargs bazel build --incompatible_strict_action_env=true
+#RUN bazel build --incompatible_strict_action_env=true //encryption/palisade/samples:test_palisade_hello_world
+#RUN bazel run //encryption/palisade/samples:test_palisade_bgvrns_example
 
 # Build all core projectmetis modules before publishing the docker image.
 ##RUN bazel query //... | grep -i -e "//encryption" | xargs bazel build
@@ -44,8 +52,8 @@ RUN chmod +x ./configure && ./configure
 #RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
 #RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_learner
 #RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
-RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
-RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_learner
+#RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_controller
+#RUN bazel build --incompatible_strict_action_env=true //projectmetis/python/driver:initialize_learner
 #RUN bazel --output_user_root=/tmp/metis/bazel run //projectmetis/python/driver:initialize_learner
 #RUN bazel --output_user_root=/tmp/metis/bazel build --disk_cache=/tmp/metis/bazel //projectmetis/python/driver:initialize_learner
 #RUN cd /$PROJECT_HOME

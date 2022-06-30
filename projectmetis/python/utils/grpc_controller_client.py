@@ -18,9 +18,9 @@ class GRPCControllerClient(GRPCServerClient):
             get_services_health_status_request_pb = \
                 proto_factory.ServiceCommonProtoMessages. \
                     construct_get_services_health_status_request_pb()
-            MetisLogger.info("Checking controller health status.")
+            MetisLogger.info("Requesting controller's health status.")
             response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
-            MetisLogger.info("Health status of controller {} - {}".format(self._server_entity, response))
+            MetisLogger.info("Received controller's health status, {} - {}".format(self._server_entity, response))
             return response
 
         if request_retries > 1:
@@ -70,14 +70,14 @@ class GRPCControllerClient(GRPCServerClient):
             # grpc.StatusCode.ALREADY_EXISTS is raised and the existing/already saved
             # learner id and authentication token are read/loaded from the disk.
             try:
-                MetisLogger.info("Learner {} joining federation.".format(learner_server_entity))
+                MetisLogger.info("Joining federation, learner {}.".format(learner_server_entity))
                 response = self._stub.JoinFederation(join_federation_request_pb, timeout=_timeout)
                 learner_id, auth_token, status = \
                     response.learner_id, response.auth_token, response.ack.status
                 # override file contents or create file if not exists
                 open(learner_id_fp, "w+").write(learner_id.strip())
                 open(auth_token_fp, "w+").write(auth_token.strip())
-                MetisLogger.info("Learner joined federation with assigned id: {}".format(learner_id))
+                MetisLogger.info("Joined federation with assigned id: {}".format(learner_id))
             except grpc.RpcError as rpc_error:
                 if rpc_error.code() == grpc.StatusCode.ALREADY_EXISTS:
                     learner_id = open(learner_id_fp, "r").read().strip()
@@ -103,9 +103,9 @@ class GRPCControllerClient(GRPCServerClient):
         def _request(_timeout=None):
             leave_federation_request_pb = proto_factory.ControllerServiceProtoMessages \
                 .construct_leave_federation_request_pb(learner_id=learner_id, auth_token=auth_token)
-            MetisLogger.info("Learner {} leaving federation.".format(learner_id))
+            MetisLogger.info("Leaving federation, learner {}.".format(learner_id))
             response = self._stub.LeaveFederation(leave_federation_request_pb, timeout=_timeout)
-            MetisLogger.info("Learner {} left federation.".format(learner_id))
+            MetisLogger.info("Left federation, learner {}.".format(learner_id))
             return response
 
         if request_retries > 1:
@@ -126,9 +126,9 @@ class GRPCControllerClient(GRPCServerClient):
                 .construct_mark_task_completed_request_pb(learner_id=learner_id,
                                                           auth_token=auth_token,
                                                           completed_learning_task_pb=completed_task_pb)
-            MetisLogger.info("Learner {} sending local completed task.".format(learner_id))
+            MetisLogger.info("Sending local completed task, learner {}.".format(learner_id))
             response = self._stub.MarkTaskCompleted(mark_task_completed_request_pb, timeout=_timeout)
-            MetisLogger.info("Learner {} sent local completed task.".format(learner_id))
+            MetisLogger.info("Sent local completed task, learner {}.".format(learner_id))
             return response
 
         if request_retries > 1:
@@ -148,9 +148,10 @@ class GRPCControllerClient(GRPCServerClient):
             get_community_model_evaluation_lineage_request_pb = \
                 proto_factory.ControllerServiceProtoMessages\
                     .construct_get_community_model_evaluation_lineage_request_pb(num_backtracks)
-            MetisLogger.info("Retrieving community model evaluation lineage for {} backtracks.".format(num_backtracks))
+            MetisLogger.info("Requesting community model evaluation lineage for {} backtracks.".format(num_backtracks))
             response = self._stub.GetCommunityModelEvaluationLineage(
                 get_community_model_evaluation_lineage_request_pb, timeout=_timeout)
+            MetisLogger.info("Retrieved community model evaluation lineage.")
             return response
 
         if request_retries > 1:
@@ -171,9 +172,10 @@ class GRPCControllerClient(GRPCServerClient):
                 proto_factory.ControllerServiceProtoMessages \
                     .construct_get_local_task_lineage_request_pb(num_backtracks=num_backtracks,
                                                                  learner_ids=learner_ids)
-            MetisLogger.info("Retrieving local model evaluation lineage for {} backtracks.".format(num_backtracks))
+            MetisLogger.info("Requesting local model evaluation lineage for {} backtracks.".format(num_backtracks))
             response = self._stub.GetLocalTaskLineage(
                 get_local_task_lineage_request_pb, timeout=_timeout)
+            MetisLogger.info("Received local model evaluation lineage.")
             return response
 
         if request_retries > 1:
@@ -191,7 +193,9 @@ class GRPCControllerClient(GRPCServerClient):
         def _request(_timeout=None):
             get_participating_learners_pb = \
                 proto_factory.ControllerServiceProtoMessages.construct_get_participating_learners_request_pb()
+            MetisLogger.info("Requesting number of participating learners.")
             response = self._stub.GetParticipatingLearners(get_participating_learners_pb, timeout=_timeout)
+            MetisLogger.info("Received number of participating learners.")
             return response
 
         if request_retries > 1:
@@ -210,7 +214,9 @@ class GRPCControllerClient(GRPCServerClient):
             get_runtime_metadata_pb = \
                 proto_factory.ControllerServiceProtoMessages\
                   .construct_get_runtime_metadata_lineage_request_pb(num_backtracks=num_backtracks)
+            MetisLogger.info("Requesting runtime metadata lineage.")
             response = self._stub.GetRuntimeMetadataLineage(get_runtime_metadata_pb, timeout=_timeout)
+            MetisLogger.info("Received runtime metadata lineage.")
             return response
 
         if request_retries > 1:
@@ -224,19 +230,9 @@ class GRPCControllerClient(GRPCServerClient):
         else:
             self.executor_pool.put(future)
 
-    def replace_community_model(self, num_contributors, model_weights,
+    def replace_community_model(self, num_contributors, model_vars_pb,
                                 request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            model_vars_pb = []
-            for widx, weight in enumerate(model_weights):
-                tensor_pb = proto_factory.ModelProtoMessages.construct_tensor_pb_from_nparray(weight)
-                # TODO(dstripelis) Need to change the following to reflect the true variables' names
-                #  and whether they are trainable or not - similar to keras_proto_factory.
-                model_var_pb = proto_factory \
-                    .ModelProtoMessages.construct_model_variable_pb(name="arr_{}".format(widx),
-                                                                    trainable=True,
-                                                                    tensor_pb=tensor_pb)
-                model_vars_pb.append(model_var_pb)
             model_pb = proto_factory.ModelProtoMessages.construct_model_pb(model_vars_pb)
             federated_model_pb = proto_factory.ModelProtoMessages.construct_federated_model_pb(
                 num_contributors, model_pb)
@@ -245,6 +241,7 @@ class GRPCControllerClient(GRPCServerClient):
                 federated_model_pb)
             MetisLogger.info("Replacing controller's community model.")
             response = self._stub.ReplaceCommunityModel(replace_community_model_request_pb, timeout=_timeout)
+            MetisLogger.info("Replaced controller's community model.")
             return response.ack.status
 
         if request_retries > 1:

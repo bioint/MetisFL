@@ -1,9 +1,7 @@
 import math
 
-import projectmetis.python.utils.proto_messages_factory as proto_factory
-
 from projectmetis.python.utils.formatting import DictionaryFormatter
-from projectmetis.python.utils.proto_messages_factory import MetisProtoMessages
+from projectmetis.python.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 
 
 class KerasProtoFactory:
@@ -71,12 +69,12 @@ class KerasProtoFactory:
                     # Need to store the actual epoch id hence the +1.
                     epoch_evaluations_pb.append(
                         MetisProtoMessages.construct_epoch_evaluation_pb(
-                            epoch_id=e_idx+1, model_evaluation_pb=model_evaluation_pb))
+                            epoch_id=e_idx + 1, model_evaluation_pb=model_evaluation_pb))
             else:
                 # Grab the results of the last evaluation.
                 epoch_evaluation_stats = {k: v[-1] for k, v in collection.items()}
                 epoch_evaluation_stats = DictionaryFormatter.stringify(epoch_evaluation_stats)
-                model_evaluation_pb = MetisProtoMessages\
+                model_evaluation_pb = MetisProtoMessages \
                     .construct_model_evaluation_pb(metric_values=epoch_evaluation_stats)
                 # Need to store the index/value of the last epoch.
                 epoch_evaluations_pb.append(
@@ -102,23 +100,23 @@ class KerasProtoFactory:
                 self._processing_ms_per_batch)
             return task_execution_pb
 
-        def construct_completed_learning_task_pb(self, aux_metadata=""):
+        def construct_completed_learning_task_pb(self, aux_metadata="", encryption_scheme=None):
             model_vars = []
             trainable_vars_names = [v.name for v in self._model.trainable_variables]
             for w in self._model.weights:
                 is_weight_trainable = True if w.name in trainable_vars_names else False
-                tensor_pb = proto_factory.ModelProtoMessages.construct_tensor_pb_from_nparray(w.numpy())
-                model_var = proto_factory\
-                    .ModelProtoMessages.construct_model_variable_pb(name=w.name,
-                                                                    trainable=is_weight_trainable,
-                                                                    tensor_pb=tensor_pb)
+                ciphertext = None
+                if encryption_scheme is not None:
+                    ciphertext = encryption_scheme.encrypt(w.numpy().flatten(), 1)
+                tensor_pb = ModelProtoMessages.construct_tensor_pb_from_nparray(w.numpy(), ciphertext=ciphertext)
+                model_var = ModelProtoMessages.construct_model_variable_pb(name=w.name,
+                                                                           trainable=is_weight_trainable,
+                                                                           tensor_pb=tensor_pb)
                 model_vars.append(model_var)
-            model_pb = proto_factory.ModelProtoMessages.construct_model_pb(model_vars)
+            model_pb = ModelProtoMessages.construct_model_pb(model_vars)
             task_execution_meta_pb = self.construct_task_execution_metadata_pb()
-            completed_learning_task_pb = proto_factory.MetisProtoMessages\
-                .construct_completed_learning_task_pb(model_pb=model_pb,
-                                                      task_execution_metadata_pb=task_execution_meta_pb,
-                                                      aux_metadata=aux_metadata)
+            completed_learning_task_pb = MetisProtoMessages.construct_completed_learning_task_pb(
+                model_pb=model_pb, task_execution_metadata_pb=task_execution_meta_pb, aux_metadata=aux_metadata)
             return completed_learning_task_pb
 
     class ModelEvaluationProtoMessage(object):
@@ -128,5 +126,4 @@ class KerasProtoFactory:
 
         def construct_model_evaluation_pb(self):
             metric_values = DictionaryFormatter.stringify(self.metric_values)
-            return proto_factory.MetisProtoMessages\
-                .construct_model_evaluation_pb(metric_values)
+            return MetisProtoMessages.construct_model_evaluation_pb(metric_values)

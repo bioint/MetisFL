@@ -2,15 +2,21 @@ package(default_visibility = ["//projectmetis/controller:__subpackages__"])
 
 cc_library(
     name = "model_aggregation",
-    srcs = ["federated_average.cc"],
+    srcs = ["federated_average.cc", "private_weighted_average.cc"],
     hdrs = [
         "aggregation_function.h",
         "model_aggregation.h",
-        "federated_average.h"
+        "federated_average.h",
+        "private_weighted_average.h"
     ],
     deps = [
+        "//encryption/palisade/fhe:palisade_fhe_helper",
+        "//projectmetis/proto:metis_cc_proto",
         "//projectmetis/proto:model_cc_proto",
     ],
+    data = [
+      "//resources:fhe_cryptoparams"
+    ]
 )
 
 cc_library(
@@ -38,5 +44,21 @@ cc_test(
         "//projectmetis/core/matchers:proto_matchers",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
+    ],
+)
+
+cc_library(
+    name = "private_weighted_average",
+    srcs = [
+        "private_weighted_average.cc"
+    ],
+    hdrs = [
+        "aggregation_function.h",
+        "private_weighted_average.h"
+    ],
+    deps = [
+        "//projectmetis/proto:metis_cc_proto",
+        "//projectmetis/proto:model_cc_proto",
+        "//encryption/palisade/fhe:palisade_fhe_helper",
     ],
 )

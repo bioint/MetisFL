@@ -8,8 +8,9 @@ class BazelMetisServicesCmdFactory(object):
                                      port,
                                      aggregation_rule,
                                      participation_ratio,
-                                     protocol_pb,
-                                     model_hyperparameters_pb):
+                                     communication_specs_pb,
+                                     model_hyperparameters_pb,
+                                     fhe_scheme_protobuff):
         bazel_cmd = \
             "bazel " \
             "run --incompatible_strict_action_env=true " \
@@ -19,11 +20,12 @@ class BazelMetisServicesCmdFactory(object):
             "--controller_port={port} " \
             "--aggregation_rule=\"{aggregation_rule}\" " \
             "--learners_participation_ratio={participation_ratio} " \
-            "--communication_protocol_protobuff=\"{protocol_pb}\" " \
-            "--model_hyperparameters_protobuff=\"{model_hyperparameters_pb}\" ".format(
+            "--communication_specs_protobuff=\"{communication_specs_pb}\" " \
+            "--model_hyperparameters_protobuff=\"{model_hyperparameters_pb}\" " \
+            "--fhe_scheme_protobuff=\"{fhe_scheme_protobuff}\" ".format(
                 hostname=hostname, port=port, aggregation_rule=aggregation_rule,
-                participation_ratio=participation_ratio, protocol_pb=protocol_pb,
-                model_hyperparameters_pb=model_hyperparameters_pb)
+                participation_ratio=participation_ratio, communication_specs_pb=communication_specs_pb,
+                model_hyperparameters_pb=model_hyperparameters_pb, fhe_scheme_protobuff=fhe_scheme_protobuff)
         return bazel_cmd
 
     @classmethod
@@ -32,6 +34,7 @@ class BazelMetisServicesCmdFactory(object):
                                   learner_port,
                                   controller_hostname,
                                   controller_port,
+                                  fhe_scheme_protobuff,
                                   model_definition,
                                   train_dataset,
                                   train_dataset_recipe,
@@ -56,7 +59,8 @@ class BazelMetisServicesCmdFactory(object):
             "--test_dataset=\"{test_dataset}\" " \
             "--train_dataset_recipe=\"{train_dataset_recipe}\" " \
             "--validation_dataset_recipe=\"{validation_dataset_recipe}\" " \
-            "--test_dataset_recipe=\"{test_dataset_recipe}\"".format(
+            "--test_dataset_recipe=\"{test_dataset_recipe}\" " \
+            "--fhe_scheme_protobuff=\"{fhe_scheme_protobuff}\" ".format(
                 neural_engine=neural_engine,
                 learner_hostname=learner_hostname,
                 learner_port=learner_port,
@@ -68,5 +72,6 @@ class BazelMetisServicesCmdFactory(object):
                 test_dataset=test_dataset,
                 train_dataset_recipe=train_dataset_recipe,
                 validation_dataset_recipe=validation_dataset_recipe,
-                test_dataset_recipe=test_dataset_recipe)
+                test_dataset_recipe=test_dataset_recipe,
+                fhe_scheme_protobuff=fhe_scheme_protobuff)
         return bazel_cmd

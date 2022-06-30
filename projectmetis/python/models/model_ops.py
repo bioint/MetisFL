@@ -8,27 +8,37 @@ from projectmetis.proto import metis_pb2, model_pb2
 
 class ModelOps(object):
 
-    def __init__(self, model, *args, **kwargs):
+    def __init__(self, model, encryption_scheme=None, *args, **kwargs):
         self._model = model
+        self._encryption_scheme = encryption_scheme
 
-    @classmethod
-    def get_model_weights_from_variables_pb(cls, variables: [model_pb2.Model.Variable]):
+    def get_model_weights_from_variables_pb(self, variables: [model_pb2.Model.Variable]):
         assert all([isinstance(var, model_pb2.Model.Variable) for var in variables])
         var_names, var_trainables, var_nps = [], [], []
         for var in variables:
             var_name = var.name
             var_trainable = var.trainable
+            is_ciphertext = False
             if var.HasField('int_tensor'):
                 var_tensor = var.int_tensor
             if var.HasField('double_tensor'):
                 var_tensor = var.double_tensor
-            tensor_values = var_tensor.values
+            # TODO Adding ciphertext_tensor support.
+            if var.HasField('ciphertext_tensor'):
+                var_tensor = var.ciphertext_tensor
+                is_ciphertext = True
+
             tensor_spec = var_tensor.spec
             tensor_length = tensor_spec.length
             tensor_dims = tensor_spec.dimensions
             tensor_dtype = tensor_spec.dtype
+            tensor_values = var_tensor.values
+            if is_ciphertext:
+                assert self._encryption_scheme is not None, "Need encryption scheme to decrypt tensor."
+                tensor_values = self._encryption_scheme.decrypt(tensor_values, tensor_length, 1)
+
             if tensor_dtype == model_pb2.TensorSpec.DType.INT:
-                tensor_np = np.array(tensor_values, dtype=np.int)
+                    tensor_np = np.array(tensor_values, dtype=np.int)
             elif tensor_dtype == model_pb2.TensorSpec.DType.LONG:
                 tensor_np = np.array(tensor_values, dtype=np.long)
             elif tensor_dtype == model_pb2.TensorSpec.DType.FLOAT:

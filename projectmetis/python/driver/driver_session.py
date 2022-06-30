@@ -17,6 +17,7 @@ from projectmetis.python.logging.metis_logger import MetisLogger
 from projectmetis.python.utils.bazel_services_factory import BazelMetisServicesCmdFactory
 from projectmetis.python.utils.docker_services_factory import DockerMetisServicesCmdFactory
 from projectmetis.python.utils.fedenv_parser import FederationEnvironment
+from pybind.fhe import fhe
 
 
 class DriverSessionBase(object):
@@ -42,6 +43,18 @@ class DriverSessionBase(object):
         self._driver_learner_grpc_clients = self._create_driver_learner_grpc_clients()
         # This field is populated at different stages of the entire federated training lifecycle.
         self._federation_statistics = dict()
+
+        self.fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb()
+        if self.federation_environment.fhe_scheme:
+            if self.federation_environment.fhe_scheme.scheme_name.lower() == "ckks":
+                self.encryption_scheme = fhe.CKKS(self.federation_environment.fhe_scheme.batch_size,
+                                                  self.federation_environment.fhe_scheme.scaling_bits,
+                                                  "resources/fheparams/cryptoparams/")
+                self.encryption_scheme.load_crypto_params()
+                self.fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb(
+                    enabled=True, name="ckks",
+                    batch_size=self.federation_environment.fhe_scheme.batch_size,
+                    scaling_bits=self.federation_environment.fhe_scheme.scaling_bits)
 
     def __getstate__(self):
         """
@@ -78,11 +91,11 @@ class DriverSessionBase(object):
         return grpc_clients
 
     def _init_controller_bazel_cmd(self):
-        protocol_pb = proto_messages_factory.MetisProtoMessages.construct_communication_specs_pb(
+        communication_specs_pb = proto_messages_factory.MetisProtoMessages.construct_communication_specs_pb(
             protocol=self.federation_environment.communication_protocol.name,
             semi_sync_lambda=self.federation_environment.communication_protocol.semi_synchronous_lambda,
             semi_sync_recompute_num_updates=self.federation_environment.communication_protocol.semi_sync_recompute_num_updates)
-        protocol_pb_serialized = protocol_pb.SerializeToString()
+        communication_specs_pb_serialized = communication_specs_pb.SerializeToString()
         optimizer_pb = self.federation_environment.local_model_config.optimizer_config.optimizer_pb
         model_hyperparameters_pb = proto_messages_factory.MetisProtoMessages \
             .construct_controller_modelhyperparams_pb(
@@ -96,20 +109,21 @@ class DriverSessionBase(object):
              port=self.federation_environment.controller.grpc_servicer.port,
              aggregation_rule=self.federation_environment.global_model_config.aggregation_function,
              participation_ratio=self.federation_environment.global_model_config.participation_ratio,
-             protocol_pb=protocol_pb_serialized,
-             model_hyperparameters_pb=model_hyperparameters_pb_serialized)
+             communication_specs_pb=communication_specs_pb_serialized,
+             model_hyperparameters_pb=model_hyperparameters_pb_serialized,
+             fhe_scheme_protobuff=self.fhe_scheme_pb.SerializeToString())
         return bazel_init_controller_cmd
 
     def _init_learner_bazel_cmd(self, learner_instance, controller_instance):
         model_def_name = "model_definition"
         remote_metis_model_path = "/tmp/metis/model_learner_{}".format(learner_instance.grpc_servicer.port)
         remote_model_def_path = os.path.join(remote_metis_model_path, model_def_name)
-
         init_learner_cmd = BazelMetisServicesCmdFactory().bazel_init_learner_target(
             learner_hostname=learner_instance.connection_configs.hostname,
             learner_port=learner_instance.grpc_servicer.port,
             controller_hostname=controller_instance.connection_configs.hostname,
             controller_port=controller_instance.grpc_servicer.port,
+            fhe_scheme_protobuff=self.fhe_scheme_pb.SerializeToString(),
             model_definition=remote_model_def_path,
             train_dataset=learner_instance.dataset_configs.train_dataset_path,
             validation_dataset=learner_instance.dataset_configs.validation_dataset_path,
@@ -122,15 +136,30 @@ class DriverSessionBase(object):
         return init_learner_cmd
 
     def _make_tarfile(self, output_filename, source_dir):
-        output_filename = "{}.tar.gz".format(output_filename)
-        with tarfile.open(output_filename, "w:gz") as tar:
+        output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))
+        output_filepath = os.path.join(output_dir, "{}.tar.gz".format(output_filename))
+        with tarfile.open(output_filepath, "w:gz") as tar:
             tar.add(source_dir, arcname=os.path.basename(source_dir))
-        return output_filename
+        return output_filepath
 
     def _ship_model(self, model_weights):
+        model_vars_pb = []
+        for widx, weight in enumerate(model_weights):
+            ciphertext = None
+            if self.fhe_scheme_pb.enabled:
+                ciphertext = self.encryption_scheme.encrypt(weight.flatten(), 1)
+            tensor_pb = proto_messages_factory.ModelProtoMessages.construct_tensor_pb_from_nparray(
+                nparray=weight, ciphertext=ciphertext)
+            # TODO(dstripelis) Need to change the following to reflect the true variables' names
+            #  and whether they are trainable or not - similar to keras_proto_factory.
+            model_var_pb = proto_messages_factory \
+                .ModelProtoMessages.construct_model_variable_pb(name="arr_{}".format(widx),
+                                                                trainable=True,
+                                                                tensor_pb=tensor_pb)
+            model_vars_pb.append(model_var_pb)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self.num_participating_learners,
-            model_weights=model_weights)
+            model_vars_pb=model_vars_pb)
 
     def _shutdown(self):
         # Collect all statistics related to learners before sending the shutdown signal.
@@ -160,7 +189,7 @@ class DriverSessionBase(object):
         This func will create N number of processes/workers to create the federation
         environment. One process for the controller and every other learner.
 
-        It first initializes the federation controller and then each learner, with some
+        It first initializes the federation coniohtroller and then each learner, with some
         lagging time till the federation controller is live so that every learner can
         connect to it.
         """
@@ -170,7 +199,7 @@ class DriverSessionBase(object):
         # regarding the execution progress of the federation.
         controller_future = self._executor.schedule(function=self._init_controller)
         self._executor_controller_tasks_q.put(controller_future)
-        if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=3, block=True):
+        if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model(model_weights=model_weights)
             for learner_instance in self.federation_environment.learners.learners:
                 learner_future = self._executor.schedule(
@@ -287,12 +316,13 @@ class DriverSession(DriverSessionBase):
     def _init_controller(self):
         fabric_connection_config = self.federation_environment.controller \
             .connection_configs.get_fabric_connection_config()
-        remote_on_login = self.federation_environment.controller.connection_configs.on_login
-        if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
-            remote_on_login = remote_on_login[:-1]
         connection = Connection(**fabric_connection_config)
         # We do not use asynchronous or disown, since we want the remote subprocess to return standard (error) output.
         # see also, https://github.com/pyinvoke/invoke/blob/master/invoke/runners.py#L109
+        remote_on_login = self.federation_environment.controller.connection_configs.on_login
+        if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
+            remote_on_login = remote_on_login[:-1]
+
         init_cmd = "{} && cd {} && {}".format(
             remote_on_login,
             self.federation_environment.controller.project_home,
@@ -328,10 +358,12 @@ class DriverSession(DriverSessionBase):
         remote_on_login = learner_instance.connection_configs.on_login
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
             remote_on_login = remote_on_login[:-1]
+
         # Untar model definition zipped file.
         connection.run("cd {}; tar -xvzf {}".format(
             remote_metis_model_path,
             self.model_definition_tar_fp))
+
         init_cmd = "{} && {} && cd {} && {}".format(
             remote_on_login,
             cuda_devices_str,

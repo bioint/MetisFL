@@ -90,6 +90,12 @@ class MetisProtoMessages(object):
         return metis_pb2.ServerEntity(hostname=hostname, port=port)
 
     @classmethod
+    def construct_fhe_scheme_pb(cls, enabled=False, name=None, batch_size=None, scaling_bits=None, cryptocontext=None,
+                                public_key=None, private_key=None):
+        return metis_pb2.FHEScheme(enabled=enabled, name=name, batch_size=batch_size, scaling_bits=scaling_bits,
+                                   cryptocontext=cryptocontext, public_key=public_key, private_key=private_key)
+
+    @classmethod
     def construct_dataset_spec_pb(cls, num_training_examples, num_validation_examples, num_test_examples,
                                   training_spec, validation_spec, test_spec,
                                   is_classification=False, is_regression=False):
@@ -236,28 +242,33 @@ class MetisProtoMessages(object):
 class ModelProtoMessages(object):
 
     @classmethod
-    def construct_tensor_pb_from_nparray(cls, nparray):
+    def construct_tensor_pb_from_nparray(cls, nparray, ciphertext=None):
         if not isinstance(nparray, np.ndarray):
             raise TypeError("Parameter {} must be of type {}.".format(nparray, np.ndarray))
-        values = nparray.flatten()
         size = int(nparray.size)
-        dtype = str(nparray.dtype.name)
         shape = nparray.shape
-        if "int" in dtype:
-            tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.INT)
-            tensor_pb = model_pb2.IntTensor(spec=tensor_spec, values=values)
-        elif "long" in dtype:
-            tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.LONG)
-            tensor_pb = model_pb2.IntTensor(spec=tensor_spec, values=values)
-        elif "float32" in dtype:
-            tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.FLOAT)
-            tensor_pb = model_pb2.DoubleTensor(spec=tensor_spec, values=values)
-        elif "float" in dtype:
-            # The default dtype for numpy arrays is float64, also represented as float.
-            tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.DOUBLE)
-            tensor_pb = model_pb2.DoubleTensor(spec=tensor_spec, values=values)
+        if ciphertext is not None:
+            tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.UNKNOWN)
+            tensor_pb = model_pb2.CiphertextTensor(spec=tensor_spec, values=ciphertext)
         else:
-            raise RuntimeError("Provided data type: {}, is not supported".format(dtype))
+            dtype = str(nparray.dtype.name)
+            values = nparray.flatten()
+            if "int" in dtype:
+                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.INT)
+                tensor_pb = model_pb2.IntTensor(spec=tensor_spec, values=values)
+            elif "long" in dtype:
+                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.LONG)
+                tensor_pb = model_pb2.IntTensor(spec=tensor_spec, values=values)
+            elif "float32" in dtype:
+                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.FLOAT)
+                tensor_pb = model_pb2.DoubleTensor(spec=tensor_spec, values=values)
+            elif "float" in dtype:
+                # The default dtype for numpy arrays is float64, also represented as float.
+                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.DOUBLE)
+                tensor_pb = model_pb2.DoubleTensor(spec=tensor_spec, values=values)
+            else:
+                raise RuntimeError("Provided data type: {}, is not supported".format(dtype))
+
         return tensor_pb
 
     @classmethod
@@ -267,6 +278,8 @@ class ModelProtoMessages(object):
             return model_pb2.Model.Variable(name=name, trainable=trainable, int_tensor=tensor_pb)
         elif isinstance(tensor_pb, model_pb2.DoubleTensor):
             return model_pb2.Model.Variable(name=name, trainable=trainable, double_tensor=tensor_pb)
+        elif isinstance(tensor_pb, model_pb2.CiphertextTensor):
+            return model_pb2.Model.Variable(name=name, trainable=trainable, ciphertext_tensor=tensor_pb)
         else:
             raise RuntimeError("Tensor proto message refers to a non-supported tensor protobuff datatype.")
 

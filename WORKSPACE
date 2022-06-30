@@ -48,9 +48,9 @@ http_archive(
 # Imports PyBind11 Bazel plugin.
 http_archive(
   name = "pybind11_bazel",
-  sha256 = "3dc6435bd41c058453efe102995ef084d0a86b0176fd6a67a6b7100a2e9a940e",
-  urls = ["https://github.com/pybind/pybind11_bazel/archive/992381ced716ae12122360b0fbadbc3dda436dbf.zip"],
-  strip_prefix = "pybind11_bazel-992381ced716ae12122360b0fbadbc3dda436dbf",
+  sha256 = "3700ef34597cda8e9fa4a43a6f177bec87d6d07fb400f3dfdf636a71332282e1",
+  urls = ["https://github.com/raschild/pybind11_bazel/archive/refs/heads/main.zip"],
+  strip_prefix = "pybind11_bazel-main",
 )
 
 # Imports PyBind11 library.
@@ -95,24 +95,27 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 # Imports Palisades library.
 new_git_repository(
     name = "palisade_git",
-    commit = "fded3711c5855e968467e2e73ccf2fcd7948dc7d",
-    shallow_since = "1622060746 -0400",
-    remote = "https://gitlab.com/palisade/palisade-development.git",
+    remote = "https://gitlab.com/palisade/palisade-release.git",
+    # tag: v1.11.7
+    commit = "19e84ae53ecdd1ca3360c4cdbb6df2eb31f21195",
+    strip_prefix = "",
+    init_submodules = True,
+    shallow_since = "1651346647 +0000",
     verbose = True,
     recursive_init_submodules = True,
     build_file_content = """
 filegroup(
-    name = "all",
+    name = "palisade_srcs",
     srcs = glob(["**/*"]),
     visibility = ["//visibility:public"],
 )
 """,
 )
 
+
 # Imports SHELFI-FHE library.
 new_git_repository(
     name = "shelfi_fhe_git",
-    #branch = "main",
     commit = "5cba05be07320b5a5a828a40bd148fcd59720c19",
     shallow_since = "1635215298 -0700",
     remote = "https://github.com/tanmayghai18/he-encryption-shelfi.git",
@@ -127,17 +130,29 @@ filegroup(
 )
 
 # Imports foreign rules repository.
+#http_archive(
+#    name = "rules_foreign_cc",
+#    sha256 = "33a5690733c5cc2ede39cb62ebf89e751f2448e27f20c8b2fbbc7d136b166804",
+#    strip_prefix = "rules_foreign_cc-0.5.1",
+#    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/0.5.1.tar.gz"
+#)
+#
+#load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
+#
+## This sets up some common toolchains for building targets. For more details, please see
+## https://bazelbuild.github.io/rules_foreign_cc/0.4.0/flatten.html#rules_foreign_cc_dependencies
+#rules_foreign_cc_dependencies()
+
 http_archive(
     name = "rules_foreign_cc",
-    sha256 = "33a5690733c5cc2ede39cb62ebf89e751f2448e27f20c8b2fbbc7d136b166804",
-    strip_prefix = "rules_foreign_cc-0.5.1",
-    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/refs/tags/0.5.1.tar.gz"
+    sha256 = "6041f1374ff32ba711564374ad8e007aef77f71561a7ce784123b9b4b88614fc",
+    strip_prefix = "rules_foreign_cc-0.8.0",
+    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/0.8.0.tar.gz",
 )
 
 load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
-
 # This sets up some common toolchains for building targets. For more details, please see
-# https://bazelbuild.github.io/rules_foreign_cc/0.4.0/flatten.html#rules_foreign_cc_dependencies
+# https://bazelbuild.github.io/rules_foreign_cc/0.8.0/flatten.html#rules_foreign_cc_dependencies
 rules_foreign_cc_dependencies()
 
 # Add boost library rule for future development.
@@ -153,3 +168,145 @@ rules_foreign_cc_dependencies()
 #    sha256 = "94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7",
 #    urls = ["https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz"],
 #)
+
+
+# Imports Cryptopp library.
+new_git_repository(
+    name = "cryptopp",
+    commit = "59895be61b03f973416724cfe0274693ce73b6a1",
+    shallow_since = "1649218442 -0400",
+    remote = "https://github.com/weidai11/cryptopp.git",
+    verbose = True,
+    build_file_content = """
+cc_library(
+    name = "cryptopp",
+    visibility = ['//visibility:public'],
+    hdrs = glob([
+        '*.h',
+        '*.cpp',
+      ]),
+    srcs = [
+      '3way.cpp',
+      'adler32.cpp',
+      'algebra.cpp',
+      'algparam.cpp',
+      'arc4.cpp',
+      'asn.cpp',
+      'authenc.cpp',
+      'base32.cpp',
+      'base64.cpp',
+      'basecode.cpp',
+      'bfinit.cpp',
+      'blowfish.cpp',
+      'blumshub.cpp',
+      'camellia.cpp',
+      'cast.cpp',
+      'casts.cpp',
+      'cbcmac.cpp',
+      'ccm.cpp',
+      'channels.cpp',
+      'cmac.cpp',
+      'cpu.cpp',
+      'crc.cpp',
+      'cryptlib.cpp',
+      'default.cpp',
+      'des.cpp',
+      'dessp.cpp',
+      'dh2.cpp',
+      'dh.cpp',
+      'dll.cpp',
+      'dsa.cpp',
+      'eax.cpp',
+      'ec2n.cpp',
+      'eccrypto.cpp',
+      'ecp.cpp',
+      'elgamal.cpp',
+      'emsa2.cpp',
+      'eprecomp.cpp',
+      'esign.cpp',
+      'files.cpp',
+      'filters.cpp',
+      'fips140.cpp',
+      'fipstest.cpp',
+      'gcm.cpp',
+      'gf2_32.cpp',
+      'gf256.cpp',
+      'gf2n.cpp',
+      'gfpcrypt.cpp',
+      'gost.cpp',
+      'gzip.cpp',
+      'hex.cpp',
+      'hmac.cpp',
+      'hrtimer.cpp',
+      'ida.cpp',
+      'idea.cpp',
+      'integer.cpp',
+      'iterhash.cpp',
+      'luc.cpp',
+      'mars.cpp',
+      'marss.cpp',
+      'md2.cpp',
+      'md4.cpp',
+      'md5.cpp',
+      'misc.cpp',
+      'modes.cpp',
+      'mqueue.cpp',
+      'mqv.cpp',
+      'nbtheory.cpp',
+      'oaep.cpp',
+      'osrng.cpp',
+      'panama.cpp',
+      'pch.cpp',
+      'pkcspad.cpp',
+      'polynomi.cpp',
+      'pssr.cpp',
+      'pubkey.cpp',
+      'queue.cpp',
+      'rabin.cpp',
+      'randpool.cpp',
+      'rc2.cpp',
+      'rc5.cpp',
+      'rc6.cpp',
+      'rdtables.cpp',
+      'rijndael.cpp',
+      'ripemd.cpp',
+      'rng.cpp',
+      'rsa.cpp',
+      'rw.cpp',
+      'safer.cpp',
+      'salsa.cpp',
+      'seal.cpp',
+      'seed.cpp',
+      'serpent.cpp',
+      'sha3.cpp',
+      'shacal2.cpp',
+      'sha.cpp',
+      'sharkbox.cpp',
+      'shark.cpp',
+      'simple.cpp',
+      'skipjack.cpp',
+      'sosemanuk.cpp',
+      'square.cpp',
+      'squaretb.cpp',
+      'strciphr.cpp',
+      'tea.cpp',
+      'tftables.cpp',
+      'tiger.cpp',
+      'tigertab.cpp',
+      'ttmac.cpp',
+      'twofish.cpp',
+      'vmac.cpp',
+      'wake.cpp',
+      'whrlpool.cpp',
+      'xtr.cpp',
+      'xtrcrypt.cpp',
+      'zdeflate.cpp',
+      'zinflate.cpp',
+      'zlib.cpp'
+    ],
+    linkopts = [
+      '-lm',
+    ]
+)
+""",
+)

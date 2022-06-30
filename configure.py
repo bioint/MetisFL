@@ -1,6 +1,16 @@
 import errno
 import os
 import platform
+import subprocess
+
+
+def is_nvidia_installed():
+    installed = True
+    try:
+        subprocess.check_output('nvidia-smi')
+    except Exception:
+        installed = False
+    return installed
 
 
 def is_windows():
@@ -42,7 +52,8 @@ def symlink_force(target, link_name):
 def setup_python():
     # TODO By Default python version is 3.8.8. We might need to make this
     #  user specific. Conda downloads the python interpreter.
-    if is_macos() or is_windows() or is_cygwin():
+
+    if not is_nvidia_installed() or is_macos() or is_windows() or is_cygwin():
         target = os.path.join(os.getcwd(), "python/py38_condaenv.yaml")
     else:
         target = os.path.join(os.getcwd(), "python/py38_condaenvcuda.yaml")

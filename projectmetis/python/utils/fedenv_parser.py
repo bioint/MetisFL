@@ -14,6 +14,8 @@ class TerminationSignals(object):
     def __init__(self, termination_signals_map):
         self.federation_rounds = termination_signals_map.get("FederationRounds", 100)
         self.execution_time_cutoff_mins = termination_signals_map.get("ExecutionCutoffTimeMins", 1e6)
+        if not self.execution_time_cutoff_mins:
+            self.execution_time_cutoff_mins = 1e6
         self.metric_cutoff_score = termination_signals_map.get("MetricCutoffScore", 1)
 
 
@@ -29,6 +31,14 @@ class CommunicationProtocol(object):
         if self.specifications and self.is_semi_synchronous:
             self.semi_synchronous_lambda = self.specifications.get("SemiSynchronousLambda", None)
             self.semi_sync_recompute_num_updates = self.specifications.get("SemiSynchronousRecomputeSteps", None)
+
+
+class FHEScheme(object):
+
+    def __init__(self, fhe_scheme_map):
+        self.scheme_name = fhe_scheme_map.get("Name")
+        self.batch_size = fhe_scheme_map.get("BatchSize")
+        self.scaling_bits = fhe_scheme_map.get("ScalingBits")
 
 
 class GlobalModelConfig(object):
@@ -133,6 +143,7 @@ class ConnectionConfigs(object):
 
     def __init__(self, connection_configs_map):
         self.hostname = connection_configs_map.get("Hostname", "localhost")
+        self.port = connection_configs_map.get("Port", "22")
         self.username = connection_configs_map.get("Username", "")
         self.password = connection_configs_map.get("Password", "")
         # make sure that we do have connection credentials
@@ -154,13 +165,19 @@ class ConnectionConfigs(object):
         return conn_config
 
     def get_fabric_connection_config(self):
+        # Look for parameters values here:
+        # https://pyneng.readthedocs.io/en/latest/book/18_ssh_telnet/paramiko.html#module-paramiko
+        # 'allow_agent' show be disabled if working with username/password.
         connect_kwargs = {
             "password": self.password,
+            "allow_agent": False if self.password else True,
+            "look_for_keys": True if self.key_filename else False,
             "key_filename": self.key_filename,
             "passphrase": self.passphrase
         }
         conn_config = {
             "host": self.hostname,
+            "port": self.port,
             "user": self.username,
             "connect_kwargs": connect_kwargs
         }
@@ -197,3 +214,11 @@ class FederationEnvironment(object):
         self.local_model_config = LocalModelConfig(federation_environment.get("LocalModelConfig"))
         self.controller = Controller(federation_environment.get("Controller"))
         self.learners = Learners(federation_environment.get("Learners"))
+
+        self.fhe_scheme = None
+        if "FHEScheme" in federation_environment:
+            self.fhe_scheme = FHEScheme(federation_environment.get("FHEScheme"))
+            if self.global_model_config.aggregation_function == "FED_AVG":
+                # Since federated average does not work with ciphertext out-of-the box,
+                # we redefine the aggregation function to Private Weighted Aggregation.
+                self.global_model_config.aggregation_function = "PWA"

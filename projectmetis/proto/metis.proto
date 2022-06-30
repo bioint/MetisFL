@@ -26,6 +26,16 @@ message SSLConfig {
   string server_cert = 2;
 }
 
+message FHEScheme {
+  bool enabled = 1;
+  string name = 2;
+  uint32 batch_size = 3;
+  uint32 scaling_bits = 4;
+  string cryptocontext = 5;
+  string public_key = 6;
+  string private_key = 7;
+}
+
 //////////////
 // Learning //
 //////////////
@@ -183,6 +193,7 @@ message ControllerParams {
   ServerEntity server_entity = 1;
   GlobalModelSpecs global_model_specs = 2;
   CommunicationSpecs communication_specs = 3;
+  FHEScheme fhe_scheme = 4;
 
   message ModelHyperparams {
 
@@ -198,13 +209,14 @@ message ControllerParams {
     float percent_validation = 4;
   }
 
-  ModelHyperparams model_hyperparams = 6;
+  ModelHyperparams model_hyperparams = 5;
 }
 
 message GlobalModelSpecs {
   enum AggregationRule {
     UNKNOWN = 0;
     FED_AVG = 1;
+    PWA = 2;
   }
   AggregationRule aggregation_rule = 1;
   float learners_participation_ratio = 2;

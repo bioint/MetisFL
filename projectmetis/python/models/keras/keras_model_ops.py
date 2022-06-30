@@ -13,7 +13,7 @@ from projectmetis.python.models.keras.callbacks.performance_profiler import Perf
 
 class KerasModelOps(ModelOps):
 
-    def __init__(self, model_filepath="/tmp/model", keras_callbacks=None, *args, **kwargs):
+    def __init__(self, model_filepath="/tmp/model", encryption_scheme=None, keras_callbacks=None, *args, **kwargs):
         # Runtime memory growth configuration for Tensorflow/Keras sessions.
         # Assumption is that the visible GPUs are set through the environmental
         # variable CUDA_VISIBLE_DEVICES, else it will consume all available GPUs.
@@ -40,8 +40,9 @@ class KerasModelOps(ModelOps):
 
         self._model_filepath = model_filepath
         self._model = self.load_model(self._model_filepath)
+        self._encryption_scheme = encryption_scheme
         self._keras_callbacks = keras_callbacks
-        super(KerasModelOps, self).__init__(self._model)
+        super(KerasModelOps, self).__init__(self._model, self._encryption_scheme)
 
     def _construct_dataset_pipeline(self, dataset: ModelDataset, batch_size, is_train=False):
         """
@@ -171,7 +172,9 @@ class KerasModelOps(ModelOps):
             test_stats=test_res, completes_batches=total_steps,
             batch_size=batch_size, processing_ms_per_epoch=mean_epoch_wall_clock_time_ms,
             processing_ms_per_batch=mean_batch_wall_clock_time_ms)
-        return completed_learning_task.construct_completed_learning_task_pb()
+        completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
+            encryption_scheme=self._encryption_scheme)
+        return completed_learning_task_pb
 
     def evaluate_model(self, dataset: ModelDataset = None, batch_size=100,
                        verbose=False, metrics=None, *args, **kwargs):
