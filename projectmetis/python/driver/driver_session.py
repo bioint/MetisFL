@@ -35,8 +35,8 @@ class DriverSessionBase(object):
         self.train_dataset_recipe_fp = train_dataset_recipe_fp
         self.validation_dataset_recipe_fp = validation_dataset_recipe_fp
         self.test_dataset_recipe_fp = test_dataset_recipe_fp
-
-        self._executor = ThreadPool()
+        
+        self._executor = ThreadPool(max_workers=self.num_participating_learners+1)
         self._executor_controller_tasks_q = queue.LifoQueue(maxsize=0)
         self._executor_learners_tasks_q = queue.LifoQueue(maxsize=0)
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
