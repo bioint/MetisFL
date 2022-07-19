@@ -1,41 +1,39 @@
+import argparse
 import cloudpickle
+import json
 import os
 
 import numpy as np
 import tensorflow as tf
 
+from experiments.utils.data_partitioning import DataPartitioning
 from experiments.keras.models.cifar_cnn import CifarCNN
-from projectmetis.proto.metis_pb2 import ServerEntity, DatasetSpec
-from projectmetis.python.learner.learner import Learner
-from projectmetis.python.learner.learner_servicer import LearnerServicer
-from projectmetis.python.models.model_dataset import ModelDataset
+from projectmetis.python.driver.driver_session import DriverSession
+from projectmetis.python.models.model_dataset import ModelDatasetClassification
+from projectmetis.python.utils.fedenv_parser import FederationEnvironment
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 if __name__ == "__main__":
-    # ARGS
-    # 1. Learner hostname
-    # 2. Learner port: "Docker" port that the learner servicer will be listening on
-    # 3. Controller hostname
-    # 4. Controller port
-    # 5. Model definition/architecture/structure
-    #       Method 1: Send .gz file from the driver and store inside /tmp/
-    #       Method 2: Create an endpoint to the LearnerServicer and send it there after servicer is initialized
-    # 6. Path to training dataset
-    # 7. Path to validation dataset
-    # 8. Path to test dataset
-    # 9. Datasets recipe: one for each dataset!
 
-    metis_filepath_prefix = "/tmp/projectmetis"
-    if not os.path.exists(metis_filepath_prefix):
-        os.makedirs(metis_filepath_prefix)
+    script_cwd = os.path.dirname(__file__)
+    print("Script current working directory: ", script_cwd, flush=True)
+    default_federation_environment_config_fp = os.path.join(
+        script_cwd, "../federation_environments_config/localhost/test_localhost_synchronous.yaml")
 
-    model_filepath = "{}/model_definition".format(metis_filepath_prefix)
-    train_dataset_filepath = "{}/model_train_dataset.npz".format(metis_filepath_prefix)
-    valid_dataset_filepath = "{}/model_valid_dataset.npz".format(metis_filepath_prefix)
-    test_dataset_filepath = "{}/model_test_dataset.npz".format(metis_filepath_prefix)
-    dataset_recipe_fp_pkl = "{}/model_dataset_ops.pkl".format(metis_filepath_prefix)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--federation_environment_config_fp",
+                        default=default_federation_environment_config_fp)
+    parser.add_argument("--generate_iid_partitions", default=False)
+    parser.add_argument("--generate_noniid_partitions", default=False)
 
-    cifar10_model = CifarCNN().get_model()
+    args = parser.parse_args()
+    print(args, flush=True)
+
+    """ Load the environment. """
+    federation_environment = FederationEnvironment(args.federation_environment_config_fp)
+
+    """ Load the data. """
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
     x_valid, y_valid = x_train[:6000], y_train[:6000]
     x_train, y_train = x_train[6000:], y_train[6000:]
@@ -43,49 +41,72 @@ if __name__ == "__main__":
     x_valid = x_valid.astype('float32') / 255
     x_test = x_test.astype('float32') / 255
 
-    # Save data.
-    np.savez(train_dataset_filepath, x=x_train, y=y_train)
-    np.savez(valid_dataset_filepath, x=x_valid, y=y_valid)
-    np.savez(test_dataset_filepath, x=x_test, y=y_test)
+    if not args.generate_iid_partitions and not args.generate_noniid_partitions \
+            and not all([l.dataset_configs.train_dataset_path for l in federation_environment.learners]):
+        raise RuntimeError("Need to specify datasets training paths or pass generate iid/noniid partitions argument.")
 
-    nn_model = cifar10_model
+    if args.generate_iid_partitions or args.generate_noniid_partitions:
+        # Parse environment to assign datasets to learners.
+        num_learners = len(federation_environment.learners.learners)
+        if args.generate_iid_partitions:
+            x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners).iid_partition()
+        elif args.generate_noniid_partitions:
+            num_learners = len(federation_environment.learners.learners)
+            x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners) \
+                .non_iid_partition(classes_per_partition=2)
+
+        datasets_path = "datasets/cifar/"
+        np.savez(os.path.join(script_cwd, datasets_path, "test.npz"), x=x_test, y=y_test)
+        for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):
+            np.savez(os.path.join(script_cwd, datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
+        for lidx, learner in enumerate(federation_environment.learners.learners):
+            learner.dataset_configs.test_dataset_path = \
+                os.path.join(script_cwd, datasets_path, "test.npz")
+            learner.dataset_configs.train_dataset_path = \
+                os.path.join(script_cwd, datasets_path, "train_{}.npz".format(lidx))
+
+    nn_engine = "keras"
+    metis_filepath_prefix = "/tmp/metis/model/"
+    if not os.path.exists(metis_filepath_prefix):
+        os.makedirs(metis_filepath_prefix)
+
+    model_filepath = "{}/model_definition".format(metis_filepath_prefix)
+    train_dataset_recipe_fp_pkl = "{}/model_train_dataset_ops.pkl".format(metis_filepath_prefix)
+    validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(metis_filepath_prefix)
+    test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(metis_filepath_prefix)
+
+    nn_model = CifarCNN().get_model()
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
     # properly and any subsequent fit step will never train the model properly. We could apply the .fit() step instead
     # of the .evaluation() step, but since the driver does not hold any data it simply evaluates a random sample.
     nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
     nn_model.save(model_filepath)
 
-    # TODO Check serialization of the recipe through cloudpickle -
-    #  serialized recipe pass as arg
     def dataset_recipe_fn(dataset_fp):
         loaded_dataset = np.load(dataset_fp)
         x, y = loaded_dataset['x'], loaded_dataset['y']
-        train_dataset = ModelDataset(x=x, y=y, size=y.size)
-        return train_dataset
-    cloudpickle.dump(dataset_recipe_fn, open(dataset_recipe_fp_pkl, "wb+"))
-    dataset_recipe_fn = cloudpickle.load(open(dataset_recipe_fp_pkl, "rb"))
+        unique, counts = np.unique(y, return_counts=True)
+        distribution = {}
+        for cid, num in zip(unique, counts):
+            distribution[cid] = num
+        model_dataset = ModelDatasetClassification(
+            x=x, y=y, size=y.size, examples_per_class=distribution)
+        return model_dataset
 
-    # TODO Combine (train_dataset_recipe_fn and train_dataset_fp) and define
-    #  a load() function that invokes all the data and the defined ETLs.
-    learner_id = "TestLearner"
-    learner_server_entity = ServerEntity(hostname="[::]", port=50052)
-    controller_server_entity = ServerEntity(hostname="0.0.0.0", port=50051)
-    learner = Learner(
-        learner_server_entity=learner_server_entity,
-        controller_server_entity=controller_server_entity,
-        nn_engine="keras",
-        model_fp=model_filepath,
-        train_dataset_fp=train_dataset_filepath,
-        train_dataset_recipe_fn=dataset_recipe_fn,
-        test_dataset_fp=test_dataset_filepath,
-        test_dataset_recipe_fn=dataset_recipe_fn,
-        validation_dataset_fp=valid_dataset_filepath,
-        validation_dataset_recipe_fn=dataset_recipe_fn)
-    learner.join_federation()
-    learner_servicer = LearnerServicer(
-        learner=learner,
-        learner_server_entity=learner_server_entity,
-        servicer_workers=10)
-    learner_servicer.init_servicer()
-    learner_servicer.wait_servicer()
-    learner.leave_federation()
+    cloudpickle.dump(obj=dataset_recipe_fn, file=open(train_dataset_recipe_fp_pkl, "wb+"))
+    cloudpickle.dump(obj=dataset_recipe_fn, file=open(test_dataset_recipe_fp_pkl, "wb+"))
+    cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
+
+    driver_session = DriverSession(federation_environment, nn_engine,
+                                   model_definition_dir=model_filepath,
+                                   train_dataset_recipe_fp=train_dataset_recipe_fp_pkl,
+                                   validation_dataset_recipe_fp=validation_dataset_recipe_fp_pkl,
+                                   test_dataset_recipe_fp=test_dataset_recipe_fp_pkl)
+    driver_session.initialize_federation(model_weights=nn_model.get_weights())
+    driver_session.monitor_federation()
+    driver_session.shutdown_federation()
+    statistics = driver_session.get_federation_statistics()
+
+    with open(os.path.join(script_cwd, "experiment.json"), "w+") as fout:
+        print("Execution File Output Path:", fout.name, flush=True)
+        json.dump(statistics, fout, indent=4)

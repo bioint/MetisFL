@@ -19,12 +19,12 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../federation_environments_config/fashionmnist/test_localhost_synchronous.yaml")
+        script_cwd, "../federation_environments_config/localhost/test_localhost_synchronous.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
                         default=default_federation_environment_config_fp)
-    parser.add_argument("--generate_iid_partitions", default=True)
+    parser.add_argument("--generate_iid_partitions", default=False)
     parser.add_argument("--generate_noniid_partitions", default=False)
 
     args = parser.parse_args()
@@ -39,6 +39,10 @@ if __name__ == "__main__":
     print(y_train[0:1].shape, flush=True)
     x_train = (x_train.astype('float32') / 256).reshape(-1, 28, 28, 1)
     x_test = (x_test.astype('float32') / 256).reshape(-1, 28, 28, 1)
+
+    if not args.generate_iid_partitions and not args.generate_noniid_partitions \
+            and not all([l.dataset_configs.train_dataset_path for l in federation_environment.learners]):
+        raise RuntimeError("Need to specify datasets training paths or pass generate iid/noniid partitions argument.")
 
     if args.generate_iid_partitions or args.generate_noniid_partitions:
         # Parse environment to assign datasets to learners.
@@ -70,15 +74,13 @@ if __name__ == "__main__":
     validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(metis_filepath_prefix)
     test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(metis_filepath_prefix)
 
-    fmnist_model = FashionMnistModel().get_model()
     # TODO Save model as tf native and ship the resulted files.
-    nn_model = fmnist_model
+    nn_model = FashionMnistModel().get_model()
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
     # properly and any subsequent fit step will never train the model properly. We could apply the .fit() step instead
     # of the .evaluation() step, but since the driver does not hold any data it simply evaluates a random sample.
     nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
     nn_model.save(model_filepath)
-
 
     def dataset_recipe_fn(dataset_fp):
         loaded_dataset = np.load(dataset_fp)
