@@ -6,21 +6,18 @@ FederationEnvironment:
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
   CommunicationProtocol:
-    Name: "SEMI_SYNCHRONOUS"
-    Specifications:
-      SemiSynchronousLambda: 2
-      SemiSynchronousRecomputeSteps: True
+    Name: "SYNCHRONOUS"
   GlobalModelConfig:
     AggregationFunction: "FED_AVG"
     ParticipationRatio: 1
   LocalModelConfig:
-    BatchSize: 100
-    LocalEpochs: 5
+    BatchSize: 32
+    LocalEpochs: 4
     ValidationPercentage: 0.0
     OptimizerConfig:
-      OptimizerName: "VanillaSGD"
+      OptimizerName: "FedProx"
       LearningRate: 0.05
-      L2Reg: 0.001
+      ProximalTerm: 0.001
   Controller:
     ProjectHome: "/projectmetis-rc"
     ConnectionConfigs:

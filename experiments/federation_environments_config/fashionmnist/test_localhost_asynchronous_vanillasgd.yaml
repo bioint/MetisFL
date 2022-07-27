@@ -1,16 +1,12 @@
 FederationEnvironment:
   DockerImage: null # null indicates to run Metis without docker, if it is provided then run using the specified image
   TerminationSignals:
-    FederationRounds: 10 # only in synchronous execution
-    ExecutionCutoffTimeMins: null
+    FederationRounds: null # only in synchronous execution
+    ExecutionCutoffTimeMins: 3
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
   CommunicationProtocol:
-    Name: "SYNCHRONOUS"
-  FHEScheme: # fully homomorphic encryption scheme - if provided run with it, else disabled.
-    Name: "ckks"
-    BatchSize: 4096
-    ScalingBits: 52
+    Name: "ASYNCHRONOUS"
   GlobalModelConfig:
     AggregationFunction: "FED_AVG"
     ParticipationRatio: 1
@@ -21,7 +17,7 @@ FederationEnvironment:
     OptimizerConfig:
       OptimizerName: "VanillaSGD"
       LearningRate: 0.05
-      L2Reg: 0.001
+      L2Reg: 0.0
   Controller:
     ProjectHome: "/projectmetis-rc"
     ConnectionConfigs:

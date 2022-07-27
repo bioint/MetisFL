@@ -19,7 +19,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../federation_environments_config/localhost/test_localhost_synchronous.yaml")
+        script_cwd, "../federation_environments_config/cifar10/test_localhost_synchronous_fedprox.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -35,11 +35,20 @@ if __name__ == "__main__":
 
     """ Load the data. """
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-    x_valid, y_valid = x_train[:6000], y_train[:6000]
-    x_train, y_train = x_train[6000:], y_train[6000:]
     x_train = x_train.astype('float32') / 255
-    x_valid = x_valid.astype('float32') / 255
+    y_train = y_train.astype('int64')
     x_test = x_test.astype('float32') / 255
+    y_test = y_test.astype('int64')
+
+    # normalize data
+    test_channel_mean = np.mean(x_train, axis=(0, 1, 2))
+    test_channel_std = np.std(x_train, axis=(0, 1, 2))
+    train_channel_mean = np.mean(x_train, axis=(0, 1, 2))
+    train_channel_std = np.std(x_train, axis=(0, 1, 2))
+
+    for i in range(3):
+        x_test[:, :, :, i] = (x_test[:, :, :, i] - test_channel_mean[i]) / test_channel_std[i]
+        x_train[:, :, :, i] = (x_train[:, :, :, i] - train_channel_mean[i]) / train_channel_std[i]
 
     if not args.generate_iid_partitions and not args.generate_noniid_partitions \
             and not all([l.dataset_configs.train_dataset_path for l in federation_environment.learners]):

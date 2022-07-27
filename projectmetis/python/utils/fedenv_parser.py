@@ -62,37 +62,37 @@ class OptimizerConfig(object):
     def __init__(self, optimizer_map):
         self.optimizer_name = optimizer_map.get("OptimizerName")
         self.learning_rate = optimizer_map.get("LearningRate")
+        self.optimizer_kwargs = dict()
         self.optimizer_pb = self.create_optimizer_pb(optimizer_map)
 
     def create_optimizer_pb(self, optimizer_map):
-        optimizer_kwargs = dict()
-        optimizer_kwargs["learning_rate"] = self.learning_rate
+        self.optimizer_kwargs["learning_rate"] = self.learning_rate
         if self.optimizer_name == "VanillaSGD":
             if "L1Reg" in optimizer_map:
-                optimizer_kwargs["l1_reg"] = optimizer_map['L1Reg']
+                self.optimizer_kwargs["l1_reg"] = optimizer_map['L1Reg']
             if "L2Reg" in optimizer_map:
-                optimizer_kwargs["l2_reg"] = optimizer_map['L2Reg']
+                self.optimizer_kwargs["l2_reg"] = optimizer_map['L2Reg']
             optimizer_pb = proto_messages_factory.ModelProtoMessages \
-                .construct_vanilla_sgd_optimizer_pb(**optimizer_kwargs)
+                .construct_vanilla_sgd_optimizer_pb(**self.optimizer_kwargs)
         elif self.optimizer_name == "MomentumSGD":
             if "MomentumFactor" in optimizer_map:
-                optimizer_kwargs["momentum_factor"] = optimizer_map['MomentumFactor']
+                self.optimizer_kwargs["momentum_factor"] = optimizer_map['MomentumFactor']
             optimizer_pb = proto_messages_factory.ModelProtoMessages \
-                .construct_momentum_sgd_optimizer_pb(**optimizer_kwargs)
+                .construct_momentum_sgd_optimizer_pb(**self.optimizer_kwargs)
         elif self.optimizer_name == "FedProx":
             if "ProximalTerm" in optimizer_map:
-                optimizer_kwargs["proximal_term"] = optimizer_map['ProximalTerm']
+                self.optimizer_kwargs["proximal_term"] = optimizer_map['ProximalTerm']
             optimizer_pb = proto_messages_factory.ModelProtoMessages \
-                .construct_fed_prox_optimizer_pb(**optimizer_kwargs)
+                .construct_fed_prox_optimizer_pb(**self.optimizer_kwargs)
         elif self.optimizer_name == "Adam":
             if "Beta1" in optimizer_map:
-                optimizer_kwargs["beta_1"] = optimizer_map['Beta1']
+                self.optimizer_kwargs["beta_1"] = optimizer_map['Beta1']
             if "Beta2" in optimizer_map:
-                optimizer_kwargs["beta_2"] = optimizer_map['Beta2']
+                self.optimizer_kwargs["beta_2"] = optimizer_map['Beta2']
             if "Epsilon" in optimizer_map:
-                optimizer_kwargs["epsilon"] = optimizer_map['Epsilon']
+                self.optimizer_kwargs["epsilon"] = optimizer_map['Epsilon']
             optimizer_pb = proto_messages_factory.ModelProtoMessages \
-                .construct_adam_optimizer_pb(**optimizer_kwargs)
+                .construct_adam_optimizer_pb(**self.optimizer_kwargs)
         optimizer_pb = proto_messages_factory.ModelProtoMessages \
             .construct_optimizer_config_pb(optimizer_pb=optimizer_pb)
         return optimizer_pb
@@ -145,11 +145,10 @@ class ConnectionConfigs(object):
         self.hostname = connection_configs_map.get("Hostname", "localhost")
         self.port = connection_configs_map.get("Port", "22")
         self.username = connection_configs_map.get("Username", "")
-        self.password = connection_configs_map.get("Password", "")
-        # make sure that we do have connection credentials
-        # in order to establish local/remote session.
+        # Username is necessary to establish connection.
         assert self.username, "Need to define username."
-        assert self.password, "Need to define password."
+        # Password might not be necessary, e.g., if key filename is provided.
+        self.password = connection_configs_map.get("Password", "")
 
         self.key_filename = connection_configs_map.get("KeyFilename", "")
         self.passphrase = connection_configs_map.get("Passphrase", "")
@@ -172,9 +171,11 @@ class ConnectionConfigs(object):
             "password": self.password,
             "allow_agent": False if self.password else True,
             "look_for_keys": True if self.key_filename else False,
-            "key_filename": self.key_filename,
-            "passphrase": self.passphrase
         }
+        if self.key_filename:
+            connect_kwargs["key_filename"] = self.key_filename
+            connect_kwargs["passphrase"] = self.passphrase
+
         conn_config = {
             "host": self.hostname,
             "port": self.port,

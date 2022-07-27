@@ -11,13 +11,13 @@ FederationEnvironment:
     AggregationFunction: "FED_AVG"
     ParticipationRatio: 1
   LocalModelConfig:
-    BatchSize: 100
-    LocalEpochs: 5
+    BatchSize: 32
+    LocalEpochs: 4
     ValidationPercentage: 0.0
     OptimizerConfig:
-      OptimizerName: "VanillaSGD"
-      LearningRate: 0.05
-      L2Reg: 0.001
+      OptimizerName: "MomentumSGD"
+      LearningRate: 0.005
+      MomentumFactor: 0.75
   Controller:
     ProjectHome: "/projectmetis-rc"
     ConnectionConfigs:

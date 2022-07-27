@@ -39,6 +39,8 @@ class KerasModelOps(ModelOps):
                     "{} needs to be an instance of {}".format(keras_callbacks, [tf.keras.callbacks.Callback]))
 
         self._model_filepath = model_filepath
+        # TODO Register custom objects, e.g., optimizers, required to load the model.
+        self._load_model_custom_objects = {"FedProx": FedProx}
         self._model = self.load_model(self._model_filepath)
         self._encryption_scheme = encryption_scheme
         self._keras_callbacks = keras_callbacks
@@ -74,7 +76,7 @@ class KerasModelOps(ModelOps):
         if filepath is None:
             filepath = self._model_filepath
         MetisLogger.info("Loading model from: {}".format(filepath))
-        m = tf.keras.models.load_model(filepath)
+        m = tf.keras.models.load_model(filepath, custom_objects=self._load_model_custom_objects)
         MetisLogger.info("Loaded model from: {}".format(filepath))
         return m
 
@@ -111,6 +113,7 @@ class KerasModelOps(ModelOps):
         # TODO Compile model with new optimizer if need to.
         #  It is required by TF when redefining a model.
         #  Assign new model weights after model compilation.
+        self.set_optimizer_state(hyperparameters_pb.optimizer)
         if train_dataset is None:
             raise RuntimeError("Provided `dataset` for training is None.")
         # Compute number of epochs based on the data size of the training set.
@@ -213,32 +216,36 @@ class KerasModelOps(ModelOps):
         MetisLogger.info("Model inference is complete.")
         return predictions
 
-    def construct_optimizer(self, optimizer_config_pb: model_pb2.OptimizerConfig = None,
+    def set_optimizer_state(self, optimizer_config_pb: model_pb2.OptimizerConfig = None,
                             *args, **kwargs):
         if optimizer_config_pb is None:
             raise RuntimeError("Provided `OptimizerConfig` proto message is None.")
         if optimizer_config_pb.HasField('vanilla_sgd'):
             learning_rate = optimizer_config_pb.vanilla_sgd.learning_rate
-            # TODO We might have to implement our own custom SGD with L2/L1, since Keras does not add L2 or L1
-            #  regularization directly in the optimization function, it does so during model compilation
-            #  at the kernel and bias level.
+            # TODO For now we only assign the learning rate, since Keras does not add L2 or L1
+            #  regularization directly in the optimization function, it does so during model
+            #  compilation at the kernel and bias layers level.
             l1_reg = optimizer_config_pb.vanilla_sgd.L1_reg
             l2_reg = optimizer_config_pb.vanilla_sgd.L2_reg
-            return tf.keras.optimizers.SGD(learning_rate=learning_rate, name='SGD')
+            self._model.optimizer.learning_rate.assign(learning_rate)
         elif optimizer_config_pb.HasField('momentum_sgd'):
             learning_rate = optimizer_config_pb.momentum_sgd.learning_rate
             momentum_factor = optimizer_config_pb.momentum_sgd.momentum_factor
-            return tf.keras.optimizers.SGD(learning_rate=learning_rate, momentum=momentum_factor, name='MomentumSGD')
+            self._model.optimizer.learning_rate.assign(learning_rate)
+            self._model.optimizer.momentum.assign(momentum_factor)
         elif optimizer_config_pb.HasField('fed_prox'):
             learning_rate = optimizer_config_pb.fed_prox.learning_rate
             proximal_term = optimizer_config_pb.fed_prox.proximal_term
-            return FedProx(learning_rate, proximal_term, name="FedProx")
+            self._model.optimizer.learning_rate.assign(learning_rate)
+            self._model.optimizer.proximal_term.assign(proximal_term)
         elif optimizer_config_pb.HasField('adam'):
             learning_rate = optimizer_config_pb.adam.learning_rate
             beta_1 = optimizer_config_pb.adam.beta_1
             beta_2 = optimizer_config_pb.adam.beta_2
             epsilon = optimizer_config_pb.adam.epsilon
-            return tf.keras.optimizers.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon,
-                                            amsgrad=False, name='Adam')
+            self._model.optimizer.learning_rate.assign(learning_rate)
+            self._model.optimizer.beta_1.assign(beta_1)
+            self._model.optimizer.beta_2.assign(beta_2)
+            self._model.optimizer.epsilon.assign(epsilon)
         else:
             raise RuntimeError("TrainingHyperparameters proto message refers to a non-supported optimizer.")

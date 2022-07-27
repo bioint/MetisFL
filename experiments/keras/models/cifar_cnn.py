@@ -1,13 +1,13 @@
 import tensorflow as tf
 
 from projectmetis.python.models.model_def import ModelDef
+from projectmetis.python.models.keras.optimizers.fed_prox import FedProx
 
 
 class CifarCNN(ModelDef):
 
-    def __init__(self, learning_rate=0.005, metrics=["accuracy"]):
+    def __init__(self, metrics=["accuracy"]):
         super(CifarCNN, self).__init__()
-        self.learning_rate = learning_rate
         self.metrics = metrics
 
     def get_model(self):
@@ -39,7 +39,8 @@ class CifarCNN(ModelDef):
 
         model.add(tf.keras.layers.Dense(10, activation='softmax'))
 
-        optimizer = tf.keras.optimizers.SGD(learning_rate=self.learning_rate, momentum=0.75)
+        # optimizer = tf.keras.optimizers.SGD()
+        optimizer = FedProx()
         model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=self.metrics)
         return model
