@@ -8,7 +8,7 @@
 #                https://gitlab.com/nvidia/container-images/cuda/-/tree/master/dist
 
 
-FROM projectmetis_rockylinux_8:0.0.1 as base
+FROM projectmetis_rockylinux_8 as base
 
 ENV NVARCH x86_64
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.3 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"

@@ -4,8 +4,8 @@ channels:
 dependencies:
   - python==3.8.8
   - pip==19.3.1
-  - cudatoolkit=10.* # Required for enabling GPU allocation.
-  - cudnn=7.* # Required for GPU acceleration.
+  - cudatoolkit=11* # Required for enabling GPU allocation.
+  - cudnn=8* # Required for GPU acceleration.
   - cloudpickle
   - fabric
   - future
@@ -30,7 +30,7 @@ dependencies:
   - scikit-learn
   - SQLAlchemy
   - tensorboard
-  - tensorflow-gpu=2.6.2=cuda10* # TF Version associated with cudatoolkit and cudnn versions.
+  - tensorflow-gpu=2.6.2=cuda11* # TF Version associated with cudatoolkit and cudnn versions.
   - termcolor
   - threadpoolctl
   - urllib3

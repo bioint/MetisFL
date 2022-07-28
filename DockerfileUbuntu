@@ -49,8 +49,7 @@ RUN apt-get clean
 WORKDIR /projectmetis-rc
 COPY . .
 
-# Build all bazel targets.
-#RUN bazel query //... | xargs bazel build
+# Build bazel targets.
 RUN bazel build //projectmetis/python/driver:initialize_controller
 RUN bazel build //projectmetis/python/driver:initialize_learner
 

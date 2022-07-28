@@ -1,6 +1,7 @@
 import errno
 import os
 import platform
+import shutil
 import subprocess
 
 
@@ -54,11 +55,14 @@ def setup_python():
     #  user specific. Conda downloads the python interpreter.
 
     if not is_nvidia_installed() or is_macos() or is_windows() or is_cygwin():
-        target = os.path.join(os.getcwd(), "python/py38_condaenv.yaml")
+        src = os.path.join(os.getcwd(), "python/py38_condaenv.yaml")
     else:
-        target = os.path.join(os.getcwd(), "python/py38_condaenvcuda.yaml")
-    link_name = os.path.join(os.getcwd(), "python/conda_env.yaml")
-    symlink_force(target, link_name)
+        src = os.path.join(os.getcwd(), "python/py38_condaenvcuda.yaml")
+    dst = os.path.join(os.getcwd(), "python/conda_env.yaml")
+    # We do not create a symlink, because when copying the files inside the image,
+    # the content of symlinked files are not transferred. Hence, the hard copy.
+    # symlink_force(source, target)
+    shutil.copy(src, dst)
 
 
 def main():
