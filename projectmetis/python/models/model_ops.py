@@ -21,6 +21,8 @@ class ModelOps(object):
             is_ciphertext = False
             if var.HasField('int_tensor'):
                 var_tensor = var.int_tensor
+            if var.HasField('float_tensor'):
+                var_tensor = var.float_tensor
             if var.HasField('double_tensor'):
                 var_tensor = var.double_tensor
             # TODO Adding ciphertext_tensor support.

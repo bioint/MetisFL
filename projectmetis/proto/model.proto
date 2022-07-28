@@ -36,6 +36,15 @@ message DoubleTensor {
   repeated double values = 2;
 }
 
+// Tensor storing double values.
+message FloatTensor {
+  // Tensor metadata.
+  TensorSpec spec = 1;
+
+  // Flattened representation of the array.
+  repeated float values = 2;
+}
+
 // Tensor storing integer values.
 message IntTensor {
   // Tensor metadata.
@@ -70,8 +79,9 @@ message Model {
     // The tensor holding the values of this variable.
     oneof tensor {
       IntTensor int_tensor = 3;
-      DoubleTensor double_tensor = 4;
-      CiphertextTensor ciphertext_tensor = 5;
+      FloatTensor float_tensor = 4;
+      DoubleTensor double_tensor = 5;
+      CiphertextTensor ciphertext_tensor = 6;
     }
   }
 

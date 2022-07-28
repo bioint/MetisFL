@@ -72,6 +72,12 @@ FederatedAverage::Aggregate(
       for (int j = 0; j < sample_variable.int_tensor().values_size(); ++j) {
         variable->mutable_int_tensor()->add_values(0);
       }
+    } else if (sample_variable.has_float_tensor()) {
+      *variable->mutable_float_tensor()->mutable_spec() =
+          sample_variable.float_tensor().spec();
+      for (int j = 0; j < sample_variable.float_tensor().values_size(); ++j) {
+        variable->mutable_float_tensor()->add_values(0.0f);
+      }
     } else if (sample_variable.has_double_tensor()) {
       *variable->mutable_double_tensor()->mutable_spec() =
           sample_variable.double_tensor().spec();
@@ -79,6 +85,7 @@ FederatedAverage::Aggregate(
         variable->mutable_double_tensor()->add_values(0.0);
       }
     } else {
+      // TODO(canast02) Need to catch the error or exit entirely.
       throw std::runtime_error("unsupported variable type");
     }
   }
@@ -101,6 +108,10 @@ FederatedAverage::Aggregate(
         AddScaledValues(variable.int_tensor(),
                         contrib_value,
                         community_variable->mutable_int_tensor());
+      } else if (variable.has_float_tensor()) {
+        AddScaledValues(variable.float_tensor(),
+                        contrib_value,
+                        community_variable->mutable_float_tensor());
       } else if (variable.has_double_tensor()) {
         AddScaledValues(variable.double_tensor(),
                         contrib_value,

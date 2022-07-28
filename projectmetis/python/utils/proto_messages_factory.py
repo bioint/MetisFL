@@ -260,8 +260,9 @@ class ModelProtoMessages(object):
                 tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.LONG)
                 tensor_pb = model_pb2.IntTensor(spec=tensor_spec, values=values)
             elif "float32" in dtype:
+                # The default dtype for Tensorflow and PyTorch weights is float32.
                 tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.FLOAT)
-                tensor_pb = model_pb2.DoubleTensor(spec=tensor_spec, values=values)
+                tensor_pb = model_pb2.FloatTensor(spec=tensor_spec, values=values)
             elif "float" in dtype:
                 # The default dtype for numpy arrays is float64, also represented as float.
                 tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.DOUBLE)
@@ -276,6 +277,8 @@ class ModelProtoMessages(object):
         assert isinstance(name, str) and isinstance(trainable, bool)
         if isinstance(tensor_pb, model_pb2.IntTensor):
             return model_pb2.Model.Variable(name=name, trainable=trainable, int_tensor=tensor_pb)
+        elif isinstance(tensor_pb, model_pb2.FloatTensor):
+            return model_pb2.Model.Variable(name=name, trainable=trainable, float_tensor=tensor_pb)
         elif isinstance(tensor_pb, model_pb2.DoubleTensor):
             return model_pb2.Model.Variable(name=name, trainable=trainable, double_tensor=tensor_pb)
         elif isinstance(tensor_pb, model_pb2.CiphertextTensor):
