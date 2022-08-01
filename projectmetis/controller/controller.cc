@@ -193,6 +193,9 @@ public:
     }
 
     // Updates the learner's state.
+    // TODO (dstripelis) Clear local models collection to avoid controller crashes.
+    //  in future releases we might need to keep many more models in-memory.
+    learners_[learner_id].mutable_model()->Clear();
     *learners_[learner_id].mutable_model()->Add() = task.model();
 
     // Update learner collection with metrics from last completed training task.
