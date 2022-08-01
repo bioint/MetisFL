@@ -56,7 +56,8 @@ public:
         learner_stubs_(), learner_task_templates_(), learners_mutex_(),
         scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
         scheduler_(std::move(scheduler)), selector_(std::move(selector)),
-        community_model_(), community_mutex_(), pool_(2) {}
+        community_model_(), community_mutex_(), task_pool_(2),
+        scheduler_pool_(1) {}
 
   const ControllerParams &GetParams() const override { return params_; }
 
@@ -208,9 +209,8 @@ public:
     // the learner who completed its task the last within a round will have to
     // keep a connection open with the controller, till the controller schedules
     // all necessary training tasks for the next federation round.
-//    pool_.push_task(
-//        [this, learner_id, task] { ScheduleTasks(learner_id, task); });
-    ScheduleTasks(learner_id, task);
+    scheduler_pool_.push_task(
+        [this, learner_id, task] { ScheduleTasks(learner_id, task); });
 
     return absl::OkStatus();
   }
@@ -373,7 +373,7 @@ private:
       }
       // Wait for all evaluation tasks to complete
       // before starting a new global iteration.
-      pool_.wait_for_tasks();
+      task_pool_.wait_for_tasks();
 
       // Increase global iteration counter to reflect the new scheduling round.
       ++global_iteration_;
@@ -450,7 +450,7 @@ private:
     auto &params = params_;
 
     auto &model_evaluations_map = community_evaluations_.back();
-    pool_.push_task([model, learner_stub, learner_id, &params,
+    task_pool_.push_task([model, learner_stub, learner_id, &params,
                      &model_evaluations_map] {
       EvaluateModelRequest request;
       *request.mutable_model() = model.model();
@@ -484,7 +484,7 @@ private:
     const auto &task_template = learner_task_templates_[learner_id];
     const auto &dataset_spec = learner.dataset_spec();
 
-    pool_.push_task([learner_stub, task_template, dataset_spec, model,
+    task_pool_.push_task([learner_stub, task_template, dataset_spec, model,
                      global_iteration, &params] {
       RunTaskRequest request;
       *request.mutable_federated_model() = model;
@@ -574,8 +574,10 @@ private:
   // Community model.
   FederatedModel community_model_;
   std::mutex community_mutex_;
+  // Thread pool for async scheduling.
+  thread_pool scheduler_pool_;
   // Thread pool for async tasks.
-  thread_pool pool_;
+  thread_pool task_pool_;
 };
 
 std::unique_ptr<AggregationFunction>
