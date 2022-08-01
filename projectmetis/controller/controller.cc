@@ -26,7 +26,9 @@
 #include <utility>
 
 #include <google/protobuf/util/time_util.h>
+#include <grpcpp/impl/codegen/async_unary_call.h>
 #include <grpcpp/client_context.h>
+#include <grpcpp/completion_queue.h>
 #include <grpcpp/create_channel.h>
 
 #include "absl/memory/memory.h"
@@ -36,7 +38,7 @@
 #include "projectmetis/controller/model_selection/model_selection.h"
 #include "projectmetis/controller/scheduling/scheduling.h"
 #include "projectmetis/core/macros.h"
-#include "projectmetis/core/thread_pool.h"
+#include "projectmetis/core/bs_thread_pool.h"
 #include "projectmetis/proto/learner.grpc.pb.h"
 #include "projectmetis/proto/metis.pb.h"
 
@@ -56,8 +58,7 @@ public:
         learner_stubs_(), learner_task_templates_(), learners_mutex_(),
         scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
         scheduler_(std::move(scheduler)), selector_(std::move(selector)),
-        community_model_(), community_mutex_(), task_pool_(2),
-        scheduler_pool_(1) {}
+        community_model_(), community_mutex_(), pool_(2) {}
 
   const ControllerParams &GetParams() const override { return params_; }
 
@@ -212,7 +213,7 @@ public:
     // the learner who completed its task the last within a round will have to
     // keep a connection open with the controller, till the controller schedules
     // all necessary training tasks for the next federation round.
-    scheduler_pool_.push_task(
+    pool_.push_task(
         [this, learner_id, task] { ScheduleTasks(learner_id, task); });
 
     return absl::OkStatus();
@@ -367,16 +368,16 @@ private:
       community_eval.set_global_iteration(task_global_iteration);
       community_evaluations_.emplace_back(community_eval);
 
-      // Firstly, evaluate the community model across all scheduled learners.
-      for (const auto &to_schedule_id : to_schedule) {
-        // Send community model evaluation tasks to every learner. Each learner
-        // holds a different training, validation and test dataset and hence
-        // we need to evaluate the community model over each individual dataset.
-        SendEvaluationTask(to_schedule_id, community_model);
-      }
-      // Wait for all evaluation tasks to complete
-      // before starting a new global iteration.
-      task_pool_.wait_for_tasks();
+      // Evaluate the community model across all scheduled learners.
+      // Send community model evaluation tasks to all scheduled learners.
+      // Each learner holds a different training, validation and test dataset
+      // and hence we need to evaluate the community model over each dataset.
+      // The following function uses a single thread to asynchronously submit the
+      // evaluation task to every scheduled learner and uses a completion queue
+      // to digest the learners' evaluation responses. This is a blocking call
+      // since we need all scheduled learners to return evaluation replies before
+      // we proceed to the next federated iteration.
+      SendEvaluationTasksAsyncBlock(to_schedule, community_model);
 
       // Increase global iteration counter to reflect the new scheduling round.
       ++global_iteration_;
@@ -447,14 +448,75 @@ private:
     }
   }
 
-  void SendEvaluationTask(const std::string &learner_id,
-                          const FederatedModel &model) {
+  void SendEvaluationTasksAsyncBlock(std::vector<std::string> &learners,
+                                     const FederatedModel &model) {
+
+    // The implementation using asynchronous response readers is
+    // based on the official grpc example:
+    // https://github.com/grpc/grpc/blob/v1.46.3/examples/cpp/helloworld/greeter_async_client2.cc
+    // A single thread performs a non-blocking submission of one evaluation task
+    // per learner and reads from the completion queue.
+    grpc::CompletionQueue cq_;
+    for (const auto &learner_id : learners) {
+      // Send the community model evaluation tasks to every learner. Each learner
+      // holds a different training, validation and test dataset and hence
+      // we need to evaluate the community model over each individual dataset.
+      SendEvaluationTaskAsync(learner_id, model, cq_);
+    }
+
+    void* got_tag;
+    bool ok = false;
+    auto &model_evaluations_map = community_evaluations_.back();
+
+    // Sentinel variable for checking if all evaluation requests have been processed.
+    uint received_evaluations = 0;
+    // Block until the next result is available in the completion queue "cq".
+    while (cq_.Next(&got_tag, &ok)) {
+      // The tag in this example is the memory location of the call object
+      AsyncLearnerCall<EvaluateModelResponse>* call =
+          static_cast<AsyncLearnerCall<EvaluateModelResponse>*>(got_tag);
+
+      // Verify that the request was completed successfully. Note that "ok"
+      // corresponds solely to the request for updates introduced by Finish().
+      GPR_ASSERT(ok);
+
+      if (call) {
+        received_evaluations += 1;
+        if (call->status.ok()) {
+          ModelEvaluations model_evaluations;
+          *model_evaluations.mutable_training_evaluation() =
+              call->reply.evaluations().training_evaluation();
+          *model_evaluations.mutable_validation_evaluation() =
+              call->reply.evaluations().validation_evaluation();
+          *model_evaluations.mutable_test_evaluation() =
+              call->reply.evaluations().test_evaluation();
+          (*model_evaluations_map.mutable_evaluations())[call->learner_id] =
+              model_evaluations;
+        } else {
+          std::cout << "RPC failed. Failed Learner: " << call->learner_id << std::endl;
+        }
+      }
+
+      // Once we're complete, deallocate the call object.
+      delete call;
+
+      // Exit from loop if received all responses from learners;
+      if (received_evaluations == learners.size()) break;
+
+    } // end of loop
+
+    // Terminate queue.
+    cq_.Shutdown();
+
+  }
+
+  void SendEvaluationTaskAsync(const std::string &learner_id,
+                               const FederatedModel &model,
+                               grpc::CompletionQueue &cq_) {
+
     auto *learner_stub = learner_stubs_[learner_id].get();
     auto &params = params_;
-
-    auto &model_evaluations_map = community_evaluations_.back();
-    task_pool_.push_task([model, learner_stub, learner_id, &params,
-                     &model_evaluations_map] {
+    pool_.push_task([model, learner_stub, learner_id, &params, &cq_] {
       EvaluateModelRequest request;
       *request.mutable_model() = model.model();
       request.set_batch_size(params.model_hyperparams().batch_size());
@@ -462,21 +524,28 @@ private:
       request.add_evaluation_dataset(EvaluateModelRequest::VALIDATION);
       request.add_evaluation_dataset(EvaluateModelRequest::TEST);
 
-      ::grpc::ClientContext context;
-      EvaluateModelResponse response;
-      auto status = learner_stub->EvaluateModel(&context, request, &response);
-      if (status.ok()) {
-        ModelEvaluations model_evaluations;
-        *model_evaluations.mutable_training_evaluation() =
-            response.evaluations().training_evaluation();
-        *model_evaluations.mutable_validation_evaluation() =
-            response.evaluations().validation_evaluation();
-        *model_evaluations.mutable_test_evaluation() =
-            response.evaluations().test_evaluation();
-        (*model_evaluations_map.mutable_evaluations())[learner_id] =
-            model_evaluations;
-      }
+      // Call object to store rpc data
+      AsyncLearnerCall<EvaluateModelResponse>* call = new AsyncLearnerCall<EvaluateModelResponse>;
+      call->learner_id = learner_id;
+
+      // stub_->PrepareAsyncSayHello() creates an RPC object, returning
+      // an instance to store in "call" but does not actually start the RPC
+      // Because we are using the asynchronous API, we need to hold on to
+      // the "call" instance in order to get updates on the ongoing RPC.
+      call->response_reader =
+          learner_stub->AsyncEvaluateModel(&call->context, request, &cq_);
+
+      // StartCall initiates the RPC call
+      call->response_reader->StartCall();
+
+      // Request that, upon completion of the RPC, "reply" be updated with the
+      // server's response; "status" with the indication of whether the operation
+      // was successful. Tag the request with the memory address of the call
+      // object.
+      call->response_reader->Finish(&call->reply, &call->status, (void*)call);
+
     });
+
   }
 
   void SendRunTask(const std::string &learner_id, const FederatedModel &model) {
@@ -487,7 +556,7 @@ private:
     const auto &task_template = learner_task_templates_[learner_id];
     const auto &dataset_spec = learner.dataset_spec();
 
-    task_pool_.push_task([learner_stub, task_template, dataset_spec, model,
+    pool_.push_task([learner_stub, task_template, dataset_spec, model,
                      global_iteration, &params] {
       RunTaskRequest request;
       *request.mutable_federated_model() = model;
@@ -549,10 +618,10 @@ private:
   uint32_t global_iteration_;
   // We store a collection of federated training metadata as training
   // progresses related to the federation runtime environment. All
-  // insertions take place at the end of the structure and we want to
+  // insertions take place at the end of the structure, and we want to
   // randomly access positions in the structure. Hence, the vector container.
   std::vector<FederatedTaskRuntimeMetadata> metadata_;
-  // Stores active learners execution state inside a lookup map.
+  // Stores active learners' execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
   absl::flat_hash_map<std::string, LearnerStub> learner_stubs_;
   absl::flat_hash_map<std::string, LearningTaskTemplate>
@@ -577,10 +646,28 @@ private:
   // Community model.
   FederatedModel community_model_;
   std::mutex community_mutex_;
-  // Thread pool for async scheduling.
-  thread_pool scheduler_pool_;
   // Thread pool for async tasks.
-  thread_pool task_pool_;
+  BS::thread_pool pool_;
+
+  // Templated struct for keeping state and data information.
+  template <typename T>
+  struct AsyncLearnerCall {
+
+    std::string learner_id;
+
+    // Container for the data we expect from the server.
+    T reply;
+
+    // Context for the client. It could be used to convey extra information to
+    // the server and/or tweak certain RPC behaviors.
+    grpc::ClientContext context;
+
+    // Storage for the status of the RPC upon completion.
+    grpc::Status status;
+
+    std::unique_ptr<grpc::ClientAsyncResponseReader<T>> response_reader;
+  };
+
 };
 
 std::unique_ptr<AggregationFunction>

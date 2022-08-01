@@ -32,7 +32,7 @@
 #include "projectmetis/controller/controller_servicer.h"
 #include "projectmetis/proto/controller.grpc.pb.h"
 #include "projectmetis/proto/metis.pb.h"
-#include "projectmetis/core/thread_pool.h"
+#include "projectmetis/core/bs_thread_pool.h"
 
 namespace projectmetis::controller {
 namespace {
@@ -402,7 +402,7 @@ public:
 
 private:
   // Thread pool for async tasks.
-  thread_pool pool_;
+  BS::thread_pool pool_;
   Controller *controller_;
 };
 } // namespace
