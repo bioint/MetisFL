@@ -1,7 +1,7 @@
 FederationEnvironment:
   DockerImage: null # null indicates to run Metis without docker, if it is provided then run using the specified image
   TerminationSignals:
-    FederationRounds: 10 # only in synchronous execution
+    FederationRounds: 100 # only in synchronous execution
     ExecutionCutoffTimeMins: null
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
@@ -16,7 +16,7 @@ FederationEnvironment:
     ParticipationRatio: 1
   LocalModelConfig:
     BatchSize: 100
-    LocalEpochs: 5
+    LocalEpochs: 4
     ValidationPercentage: 0.0
     OptimizerConfig:
       OptimizerName: "VanillaSGD"

@@ -202,9 +202,9 @@ if __name__ == "__main__":
     #     "/private/var/tmp/_bazel_Dstrip/6e1f0333b1e46ed6aeb019f1648d0665/execroot/projectmetis/bazel-out/darwin-fastbuild/bin/experiments/keras/fashionmnist.runfiles/projectmetis/experiments/keras/experiment.json",
     #     metric="accuracy")
     # files = glob.glob("/Users/Dstrip/CLionProjects/projectmetis-rc/experiments/execution_logs/brainage/federated/3dmodel/*3D*")
-    files = glob.glob("/Users/Dstrip/Downloads/experiment.json")
-    fig = plot_rounds_convergence(files, metric="mae")
-    pdf_out = "/Users/Dstrip/CLionProjects/projectmetis-rc/experiments/analysis/{}.pdf".format('Policies Convergence')
+    files = glob.glob("/projectmetis-rc/experiments/analysis/fashionmnist_*.json")
+    fig = plot_rounds_convergence(files, metric="accuracy")
+    pdf_out = "{}.pdf".format('Policies Convergence')
     pdfpages1 = PdfPages(pdf_out)
     pdfpages1.savefig(figure=fig, bbox_inches='tight')
     pdfpages1.close()

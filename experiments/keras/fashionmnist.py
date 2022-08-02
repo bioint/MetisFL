@@ -49,7 +49,7 @@ if __name__ == "__main__":
         num_learners = len(federation_environment.learners.learners)
         if args.generate_iid_partitions:
             x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners).iid_partition()
-        elif args.generate_noniid_partitions:
+        if args.generate_noniid_partitions:
             num_learners = len(federation_environment.learners.learners)
             x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners)\
                 .non_iid_partition(classes_per_partition=2)
