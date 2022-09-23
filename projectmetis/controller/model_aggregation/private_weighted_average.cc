@@ -32,6 +32,8 @@ PWA::Aggregate(
       learners_Data.emplace_back(
           model->variables(i).ciphertext_tensor().values());
     }
+    // ComputeWeightedAverage assumes that each learner's contribution value,
+    // scaling factor is already normalized / scaled.
     std::string pwa_result =
         fhe_helper_.computeWeightedAverage(learners_Data, scalingFactors);
     *variable->mutable_ciphertext_tensor()->mutable_values() = pwa_result;

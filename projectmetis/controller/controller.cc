@@ -577,6 +577,9 @@ private:
     for (const auto &id : learners_ids) {
       participating_states[id] = learners_.at(id);
     }
+    // Before performing any aggregation, we need first to compute the
+    // normalized scaling factor or contribution value of each model in
+    // the community/global/aggregated model.
     auto scaling_factors =
         scaler_->ComputeScalingFactors(community_model_, participating_states);
     std::vector<std::pair<const Model *, double>> participating_models;

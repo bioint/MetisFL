@@ -30,13 +30,16 @@ void AddScaledValues(const Tensor &tensor,
 
 }
 
+/*
+ * To aggregate models passed through the pairs list using Federated Average,
+ * we assume that the second value (the contribution value or model scaling factor)
+ * of each pair item in the pairs list is already scaled / normalized.
+ * @pairs Represents the container of <Model Proto, Model Contribution Value(scaled)>
+ * holding the local models over which we want to compute the aggregated model.
+ */
 FederatedModel
 FederatedAverage::Aggregate(
     std::vector<std::pair<const Model*, double>>& pairs) {
-  double z = 0;
-  for (const auto &pair : pairs) {
-    z += pair.second;
-  }
 
   // Initializes the community model.
   FederatedModel community_model;
@@ -75,11 +78,10 @@ FederatedAverage::Aggregate(
   // Aggregates the input models.
   for (const auto &pair : pairs) {
     const auto* model = pair.first;
-    const double scale = pair.second;
+    const double contrib_value = pair.second;
     for (int i = 0; i < model->variables_size(); ++i) {
       const auto& variable = model->variables(i);
 
-      auto contrib_value = scale / z;
       auto community_variable =
           community_model.mutable_model()->mutable_variables(i);
 
