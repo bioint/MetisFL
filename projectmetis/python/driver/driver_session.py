@@ -165,9 +165,8 @@ class DriverSessionBase(object):
         self._collect_local_statistics()
         # Send shutdown signal to all learners in a Round-Robin fashion.
         for learner_id, grpc_client in self._driver_learner_grpc_clients.items():
-            # We give a bit more time in between requests since some of the learners
-            # may be processing pending tasks and may need to wrap up their ongoing workload.
-            grpc_client.shutdown_learner(request_retries=2, request_timeout=30, block=False)
+            # We send a single non-blocking shutdown request to every learner with a 30secs time-to-live.
+            grpc_client.shutdown_learner(request_retries=1, request_timeout=30, block=False)
         # Blocking-call, wait for learners shutdown acknowledgment.
         for learner_id, grpc_client in self._driver_learner_grpc_clients.items():
             grpc_client.shutdown()
@@ -257,7 +256,7 @@ class DriverSessionBase(object):
                 # First condition is to check if we reached the desired
                 # number of federation rounds for synchronous execution.
                 if communication_protocol.is_synchronous or communication_protocol.is_semi_synchronous:
-                    if len(metadata_pb) > 0:
+                    if federation_rounds_cutoff and len(metadata_pb) > 0:
                         current_global_iteration = max([m.global_iteration for m in metadata_pb])
                         if current_global_iteration > federation_rounds_cutoff:
                             MetisLogger.info("Exceeded federation rounds cutoff point. Exiting ...")

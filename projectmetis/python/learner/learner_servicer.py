@@ -108,6 +108,8 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.__not_serving_event.set()
         # Second, trigger a shutdown signal to learner's underlying execution engine
         # to release all resources and reply any pending tasks to the controller.
+        # When shutdown is triggered we do not wait for any pending tasks.
+        # We forcefully shutdown all running tasks.
         self.learner.shutdown(graceful=False)
         # Third, remove the learner from the federation.
         self.learner.leave_federation()

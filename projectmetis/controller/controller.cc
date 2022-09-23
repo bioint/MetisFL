@@ -1,8 +1,8 @@
-
 #include "projectmetis/controller/controller.h"
 
 #include <mutex>
 #include <utility>
+#include <thread>
 
 #include <google/protobuf/util/time_util.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
@@ -27,27 +27,51 @@ namespace {
 using google::protobuf::util::TimeUtil;
 
 class ControllerDefaultImpl : public Controller {
-public:
+ public:
   ControllerDefaultImpl(ControllerParams &&params,
                         std::unique_ptr<ScalingFunction> scaler,
                         std::unique_ptr<AggregationFunction> aggregator,
                         std::unique_ptr<Scheduler> scheduler,
                         std::unique_ptr<Selector> selector)
       : params_(std::move(params)), global_iteration_(0), learners_(),
-        learner_stubs_(), learner_task_templates_(), learners_mutex_(),
+        learners_stub_(), learners_task_template_(), learners_mutex_(),
         scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
         scheduler_(std::move(scheduler)), selector_(std::move(selector)),
-        community_model_(), community_mutex_(), pool_(2) {}
+        community_model_(), community_mutex_(), scheduling_pool_(2) {
+
+    // We perform the following detachment because we want to have only
+    // one thread and one completion queue to handle asynchronous request
+    // submission and digestion. In the previous implementation, we were
+    // always spawning a new thread for every run task request and a new
+    // thread for every evaluate model request. With the refactoring,
+    // there is only one thread to handle all SendRunTask requests
+    // submission, one thread to handle all EvaluateModel requests
+    // submission and one thread to digest SendRunTask responses
+    // and one thread to digest EvaluateModel responses.
+
+    // One thread to handle learners' responses to RunTasks requests.
+    std::thread run_tasks_digest_t_(
+        &ControllerDefaultImpl::DigestRunTasksResponses, this);
+    run_tasks_digest_t_.detach();
+
+    // One thread to handle learners' responses to EvaluateModel requests.
+    std::thread eval_tasks_digest_t_(
+        &ControllerDefaultImpl::DigestEvaluationTasksResponses, this);
+    eval_tasks_digest_t_.detach();
+
+  }
 
   const ControllerParams &GetParams() const override { return params_; }
 
   std::vector<LearnerDescriptor> GetLearners() const override {
+
     // TODO Shall we 'hide' authentication token from exposure?
     std::vector<LearnerDescriptor> learners;
     for (const auto &[key, learner_state] : learners_) {
       learners.push_back(learner_state.learner());
     }
     return learners;
+
   }
 
   uint32_t GetNumLearners() const override { return learners_.size(); }
@@ -57,7 +81,9 @@ public:
   }
 
   // TODO: add admin auth token support
-  absl::Status ReplaceCommunityModel(const FederatedModel &model) override {
+  absl::Status
+  ReplaceCommunityModel(const FederatedModel &model) override {
+
     std::lock_guard<std::mutex> guard(community_mutex_);
     // When replacing the federation model we only set the number of learners
     // contributed to this model and the actual model. We do not replace the
@@ -65,11 +91,13 @@ public:
     community_model_.set_num_contributors(model.num_contributors());
     *community_model_.mutable_model() = model.model();
     return absl::OkStatus();
+
   }
 
   absl::StatusOr<LearnerDescriptor>
   AddLearner(const ServerEntity &server_entity,
              const DatasetSpec &dataset_spec) override {
+
     // Validates non-empty hostname and non-negative port.
     if (server_entity.hostname().empty() || server_entity.port() < 0) {
       return absl::InvalidArgumentError("Hostname and port must be provided.");
@@ -104,7 +132,7 @@ public:
     LearnerDescriptor learner;
     learner.set_id(learner_id);
     learner.set_auth_token(auth_token);
-    *learner.mutable_service_spec() = server_entity;
+    *learner.mutable_server_entity() = server_entity;
     *learner.mutable_dataset_spec() = dataset_spec;
 
     LearnerState learner_state;
@@ -113,29 +141,29 @@ public:
     // Creates default task template.
     LearningTaskTemplate task_template;
     uint32_t steps_per_epoch = dataset_spec.num_training_examples() /
-                               params_.model_hyperparams().batch_size();
+        params_.model_hyperparams().batch_size();
     task_template.set_num_local_updates(params_.model_hyperparams().epochs() *
-                                        steps_per_epoch);
+        steps_per_epoch);
 
     // Registers learner.
     learners_[learner_id] = learner_state;
-    learner_task_templates_[learner_id] = task_template;
+    learners_task_template_[learner_id] = task_template;
 
-    // Opens gRPC channel with learner.
-    auto target =
-        absl::StrCat(server_entity.hostname(), ":", server_entity.port());
-    auto channel =
-        ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
-    learner_stubs_[learner_id] = LearnerService::NewStub(channel);
+    // Opens gRPC connection with the learner.
+    learners_stub_[learner_id] = CreateLearnerStub(learner_id);
 
     // Triggers the initial task.
-    ScheduleInitialTask(learner_id);
+    scheduling_pool_.push_task(
+        [this, learner_id] { ScheduleInitialTask(learner_id); });
 
     return learner;
+
   }
 
-  absl::Status RemoveLearner(const std::string &learner_id,
-                             const std::string &token) override {
+  absl::Status
+  RemoveLearner(const std::string &learner_id,
+                const std::string &token) override {
+
     RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
     // Acquires a lock to avoid having multiple threads overwriting the learners
@@ -148,7 +176,8 @@ public:
     if (it != learners_.end()) {
       if (it->second.learner().auth_token() == token) {
         learners_.erase(it);
-        learner_task_templates_.erase(learner_id);
+        learners_stub_.erase(learner_id);
+        learners_task_template_.erase(learner_id);
         return absl::OkStatus();
       } else {
         return absl::UnauthenticatedError("Learner token is wrong.");
@@ -156,11 +185,13 @@ public:
     } else {
       return absl::NotFoundError("Learner is not part of the federation.");
     }
+
   }
 
   absl::Status
   LearnerCompletedTask(const std::string &learner_id, const std::string &token,
                        const CompletedLearningTask &task) override {
+
     RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
     // Assign a non-negative value to the metadata index.
@@ -192,14 +223,16 @@ public:
     // the learner who completed its task the last within a round will have to
     // keep a connection open with the controller, till the controller schedules
     // all necessary training tasks for the next federation round.
-    pool_.push_task(
+    scheduling_pool_.push_task(
         [this, learner_id, task] { ScheduleTasks(learner_id, task); });
 
     return absl::OkStatus();
+
   }
 
   std::vector<FederatedTaskRuntimeMetadata>
   GetRuntimeMetadataLineage(uint32_t num_steps) override {
+
     if (metadata_.empty()) {
       return {};
     }
@@ -218,10 +251,12 @@ public:
     }
 
     return lineage_head;
+
   }
 
   std::vector<CommunityModelEvaluation>
   GetEvaluationLineage(uint32_t num_steps) override {
+
     if (community_evaluations_.empty()) {
       return {};
     }
@@ -240,11 +275,13 @@ public:
     }
 
     return lineage_head;
+
   }
 
   std::vector<TaskExecutionMetadata>
   GetLocalTaskLineage(const std::string &learner_id,
                       uint32_t num_steps) override {
+
     if (!local_tasks_metadata_.contains(learner_id)) {
       return {};
     }
@@ -263,13 +300,37 @@ public:
     }
 
     return lineage_head;
+
   }
 
-private:
+  void Shutdown() override {
+
+    // Proper shutdown of the controller process.
+    // Send shutdown signal to the completion queues and
+    // gracefully close the scheduling pool.
+    run_tasks_cq_.Shutdown();
+    eval_tasks_cq_.Shutdown();
+    scheduling_pool_.wait_for_tasks();
+
+  }
+
+ private:
   typedef std::unique_ptr<LearnerService::Stub> LearnerStub;
+
+  LearnerStub CreateLearnerStub(const std::string &learner_id) {
+
+    auto server_entity = learners_[learner_id].learner().server_entity();
+    auto target =
+        absl::StrCat(server_entity.hostname(), ":", server_entity.port());
+    auto channel =
+        ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
+    return LearnerService::NewStub(channel);
+
+  }
 
   absl::Status ValidateLearner(const std::string &learner_id,
                                const std::string &token) const {
+
     // Validates non-empty learner_id and authentication token.
     if (learner_id.empty() || token.empty()) {
       return absl::InvalidArgumentError("Learner id and token cannot be empty");
@@ -283,9 +344,11 @@ private:
     }
 
     return absl::OkStatus();
+
   }
 
   void ScheduleInitialTask(const std::string &learner_id) {
+
     if (!community_model_.IsInitialized()) {
       return;
     }
@@ -296,7 +359,8 @@ private:
       // federation runtime metadata object.
       FederatedTaskRuntimeMetadata meta = FederatedTaskRuntimeMetadata();
       ++global_iteration_;
-      std::cout << "FedIteration: " << unsigned(global_iteration_) << std::endl;
+      std::cout << "FedIteration: " << unsigned(global_iteration_)
+                << "\n" << std::flush;
       meta.set_global_iteration(global_iteration_);
       *meta.mutable_started_at() = TimeUtil::GetCurrentTime();
       metadata_.emplace_back(meta);
@@ -307,11 +371,14 @@ private:
     auto &community_model = community_model_;
 
     // Send initial training.
-    SendRunTask(learner_id, community_model);
+    std::vector<std::string> learner_to_list_ = {learner_id};
+    SendRunTasks(learner_to_list_, community_model);
+
   }
 
   void ScheduleTasks(const std::string &learner_id,
                      const CompletedLearningTask &task) {
+
     // Acquires a lock to avoid having multiple threads overwriting the learners
     // data structures. The guard releases the mutex as soon as it goes out of
     // scope so no need to manually release it in the code.
@@ -341,26 +408,27 @@ private:
       community_model_ = community_model;
 
       // Creates an evaluation hash map container for the new community model.
-      CommunityModelEvaluation community_eval = CommunityModelEvaluation();
+      CommunityModelEvaluation community_eval;
       // Records the evaluation of the community model that was
       // computed at the previously completed global iteration.
       community_eval.set_global_iteration(task_global_iteration);
-      community_evaluations_.emplace_back(community_eval);
+      community_evaluations_.push_back(community_eval);
 
-      // Evaluate the community model across all scheduled learners.
-      // Send community model evaluation tasks to all scheduled learners.
-      // Each learner holds a different training, validation and test dataset
+      // Evaluate the community model across all scheduled learners. Send
+      // community model evaluation tasks to all scheduled learners. Each
+      // learner holds a different training, validation and test dataset
       // and hence we need to evaluate the community model over each dataset.
-      // The following function uses a single thread to asynchronously submit the
-      // evaluation task to every scheduled learner and uses a completion queue
-      // to digest the learners' evaluation responses. This is a blocking call
-      // since we need all scheduled learners to return evaluation replies before
-      // we proceed to the next federated iteration.
-      SendEvaluationTasksAsyncBlock(to_schedule, community_model);
+      // All evaluation tasks are submitted asynchronously, therefore, to
+      // make sure that all metrics are properly collected when an EvaluateModel
+      // response is received, we pass the index of the `community_evaluations_`
+      // vector of the position to which the current community model refers to.
+      SendEvaluationTasks(to_schedule, community_model,
+                          community_evaluations_.size()-1);
 
       // Increase global iteration counter to reflect the new scheduling round.
       ++global_iteration_;
-      std::cout << "FedIteration: " << unsigned(global_iteration_) << std::endl;
+      std::cout << "FedIteration: " << unsigned(global_iteration_)
+                << "\n" << std::flush;
 
       // Creates a new federation runtime metadata
       // object for the new scheduling round.
@@ -377,14 +445,14 @@ private:
       UpdateLearnersTaskTemplates(to_schedule);
 
       // Send training task to all scheduled learners.
-      for (const auto &to_schedule_id : to_schedule) {
-        // Send the new training task and add it to the pool.
-        SendRunTask(to_schedule_id, community_model);
-      }
+      SendRunTasks(to_schedule, community_model);
+
     }
+
   }
 
   void UpdateLearnersTaskTemplates(std::vector<std::string> &learners) {
+
     // If we are running in a semi-synchronous setting, we need to update the
     // task templates based on the execution times of the previous global
     // iteration.
@@ -396,6 +464,7 @@ private:
         CommunicationSpecs::SEMI_SYNCHRONOUS &&
         (global_iteration_ == 2 ||
             protocol_specs.semi_sync_recompute_num_updates())) {
+
       // Finds the slowest learner.
       // float ms_per_batch_slowest = std::numeric_limits<float>::min();
       float ms_per_epoch_slowest = std::numeric_limits<float>::min();
@@ -421,46 +490,105 @@ private:
         int num_local_updates =
             std::ceil(t_max / metadata.processing_ms_per_batch());
 
-        auto &task_template = learner_task_templates_[learner_id];
+        auto &task_template = learners_task_template_[learner_id];
         task_template.set_num_local_updates(num_local_updates);
       }
+
+    } // end-if.
+
+  }
+
+  void SendEvaluationTasks(std::vector<std::string> &learners,
+                           const FederatedModel &model,
+                           const uint32_t &comm_eval_ref_idx) {
+
+    // Our goal is to send the EvaluateModel request to each learner in parallel.
+    // We use a single thread to asynchronously send all evaluate model requests
+    // and add every submitted EvaluateModel request inside the `eval_tasks_q`
+    // completion queue. The implementation follows the (recommended) async grpc client:
+    // https://github.com/grpc/grpc/blob/master/examples/cpp/helloworld/greeter_async_client2.cc
+    auto& cq_ = eval_tasks_cq_;
+    for (const auto &learner_id: learners) {
+      SendEvaluationTaskAsync(learner_id, model, cq_, comm_eval_ref_idx);
     }
   }
 
-  void SendEvaluationTasksAsyncBlock(std::vector<std::string> &learners,
-                                     const FederatedModel &model) {
+  void SendEvaluationTaskAsync(const std::string &learner_id,
+                               const FederatedModel &model,
+                               grpc::CompletionQueue &cq_,
+                               const uint32_t &comm_eval_ref_idx) {
 
-    // The implementation using asynchronous response readers is
-    // based on the official grpc example:
-    // https://github.com/grpc/grpc/blob/v1.46.3/examples/cpp/helloworld/greeter_async_client2.cc
-    // A single thread performs a non-blocking submission of one evaluation task
-    // per learner and reads from the completion queue.
-    grpc::CompletionQueue cq_;
-    for (const auto &learner_id : learners) {
-      // Send the community model evaluation tasks to every learner. Each learner
-      // holds a different training, validation and test dataset and hence
-      // we need to evaluate the community model over each individual dataset.
-      SendEvaluationTaskAsync(learner_id, model, cq_);
-    }
+    // TODO (dstripelis,canastas) This needs to be reimplemented by using
+    //  a single channel/stub. We tried to implement this that way, but when
+    //  we run either of the two approaches either through the (reused) channel
+    //  or stub, the requests were delayed substantially and not received
+    //  immediately by the learners. For instance, under normal conditions
+    //  sending the tasks should take around 10-20secs but by reusing the
+    //  grpc Stub/Channel sending all requests would take around 100-120secs.
+    //  This behavior did not occur when testing with small model proto
+    //  messages, e.g., DenseNet FashionMNIST with 120k params but it is clearly
+    //  evident when working with very large model proto messages, e.g.,
+    //  CIFAR-10 with 1.6M params and encryption using FHE ~ 100MBs per model.
+    auto learner_stub = CreateLearnerStub(learner_id);
 
+    auto &params = params_;
+    EvaluateModelRequest request;
+    *request.mutable_model() = model.model();
+    request.set_batch_size(params.model_hyperparams().batch_size());
+    request.add_evaluation_dataset(EvaluateModelRequest::TRAINING);
+    request.add_evaluation_dataset(EvaluateModelRequest::VALIDATION);
+    request.add_evaluation_dataset(EvaluateModelRequest::TEST);
+
+    // Call object to store rpc data.
+    auto* call = new AsyncLearnerEvalCall;
+
+    // Set the learner id this call will be submitted to.
+    call->learner_id = learner_id;
+
+    // Set the index of the community model evaluation vector evaluation
+    // metrics and values will be stored when response is received.
+    call->comm_eval_ref_idx = comm_eval_ref_idx;
+
+    // stub->PrepareAsyncEvaluateModel() creates an RPC object, returning
+    // an instance to store in "call" but does not actually start the RPC
+    // Because we are using the asynchronous API, we need to hold on to
+    // the "call" instance in order to get updates on the ongoing RPC.
+    // Opens gRPC channel with learner.
+    call->response_reader = learner_stub->
+        PrepareAsyncEvaluateModel(&call->context, request, &cq_);
+
+    // Initiate the RPC call.
+    call->response_reader->StartCall();
+
+    // Request that, upon completion of the RPC, "reply" be updated with the
+    // server's response; "status" with the indication of whether the operation
+    // was successful. Tag the request with the memory address of the call object.
+    call->response_reader->Finish(&call->reply, &call->status, (void*)call);
+
+  }
+
+  void DigestEvaluationTasksResponses() {
+
+    // This function loops indefinitely over the `eval_task_q` completion queue.
+    // It stops when it receives a shutdown signal. Specifically, `cq._Next()`
+    // will not return false until `cq_.Shutdown()` is called and all pending
+    // tags have been digested.
     void* got_tag;
     bool ok = false;
-    auto &model_evaluations_map = community_evaluations_.back();
 
-    // Sentinel variable for checking if all evaluation requests have been processed.
-    uint received_evaluations = 0;
+    auto& cq_ = eval_tasks_cq_;
     // Block until the next result is available in the completion queue "cq".
     while (cq_.Next(&got_tag, &ok)) {
-      // The tag in this example is the memory location of the call object
-      AsyncLearnerCall<EvaluateModelResponse>* call =
-          static_cast<AsyncLearnerCall<EvaluateModelResponse>*>(got_tag);
+      // The tag is the memory location of the call object.
+      auto* call = static_cast<AsyncLearnerEvalCall*>(got_tag);
 
       // Verify that the request was completed successfully. Note that "ok"
       // corresponds solely to the request for updates introduced by Finish().
       GPR_ASSERT(ok);
 
       if (call) {
-        received_evaluations += 1;
+        // If either a failed or successful response is received
+        // then increase counter of sentinel variable counter.
         if (call->status.ok()) {
           ModelEvaluations model_evaluations;
           *model_evaluations.mutable_training_evaluation() =
@@ -469,98 +597,117 @@ private:
               call->reply.evaluations().validation_evaluation();
           *model_evaluations.mutable_test_evaluation() =
               call->reply.evaluations().test_evaluation();
-          (*model_evaluations_map.mutable_evaluations())[call->learner_id] =
-              model_evaluations;
+          (*community_evaluations_.at(call->comm_eval_ref_idx)
+          .mutable_evaluations())[call->learner_id] = model_evaluations;
         } else {
-          std::cout << "RPC failed. Failed Learner: " << call->learner_id << std::endl;
+          std::cout << "EvaluateModel RPC request to learner: " << call->learner_id
+                    << " failed with error: " << call->status.error_message()
+                    << "\n" << std::flush;
         }
       }
 
-      // Once we're complete, deallocate the call object.
       delete call;
-
-      // Exit from loop if received all responses from learners;
-      if (received_evaluations == learners.size()) break;
 
     } // end of loop
 
-    // Terminate queue.
-    cq_.Shutdown();
+  }
+
+  void SendRunTasks(std::vector<std::string> &learners,
+                    const FederatedModel &model) {
+
+    // Our goal is to send the RunTask request to each learner in parallel.
+    // We use a single thread to asynchronously send all run task requests
+    // and add every submitted RunTask request inside the `run_tasks_q`
+    // completion queue. The implementation follows the (recommended) async grpc client:
+    // https://github.com/grpc/grpc/blob/master/examples/cpp/helloworld/greeter_async_client2.cc
+    auto& cq_ = run_tasks_cq_;
+    for (const auto &learner_id : learners) {
+      SendRunTaskAsync(learner_id, model, cq_);
+    }
 
   }
 
-  void SendEvaluationTaskAsync(const std::string &learner_id,
-                               const FederatedModel &model,
-                               grpc::CompletionQueue &cq_) {
+  void SendRunTaskAsync(const std::string &learner_id,
+                        const FederatedModel &model,
+                        grpc::CompletionQueue &cq_) {
 
-    auto *learner_stub = learner_stubs_[learner_id].get();
-    auto &params = params_;
-    pool_.push_task([model, learner_stub, learner_id, &params, &cq_] {
-      EvaluateModelRequest request;
-      *request.mutable_model() = model.model();
-      request.set_batch_size(params.model_hyperparams().batch_size());
-      request.add_evaluation_dataset(EvaluateModelRequest::TRAINING);
-      request.add_evaluation_dataset(EvaluateModelRequest::VALIDATION);
-      request.add_evaluation_dataset(EvaluateModelRequest::TEST);
+    auto learner_stub = CreateLearnerStub(learner_id);
 
-      // Call object to store rpc data
-      AsyncLearnerCall<EvaluateModelResponse>* call = new AsyncLearnerCall<EvaluateModelResponse>;
-      call->learner_id = learner_id;
-
-      // stub_->PrepareAsyncSayHello() creates an RPC object, returning
-      // an instance to store in "call" but does not actually start the RPC
-      // Because we are using the asynchronous API, we need to hold on to
-      // the "call" instance in order to get updates on the ongoing RPC.
-      call->response_reader =
-          learner_stub->AsyncEvaluateModel(&call->context, request, &cq_);
-
-      // StartCall initiates the RPC call
-      call->response_reader->StartCall();
-
-      // Request that, upon completion of the RPC, "reply" be updated with the
-      // server's response; "status" with the indication of whether the operation
-      // was successful. Tag the request with the memory address of the call
-      // object.
-      call->response_reader->Finish(&call->reply, &call->status, (void*)call);
-
-    });
-
-  }
-
-  void SendRunTask(const std::string &learner_id, const FederatedModel &model) {
     auto &params = params_;
     auto global_iteration = global_iteration_;
-    const auto &learner = learners_[learner_id].learner();
-    auto *learner_stub = learner_stubs_[learner_id].get();
-    const auto &task_template = learner_task_templates_[learner_id];
-    const auto &dataset_spec = learner.dataset_spec();
+    const auto &task_template = learners_task_template_[learner_id];
 
-    pool_.push_task([learner_stub, task_template, dataset_spec, model,
-                     global_iteration, &params] {
-      RunTaskRequest request;
-      *request.mutable_federated_model() = model;
+    RunTaskRequest request;
+    *request.mutable_federated_model() = model;
+    auto *next_task = request.mutable_task();
+    next_task->set_global_iteration(global_iteration);
+    const auto &model_params = params.model_hyperparams();
+    next_task->set_num_local_updates(
+        task_template.num_local_updates()); // get from task template.
+    next_task->set_training_dataset_percentage_for_stratified_validation(
+        model_params.percent_validation());
+    // TODO (dstripelis) Add evaluation metrics for the learning task.
 
-      auto *next_task = request.mutable_task();
-      next_task->set_global_iteration(global_iteration);
-      const auto &model_params = params.model_hyperparams();
-      next_task->set_num_local_updates(
-          task_template.num_local_updates()); // get from task template.
-      next_task->set_training_dataset_percentage_for_stratified_validation(
-          model_params.percent_validation());
-      // TODO (dstripelis) Add evaluation metrics for the learning task.
+    auto *hyperparams = request.mutable_hyperparameters();
+    hyperparams->set_batch_size(model_params.batch_size());
+    *hyperparams->mutable_optimizer() =
+        params.model_hyperparams().optimizer();
 
-      auto *hyperparams = request.mutable_hyperparameters();
-      hyperparams->set_batch_size(model_params.batch_size());
-      *hyperparams->mutable_optimizer() =
-          params.model_hyperparams().optimizer();
+    // Call object to store rpc data.
+    auto* call = new AsyncLearnerRunTaskCall;
 
-      ::grpc::ClientContext context;
-      RunTaskResponse response;
+    call->learner_id = learner_id;
+    // stub->PrepareAsyncRunTask() creates an RPC object, returning
+    // an instance to store in "call" but does not actually start the RPC
+    // Because we are using the asynchronous API, we need to hold on to
+    // the "call" instance in order to get updates on the ongoing RPC.
+    // Opens gRPC channel with learner.
+    call->response_reader = learner_stub->
+        PrepareAsyncRunTask(&call->context, request, &cq_);
 
-      // TODO(aasghar) Need to implement logic, when the learner is behaving as
-      //  a server, and controller needs to connect.
-      learner_stub->RunTask(&context, request, &response);
-    });
+    // Initiate the RPC call.
+    call->response_reader->StartCall();
+
+    // Request that, upon completion of the RPC, "reply" be updated with the
+    // server's response; "status" with the indication of whether the operation
+    // was successful. Tag the request with the memory address of the call object.
+    call->response_reader->Finish(&call->reply, &call->status, (void*)call);
+
+  }
+
+  void DigestRunTasksResponses() {
+
+    // This function loops indefinitely over the `run_task_q` completion queue.
+    // It stops when it receives a shutdown signal. Specifically, `cq._Next()`
+    // will not return false until `cq_.Shutdown()` is called and all pending
+    // tags have been digested.
+    void* got_tag;
+    bool ok = false;
+
+    auto& cq_ = run_tasks_cq_;
+    // Block until the next result is available in the completion queue "cq".
+    while (cq_.Next(&got_tag, &ok)) {
+      // The tag is the memory location of the call object.
+      auto* call = static_cast<AsyncLearnerRunTaskCall*>(got_tag);
+
+      // Verify that the request was completed successfully. Note that "ok"
+      // corresponds solely to the request for updates introduced by Finish().
+      GPR_ASSERT(ok);
+
+      if (call) {
+        // If either a failed or successful response is received
+        // then increase counter of sentinel variable counter.
+        if (!call->status.ok()) {
+          std::cout << "RunTask RPC request to learner: " << call->learner_id
+                    << " failed with error: " << call->status.error_message()
+                    << "\n" << std::flush;
+        }
+      }
+
+       delete call;
+
+    } // end of loop
+
   }
 
   FederatedModel
@@ -603,15 +750,16 @@ private:
   // insertions take place at the end of the structure, and we want to
   // randomly access positions in the structure. Hence, the vector container.
   std::vector<FederatedTaskRuntimeMetadata> metadata_;
-  // Stores active learners' execution state inside a lookup map.
+  // Stores learners' execution state inside a lookup map.
   absl::flat_hash_map<std::string, LearnerState> learners_;
-  absl::flat_hash_map<std::string, LearnerStub> learner_stubs_;
+  // Stores learners' connection stub.
+  absl::flat_hash_map<std::string, LearnerStub> learners_stub_;
   absl::flat_hash_map<std::string, LearningTaskTemplate>
-      learner_task_templates_;
-  std::mutex learners_mutex_;
+      learners_task_template_;
   // Stores local models evaluation lineages.
   absl::flat_hash_map<std::string, std::list<TaskExecutionMetadata>>
       local_tasks_metadata_;
+  std::mutex learners_mutex_;
   // Stores community models evaluation lineages. A community model might not
   // get evaluated across all learners depending on the participation ratio and
   // therefore we store sequentially the evaluations on every other learner.
@@ -628,10 +776,15 @@ private:
   // Community model.
   FederatedModel community_model_;
   std::mutex community_mutex_;
-  // Thread pool for async tasks.
-  BS::thread_pool pool_;
+  // Thread pool for scheduling tasks.
+  BS::thread_pool scheduling_pool_;
+  // GRPC completion queue to process submitted learners' RunTasks requests.
+  grpc::CompletionQueue run_tasks_cq_;
+  // GRPC completion queue to process submitted learners' EvaluateModel requests.
+  grpc::CompletionQueue eval_tasks_cq_;
 
-  // Templated struct for keeping state and data information.
+  // Templated struct for keeping state and data information
+  // from requests submitted to learners services.
   template <typename T>
   struct AsyncLearnerCall {
 
@@ -648,12 +801,23 @@ private:
     grpc::Status status;
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<T>> response_reader;
+
+  };
+
+  // Implementation of generic AsyncLearnerCall type to handle RunTask responses.
+  struct AsyncLearnerRunTaskCall : AsyncLearnerCall<RunTaskResponse> {};
+
+  // Implementation of generic AsyncLearnerCall type to handle EvaluateModel responses.
+  struct AsyncLearnerEvalCall : AsyncLearnerCall<EvaluateModelResponse> {
+    uint32_t comm_eval_ref_idx;
+    AsyncLearnerEvalCall(){comm_eval_ref_idx = 0;}
   };
 
 };
 
 std::unique_ptr<AggregationFunction>
 CreateAggregator(const GlobalModelSpecs &specs, const FHEScheme &fhe_scheme) {
+
   if (specs.aggregation_rule() == GlobalModelSpecs::FED_AVG) {
     return absl::make_unique<FederatedAverage>();
   }
@@ -661,9 +825,11 @@ CreateAggregator(const GlobalModelSpecs &specs, const FHEScheme &fhe_scheme) {
     return absl::make_unique<PWA>(fhe_scheme);
   }
   throw std::runtime_error("unsupported aggregation rule.");
+
 }
 
 std::unique_ptr<Scheduler> CreateScheduler(const CommunicationSpecs &specs) {
+
   if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS ||
       specs.protocol() == CommunicationSpecs::SEMI_SYNCHRONOUS) {
     return absl::make_unique<SynchronousScheduler>();
@@ -672,6 +838,7 @@ std::unique_ptr<Scheduler> CreateScheduler(const CommunicationSpecs &specs) {
     return absl::make_unique<AsynchronousScheduler>();
   }
   throw std::runtime_error("unsupported scheduling policy.");
+
 }
 
 std::unique_ptr<Selector> CreateSelector() {
@@ -681,10 +848,12 @@ std::unique_ptr<Selector> CreateSelector() {
 } // namespace
 
 std::unique_ptr<Controller> Controller::New(const ControllerParams &params) {
+
   return absl::make_unique<ControllerDefaultImpl>(
       ControllerParams(params), absl::make_unique<DatasetSizeScaler>(),
       CreateAggregator(params.global_model_specs(), params.fhe_scheme()),
       CreateScheduler(params.communication_specs()), CreateSelector());
+
 }
 
 } // namespace projectmetis::controller

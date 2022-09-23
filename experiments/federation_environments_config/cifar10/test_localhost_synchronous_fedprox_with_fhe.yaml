@@ -19,9 +19,9 @@ FederationEnvironment:
     LocalEpochs: 4
     ValidationPercentage: 0.0
     OptimizerConfig:
-      OptimizerName: "VanillaSGD"
+      OptimizerName: "FedProx"
       LearningRate: 0.05
-      L2Reg: 0.0
+      ProximalTerm: 0.001
   Controller:
     ProjectHome: "/projectmetis-rc"
     ConnectionConfigs:
@@ -88,87 +88,87 @@ FederationEnvironment:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
         TestDatasetPath: ""
-    - LearnerID: "localhost-5"
-      ProjectHome: "/projectmetis-rc"
-      ConnectionConfigs:
-        Hostname: "localhost"
-        Username: "root"
-        Password: "root"
-        OnLogin: "source /etc/profile;"
-      GRPCServicer:
-        Port: 50056
-      CudaDevices: [2]
-      DatasetConfigs:
-        TrainDatasetPath: ""
-        ValidationDatasetPath: ""
-        TestDatasetPath: ""
-    - LearnerID: "localhost-6"
-      ProjectHome: "/projectmetis-rc"
-      ConnectionConfigs:
-        Hostname: "localhost"
-        Username: "root"
-        Password: "root"
-        OnLogin: "source /etc/profile;"
-      GRPCServicer:
-        Port: 50057
-      CudaDevices: [2]
-      DatasetConfigs:
-        TrainDatasetPath: ""
-        ValidationDatasetPath: ""
-        TestDatasetPath: ""
-    - LearnerID: "localhost-7"
-      ProjectHome: "/projectmetis-rc"
-      ConnectionConfigs:
-        Hostname: "localhost"
-        Username: "root"
-        Password: "root"
-        OnLogin: "source /etc/profile;"
-      GRPCServicer:
-        Port: 50058
-      CudaDevices: [2]
-      DatasetConfigs:
-        TrainDatasetPath: ""
-        ValidationDatasetPath: ""
-        TestDatasetPath: ""
-    - LearnerID: "localhost-8"
-      ProjectHome: "/projectmetis-rc"
-      ConnectionConfigs:
-        Hostname: "localhost"
-        Username: "root"
-        Password: "root"
-        OnLogin: "source /etc/profile;"
-      GRPCServicer:
-        Port: 50059
-      CudaDevices: [2]
-      DatasetConfigs:
-        TrainDatasetPath: ""
-        ValidationDatasetPath: ""
-        TestDatasetPath: ""
-    - LearnerID: "localhost-9"
-      ProjectHome: "/projectmetis-rc"
-      ConnectionConfigs:
-        Hostname: "localhost"
-        Username: "root"
-        Password: "root"
-        OnLogin: "source /etc/profile;"
-      GRPCServicer:
-        Port: 50060
-      CudaDevices: [2]
-      DatasetConfigs:
-        TrainDatasetPath: ""
-        ValidationDatasetPath: ""
-        TestDatasetPath: ""
-    - LearnerID: "localhost-10"
-      ProjectHome: "/projectmetis-rc"
-      ConnectionConfigs:
-        Hostname: "localhost"
-        Username: "root"
-        Password: "root"
-        OnLogin: "source /etc/profile;"
-      GRPCServicer:
-        Port: 50061
-      CudaDevices: [2]
-      DatasetConfigs:
-        TrainDatasetPath: ""
-        ValidationDatasetPath: ""
-        TestDatasetPath: ""
+#    - LearnerID: "localhost-5"
+#      ProjectHome: "/projectmetis-rc"
+#      ConnectionConfigs:
+#        Hostname: "localhost"
+#        Username: "root"
+#        Password: "root"
+#        OnLogin: "source /etc/profile;"
+#      GRPCServicer:
+#        Port: 50056
+#      CudaDevices: [2]
+#      DatasetConfigs:
+#        TrainDatasetPath: ""
+#        ValidationDatasetPath: ""
+#        TestDatasetPath: ""
+#    - LearnerID: "localhost-6"
+#      ProjectHome: "/projectmetis-rc"
+#      ConnectionConfigs:
+#        Hostname: "localhost"
+#        Username: "root"
+#        Password: "root"
+#        OnLogin: "source /etc/profile;"
+#      GRPCServicer:
+#        Port: 50057
+#      CudaDevices: [2]
+#      DatasetConfigs:
+#        TrainDatasetPath: ""
+#        ValidationDatasetPath: ""
+#        TestDatasetPath: ""
+#    - LearnerID: "localhost-7"
+#      ProjectHome: "/projectmetis-rc"
+#      ConnectionConfigs:
+#        Hostname: "localhost"
+#        Username: "root"
+#        Password: "root"
+#        OnLogin: "source /etc/profile;"
+#      GRPCServicer:
+#        Port: 50058
+#      CudaDevices: [2]
+#      DatasetConfigs:
+#        TrainDatasetPath: ""
+#        ValidationDatasetPath: ""
+#        TestDatasetPath: ""
+#    - LearnerID: "localhost-8"
+#      ProjectHome: "/projectmetis-rc"
+#      ConnectionConfigs:
+#        Hostname: "localhost"
+#        Username: "root"
+#        Password: "root"
+#        OnLogin: "source /etc/profile;"
+#      GRPCServicer:
+#        Port: 50059
+#      CudaDevices: [2]
+#      DatasetConfigs:
+#        TrainDatasetPath: ""
+#        ValidationDatasetPath: ""
+#        TestDatasetPath: ""
+#    - LearnerID: "localhost-9"
+#      ProjectHome: "/projectmetis-rc"
+#      ConnectionConfigs:
+#        Hostname: "localhost"
+#        Username: "root"
+#        Password: "root"
+#        OnLogin: "source /etc/profile;"
+#      GRPCServicer:
+#        Port: 50060
+#      CudaDevices: [2]
+#      DatasetConfigs:
+#        TrainDatasetPath: ""
+#        ValidationDatasetPath: ""
+#        TestDatasetPath: ""
+#    - LearnerID: "localhost-10"
+#      ProjectHome: "/projectmetis-rc"
+#      ConnectionConfigs:
+#        Hostname: "localhost"
+#        Username: "root"
+#        Password: "root"
+#        OnLogin: "source /etc/profile;"
+#      GRPCServicer:
+#        Port: 50061
+#      CudaDevices: [2]
+#      DatasetConfigs:
+#        TrainDatasetPath: ""
+#        ValidationDatasetPath: ""
+#        TestDatasetPath: ""

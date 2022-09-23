@@ -375,6 +375,7 @@ public:
               "Request and response cannot be empty."};
     }
     response->mutable_ack()->set_status(true);
+    pool_.push_task([this] {controller_->Shutdown();});
     pool_.push_task([this] {this->StopService();});
     return Status::OK;
   }

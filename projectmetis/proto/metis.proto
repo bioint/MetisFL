@@ -242,7 +242,7 @@ message ProtocolSpecs {
 message LearnerDescriptor {
   string id = 1;
   string auth_token = 2;
-  ServerEntity service_spec = 3;
+  ServerEntity server_entity = 3;
   DatasetSpec dataset_spec = 4;
 }
 
