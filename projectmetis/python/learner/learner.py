@@ -37,7 +37,7 @@ class Learner(object):
                  train_dataset_fp, train_dataset_recipe_pkl,
                  validation_dataset_fp="", validation_dataset_recipe_pkl="",
                  test_dataset_fp="", test_dataset_recipe_pkl="",
-                 release_resources_after_task_completion=False,
+                 recreate_queue_task_worker=False,
                  learner_credentials_fp="/tmp/metis/learner/"):
         self._learner_server_entity = learner_server_entity
         self._controller_server_entity = controller_server_entity
@@ -59,7 +59,7 @@ class Learner(object):
         # because we had to wait for the active task to complete.
         # A single Process per training/evaluation/inference task.
         worker_max_tasks = 0
-        if release_resources_after_task_completion:
+        if recreate_queue_task_worker:
             worker_max_tasks = 1
         self._training_tasks_pool, self._training_tasks_futures_q = \
             ProcessPool(max_workers=1, max_tasks=worker_max_tasks), \
@@ -103,14 +103,16 @@ class Learner(object):
         del self_dict['_learner_controller_client']
         return self_dict
 
-    def _empty_tasks_q(self, future_tasks_q, graceful=False):
+    def _empty_tasks_q(self, future_tasks_q, forceful=False):
         while not future_tasks_q.empty():
-            if graceful:
-                # await for the underlying future to complete
-                future_tasks_q.get().result()
-            else:
-                # non-blocking retrieval of AsyncResult from queue
+            if forceful:
+                # Forceful Shutdown. Non-blocking retrieval
+                # of AsyncResult from futures queue.
                 future_tasks_q.get(block=False).cancel()
+            else:
+                # Graceful Shutdown. Await for the underlying
+                # future inside the queue to complete.
+                future_tasks_q.get().result()
 
     def _create_model_dataset_helper(self, dataset_recipe_pkl, dataset_fp, default_class=None):
         # TODO Move into utils?
@@ -221,9 +223,9 @@ class Learner(object):
                        metrics_pb: metis_pb2.EvaluationMetrics, verbose=False):
         MetisLogger.info("Learner {} starts model evaluation on requested datasets."
                          .format(self.host_port_identifier()))
-        model_ops = self._model_ops_factory(self._nn_engine)
+        model_ops_fn = self._model_ops_factory(self._nn_engine)
 
-        learner_evaluator = LearnerEvaluator(model_ops, model_pb)
+        learner_evaluator = LearnerEvaluator(model_ops_fn, model_pb)
         # Invoke dataset recipes on a per model operations context,
         # since model evaluation will run as a subprocess.
         train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
@@ -253,9 +255,9 @@ class Learner(object):
                          .format(self.host_port_identifier()))
         # TODO infer model should behave similarly as the evaluate_model(), by looping over a
         #  similar learner_pb2.InferModelRequest.dataset_to_infer list.
-        model_ops = self._model_ops_factory(self._nn_engine)
+        model_ops_fn = self._model_ops_factory(self._nn_engine)
 
-        learner_evaluator = LearnerEvaluator(model_ops, model_pb)
+        learner_evaluator = LearnerEvaluator(model_ops_fn, model_pb)
         # Invoke dataset recipes on a per model operations context,
         # since model inference will run as a subprocess.
         train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
@@ -294,10 +296,9 @@ class Learner(object):
 
     def run_evaluation_task(self, model_pb: model_pb2.Model, batch_size: int,
                             evaluation_dataset_pb: [learner_pb2.EvaluateModelRequest.dataset_to_eval],
-                            metrics_pb, verbose=False, block=False):
-        # TODO No callback function when evaluation result is returned. Maybe we need to implement one more gRPC
-        #  endpoint to the controller to retrieve latest model evaluation results? Similar to mark task completed?
-        self._empty_tasks_q(future_tasks_q=self._evaluation_tasks_futures_q)
+                            metrics_pb, cancel_running_tasks=False, block=False, verbose=False):
+        # If `cancel_running_tasks` is True, we perform a forceful shutdown of running tasks, else graceful.
+        self._empty_tasks_q(future_tasks_q=self._evaluation_tasks_futures_q, forceful=cancel_running_tasks)
         # If we submit the datasets and the metrics as is (i.e., as repeated fields) pickle cannot
         # serialize the repeated messages and it requires converting the repeated messages into a list.
         evaluation_datasets_pb = [d for d in evaluation_dataset_pb]
@@ -314,9 +315,9 @@ class Learner(object):
 
     def run_learning_task(self, learning_task_pb: metis_pb2.LearningTask,
                           hyperparameters_pb: metis_pb2.Hyperparameters, model_pb: model_pb2.Model,
-                          verbose=False, block=False):
-        # Always clear most recent tasks from the queue - process the last submitted task.
-        self._empty_tasks_q(future_tasks_q=self._training_tasks_futures_q)
+                          cancel_running_tasks=False, block=False, verbose=False):
+        # If `cancel_running_tasks` is True, we perform a forceful shutdown of running tasks, else graceful.
+        self._empty_tasks_q(future_tasks_q=self._training_tasks_futures_q, forceful=cancel_running_tasks)
         # Submit the learning/training task to the Process Pool and add a callback to send the
         # trained local model to the controller when the learning task is complete. Given that
         # local training could span from seconds to hours, we cannot keep the grpc connection
@@ -333,18 +334,20 @@ class Learner(object):
         is_task_submitted = not future.cancelled()
         return is_task_submitted
 
-    def shutdown(self, graceful=False):
+    def shutdown(self,
+                 cancel_train_running_tasks=True,
+                 cancel_eval_running_tasks=True,
+                 cancel_infer_running_tasks=True):
         # If graceful is True, it will allow all pending tasks to be completed,
         # else it will stop immediately all active tasks. At first, we close the
-        # tasks pool so that no more tasks can be submitted and then we wait
+        # tasks pool so that no more tasks can be submitted, and then we wait
         # gracefully or non-gracefully (cancel future) for their completion.
         self._training_tasks_pool.close()
         self._evaluation_tasks_pool.close()
         self._inference_tasks_pool.close()
-        if not graceful:
-            self._empty_tasks_q(self._training_tasks_futures_q)
-            self._empty_tasks_q(self._evaluation_tasks_futures_q)
-            self._empty_tasks_q(self._inference_tasks_futures_q)
+        self._empty_tasks_q(self._training_tasks_futures_q, forceful=cancel_train_running_tasks)
+        self._empty_tasks_q(self._evaluation_tasks_futures_q, forceful=cancel_eval_running_tasks)
+        self._empty_tasks_q(self._inference_tasks_futures_q, forceful=cancel_infer_running_tasks)
         self._training_tasks_pool.join()
         self._evaluation_tasks_pool.join()
         self._inference_tasks_pool.join()

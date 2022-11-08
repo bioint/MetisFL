@@ -37,7 +37,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50052
-      CudaDevices: [1]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -51,7 +51,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50053
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -65,7 +65,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50054
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -79,7 +79,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50055
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -93,7 +93,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50056
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -107,7 +107,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50057
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -121,7 +121,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50058
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -135,7 +135,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50059
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -149,7 +149,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50060
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""
@@ -163,7 +163,7 @@ FederationEnvironment:
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Port: 50061
-      CudaDevices: [2]
+      CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""
         ValidationDatasetPath: ""

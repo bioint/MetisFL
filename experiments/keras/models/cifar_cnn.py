@@ -6,9 +6,10 @@ from projectmetis.python.models.keras.optimizers.fed_prox import FedProx
 
 class CifarCNN(ModelDef):
 
-    def __init__(self, metrics=["accuracy"]):
+    def __init__(self, metrics=["accuracy"], optimizer_name="MomentumSGD"):
         super(CifarCNN, self).__init__()
         self.metrics = metrics
+        self.optimizer_name = optimizer_name
 
     def get_model(self):
         """
@@ -39,8 +40,13 @@ class CifarCNN(ModelDef):
 
         model.add(tf.keras.layers.Dense(10, activation='softmax'))
 
-        # optimizer = tf.keras.optimizers.SGD()
-        optimizer = FedProx()
-        model.compile(optimizer=optimizer, loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        if self.optimizer_name.lower() in ["vanillasgd", "momentumsgd"]:
+            optimizer = tf.keras.optimizers.SGD()
+        elif self.optimizer_name.lower() == "fedprox":
+            optimizer = FedProx()
+        else:
+            raise RuntimeError("Not supported optimizer.")
+        model.compile(optimizer=optimizer,
+                      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                       metrics=self.metrics)
         return model

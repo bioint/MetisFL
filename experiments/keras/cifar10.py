@@ -19,7 +19,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../federation_environments_config/cifar10/test_localhost_synchronous_fedprox.yaml")
+        script_cwd, "../federation_environments_config/cifar10/test_localhost_synchronous_momentumsgd.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -84,7 +84,8 @@ if __name__ == "__main__":
     validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(metis_filepath_prefix)
     test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(metis_filepath_prefix)
 
-    nn_model = CifarCNN().get_model()
+    optimizer_name = federation_environment.local_model_config.optimizer_config.optimizer_name
+    nn_model = CifarCNN(metrics=["accuracy"], optimizer_name="MomentumSGD").get_model()
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
     # properly and any subsequent fit step will never train the model properly. We could apply the .fit() step instead
     # of the .evaluation() step, but since the driver does not hold any data it simply evaluates a random sample.

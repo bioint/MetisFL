@@ -37,7 +37,8 @@ class ControllerDefaultImpl : public Controller {
         learners_stub_(), learners_task_template_(), learners_mutex_(),
         scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
         scheduler_(std::move(scheduler)), selector_(std::move(selector)),
-        community_model_(), community_mutex_(), scheduling_pool_(2) {
+        community_model_(), community_mutex_(), scheduling_pool_(2),
+        run_tasks_cq_(), eval_tasks_cq_() {
 
     // We perform the following detachment because we want to have only
     // one thread and one completion queue to handle asynchronous request
@@ -602,6 +603,7 @@ class ControllerDefaultImpl : public Controller {
         } else {
           std::cout << "EvaluateModel RPC request to learner: " << call->learner_id
                     << " failed with error: " << call->status.error_message()
+                    << call->context.debug_error_string()
                     << "\n" << std::flush;
         }
       }
@@ -700,6 +702,7 @@ class ControllerDefaultImpl : public Controller {
         if (!call->status.ok()) {
           std::cout << "RunTask RPC request to learner: " << call->learner_id
                     << " failed with error: " << call->status.error_message()
+                    << call->context.debug_error_string()
                     << "\n" << std::flush;
         }
       }
@@ -810,7 +813,7 @@ class ControllerDefaultImpl : public Controller {
   // Implementation of generic AsyncLearnerCall type to handle EvaluateModel responses.
   struct AsyncLearnerEvalCall : AsyncLearnerCall<EvaluateModelResponse> {
     uint32_t comm_eval_ref_idx;
-    AsyncLearnerEvalCall(){comm_eval_ref_idx = 0;}
+    AsyncLearnerEvalCall() { comm_eval_ref_idx = 0; }
   };
 
 };

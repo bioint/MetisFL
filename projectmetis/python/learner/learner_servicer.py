@@ -53,8 +53,13 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         metrics_pb = request.metrics
         evaluation_dataset_pb = request.evaluation_dataset
         # Blocking execution. Learner evaluates received model on its local datasets.
+        # We do not stop any running evaluation tasks. Evaluation is critical! We need
+        # all computed metrics to assess how well our models perform!
         model_evaluations_pb = self.learner.run_evaluation_task(
-            model_pb, batch_size, evaluation_dataset_pb, metrics_pb, verbose=True, block=True)
+            model_pb, batch_size, evaluation_dataset_pb, metrics_pb,
+            cancel_running_tasks=False,
+            block=True,
+            verbose=True)
         evaluate_model_response_pb = \
             proto_factory.LearnerServiceProtoMessages\
             .construct_evaluate_model_response_pb(model_evaluations_pb)
@@ -90,9 +95,13 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         learning_task_pb = request.task
         hyperparameters_pb = request.hyperparameters
         # Non-Blocking execution. Learner trains received task in the background and sends
-        # the newly computed local model to the controller upon task completion.
+        # the newly computed local model to the controller upon task completion. Upon receival
+        # of a new training task the learner needs to cancel all running training tasks.
         is_task_submitted = self.learner.run_learning_task(
-            learning_task_pb, hyperparameters_pb, model_pb, verbose=True, block=False)
+            learning_task_pb, hyperparameters_pb, model_pb,
+            cancel_running_tasks=True,
+            block=False,
+            verbose=True)
         ack_pb = proto_factory.ServiceCommonProtoMessages.construct_ack_pb(
             status=is_task_submitted,
             google_timestamp=Timestamp().GetCurrentTime(),
@@ -109,8 +118,11 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         # Second, trigger a shutdown signal to learner's underlying execution engine
         # to release all resources and reply any pending tasks to the controller.
         # When shutdown is triggered we do not wait for any pending tasks.
-        # We forcefully shutdown all running tasks.
-        self.learner.shutdown(graceful=False)
+        # We perform a forceful shutdown of all training and inference running tasks.
+        # We only wait for the completion of the evaluation tasks.
+        self.learner.shutdown(cancel_train_running_tasks=True,
+                              cancel_eval_running_tasks=False,
+                              cancel_infer_running_tasks=True)
         # Third, remove the learner from the federation.
         self.learner.leave_federation()
         # Fourth, issue servicer termination signal.
