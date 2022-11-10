@@ -202,6 +202,8 @@ class ControllerDefaultImpl : public Controller {
     // Records the id of the learner completed the task.
     if (not metadata_.empty() && metadata_index < metadata_.size()) {
       *metadata_.at(metadata_index).add_completed_by_learner_id() = learner_id;
+      (*metadata_.at(metadata_index).mutable_train_task_received_at())[learner_id] =
+          TimeUtil::GetCurrentTime();
     }
 
     // Updates the learner's state.
@@ -363,17 +365,20 @@ class ControllerDefaultImpl : public Controller {
       std::cout << "FedIteration: " << unsigned(global_iteration_)
                 << "\n" << std::flush;
       meta.set_global_iteration(global_iteration_);
-      *meta.mutable_started_at() = TimeUtil::GetCurrentTime();
       metadata_.emplace_back(meta);
     }
 
+    // When a new learner joins/trains on the initial task, we record
+    // all runtime related metadata to the last item in the metadata collection.
+    auto &meta = metadata_.back();
     // Records the learner id to which the controller delegates the latest task.
-    *metadata_.back().add_assigned_to_learner_id() = learner_id;
+    *meta.add_assigned_to_learner_id() = learner_id;
     auto &community_model = community_model_;
 
-    // Send initial training.
+    // Send initial training task.
     std::vector<std::string> learner_to_list_ = {learner_id};
-    SendRunTasks(learner_to_list_, community_model);
+    // We also need to pass the metadata object to record submission time.
+    SendRunTasks(learner_to_list_, community_model, meta);
 
   }
 
@@ -394,16 +399,27 @@ class ControllerDefaultImpl : public Controller {
       // Assign a non-negative value to the metadata index.
       auto metadata_index =
           (task_global_iteration == 0) ? 0 : task_global_iteration - 1;
-      if (not metadata_.empty() && metadata_index < metadata_.size()) {
-        *metadata_.at(metadata_index).mutable_completed_at() =
-            TimeUtil::GetCurrentTime();
-      }
+      auto &old_meta = metadata_.at(metadata_index);
 
       // Select models that will participate in the community model.
       auto to_select = selector_->Select(to_schedule, GetLearners());
+      // We capture two different timestamps because the protobuf Timestamp
+      // class returns up to seconds. There is no functionality to return
+      // the milliseconds in the timestamp too.
+      // TODO (dstripelis) Need to check if we can re-use timestamps to
+      //  compute total community model aggregation time.
+      auto start_high_res = std::chrono::high_resolution_clock::now();
+      *old_meta.mutable_model_aggregation_started_at() =
+          TimeUtil::GetCurrentTime();
       // Computes the community model using models that have
       // been selected by the model selector.
       auto community_model = ComputeCommunityModel(to_select);
+      *old_meta.mutable_model_aggregation_completed_at() =
+          TimeUtil::GetCurrentTime();
+      auto end_high_res = std::chrono::high_resolution_clock::now();
+      std::chrono::duration<double, std::milli> elapsed = end_high_res - start_high_res;
+      old_meta.set_model_aggregation_duration_ms(elapsed.count());
+
       community_model.set_global_iteration(task_global_iteration);
       // Updates the community model.
       community_model_ = community_model;
@@ -423,31 +439,36 @@ class ControllerDefaultImpl : public Controller {
       // make sure that all metrics are properly collected when an EvaluateModel
       // response is received, we pass the index of the `community_evaluations_`
       // vector of the position to which the current community model refers to.
-      SendEvaluationTasks(to_schedule, community_model,
-                          community_evaluations_.size()-1);
+      // We also pass the index to the `metadata_` vector to which the current
+      // evaluation task corresponds and needs to store the associated meta data.
+      SendEvaluationTasks(to_schedule,
+                          community_model,
+                          community_evaluations_.size()-1,
+                          metadata_index);
 
       // Increase global iteration counter to reflect the new scheduling round.
       ++global_iteration_;
       std::cout << "FedIteration: " << unsigned(global_iteration_)
                 << "\n" << std::flush;
 
+      // Set the specifications of the next training task.
+      UpdateLearnersTaskTemplates(to_schedule);
+
       // Creates a new federation runtime metadata
       // object for the new scheduling round.
-      FederatedTaskRuntimeMetadata meta = FederatedTaskRuntimeMetadata();
-      meta.set_global_iteration(global_iteration_);
-      *meta.mutable_started_at() = TimeUtil::GetCurrentTime();
+      FederatedTaskRuntimeMetadata new_meta = FederatedTaskRuntimeMetadata();
+      new_meta.set_global_iteration(global_iteration_);
       // Records the id of the learners to which
       // the controller delegates the training task.
       for (const auto &to_schedule_id : to_schedule) {
-        *meta.add_assigned_to_learner_id() = to_schedule_id;
+        *new_meta.add_assigned_to_learner_id() = to_schedule_id;
       }
-      metadata_.emplace_back(meta);
-
-      UpdateLearnersTaskTemplates(to_schedule);
 
       // Send training task to all scheduled learners.
-      SendRunTasks(to_schedule, community_model);
+      SendRunTasks(to_schedule, community_model, new_meta);
 
+      // Save federated task runtime metadata.
+      metadata_.emplace_back(new_meta);
     }
 
   }
@@ -501,7 +522,8 @@ class ControllerDefaultImpl : public Controller {
 
   void SendEvaluationTasks(std::vector<std::string> &learners,
                            const FederatedModel &model,
-                           const uint32_t &comm_eval_ref_idx) {
+                           const uint32_t &comm_eval_ref_idx,
+                           const uint32_t &metadata_ref_idx) {
 
     // Our goal is to send the EvaluateModel request to each learner in parallel.
     // We use a single thread to asynchronously send all evaluate model requests
@@ -510,14 +532,18 @@ class ControllerDefaultImpl : public Controller {
     // https://github.com/grpc/grpc/blob/master/examples/cpp/helloworld/greeter_async_client2.cc
     auto& cq_ = eval_tasks_cq_;
     for (const auto &learner_id: learners) {
-      SendEvaluationTaskAsync(learner_id, model, cq_, comm_eval_ref_idx);
+      (*metadata_.at(metadata_ref_idx)
+          .mutable_eval_task_submitted_at())[learner_id] = TimeUtil::GetCurrentTime();
+      SendEvaluationTaskAsync(
+          learner_id, model, cq_, comm_eval_ref_idx, metadata_ref_idx);
     }
   }
 
   void SendEvaluationTaskAsync(const std::string &learner_id,
                                const FederatedModel &model,
                                grpc::CompletionQueue &cq_,
-                               const uint32_t &comm_eval_ref_idx) {
+                               const uint32_t &comm_eval_ref_idx,
+                               const uint32_t &metadata_ref_idx) {
 
     // TODO (dstripelis,canastas) This needs to be reimplemented by using
     //  a single channel/stub. We tried to implement this that way, but when
@@ -549,6 +575,11 @@ class ControllerDefaultImpl : public Controller {
     // Set the index of the community model evaluation vector evaluation
     // metrics and values will be stored when response is received.
     call->comm_eval_ref_idx = comm_eval_ref_idx;
+
+    // Set the index of the global model iteration to access the metadata_
+    // vector collection and store additional metadata related to the
+    // evaluation request, such as reception time of the evaluation task.
+    call->metadata_ref_idx = metadata_ref_idx;
 
     // stub->PrepareAsyncEvaluateModel() creates an RPC object, returning
     // an instance to store in "call" but does not actually start the RPC
@@ -591,6 +622,8 @@ class ControllerDefaultImpl : public Controller {
         // If either a failed or successful response is received
         // then increase counter of sentinel variable counter.
         if (call->status.ok()) {
+          (*metadata_.at(call->metadata_ref_idx)
+              .mutable_eval_task_received_at())[call->learner_id] = TimeUtil::GetCurrentTime();
           ModelEvaluations model_evaluations;
           *model_evaluations.mutable_training_evaluation() =
               call->reply.evaluations().training_evaluation();
@@ -615,7 +648,8 @@ class ControllerDefaultImpl : public Controller {
   }
 
   void SendRunTasks(std::vector<std::string> &learners,
-                    const FederatedModel &model) {
+                    const FederatedModel &model,
+                    FederatedTaskRuntimeMetadata &meta) {
 
     // Our goal is to send the RunTask request to each learner in parallel.
     // We use a single thread to asynchronously send all run task requests
@@ -624,6 +658,8 @@ class ControllerDefaultImpl : public Controller {
     // https://github.com/grpc/grpc/blob/master/examples/cpp/helloworld/greeter_async_client2.cc
     auto& cq_ = run_tasks_cq_;
     for (const auto &learner_id : learners) {
+      (*meta.mutable_train_task_submitted_at())[learner_id] =
+          TimeUtil::GetCurrentTime();
       SendRunTaskAsync(learner_id, model, cq_);
     }
 
@@ -812,8 +848,11 @@ class ControllerDefaultImpl : public Controller {
 
   // Implementation of generic AsyncLearnerCall type to handle EvaluateModel responses.
   struct AsyncLearnerEvalCall : AsyncLearnerCall<EvaluateModelResponse> {
+    // Index to the community/global model evaluation metrics vector.
     uint32_t comm_eval_ref_idx;
-    AsyncLearnerEvalCall() { comm_eval_ref_idx = 0; }
+    // Index to the metadata collection vector.
+    uint32_t metadata_ref_idx;
+    AsyncLearnerEvalCall() { comm_eval_ref_idx = 0; metadata_ref_idx=0; }
   };
 
 };

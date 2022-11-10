@@ -256,8 +256,17 @@ message LearnerState {
 
 message FederatedTaskRuntimeMetadata {
   uint32 global_iteration = 1;
-  google.protobuf.Timestamp started_at = 2;
-  google.protobuf.Timestamp completed_at = 3;
-  repeated string assigned_to_learner_id = 4;
-  repeated string completed_by_learner_id = 5;
+  repeated string assigned_to_learner_id = 2;
+  repeated string completed_by_learner_id = 3;
+  // The times for train and eval tasks are based on the time they are submitted/sent
+  // to the learners. They do not reflect the "true" time it takes for actual training
+  // and evaluation, since the period (submitted_at, received_at) also contains the
+  // communication time - message exchanges roundtrip.
+  map<string, google.protobuf.Timestamp> train_task_submitted_at = 4;
+  map<string, google.protobuf.Timestamp> train_task_received_at = 5;
+  map<string, google.protobuf.Timestamp> eval_task_submitted_at = 6;
+  map<string, google.protobuf.Timestamp> eval_task_received_at = 7;
+  google.protobuf.Timestamp model_aggregation_started_at = 8;
+  google.protobuf.Timestamp model_aggregation_completed_at = 9;
+  double model_aggregation_duration_ms = 10;
 }
