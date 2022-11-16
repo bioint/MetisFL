@@ -62,7 +62,10 @@ def setup_python():
     # We do not create a symlink, because when copying the files inside the image,
     # the content of symlinked files are not transferred. Hence, the hard copy.
     # symlink_force(source, target)
-    shutil.copy(src, dst)
+    try:
+        shutil.copy(src, dst)
+    except shutil.SameFileError:
+        pass
 
 
 def main():
