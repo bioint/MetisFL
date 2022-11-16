@@ -2,8 +2,8 @@ FROM projectmetis_ubuntu_22_04 as base
 
 # On Centos/RHEL machines, after you build the image in order to make sure that the nvidia driver is properly
 # configured, you need to run the following command
-#   nvidia-docker run --rm --gpus all `cuda_image_name` nvidia-smi
-#   e.g., nvidia-docker run --rm --gpus all projectmetis_ubuntu_22_04_cuda nvidia-smi
+#   docker run --rm --gpus all `cuda_image_name` nvidia-smi
+#   e.g., docker run --rm --gpus all projectmetis_ubuntu_22_04_cuda nvidia-smi
 # Image content based on: https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/11.7.0/ubuntu2204/base/Dockerfile
 CMD ["bash"]
 ENV NVARCH=x86_64
