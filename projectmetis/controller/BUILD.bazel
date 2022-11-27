@@ -97,7 +97,7 @@ cc_test(
         ":controller_servicer",
         ":controller_mock",
         "//projectmetis/core:macros",
-        "//projectmetis/core/matchers:proto_matchers",
+        "//projectmetis/core:proto_matchers",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ],

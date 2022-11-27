@@ -147,7 +147,7 @@ class DriverSessionBase(object):
             ciphertext = None
             if self.fhe_scheme_pb.enabled:
                 ciphertext = self.encryption_scheme.encrypt(weight.flatten(), 1)
-            tensor_pb = proto_messages_factory.ModelProtoMessages.construct_tensor_pb_from_nparray(
+            tensor_pb = proto_messages_factory.ModelProtoMessages.construct_tensor_pb(
                 nparray=weight, ciphertext=ciphertext)
             # TODO(dstripelis) Need to change the following to reflect the true variables' names
             #  and whether they are trainable or not - similar to keras_proto_factory.

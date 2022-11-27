@@ -23,20 +23,20 @@ PWA::Aggregate(
     auto* variable = community_model.mutable_model()->add_variables();
     variable->set_name(sample_model->variables(i).name());
     variable->set_trainable(sample_model->variables(i).trainable());
-    *variable->mutable_ciphertext_tensor()->mutable_spec() =
-        sample_model->variables(i).ciphertext_tensor().spec();
+    *variable->mutable_ciphertext_tensor()->mutable_tensor_spec() =
+        sample_model->variables(i).ciphertext_tensor().tensor_spec();
 
     std::vector<std::string> learners_Data;
     for (const auto &pair : pairs) {
       const auto *model = pair.first;
       learners_Data.emplace_back(
-          model->variables(i).ciphertext_tensor().values());
+          model->variables(i).ciphertext_tensor().tensor_spec().value());
     }
     // ComputeWeightedAverage assumes that each learner's contribution value,
     // scaling factor is already normalized / scaled.
     std::string pwa_result =
         fhe_helper_.computeWeightedAverage(learners_Data, scalingFactors);
-    *variable->mutable_ciphertext_tensor()->mutable_values() = pwa_result;
+    *variable->mutable_ciphertext_tensor()->mutable_tensor_spec()->mutable_value() = pwa_result;
   }
 
   // Sets the number of contributors to the number of input models.

@@ -1,3 +1,6 @@
+import numpy.lib.format
+import sys
+
 import numpy as np
 
 from projectmetis.proto import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
@@ -241,46 +244,136 @@ class MetisProtoMessages(object):
 
 class ModelProtoMessages(object):
 
+    class TensorSpecProto(object):
+
+        NUMPY_DATA_TYPE_TO_PROTO_LOOKUP = {
+            "i1": model_pb2.DType.Type.INT8,
+            "i2": model_pb2.DType.Type.INT16,
+            "i4": model_pb2.DType.Type.INT32,
+            "i8": model_pb2.DType.Type.INT64,
+            "u1": model_pb2.DType.Type.UINT8,
+            "u2": model_pb2.DType.Type.UINT16,
+            "u4": model_pb2.DType.Type.UINT32,
+            "u8": model_pb2.DType.Type.UINT64,
+            "f4": model_pb2.DType.Type.FLOAT32,
+            "f8": model_pb2.DType.Type.FLOAT64
+        }
+
+        INV_NUMPY_DATA_TYPE_TO_PROTO_LOOKUP = {
+            v: k for k, v in NUMPY_DATA_TYPE_TO_PROTO_LOOKUP.items()
+        }
+
+        @classmethod
+        def numpy_array_to_proto_tensor_spec(cls, arr):
+
+            # Examples of numpy arrays representation:
+            #   "<i2" == (little-endian int8)
+            #   "<u4" == (little-endian uint64)
+            #   ">f4" == (big-endian float32)
+            #   "=f2" == (system-default endian float8)
+            # In general, the first character represents the endian type
+            # and the subsequent characters the data type in the form of
+            # integer(i), unsigned integer(u), float(f), complex(c) and the
+            # digits the number of bytes, 4 refers to 4 bytes = 64bits.
+
+            length = arr.size
+            arr_metadata = numpy.lib.format.header_data_from_array_1_0(arr)
+            shape = arr_metadata["shape"]
+            dimensions = [s for s in shape]
+            fortran_order = arr_metadata["fortran_order"]
+
+            # For the byteorder representation in numpy check
+            # https://numpy.org/doc/stable/reference/generated/numpy.dtype.byteorder.html
+            descr = arr_metadata["descr"]
+            if "<" in descr:
+                endian = model_pb2.DType.ByteOrder.LITTLE_ENDIAN_ORDER
+            elif ">" in descr:
+                endian = model_pb2.DType.ByteOrder.BIG_ENDIAN_ORDER
+            elif "=" in descr:
+                endian = sys.byteorder
+                if endian == "big":
+                    endian = model_pb2.DType.ByteOrder.BIG_ENDIAN_ORDER
+                else:
+                    endian = model_pb2.DType.ByteOrder.LITTLE_ENDIAN_ORDER
+            else:
+                endian = model_pb2.DType.ByteOrder.NA  # case "|"
+
+            nparray_dtype = descr[1:]
+            if nparray_dtype in ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP:
+                proto_data_type = \
+                    ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[nparray_dtype]
+            else:
+                raise RuntimeError("Provided data type: {}, is not supported".format(nparray_dtype))
+
+            dtype = model_pb2.DType(type=proto_data_type, byte_order=endian, fortran_order=fortran_order)
+
+            flatten_array_bytes = arr.flatten().tobytes()
+            tensor_spec = model_pb2.TensorSpec(
+                length=length, dimensions=dimensions, type=dtype, value=flatten_array_bytes)
+            return tensor_spec
+
+        @classmethod
+        def get_numpy_data_type_from_tensor_spec(cls, tensor_spec):
+            if tensor_spec.type.byte_order == model_pb2.DType.ByteOrder.BIG_ENDIAN_ORDER:
+                endian_char = ">"
+            elif tensor_spec.type.byte_order == model_pb2.DType.ByteOrder.LITTLE_ENDIAN_ORDER:
+                endian_char = "<"
+            else:
+                endian_char = "|"
+
+            data_type = tensor_spec.type.type
+            fortran_order = tensor_spec.type.fortran_order
+            np_data_type = \
+                endian_char + \
+                ModelProtoMessages.TensorSpecProto.INV_NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[data_type]
+            return np_data_type
+
+        @classmethod
+        def proto_tensor_spec_to_numpy_array(cls, tensor_spec):
+            np_data_type = \
+                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(tensor_spec)
+            dimensions = tensor_spec.dimensions
+            value = tensor_spec.value
+            length = tensor_spec.length
+
+            np_array = np.frombuffer(buffer=value, dtype=np_data_type, count=length)
+            np_array = np_array.reshape(dimensions)
+
+            return np_array
+
+        @classmethod
+        def proto_tensor_spec_with_list_values_to_numpy_array(cls, tensor_spec, list_of_values):
+            np_data_type = \
+                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(tensor_spec)
+            dimensions = tensor_spec.dimensions
+
+            np_array = np.array(list_of_values, dtype=np_data_type)
+            np_array = np_array.reshape(dimensions)
+
+            return np_array
+
     @classmethod
-    def construct_tensor_pb_from_nparray(cls, nparray, ciphertext=None):
+    def construct_tensor_pb(cls, nparray, ciphertext=None):
         if not isinstance(nparray, np.ndarray):
             raise TypeError("Parameter {} must be of type {}.".format(nparray, np.ndarray))
-        size = int(nparray.size)
-        shape = nparray.shape
-        if ciphertext is not None:
-            tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.UNKNOWN)
-            tensor_pb = model_pb2.CiphertextTensor(spec=tensor_spec, values=ciphertext)
-        else:
-            dtype = str(nparray.dtype.name)
-            values = nparray.flatten()
-            if "int" in dtype:
-                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.INT)
-                tensor_pb = model_pb2.IntTensor(spec=tensor_spec, values=values)
-            elif "long" in dtype:
-                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.LONG)
-                tensor_pb = model_pb2.IntTensor(spec=tensor_spec, values=values)
-            elif "float32" in dtype:
-                # The default dtype for Tensorflow and PyTorch weights is float32.
-                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.FLOAT)
-                tensor_pb = model_pb2.FloatTensor(spec=tensor_spec, values=values)
-            elif "float" in dtype:
-                # The default dtype for numpy arrays is float64, also represented as float.
-                tensor_spec = model_pb2.TensorSpec(length=size, dimensions=shape, dtype=model_pb2.TensorSpec.DType.DOUBLE)
-                tensor_pb = model_pb2.DoubleTensor(spec=tensor_spec, values=values)
-            else:
-                raise RuntimeError("Provided data type: {}, is not supported".format(dtype))
 
+        tensor_spec = \
+            ModelProtoMessages.TensorSpecProto.numpy_array_to_proto_tensor_spec(nparray)
+
+        if ciphertext is not None:
+            # If the tensor is a ciphertext we need to set the bytes of the
+            # ciphertext as the value of the tensor not the numpy array bytes.
+            tensor_spec.value = ciphertext
+            tensor_pb = model_pb2.CiphertextTensor(tensor_spec=tensor_spec)
+        else:
+            tensor_pb = model_pb2.PlaintextTensor(tensor_spec=tensor_spec)
         return tensor_pb
 
     @classmethod
     def construct_model_variable_pb(cls, name, trainable, tensor_pb):
         assert isinstance(name, str) and isinstance(trainable, bool)
-        if isinstance(tensor_pb, model_pb2.IntTensor):
-            return model_pb2.Model.Variable(name=name, trainable=trainable, int_tensor=tensor_pb)
-        elif isinstance(tensor_pb, model_pb2.FloatTensor):
-            return model_pb2.Model.Variable(name=name, trainable=trainable, float_tensor=tensor_pb)
-        elif isinstance(tensor_pb, model_pb2.DoubleTensor):
-            return model_pb2.Model.Variable(name=name, trainable=trainable, double_tensor=tensor_pb)
+        if isinstance(tensor_pb, model_pb2.PlaintextTensor):
+            return model_pb2.Model.Variable(name=name, trainable=trainable, plaintext_tensor=tensor_pb)
         elif isinstance(tensor_pb, model_pb2.CiphertextTensor):
             return model_pb2.Model.Variable(name=name, trainable=trainable, ciphertext_tensor=tensor_pb)
         else:

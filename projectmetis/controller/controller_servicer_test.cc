@@ -7,7 +7,7 @@
 #include "projectmetis/controller/controller_mock.h"
 #include "projectmetis/controller/controller_servicer.h"
 #include "projectmetis/core/macros.h"
-#include "projectmetis/core/matchers/proto_matchers.h"
+#include "projectmetis/core/proto_matchers.h"
 #include "projectmetis/proto/controller.grpc.pb.h"
 #include "projectmetis/proto/metis.pb.h"
 

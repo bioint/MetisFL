@@ -5,62 +5,63 @@ package projectmetis;
 // Tensor Representation //
 ///////////////////////////
 
+/**
+ * Aiming for a minimal representation based on the numpy.dtype Python class.
+ * See https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
+ * Following representation is based on the excellent work of Max Klein:
+ * https://github.com/telamonian/numpy-protobuf
+ */
+message DType {
+
+  enum Type {
+    INT8 = 0; // Byte (-128 to 127)
+    INT16 = 1; // Integer (-32768 to 32767)
+    INT32 = 2; // Integer (-2147483648 to 2147483647)
+    INT64 = 3; // Integer (-9223372036854775808 to 9223372036854775807)
+    UINT8 = 4; // Unsigned integer (0 to 255)
+    UINT16 = 5; // Unsigned integer (0 to 65535)
+    UINT32 = 6; // Unsigned integer (0 to 4294967295)
+    UINT64 = 7; // Unsigned integer (0 to 18446744073709551615)
+    FLOAT32 = 8; // Single precision float: sign bit, 8 bits exponent, 23 bits mantissa
+    FLOAT64 = 9; // Double precision float: sign bit, 11 bits exponent, 52 bits mantissa
+  }
+
+  enum ByteOrder {
+    NA = 0; // Order not applicable. For example, endian is not relevant for 8 bit numbers, e.g., int8, uint8!
+    BIG_ENDIAN_ORDER = 1; // We add the _ORDER suffix because the BIG_ENDIAN and LITTLE_ENDIAN macros are already used.
+    LITTLE_ENDIAN_ORDER = 2;
+  }
+
+  Type type = 1;
+  ByteOrder byte_order = 2;
+  bool fortran_order = 3;
+
+}
+
 // Structural info of a tensor.
 message TensorSpec {
   // Length of the tensor, i.e., total number of values it stores.
   uint32 length = 1;
 
   // The size of each dimension of the tensor.
-  repeated uint32 dimensions = 2;
+  repeated int64 dimensions = 2;
 
-  // Supported data types.
-  enum DType {
-    UNKNOWN = 0;
-    INT = 1;
-    LONG = 2;
-    FLOAT = 3;
-    DOUBLE = 4;
-  }
+  DType type = 3;
 
-  // (Optional) The data type this tensor holds; may be used for
-  // casting the values to a specific type.
-  DType dtype = 3;
+  // Representation of the flatten tensor as bytes.
+  bytes value = 4;
 }
 
-// Tensor storing double values.
-message DoubleTensor {
-  // Tensor metadata.
-  TensorSpec spec = 1;
-
-  // Flattened representation of the array.
-  repeated double values = 2;
+// A wrapper over tensor spec for non-encoded / plaintext tensors.
+message PlaintextTensor {
+  // Tensor specifications.
+  TensorSpec tensor_spec = 1;
 }
 
-// Tensor storing double values.
-message FloatTensor {
-  // Tensor metadata.
-  TensorSpec spec = 1;
-
-  // Flattened representation of the array.
-  repeated float values = 2;
-}
-
-// Tensor storing integer values.
-message IntTensor {
-  // Tensor metadata.
-  TensorSpec spec = 1;
-
-  // Flattened representation of the array.
-  repeated int32 values = 2;
-}
-
-// Tensor storing double values.
+// A wrapper over tensor spec for encoded tensors.
 message CiphertextTensor {
-  // Tensor metadata.
-  TensorSpec spec = 1;
-
-  // Bytes (encrypted) representation of the array.
-  bytes values = 2;
+  // Tensor specifications.
+  TensorSpec tensor_spec = 1;
 }
 
 //////////////////////////
@@ -76,13 +77,14 @@ message Model {
     // Set to true if this is a trainable variable. Otherwise, false.
     bool trainable = 2;
 
-    // The tensor holding the values of this variable.
+    // The tensor shape and values representing this variable.
     oneof tensor {
-      IntTensor int_tensor = 3;
-      FloatTensor float_tensor = 4;
-      DoubleTensor double_tensor = 5;
-      CiphertextTensor ciphertext_tensor = 6;
+      // The value of a plaintext tensor are not encrypted.
+      PlaintextTensor plaintext_tensor = 3;
+      // The values of a ciphertext tensor are encrypted.
+      CiphertextTensor ciphertext_tensor = 4;
     }
+
   }
 
   // Model's variables.

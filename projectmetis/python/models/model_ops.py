@@ -4,6 +4,7 @@ import numpy as np
 
 from projectmetis.python.models.model_dataset import ModelDataset
 from projectmetis.proto import metis_pb2, model_pb2
+from projectmetis.python.utils.proto_messages_factory import ModelProtoMessages
 
 
 class ModelOps(object):
@@ -16,44 +17,35 @@ class ModelOps(object):
         assert all([isinstance(var, model_pb2.Model.Variable) for var in variables])
         var_names, var_trainables, var_nps = [], [], []
         for var in variables:
+            # Variable specifications.
             var_name = var.name
             var_trainable = var.trainable
-            is_ciphertext = False
-            if var.HasField('int_tensor'):
-                var_tensor = var.int_tensor
-            if var.HasField('float_tensor'):
-                var_tensor = var.float_tensor
-            if var.HasField('double_tensor'):
-                var_tensor = var.double_tensor
-            # TODO Adding ciphertext_tensor support.
-            if var.HasField('ciphertext_tensor'):
-                var_tensor = var.ciphertext_tensor
-                is_ciphertext = True
 
-            tensor_spec = var_tensor.spec
-            tensor_length = tensor_spec.length
-            tensor_dims = tensor_spec.dimensions
-            tensor_dtype = tensor_spec.dtype
-            tensor_values = var_tensor.values
-            if is_ciphertext:
+            if var.HasField("ciphertext_tensor"):
                 assert self._encryption_scheme is not None, "Need encryption scheme to decrypt tensor."
-                tensor_values = self._encryption_scheme.decrypt(tensor_values, tensor_length, 1)
-
-            if tensor_dtype == model_pb2.TensorSpec.DType.INT:
-                    tensor_np = np.array(tensor_values, dtype=np.int)
-            elif tensor_dtype == model_pb2.TensorSpec.DType.LONG:
-                tensor_np = np.array(tensor_values, dtype=np.long)
-            elif tensor_dtype == model_pb2.TensorSpec.DType.FLOAT:
-                tensor_np = np.array(tensor_values, dtype=np.float32)
-            elif tensor_dtype == model_pb2.TensorSpec.DType.DOUBLE:
-                tensor_np = np.array(tensor_values, dtype=np.float64)
+                # For a ciphertext tensor, first we need to decrypt it, and then load it
+                # into a numpy array with the data type specified in the tensor specifications.
+                tensor_spec = var.ciphertext_tensor.tensor_spec
+                tensor_length = tensor_spec.length
+                decoded_value = self._encryption_scheme.decrypt(tensor_spec.value, tensor_length, 1)
+                # Since the tensor is decoded we just need to recreate the numpy array
+                # to its original data type and shape.
+                np_array = \
+                    ModelProtoMessages.TensorSpecProto.proto_tensor_spec_with_list_values_to_numpy_array(
+                        tensor_spec, decoded_value)
+            elif var.HasField('plaintext_tensor'):
+                tensor_spec = var.plaintext_tensor.tensor_spec
+                # If the tensor is a plaintext tensor, then we need to read the byte buffer
+                # and load the tensor as a numpy array casting it to the specified data type.
+                np_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(tensor_spec)
             else:
-                # The default data type in Numpy is float64.
-                tensor_np = np.array(tensor_values, dtype=np.float64)
-            tensor_np = tensor_np.reshape(tensor_dims)
+                raise RuntimeError("Not a supported tensor type.")
+
+            # Append variable specifications to model's variable list.
             var_names.append(var_name)
             var_trainables.append(var_trainable)
-            var_nps.append(tensor_np)
+            var_nps.append(np_array)
+
         return var_names, var_trainables, var_nps
 
     @abc.abstractmethod

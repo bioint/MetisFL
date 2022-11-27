@@ -108,7 +108,8 @@ class KerasProtoFactory:
                 ciphertext = None
                 if encryption_scheme is not None:
                     ciphertext = encryption_scheme.encrypt(w.numpy().flatten(), 1)
-                tensor_pb = ModelProtoMessages.construct_tensor_pb_from_nparray(w.numpy(), ciphertext=ciphertext)
+                tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w.numpy(),
+                                                                   ciphertext=ciphertext)
                 model_var = ModelProtoMessages.construct_model_variable_pb(name=w.name,
                                                                            trainable=is_weight_trainable,
                                                                            tensor_pb=tensor_pb)

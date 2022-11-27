@@ -29,7 +29,7 @@ def evaluate_model(channel):
 
     model_vars = []
     for widx, weight in enumerate(model_weights):
-        tensor_pb = ModelProtoMessages.construct_tensor_pb_from_nparray(weight)
+        tensor_pb = ModelProtoMessages.construct_tensor_pb(weight)
         model_var = ModelProtoMessages.construct_model_variable_pb(name="arr_{}".format(widx),
                                                                    trainable=True,
                                                                    tensor_pb=tensor_pb)
@@ -63,7 +63,7 @@ def run_task(channel, epochs=1):
     model_vars = []
     for widx, weight in enumerate(model_weights):
         # tensor_pb = ModelProtoMessages.construct_tensor_pb_from_nparray(np.array([1.0, 3.0, 4.0]))
-        tensor_pb = ModelProtoMessages.construct_tensor_pb_from_nparray(weight)
+        tensor_pb = ModelProtoMessages.construct_tensor_pb(weight)
         # model_var = ModelProtoMessages.construct_model_variable_pb(name="arr1", trainable=True, tensor_pb=tensor_pb)
         model_var = ModelProtoMessages.construct_model_variable_pb(name="arr_{}".format(widx),
                                                                    trainable=True,
