@@ -9,6 +9,6 @@ fi
 
 # Set all env variables
 CONFIGURE_DIR=$(dirname "$0")
-"$PYTHON_BIN_PATH" "${CONFIGURE_DIR}/configure.py" "$@"
+"$PYTHON_BIN_PATH" "${CONFIGURE_DIR}/configure.py" --build_conda_cuda_env "$1"
 
 echo "Configuration finished"

@@ -1,6 +1,9 @@
 # Install Ubuntu image from docker hub.
 FROM ubuntu:jammy as ubuntu
 
+# Whether to install python libraries with CUDA support.
+ARG ENV_CONDA_CUDA_ENABLED=0
+
 # Assign simple root password.
 RUN echo "root:root" | chpasswd
 
@@ -53,7 +56,7 @@ WORKDIR /projectmetis-rc
 COPY . .
 
 # Configure MetisFL.
-RUN chmod +x ./configure.sh && ./configure.sh
+RUN chmod +x ./configure.sh && ./configure.sh $ENV_CONDA_CUDA_ENABLED
 
 # Build all bazel targets.
 #RUN bazel query //... | xargs bazel build

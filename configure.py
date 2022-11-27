@@ -1,17 +1,8 @@
+import argparse
 import errno
 import os
 import platform
 import shutil
-import subprocess
-
-
-def is_nvidia_installed():
-    installed = True
-    try:
-        subprocess.check_output('nvidia-smi')
-    except Exception:
-        installed = False
-    return installed
 
 
 def is_windows():
@@ -50,27 +41,31 @@ def symlink_force(target, link_name):
             raise e
 
 
-def setup_python():
+def setup_python(build_conda_cuda_env):
     # TODO By Default python version is 3.8.8. We might need to make this
     #  user specific. Conda downloads the python interpreter.
 
-    if not is_nvidia_installed() or is_macos() or is_windows() or is_cygwin():
+    if not build_conda_cuda_env or any([is_macos(), is_windows(), is_cygwin()]):
         src = os.path.join(os.getcwd(), "python/py38_condaenv.yaml")
     else:
         src = os.path.join(os.getcwd(), "python/py38_condaenvcuda.yaml")
     dst = os.path.join(os.getcwd(), "python/conda_env.yaml")
+    if os.path.isfile(dst):
+        os.remove(dst)
     # We do not create a symlink, because when copying the files inside the image,
     # the content of symlinked files are not transferred. Hence, the hard copy.
     # symlink_force(source, target)
-    try:
-        shutil.copy(src, dst)
-    except shutil.SameFileError:
-        pass
+    shutil.copy(src, dst)
 
 
-def main():
-    setup_python()
+def main(build_conda_cuda_env):
+    setup_python(build_conda_cuda_env)
 
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(
+        prog='MetisFL Python environment configurator.',
+        description='Configures whether python conda should be built against a cuda or a non-cuda environment.')
+    parser.add_argument("--build_conda_cuda_env", type=int, required=True)
+    args = parser.parse_args()
+    main(args.build_conda_cuda_env)
