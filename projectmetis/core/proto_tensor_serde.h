@@ -32,6 +32,24 @@ inline std::vector<char> SerializeTensor(const std::vector<T> &v) {
 }
 
 template<typename T>
+inline projectmetis::TensorQuantifier QuantifyTensor(const projectmetis::TensorSpec &tensor_spec) {
+  /*
+   * This function returns the tensor measurements. The first item in the returned
+   * tuple represents the number of non-zero elements, the second item the number of
+   * zero elements and the last item the size of the tensor in bytes.
+   */
+  auto t = DeserializeTensor<T>(tensor_spec);
+  auto t_zeros = std::count(t.begin(), t.end(), 0);
+  auto t_non_zeros = t.size() - t_zeros;
+  auto t_bytes = sizeof(T) * t.size();
+  auto tensor_quantifier = projectmetis::TensorQuantifier();
+  tensor_quantifier.set_tensor_non_zeros(t_non_zeros);
+  tensor_quantifier.set_tensor_zeros(t_zeros);
+  tensor_quantifier.set_tensor_size_bytes(t_bytes);
+  return tensor_quantifier;
+}
+
+template<typename T>
 inline void PrintSerializedTensor(const std::string &str, const uint32_t num_values) {
   std::vector<T> loaded_values(num_values);
   std::memcpy(&loaded_values[0], str.c_str(), num_values * sizeof(T));

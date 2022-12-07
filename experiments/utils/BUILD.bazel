@@ -6,9 +6,14 @@ py_library(
     name = "experiments_utils_py_lib",
     srcs = [
         "data_partitioning.py",
+        "environment_generator.py",
     ],
     srcs_version = "PY3",
+    data = [
+        "//experiments/federation_environments_config:configuration_files",
+    ],
     deps = [
         "//projectmetis/python/logging:logging_py_lib",
+        "//projectmetis/python/utils:utils_py_lib",
     ],
 )

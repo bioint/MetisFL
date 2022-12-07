@@ -72,6 +72,10 @@ class KerasModelOps(ModelOps):
             _x, _y, _b = dataset.get_x(), dataset.get_y(), batch_size
         return _x, _y, _b
 
+    def cleanup(self):
+        del self._model
+        tf.keras.backend.clear_session()
+
     def load_model(self, filepath=None, *args, **kwargs):
         if filepath is None:
             filepath = self._model_filepath
@@ -113,7 +117,7 @@ class KerasModelOps(ModelOps):
         # TODO Compile model with new optimizer if need to.
         #  It is required by TF when redefining a model.
         #  Assign new model weights after model compilation.
-        self.set_optimizer_state(hyperparameters_pb.optimizer)
+        self.construct_optimizer(hyperparameters_pb.optimizer)
         if train_dataset is None:
             raise RuntimeError("Provided `dataset` for training is None.")
         # Compute number of epochs based on the data size of the training set.
@@ -216,7 +220,7 @@ class KerasModelOps(ModelOps):
         MetisLogger.info("Model inference is complete.")
         return predictions
 
-    def set_optimizer_state(self, optimizer_config_pb: model_pb2.OptimizerConfig = None,
+    def construct_optimizer(self, optimizer_config_pb: model_pb2.OptimizerConfig = None,
                             *args, **kwargs):
         if optimizer_config_pb is None:
             raise RuntimeError("Provided `OptimizerConfig` proto message is None.")

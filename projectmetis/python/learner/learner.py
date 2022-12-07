@@ -54,10 +54,17 @@ class Learner(object):
             test_dataset_recipe_pkl, test_dataset_fp
 
         # We use pebble.ProcessPool() and not the native concurrent.futures.ProcessPoolExecutor() so that
-        # when a termination signal - SIGTERM is received we stop immediately the active task. This was
+        # when a termination signal (SIGTERM) is received we stop immediately the active task. This was
         # not possible with jobs/tasks submitted to the concurrent.futures.ProcessPoolExecutor()
         # because we had to wait for the active task to complete.
         # A single Process per training/evaluation/inference task.
+
+        # If recreate_queue_task_worker is True, then we will create the entire model training backend
+        # from scratch. For instance, in the case of Tensorflow, if this flag is True, then the
+        # dependency graph holding the tensors and the variables definitions will be created again.
+        # This re-creation adds substantial delay during model training and evaluation. If we do not
+        # re-create, that is recreate_queue_task_worker is set to False, then we can re-use the existing
+        # graph and avoid graph creation delays.
         worker_max_tasks = 0
         if recreate_queue_task_worker:
             worker_max_tasks = 1
@@ -225,28 +232,28 @@ class Learner(object):
                          .format(self.host_port_identifier()))
         model_ops_fn = self._model_ops_factory(self._nn_engine)
 
-        learner_evaluator = LearnerEvaluator(model_ops_fn, model_pb)
-        # Invoke dataset recipes on a per model operations context,
-        # since model evaluation will run as a subprocess.
-        train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
-        # Need to unfold the pb into python list.
-        metrics = [m for m in metrics_pb.metric]
-        # Initialize to an empty metis_pb2.ModelEvaluation object all three variables.
-        train_eval_pb = validation_eval_pb = test_eval_pb = metis_pb2.ModelEvaluation()
-        for dataset_to_eval in evaluation_datasets_pb:
-            if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TRAINING:
-                train_eval_pb = learner_evaluator.evaluate_model(train_dataset, batch_size, metrics, verbose)
-            if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.VALIDATION:
-                validation_eval_pb = learner_evaluator.evaluate_model(validation_dataset, batch_size, metrics, verbose)
-            if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TEST:
-                test_eval_pb = learner_evaluator.evaluate_model(test_dataset, batch_size, metrics, verbose)
-        model_evaluations_pb = \
-            proto_factory.MetisProtoMessages.construct_model_evaluations_pb(
-                training_evaluation_pb=train_eval_pb,
-                validation_evaluation_pb=validation_eval_pb,
-                test_evaluation_pb=test_eval_pb)
-        MetisLogger.info("Learner {} completed model evaluation on requested datasets."
-                         .format(self.host_port_identifier()))
+        with LearnerEvaluator(model_ops_fn, model_pb) as learner_evaluator:
+            # Invoke dataset recipes on a per model operations context,
+            # since model evaluation will run as a subprocess.
+            train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
+            # Need to unfold the pb into python list.
+            metrics = [m for m in metrics_pb.metric]
+            # Initialize to an empty metis_pb2.ModelEvaluation object all three variables.
+            train_eval_pb = validation_eval_pb = test_eval_pb = metis_pb2.ModelEvaluation()
+            for dataset_to_eval in evaluation_datasets_pb:
+                if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TRAINING:
+                    train_eval_pb = learner_evaluator.evaluate_model(train_dataset, batch_size, metrics, verbose)
+                if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.VALIDATION:
+                    validation_eval_pb = learner_evaluator.evaluate_model(validation_dataset, batch_size, metrics, verbose)
+                if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TEST:
+                    test_eval_pb = learner_evaluator.evaluate_model(test_dataset, batch_size, metrics, verbose)
+            model_evaluations_pb = \
+                proto_factory.MetisProtoMessages.construct_model_evaluations_pb(
+                    training_evaluation_pb=train_eval_pb,
+                    validation_evaluation_pb=validation_eval_pb,
+                    test_evaluation_pb=test_eval_pb)
+            MetisLogger.info("Learner {} completed model evaluation on requested datasets."
+                             .format(self.host_port_identifier()))
         return model_evaluations_pb
 
     def model_infer(self, model_pb: model_pb2.Model, batch_size: int,
@@ -257,23 +264,23 @@ class Learner(object):
         #  similar learner_pb2.InferModelRequest.dataset_to_infer list.
         model_ops_fn = self._model_ops_factory(self._nn_engine)
 
-        learner_evaluator = LearnerEvaluator(model_ops_fn, model_pb)
-        # Invoke dataset recipes on a per model operations context,
-        # since model inference will run as a subprocess.
-        train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
-        inferred_res = {"train": None, "valid": None, "test": None}
-        if infer_train:
-            train_inferred = learner_evaluator.infer_model(train_dataset, batch_size, verbose)
-            inferred_res["train"] = train_inferred
-        if infer_valid:
-            val_inferred = learner_evaluator.infer_model(validation_dataset, batch_size, verbose)
-            inferred_res["valid"] = val_inferred
-        if infer_test:
-            test_inferred = learner_evaluator.infer_model(test_dataset, batch_size, verbose)
-            inferred_res["test"] = test_inferred
-        stringified_res = DictionaryFormatter.stringify(inferred_res)
-        MetisLogger.info("Learner {} completed model inference on requested datasets."
-                         .format(self.host_port_identifier()))
+        with LearnerEvaluator(model_ops_fn, model_pb) as learner_evaluator:
+            # Invoke dataset recipes on a per model operations context,
+            # since model inference will run as a subprocess.
+            train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
+            inferred_res = {"train": None, "valid": None, "test": None}
+            if infer_train:
+                train_inferred = learner_evaluator.infer_model(train_dataset, batch_size, verbose)
+                inferred_res["train"] = train_inferred
+            if infer_valid:
+                val_inferred = learner_evaluator.infer_model(validation_dataset, batch_size, verbose)
+                inferred_res["valid"] = val_inferred
+            if infer_test:
+                test_inferred = learner_evaluator.infer_model(test_dataset, batch_size, verbose)
+                inferred_res["test"] = test_inferred
+            stringified_res = DictionaryFormatter.stringify(inferred_res)
+            MetisLogger.info("Learner {} completed model inference on requested datasets."
+                             .format(self.host_port_identifier()))
         return stringified_res
 
     def model_train(self, learning_task_pb: metis_pb2.LearningTask,
@@ -285,13 +292,13 @@ class Learner(object):
 
         # Invoke dataset recipes on a per model operations context,
         # since model training will run as a subprocess.
-        learner_trainer = LearnerTrainer(model_ops_fn, model_pb)
-        train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
-        completed_task_pb = learner_trainer.train_model(train_dataset, learning_task_pb,
-                                                        hyperparameters_pb, validation_dataset,
-                                                        test_dataset, verbose)
-        MetisLogger.info("Learner {} completed model training on local training dataset."
-                         .format(self.host_port_identifier()))
+        with LearnerTrainer(model_ops_fn, model_pb) as learner_trainer:
+            train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
+            completed_task_pb = learner_trainer.train_model(train_dataset, learning_task_pb,
+                                                            hyperparameters_pb, validation_dataset,
+                                                            test_dataset, verbose)
+            MetisLogger.info("Learner {} completed model training on local training dataset."
+                             .format(self.host_port_identifier()))
         return completed_task_pb
 
     def run_evaluation_task(self, model_pb: model_pb2.Model, batch_size: int,

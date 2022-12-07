@@ -63,11 +63,14 @@ class GRPCServerClient(object):
 
 class GRPCServerMaxMsgLength(object):
 
-    def __init__(self, max_workers=1):
+    def __init__(self, max_workers=None):
         # TODO Remove this. Extend Server class to read messages as chunks
-        # TODO similar to this, C++: https://jbrandhorst.com/post/grpc-binary-blob-stream/
-        self.server_options = \
+        # TODO similar to this in Go: https://jbrandhorst.com/post/grpc-binary-blob-stream/
+        self.channel_options = \
             [(cygrpc.ChannelArgKey.max_send_message_length, -1),
-             (cygrpc.ChannelArgKey.max_receive_message_length, -1)]
+             (cygrpc.ChannelArgKey.max_receive_message_length, -1),]
+             # (cygrpc.ChannelArgKey.max_concurrent_streams, 1000),
+             # (grpc.chttp2.lookahead_bytes, 1024),
+             # (grpc.chttp2.max_frame_size, 16777215)]
         self.executor = futures.ThreadPoolExecutor(max_workers=max_workers)
-        self.server = grpc.server(self.executor, options=self.server_options)
+        self.server = grpc.server(self.executor, options=self.channel_options)

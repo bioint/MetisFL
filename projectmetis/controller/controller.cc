@@ -16,8 +16,9 @@
 #include "projectmetis/controller/model_scaling/model_scaling.h"
 #include "projectmetis/controller/model_selection/model_selection.h"
 #include "projectmetis/controller/scheduling/scheduling.h"
-#include "projectmetis/core/macros.h"
 #include "projectmetis/core/bs_thread_pool.h"
+#include "projectmetis/core/macros.h"
+#include "projectmetis/core/proto_tensor_serde.h"
 #include "projectmetis/proto/learner.grpc.pb.h"
 #include "projectmetis/proto/metis.pb.h"
 
@@ -141,8 +142,14 @@ class ControllerDefaultImpl : public Controller {
 
     // Creates default task template.
     LearningTaskTemplate task_template;
-    uint32_t steps_per_epoch = dataset_spec.num_training_examples() /
-        params_.model_hyperparams().batch_size();
+    // Make sure steps per epoch is always positive. For instance if
+    // the dataset size is less than the batch size, then the steps will
+    // be equal to 0; hence the ceiling operation and float conversion.
+    // Float conversion because ceil(x/y) with x < y and x, y integers returns 0.
+    uint32_t steps_per_epoch = std::ceil(
+        (float) dataset_spec.num_training_examples() /
+        (float) params_.model_hyperparams().batch_size());
+
     task_template.set_num_local_updates(params_.model_hyperparams().epochs() *
         steps_per_epoch);
 
@@ -420,6 +427,10 @@ class ControllerDefaultImpl : public Controller {
       std::chrono::duration<double, std::milli> elapsed = end_high_res - start_high_res;
       old_meta.set_model_aggregation_duration_ms(elapsed.count());
 
+      // Record the number of zeros and non-zeros values for
+      // each model layer/variable in the metadata collection.
+      RecordCommunityModelSize(community_model, metadata_index);
+
       community_model.set_global_iteration(task_global_iteration);
       // Updates the community model.
       community_model_ = community_model;
@@ -611,12 +622,14 @@ class ControllerDefaultImpl : public Controller {
     auto& cq_ = eval_tasks_cq_;
     // Block until the next result is available in the completion queue "cq".
     while (cq_.Next(&got_tag, &ok)) {
+
       // The tag is the memory location of the call object.
       auto* call = static_cast<AsyncLearnerEvalCall*>(got_tag);
 
       // Verify that the request was completed successfully. Note that "ok"
       // corresponds solely to the request for updates introduced by Finish().
       GPR_ASSERT(ok);
+
 
       if (call) {
         // If either a failed or successful response is received
@@ -781,6 +794,49 @@ class ControllerDefaultImpl : public Controller {
     return aggregator_->Aggregate(participating_models);
   }
 
+  void RecordCommunityModelSize(const FederatedModel &model,
+                                const uint32_t &metadata_ref_idx) {
+    /*
+     * Here, we record all tensor metadat associated with its size, non-zero and zero values.
+     */
+    for (auto &variable: model.model().variables()) {
+      if (variable.has_plaintext_tensor()) {
+        auto data_type = variable.plaintext_tensor().tensor_spec().type().type();
+        auto tensor_spec = variable.plaintext_tensor().tensor_spec();
+        TensorQuantifier tensor_quantifier;
+        if (data_type == DType_Type_UINT8) {
+          tensor_quantifier = ::proto::QuantifyTensor<unsigned char>(tensor_spec);
+        } else if (data_type == DType_Type_UINT16) {
+          tensor_quantifier = ::proto::QuantifyTensor<unsigned short>(tensor_spec);
+        } else if (data_type == DType_Type_UINT32) {
+          tensor_quantifier = ::proto::QuantifyTensor<unsigned int>(tensor_spec);
+        } else if (data_type == DType_Type_UINT64) {
+          tensor_quantifier = ::proto::QuantifyTensor<unsigned long>(tensor_spec);
+        } else if (data_type == DType_Type_INT8) {
+          tensor_quantifier = ::proto::QuantifyTensor<signed char>(tensor_spec);
+        } else if (data_type == DType_Type_INT16) {
+          tensor_quantifier = ::proto::QuantifyTensor<signed short>(tensor_spec);
+        } else if (data_type == DType_Type_INT32) {
+          tensor_quantifier = ::proto::QuantifyTensor<signed int>(tensor_spec);
+        } else if (data_type == DType_Type_INT64) {
+          tensor_quantifier = ::proto::QuantifyTensor<signed long>(tensor_spec);
+        } else if (data_type == DType_Type_FLOAT32) {
+          tensor_quantifier = ::proto::QuantifyTensor<float>(tensor_spec);
+        } else if (data_type == DType_Type_FLOAT64) {
+          tensor_quantifier = ::proto::QuantifyTensor<double>(tensor_spec);
+        } else {
+          throw std::runtime_error("Unsupported tensor data type.");
+        } // end if
+
+        // Record the computed tensor measurements.
+        *metadata_.at(metadata_ref_idx).mutable_model_tensor_quantifiers()->Add()
+          = tensor_quantifier;
+
+      } // end if
+    } // end for
+
+  }
+
   // Controllers parameters.
   ControllerParams params_;
   uint32_t global_iteration_;
@@ -852,7 +908,7 @@ class ControllerDefaultImpl : public Controller {
     uint32_t comm_eval_ref_idx;
     // Index to the metadata collection vector.
     uint32_t metadata_ref_idx;
-    AsyncLearnerEvalCall() { comm_eval_ref_idx = 0; metadata_ref_idx=0; }
+    AsyncLearnerEvalCall() { comm_eval_ref_idx = 0; metadata_ref_idx = 0; }
   };
 
 };

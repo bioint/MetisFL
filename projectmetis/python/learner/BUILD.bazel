@@ -31,6 +31,8 @@ py_binary(
     deps = [
         "//experiments/keras/models:keras_models_py_lib",
         "//projectmetis/proto:learner_py_grpc",
+        "//projectmetis/python/logging:logging_py_lib",
+        "//projectmetis/python/models/keras:models_keras_py_lib",
         "//projectmetis/python/utils:utils_py_lib",
     ],
 )

@@ -10,10 +10,10 @@ import projectmetis.python.utils.proto_messages_factory as proto_messages_factor
 
 from fabric import Connection
 from google.protobuf.json_format import MessageToDict
-from pebble import ThreadPool
+from pebble import ProcessPool
 from projectmetis.python.utils.grpc_controller_client import GRPCControllerClient
 from projectmetis.python.utils.grpc_learner_client import GRPCLearnerClient
-from projectmetis.python.logging.metis_logger import MetisLogger
+from projectmetis.python.logging.metis_logger import MetisASCIIArt, MetisLogger
 from projectmetis.python.utils.bazel_services_factory import BazelMetisServicesCmdFactory
 from projectmetis.python.utils.docker_services_factory import DockerMetisServicesCmdFactory
 from projectmetis.python.utils.fedenv_parser import FederationEnvironment
@@ -24,6 +24,8 @@ class DriverSessionBase(object):
 
     def __init__(self, fed_env, nn_engine, model_definition_dir,
                  train_dataset_recipe_fp, validation_dataset_recipe_fp="", test_dataset_recipe_fp=""):
+        # Print welcome message.
+        MetisASCIIArt.print()
         # If the provided federation environment is not a `FederationEnvironment` object then construct it.
         self.federation_environment = \
             fed_env if isinstance(fed_env, FederationEnvironment) else FederationEnvironment(fed_env)
@@ -35,7 +37,7 @@ class DriverSessionBase(object):
         self.train_dataset_recipe_fp = train_dataset_recipe_fp
         self.validation_dataset_recipe_fp = validation_dataset_recipe_fp
         self.test_dataset_recipe_fp = test_dataset_recipe_fp
-        self._executor = ThreadPool(max_workers=self.num_participating_learners + 1)
+        self._executor = ProcessPool(max_workers=self.num_participating_learners + 1)
         self._executor_controller_tasks_q = queue.LifoQueue(maxsize=0)
         self._executor_learners_tasks_q = queue.LifoQueue(maxsize=0)
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
@@ -141,7 +143,7 @@ class DriverSessionBase(object):
             tar.add(source_dir, arcname=os.path.basename(source_dir))
         return output_filepath
 
-    def _ship_model(self, model_weights):
+    def _ship_model_to_controller(self, model_weights):
         model_vars_pb = []
         for widx, weight in enumerate(model_weights):
             ciphertext = None
@@ -187,7 +189,7 @@ class DriverSessionBase(object):
         This func will create N number of processes/workers to create the federation
         environment. One process for the controller and every other learner.
 
-        It first initializes the federation coniohtroller and then each learner, with some
+        It first initializes the federation controller and then each learner, with some
         lagging time till the federation controller is live so that every learner can
         connect to it.
         """
@@ -198,7 +200,7 @@ class DriverSessionBase(object):
         controller_future = self._executor.schedule(function=self._init_controller)
         self._executor_controller_tasks_q.put(controller_future)
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
-            self._ship_model(model_weights=model_weights)
+            self._ship_model_to_controller(model_weights=model_weights)
             for learner_instance in self.federation_environment.learners.learners:
                 learner_future = self._executor.schedule(
                     function=self._init_learner,
@@ -206,6 +208,9 @@ class DriverSessionBase(object):
                           self.federation_environment.controller))
                 # TODO If we need to test the pipeline we can force a future return here, i.e., learner_future.result()
                 self._executor_learners_tasks_q.put(learner_future)
+                # TODO We perform a sleep because if the learners are co-located, e.g., localhost, then an exception
+                #  is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
+                time.sleep(0.1)
 
     def _collect_local_statistics(self):
         learners_pb = self._driver_controller_grpc_client.get_participating_learners()
@@ -341,6 +346,8 @@ class DriverSession(DriverSessionBase):
         connection.run("mkdir -p {}".format(remote_metis_model_path))
         # Place/Copy model definition and dataset recipe files from the driver to the remote host.
         # Model definition ship .gz file and decompress it.
+        MetisLogger.info("Copying model definition and dataset recipe files at learner: {}"
+                         .format(learner_instance.learner_id))
         connection.put(self.model_definition_tar_fp, remote_metis_model_path)
         connection.put(self.train_dataset_recipe_fp, remote_metis_model_path)
         connection.put(self.validation_dataset_recipe_fp, remote_metis_model_path)
@@ -357,7 +364,9 @@ class DriverSession(DriverSessionBase):
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
             remote_on_login = remote_on_login[:-1]
 
-        # Untar model definition zipped file.
+        # Un-taring model definition zipped file.
+        MetisLogger.info("Un-taring model definition files at learner: {}"
+                         .format(learner_instance.learner_id))
         connection.run("cd {}; tar -xvzf {}".format(
             remote_metis_model_path,
             self.model_definition_tar_fp))
@@ -401,14 +410,14 @@ class DriverSessionDocker(DriverSessionBase):
             docker_cmd_factory.init_container(
                 port=self.federation_environment.controller.grpc_servicer.port,
                 docker_image=self.federation_environment.docker.docker_image)
+        MetisLogger.info("Initializing controller: {}".format(docker_init_container))
         init_container = docker_init_container + " /bin/bash -c \"{}; {}\"".format(
             "source /opt/rh/gcc-toolset-9/enable", self._init_controller_bazel_cmd())
-        print(init_container, flush=True)
         fabric_connection_config = self.federation_environment.controller \
             .connection_configs.get_fabric_connection_config()
         remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc "
         connection = Connection(**fabric_connection_config)
-        connection.run("{};{}".format(remote_source_path, docker_init_container))
+        connection.run("{};{}".format(remote_source_path, init_container))
         connection.close()
         return
 
@@ -423,9 +432,9 @@ class DriverSessionDocker(DriverSessionBase):
                 port=learner_instance.grpc_servicer.port,
                 docker_image=self.federation_environment.docker.docker_image,
                 cuda_devices=learner_instance.cuda_devices)
+        MetisLogger.info("Initializing learner: {}".format(docker_init_container))
         init_container = docker_init_container + " /bin/bash -c \"{}; {}\"".format(
             "source /opt/rh/gcc-toolset-9/enable", self._init_controller_bazel_cmd())
-        print(docker_init_container, flush=True)
         fabric_connection_config = self.federation_environment.controller \
             .connection_configs.get_fabric_connection_config()
         remote_source_path = "source /etc/profile; source ~/.bash_profile; source ~/.bashrc "

@@ -38,6 +38,13 @@ message DType {
 
 }
 
+// A message to measure the size of the tensor.
+message TensorQuantifier {
+  optional uint32 tensor_non_zeros = 1; // We set the field as optional because we want to print/record the zero values.
+  optional uint32 tensor_zeros = 2; // We set the field as optional because we want to print/record the zero values.
+  uint32 tensor_size_bytes = 3;
+}
+
 // Structural info of a tensor.
 message TensorSpec {
   // Length of the tensor, i.e., total number of values it stores.

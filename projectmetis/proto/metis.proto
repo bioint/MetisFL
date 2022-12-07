@@ -269,4 +269,5 @@ message FederatedTaskRuntimeMetadata {
   google.protobuf.Timestamp model_aggregation_started_at = 8;
   google.protobuf.Timestamp model_aggregation_completed_at = 9;
   double model_aggregation_duration_ms = 10;
+  repeated TensorQuantifier model_tensor_quantifiers = 11;
 }

@@ -17,6 +17,12 @@ class LearnerTrainer(object):
         if len(self.weights_values) > 0:
             self._model_ops.set_model_weights(self.weights_names, self.weights_trainable, self.weights_values)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._model_ops.cleanup()
+
     def train_model(self, train_dataset: ModelDataset, learning_task_pb, hyperparameters_pb,
                     validation_dataset=None, test_dataset=None, verbose=False, *args, **kwargs):
         completed_task_pb = self._model_ops\

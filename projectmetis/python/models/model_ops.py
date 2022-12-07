@@ -49,6 +49,10 @@ class ModelOps(object):
         return var_names, var_trainables, var_nps
 
     @abc.abstractmethod
+    def cleanup(self):
+        pass
+
+    @abc.abstractmethod
     def load_model(self, filepath=None, *args, **kwargs):
         pass
 

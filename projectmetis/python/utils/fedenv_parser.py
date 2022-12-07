@@ -138,6 +138,16 @@ class Learner(object):
         self.cuda_devices = learner_def_map.get('CudaDevices', [])
         self.dataset_configs = DatasetConfigs(learner_def_map.get("DatasetConfigs"))
 
+    def __str__(self):
+        return """ LearnerID: {}, ProjectHome: {}, ConnectionConfigs: {}, GRPCServicer:{}, CUDA_DEVICES: {}," \
+               "DatasetConfigs: {}""".format(
+            self.learner_id,
+            self.project_home,
+            self.connection_configs,
+            self.grpc_servicer,
+            self.cuda_devices,
+            self.dataset_configs)
+
 
 class ConnectionConfigs(object):
 
@@ -165,7 +175,7 @@ class ConnectionConfigs(object):
 
     def get_fabric_connection_config(self):
         # Look for parameters values here:
-        # https://pyneng.readthedocs.io/en/latest/book/18_ssh_telnet/paramiko.html#module-paramiko
+        # https://docs.paramiko.org/en/latest/api/client.html#paramiko.client.SSHClient.connect
         # 'allow_agent' show be disabled if working with username/password.
         connect_kwargs = {
             "password": self.password,

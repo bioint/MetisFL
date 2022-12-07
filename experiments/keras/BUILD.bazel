@@ -66,3 +66,25 @@ py_binary(
         "//projectmetis/python/models/keras/optimizers:models_keras_optimizers_py_lib",
     ],
 )
+
+py_binary(
+    name = "scalability_testing",
+    main = "scalability_testing.py",
+    srcs = [
+        "scalability_testing.py",
+    ],
+    srcs_version = "PY3",
+    python_version = "PY3",
+    legacy_create_init = False,
+    data = [
+        # To be able to load the federation environments .yaml files relative to the execution script.
+        "//experiments/federation_environments_config:configuration_files",
+        "//experiments/keras/datasets/housing:experiment_data",
+    ],
+    deps = [
+        "//experiments/utils:experiments_utils_py_lib",
+        "//experiments/keras/models:keras_models_py_lib",
+        "//projectmetis/python/driver:driver_py_lib",
+        "//projectmetis/python/models/keras/optimizers:models_keras_optimizers_py_lib",
+    ],
+)

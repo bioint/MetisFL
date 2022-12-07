@@ -7,6 +7,15 @@ import logging
 import sys
 
 
+class MetisASCIIArt(object):
+
+    @classmethod
+    def print(cls):
+        # Print 'METIS Federated Learning' on console as an ASCII-Art pattern.
+        cprint(figlet_format('METIS', font='greek'), 'blue', None, attrs=['bold'], flush=True)
+        cprint(figlet_format('Federated Learning Framework', width=150), 'blue', None, attrs=['bold'], flush=True)
+
+
 class MyFormatter(logging.Formatter):
     """
     Code for microseconds logging found at: https://stackoverflow.com/questions/6290739/python-logging-use-milliseconds-in-time-format
@@ -32,10 +41,6 @@ class MetisLogger(object):
     __logger.addHandler(ch)
     __logger.propagate = False
     __logger_lock = threading.Lock()
-
-    # Print 'METIS Federated Learning' on console as an ASCII-Art pattern.
-    # cprint(figlet_format('METIS', font='greek'), 'blue', None, attrs=['bold'], flush=True)
-    # cprint(figlet_format('Federated Learning Framework', width=150), 'blue', None, attrs=['bold'], flush=True)
 
     @classmethod
     def getlogger(cls):

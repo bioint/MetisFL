@@ -9,6 +9,7 @@ py_library(
         "brainage_cnns.py",
         "cifar_cnn.py",
         "fashion_mnist_fc.py",
+        "housing_mlp.py",
         "imdb_lstm.py",
         "melanoma_fc.py",
         "mnist_fc.py",

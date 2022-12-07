@@ -6,8 +6,8 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from experiments.utils.data_partitioning import DataPartitioning
 from experiments.keras.models.fashion_mnist_fc import FashionMnistModel
+from experiments.utils.data_partitioning import DataPartitioning
 from projectmetis.python.driver.driver_session import DriverSession
 from projectmetis.python.models.model_dataset import ModelDatasetClassification
 from projectmetis.python.utils.fedenv_parser import FederationEnvironment
