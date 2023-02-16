@@ -33,7 +33,7 @@ class Learner(object):
 
     def __init__(self, learner_server_entity: metis_pb2.ServerEntity,
                  controller_server_entity: metis_pb2.ServerEntity,
-                 fhe_scheme: metis_pb2.FHEScheme, nn_engine, model_fp,
+                 he_scheme: metis_pb2.HEScheme, nn_engine, model_fp,
                  train_dataset_fp, train_dataset_recipe_pkl,
                  validation_dataset_fp="", validation_dataset_recipe_pkl="",
                  test_dataset_fp="", test_dataset_recipe_pkl="",
@@ -41,7 +41,7 @@ class Learner(object):
                  learner_credentials_fp="/tmp/metis/learner/"):
         self._learner_server_entity = learner_server_entity
         self._controller_server_entity = controller_server_entity
-        self._fhe_scheme = fhe_scheme
+        self._he_scheme = he_scheme
         self._nn_engine = nn_engine
         self._model_fp = model_fp
 
@@ -175,22 +175,28 @@ class Learner(object):
 
     def _model_ops_factory_keras(self, *args, **kwargs):
         from projectmetis.python.models.keras.keras_model_ops import KerasModelOps
-        encryption_scheme = None
-        if self._fhe_scheme.enabled:
-            encryption_scheme = fhe.CKKS(
-                self._fhe_scheme.batch_size, self._fhe_scheme.scaling_bits, "resources/fheparams/cryptoparams/")
-            encryption_scheme.load_crypto_params()
-        model_ops = KerasModelOps(model_filepath=self._model_fp, encryption_scheme=encryption_scheme, *args, **kwargs)
+        he_scheme = None
+        if self._he_scheme.enabled:
+            if self._he_scheme.HasField("fhe_scheme"):
+                he_scheme = fhe.CKKS(
+                    self._he_scheme.fhe_scheme.batch_size,
+                    self._he_scheme.fhe_scheme.scaling_bits,
+                    "resources/fheparams/cryptoparams/")
+            he_scheme.load_crypto_params()
+        model_ops = KerasModelOps(model_filepath=self._model_fp, he_scheme=he_scheme, *args, **kwargs)
         return model_ops
 
     def _model_ops_factory_pytorch(self, *args, **kwargs):
         from projectmetis.python.models.pytorch.pytorch_model_ops import PyTorchModelOps
-        encryption_scheme = None
-        if self._fhe_scheme.enabled:
-            encryption_scheme = fhe.CKKS(
-                self._fhe_scheme.batch_size, self._fhe_scheme.scaling_bits, "resources/fheparams/cryptoparams/")
-            encryption_scheme.load_crypto_params()
-        model_ops = PyTorchModelOps(model_filepath=self._model_fp, encryption_scheme=encryption_scheme, *args, **kwargs)
+        he_scheme = None
+        if self._he_scheme.enabled:
+            if self._he_scheme.HasField("fhe_scheme"):
+                he_scheme = fhe.CKKS(
+                    self._he_scheme.fhe_scheme.batch_size,
+                    self._he_scheme.fhe_scheme.scaling_bits,
+                    "resources/fheparams/cryptoparams/")
+            he_scheme.load_crypto_params()
+        model_ops = PyTorchModelOps(model_filepath=self._model_fp, he_scheme=he_scheme, *args, **kwargs)
         return model_ops
 
     def host_port_identifier(self):
@@ -278,7 +284,7 @@ class Learner(object):
             if infer_test:
                 test_inferred = learner_evaluator.infer_model(test_dataset, batch_size, verbose)
                 inferred_res["test"] = test_inferred
-            stringified_res = DictionaryFormatter.stringify(inferred_res)
+            stringified_res = DictionaryFormatter.stringify(inferred_res, stringify_nan=True)
             MetisLogger.info("Learner {} completed model inference on requested datasets."
                              .format(self.host_port_identifier()))
         return stringified_res

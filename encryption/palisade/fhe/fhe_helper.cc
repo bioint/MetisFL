@@ -1,3 +1,6 @@
+
+#include <glog/logging.h>
+
 #include "fhe_helper.h"
 
 FHE_Helper::FHE_Helper() : scheme(), batchSize(0), scaleFactorBits(0) {}
@@ -16,22 +19,19 @@ void FHE_Helper::load_crypto_params() {
   if (!Serial::DeserializeFromFile(cryptodir + "/cryptocontext.txt",
                                    cc,
                                    SerType::BINARY)) {
-
-    std::cout << "Could not read cryptocontext" << std::endl;
+    PLOG(ERROR) << "Could not read cryptocontext!";
   }
 
   if (!Serial::DeserializeFromFile(cryptodir + "/key-public.txt",
                                    pk,
                                    SerType::BINARY)) {
-
-    std::cout << "Could not read public key" << std::endl;
+    PLOG(ERROR) << "Could not read public key!";
   }
 
   if (!Serial::DeserializeFromFile(cryptodir + "/key-private.txt",
                                    sk,
                                    SerType::BINARY)) {
-
-    std::cout << "Could not read secret key" << std::endl;
+    PLOG(ERROR) << "Could not read secret key!";
   }
 
 }
@@ -50,7 +50,7 @@ int FHE_Helper::genCryptoContextAndKeys() {
         depth, plaintextModulus, securityLevel, sigma, depth, OPTIMIZED, BV,
         0, 0, 0, 0, 0, batchSize);
 
-  } else if (scheme == "ckks") {
+  } else if (scheme == "ckks" || scheme == "CKKS") {
 
     usint multDepth = 2;
 
@@ -65,8 +65,7 @@ int FHE_Helper::genCryptoContextAndKeys() {
 
   if (!Serial::SerializeToFile(cryptodir + "/cryptocontext.txt",
                                cryptoContext, SerType::BINARY)) {
-    std::cerr << "Error writing serialization of the crypto context"
-              << std::endl;
+    PLOG(ERROR) << "Error writing serialization of the crypto context";
     return 0;
   }
 
@@ -75,14 +74,13 @@ int FHE_Helper::genCryptoContextAndKeys() {
 
   if (!Serial::SerializeToFile(cryptodir + "/key-public.txt",
                                keyPair.publicKey, SerType::BINARY)) {
-    std::cerr << "Error writing serialization of public key" << std::endl;
+    PLOG(ERROR) << "Error writing serialization of public key";
     return 0;
   }
 
   if (!Serial::SerializeToFile(cryptodir + "/key-private.txt",
                                keyPair.secretKey, SerType::BINARY)) {
-
-    std::cerr << "Error writing serialization of private key" << std::endl;
+    PLOG(ERROR) << "Error writing serialization of private key";
     return 0;
   }
 
@@ -95,16 +93,14 @@ int FHE_Helper::genCryptoContextAndKeys() {
   if (emkeyfile.is_open()) {
     if (cryptoContext->SerializeEvalMultKey(emkeyfile, SerType::BINARY)
         == false) {
-
-      std::cerr << "Error writing serialization of the eval mult keys"
-                << std::endl;
+      PLOG(ERROR) << "Error writing serialization of the eval mult keys";
       return 0;
     }
 
     emkeyfile.close();
 
   } else {
-    std::cerr << "Error serializing eval mult keys" << std::endl;
+    PLOG(ERROR) << "Error serializing eval mult keys";
     return 0;
   }
 
@@ -118,7 +114,7 @@ std::string FHE_Helper::encrypt(vector<double> learner_Data) {
   vector <Ciphertext<DCRTPoly>>
       ciphertext_data((int) ((size + batchSize) / batchSize));
 
-  if (scheme == "ckks") {
+  if (scheme == "ckks" || scheme == "CKKS") {
 
     if (size > (unsigned long int) batchSize) {
 
@@ -156,8 +152,7 @@ std::string FHE_Helper::encrypt(vector<double> learner_Data) {
     }
 
   } else {
-
-    std::cout << "Not supported!" << std::endl;
+    PLOG(ERROR) << "Not a supported scheme! " << scheme;
     return "";
 
   }
@@ -174,12 +169,11 @@ std::string FHE_Helper::computeWeightedAverage(
     vector <std::string> learners_Data, vector<float> scalingFactors) {
 
   if (learners_Data.size() != scalingFactors.size()) {
-    std::cout << "Error: learners_Data and scalingFactors size mismatch"
-              << std::endl;
+    PLOG(ERROR) << "Error: learners_Data and scalingFactors size mismatch"     ;
     return "";
   }
 
-  if (scheme == "ckks") {
+  if (scheme == "ckks" || scheme == "CKKS") {
 
     const SerType::SERBINARY st;
     vector <Ciphertext<DCRTPoly>> result_ciphertext;
@@ -216,8 +210,7 @@ std::string FHE_Helper::computeWeightedAverage(
     return ss.str();
 
   } else {
-
-    std::cout << "Not supported!" << std::endl;
+    PLOG(ERROR) << "Not a supported scheme! " << scheme;
     return "";
 
   }

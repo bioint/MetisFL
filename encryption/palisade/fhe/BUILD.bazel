@@ -6,7 +6,8 @@ cc_library(
     srcs = ["fhe_helper.cc"],
     deps = [
       "//encryption/palisade:palisade_cmake",
-      "@absl//absl/strings"
+      "@absl//absl/strings",
+      "@com_github_google_glog//:glog",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],
@@ -30,7 +31,7 @@ cc_binary(
   name = "palisade_fhe_helper_demo",
   srcs = ["fhe_helper_demo.cc"],
   deps = [
-    ":palisade_fhe_helper"
+    ":palisade_fhe_helper",
   ],
   data = [
     "//resources:fhe_cryptoparams"

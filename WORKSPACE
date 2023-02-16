@@ -155,6 +155,20 @@ rules_foreign_cc_dependencies()
 #    urls = ["https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz"],
 #)
 
+# Use Google Logging (glog) to implement application-level logging at the controller.
+http_archive(
+    name = "com_github_gflags_gflags",
+    sha256 = "34af2f15cf7367513b352bdcd2493ab14ce43692d2dcd9dfc499492966c64dcf",
+    strip_prefix = "gflags-2.2.2",
+    url = "https://github.com/gflags/gflags/archive/v2.2.2.tar.gz",
+)
+
+http_archive(
+    name = "com_github_google_glog",
+    sha256 = "122fb6b712808ef43fbf80f75c52a21c9760683dae470154f02bddfc61135022",
+    strip_prefix = "glog-0.6.0",
+    url = "https://github.com/google/glog/archive/v0.6.0.zip",
+)
 
 # Imports Cryptopp library.
 new_git_repository(
@@ -293,6 +307,50 @@ cc_library(
     linkopts = [
       '-lm',
     ]
+)
+""",
+)
+
+http_archive(
+    name = "hiredis_git",
+    sha256 = "e0ab696e2f07deb4252dda45b703d09854e53b9703c7d52182ce5a22616c3819",
+    strip_prefix = "hiredis-1.0.2",
+    url = "https://github.com/redis/hiredis/archive/refs/tags/v1.0.2.tar.gz",
+    build_file_content =
+"""
+# The build file's content is derived from
+# https://github.com/ray-project/ray/blob/master/bazel/BUILD.hiredis
+# This library is for internal hiredis use, because hiredis assumes a
+# different include prefix for itself than external libraries do.
+cc_library(
+    name = "_hiredis",
+    hdrs = [
+        "dict.c",
+    ],
+)
+
+cc_library(
+    name = "hiredis",
+    srcs = glob(
+        [
+            "*.c",
+            "*.h",
+        ],
+        exclude =
+        [
+            "ssl.c",
+            "test.c",
+        ],
+    ),
+    hdrs = glob([
+        "*.h",
+        "adapters/*.h",
+    ]),
+    include_prefix = "hiredis",
+    deps = [
+        ":_hiredis",
+    ],
+    visibility = ["//visibility:public"],
 )
 """,
 )

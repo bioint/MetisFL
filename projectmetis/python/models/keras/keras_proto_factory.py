@@ -62,8 +62,8 @@ class KerasProtoFactory:
                     epoch_evaluation_stats = dict()
                     for k, v in collection.items():
                         epoch_evaluation_stats[k] = v[e_idx]
-                    epoch_evaluation_stats = \
-                        DictionaryFormatter.stringify(epoch_evaluation_stats)
+                    epoch_evaluation_stats = DictionaryFormatter\
+                        .stringify(epoch_evaluation_stats, stringify_nan=True)
                     model_evaluation_pb = MetisProtoMessages \
                         .construct_model_evaluation_pb(metric_values=epoch_evaluation_stats)
                     # Need to store the actual epoch id hence the +1.
@@ -73,7 +73,8 @@ class KerasProtoFactory:
             else:
                 # Grab the results of the last evaluation.
                 epoch_evaluation_stats = {k: v[-1] for k, v in collection.items()}
-                epoch_evaluation_stats = DictionaryFormatter.stringify(epoch_evaluation_stats)
+                epoch_evaluation_stats = DictionaryFormatter\
+                    .stringify(epoch_evaluation_stats, stringify_nan=True)
                 model_evaluation_pb = MetisProtoMessages \
                     .construct_model_evaluation_pb(metric_values=epoch_evaluation_stats)
                 # Need to store the index/value of the last epoch.
@@ -100,14 +101,14 @@ class KerasProtoFactory:
                 self._processing_ms_per_batch)
             return task_execution_pb
 
-        def construct_completed_learning_task_pb(self, aux_metadata="", encryption_scheme=None):
+        def construct_completed_learning_task_pb(self, aux_metadata="", he_scheme=None):
             model_vars = []
             trainable_vars_names = [v.name for v in self._model.trainable_variables]
             for w in self._model.weights:
                 is_weight_trainable = True if w.name in trainable_vars_names else False
                 ciphertext = None
-                if encryption_scheme is not None:
-                    ciphertext = encryption_scheme.encrypt(w.numpy().flatten(), 1)
+                if he_scheme is not None:
+                    ciphertext = he_scheme.encrypt(w.numpy().flatten(), 1)
                 tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w.numpy(),
                                                                    ciphertext=ciphertext)
                 model_var = ModelProtoMessages.construct_model_variable_pb(name=w.name,
@@ -126,5 +127,5 @@ class KerasProtoFactory:
             self.metric_values = metric_values
 
         def construct_model_evaluation_pb(self):
-            metric_values = DictionaryFormatter.stringify(self.metric_values)
+            metric_values = DictionaryFormatter.stringify(self.metric_values, stringify_nan=True)
             return MetisProtoMessages.construct_model_evaluation_pb(metric_values)

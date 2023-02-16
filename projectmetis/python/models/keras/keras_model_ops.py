@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import tensorflow_addons as tfa
 
 from projectmetis.proto import model_pb2
 from projectmetis.python.logging.metis_logger import MetisLogger
@@ -13,7 +14,7 @@ from projectmetis.python.models.keras.callbacks.performance_profiler import Perf
 
 class KerasModelOps(ModelOps):
 
-    def __init__(self, model_filepath="/tmp/model", encryption_scheme=None, keras_callbacks=None, *args, **kwargs):
+    def __init__(self, model_filepath="/tmp/model", he_scheme=None, keras_callbacks=None, *args, **kwargs):
         # Runtime memory growth configuration for Tensorflow/Keras sessions.
         # Assumption is that the visible GPUs are set through the environmental
         # variable CUDA_VISIBLE_DEVICES, else it will consume all available GPUs.
@@ -42,9 +43,9 @@ class KerasModelOps(ModelOps):
         # TODO Register custom objects, e.g., optimizers, required to load the model.
         self._load_model_custom_objects = {"FedProx": FedProx}
         self._model = self.load_model(self._model_filepath)
-        self._encryption_scheme = encryption_scheme
+        self._he_scheme = he_scheme
         self._keras_callbacks = keras_callbacks
-        super(KerasModelOps, self).__init__(self._model, self._encryption_scheme)
+        super(KerasModelOps, self).__init__(self._model, self._he_scheme)
 
     def _construct_dataset_pipeline(self, dataset: ModelDataset, batch_size, is_train=False):
         """
@@ -98,10 +99,14 @@ class KerasModelOps(ModelOps):
         trainable_vars_names = [v.name for v in self._model.trainable_variables]
         assigning_weights = []
         for existing_weight, new_weight in zip(existing_weights, weights_values):
-            if existing_weight.name not in trainable_vars_names:
-                assigning_weights.append(existing_weight.numpy())  # get the numpy/array values
-            else:
-                assigning_weights.append(new_weight)
+            # TODO It seems that it is better to assign the incoming model weight altogether.
+            #  In a more fine grained implementation we should know whether to share all weights
+            #  with the federation or a subset. This should be defined during initialization.
+            assigning_weights.append(new_weight)
+            # if existing_weight.name not in trainable_vars_names:
+            #     assigning_weights.append(existing_weight.numpy())  # get the numpy/array values
+            # else:
+            #     assigning_weights.append(new_weight)
         self._model.set_weights(assigning_weights)
         MetisLogger.info("Applied new model weights")
 
@@ -152,6 +157,7 @@ class KerasModelOps(ModelOps):
                                       callbacks=[step_counter_callback,
                                                  performance_profile_callback,
                                                  self._keras_callbacks])
+
         # Compute mean wall clock time for epoch and batch.
         mean_epoch_wall_clock_time_ms = \
             np.mean(performance_profile_callback.epochs_wall_clock_time_sec) * 1000
@@ -180,7 +186,7 @@ class KerasModelOps(ModelOps):
             batch_size=batch_size, processing_ms_per_epoch=mean_epoch_wall_clock_time_ms,
             processing_ms_per_batch=mean_batch_wall_clock_time_ms)
         completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
-            encryption_scheme=self._encryption_scheme)
+            he_scheme=self._he_scheme)
         return completed_learning_task_pb
 
     def evaluate_model(self, dataset: ModelDataset = None, batch_size=100,
@@ -251,5 +257,10 @@ class KerasModelOps(ModelOps):
             self._model.optimizer.beta_1.assign(beta_1)
             self._model.optimizer.beta_2.assign(beta_2)
             self._model.optimizer.epsilon.assign(epsilon)
+        elif optimizer_config_pb.HasField('adam_weight_decay'):
+            learning_rate = optimizer_config_pb.adam_weight_decay.learning_rate
+            weight_decay = optimizer_config_pb.adam_weight_decay.weight_decay
+            self._model.optimizer.learning_rate.assign(learning_rate)
+            self._model.optimizer.weight_decay.assign(weight_decay)
         else:
             raise RuntimeError("TrainingHyperparameters proto message refers to a non-supported optimizer.")

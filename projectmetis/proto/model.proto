@@ -119,6 +119,7 @@ message OptimizerConfig {
     MomentumSGD momentum_sgd = 2;
     FedProx fed_prox = 3;
     Adam adam = 4;
+    AdamWeightDecay adam_weight_decay = 5;
   }
 }
 
@@ -143,4 +144,9 @@ message Adam {
   float beta_1 = 2;
   float beta_2 = 3;
   float epsilon = 4;
+}
+
+message AdamWeightDecay {
+  float learning_rate = 1;
+  float weight_decay = 2;
 }

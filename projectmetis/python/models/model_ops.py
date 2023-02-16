@@ -9,9 +9,9 @@ from projectmetis.python.utils.proto_messages_factory import ModelProtoMessages
 
 class ModelOps(object):
 
-    def __init__(self, model, encryption_scheme=None, *args, **kwargs):
+    def __init__(self, model, he_scheme=None, *args, **kwargs):
         self._model = model
-        self._encryption_scheme = encryption_scheme
+        self._he_scheme = he_scheme
 
     def get_model_weights_from_variables_pb(self, variables: [model_pb2.Model.Variable]):
         assert all([isinstance(var, model_pb2.Model.Variable) for var in variables])
@@ -22,12 +22,12 @@ class ModelOps(object):
             var_trainable = var.trainable
 
             if var.HasField("ciphertext_tensor"):
-                assert self._encryption_scheme is not None, "Need encryption scheme to decrypt tensor."
+                assert self._he_scheme is not None, "Need encryption scheme to decrypt tensor."
                 # For a ciphertext tensor, first we need to decrypt it, and then load it
                 # into a numpy array with the data type specified in the tensor specifications.
                 tensor_spec = var.ciphertext_tensor.tensor_spec
                 tensor_length = tensor_spec.length
-                decoded_value = self._encryption_scheme.decrypt(tensor_spec.value, tensor_length, 1)
+                decoded_value = self._he_scheme.decrypt(tensor_spec.value, tensor_length, 1)
                 # Since the tensor is decoded we just need to recreate the numpy array
                 # to its original data type and shape.
                 np_array = \

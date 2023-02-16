@@ -1,0 +1,12 @@
+package(default_visibility = ["//projectmetis/controller:__subpackages__"])
+
+cc_library(
+    name = "hash_map_model_store",
+    srcs = ["hash_map_model_store.cc"],
+    hdrs = [
+        "hash_map_model_store.h"
+    ],
+    deps = [
+        "//projectmetis/controller/model_storing:model_store",
+    ],
+)

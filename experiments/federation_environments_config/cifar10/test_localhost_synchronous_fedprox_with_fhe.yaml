@@ -6,7 +6,7 @@ FederationEnvironment:
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
   CommunicationProtocol:
-    Name: "SYNCHRONOUS"
+    Name: "Synchronous"
   FHEScheme: # fully homomorphic encryption scheme - if provided run with it, else disabled.
     Name: "ckks"
     BatchSize: 4096

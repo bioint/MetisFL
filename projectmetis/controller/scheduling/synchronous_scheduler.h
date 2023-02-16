@@ -19,9 +19,8 @@ class SynchronousScheduler : public Scheduler {
     // Second, it checks if the number of learners in the set is the same as
     // `total_num_learners_`.
     if (learner_ids_.size() != active_learners.size()) {
-      // If not, then return an empty list. No need to schedule any task for the
-      // moment.
-      return std::vector<std::string>();
+      // If not, then return an empty list. No need to schedule any task.
+      return {};
     }
 
     // Otherwise, schedule all learners for the next task.

@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include <glog/logging.h>
+
 #include "absl/container/flat_hash_map.h"
 #include "absl/status/statusor.h"
 #include "projectmetis/proto/controller.grpc.pb.h"

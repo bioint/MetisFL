@@ -93,10 +93,30 @@ class MetisProtoMessages(object):
         return metis_pb2.ServerEntity(hostname=hostname, port=port)
 
     @classmethod
-    def construct_fhe_scheme_pb(cls, enabled=False, name=None, batch_size=None, scaling_bits=None, cryptocontext=None,
-                                public_key=None, private_key=None):
-        return metis_pb2.FHEScheme(enabled=enabled, name=name, batch_size=batch_size, scaling_bits=scaling_bits,
-                                   cryptocontext=cryptocontext, public_key=public_key, private_key=private_key)
+    def construct_he_scheme_pb(cls, enabled=False, name=None, cryptocontext=None, public_key=None, private_key=None,
+                               empty_scheme_pb=None, fhe_scheme_pb=None):
+        if empty_scheme_pb is not None:
+            return metis_pb2.HEScheme(enabled=enabled,
+                                      name=name,
+                                      cryptocontext=cryptocontext,
+                                      public_key=public_key,
+                                      private_key=private_key,
+                                      empty_he_scheme=empty_scheme_pb)
+        if fhe_scheme_pb is not None:
+            return metis_pb2.HEScheme(enabled=enabled,
+                                      name=name,
+                                      cryptocontext=cryptocontext,
+                                      public_key=public_key,
+                                      private_key=private_key,
+                                      fhe_scheme=fhe_scheme_pb)
+
+    @classmethod
+    def construct_empty_he_scheme_pb(cls):
+        return metis_pb2.EmptyHEScheme()
+
+    @classmethod
+    def construct_fhe_scheme_pb(cls, batch_size, scaling_bits):
+        return metis_pb2.FHEScheme(batch_size=batch_size, scaling_bits=scaling_bits)
 
     @classmethod
     def construct_dataset_spec_pb(cls, num_training_examples, num_validation_examples, num_test_examples,
@@ -218,12 +238,117 @@ class MetisProtoMessages(object):
         return metis_pb2.ControllerParams(server_entity=server_entity_pb, global_model_specs=global_model_specs_pb,
                                           communication_specs=communication_specs_pb,
                                           model_hyperparams_pb=model_hyperparams_pb)
+
     @classmethod
     def construct_controller_modelhyperparams_pb(cls, batch_size, epochs, optimizer_pb, percent_validation):
         return metis_pb2.ControllerParams.ModelHyperparams(batch_size=batch_size,
                                                            epochs=epochs,
                                                            optimizer=optimizer_pb,
                                                            percent_validation=percent_validation)
+
+    @classmethod
+    def construct_no_eviction_pb(cls):
+        return metis_pb2.NoEviction()
+
+    @classmethod
+    def construct_lineage_length_eviction_pb(cls, lineage_length):
+        assert lineage_length > 0, "Lineage length value needs to be positive!"
+        return metis_pb2.LineageLengthEviction(lineage_length=lineage_length)
+
+    @classmethod
+    def construct_eviction_policy_pb(cls, policy_name, lineage_length):
+        if policy_name.upper() == "NOEVICTION":
+            return MetisProtoMessages.construct_no_eviction_pb()
+        elif policy_name.upper() == "LINEAGELENGTHEVICTION":
+            return MetisProtoMessages.construct_lineage_length_eviction_pb(lineage_length)
+
+    @classmethod
+    def construct_model_store_specs_pb(cls, eviction_policy_pb):
+        if isinstance(eviction_policy_pb, metis_pb2.NoEviction):
+            return metis_pb2.ModelStoreSpecs(no_eviction=eviction_policy_pb)
+        elif isinstance(eviction_policy_pb, metis_pb2.LineageLengthEviction):
+            return metis_pb2.ModelStoreSpecs(lineage_length_eviction=eviction_policy_pb)
+        else:
+            raise RuntimeError("Not a supported protobuff eviction policy.")
+
+    @classmethod
+    def construct_model_store_config_pb(cls, name, eviction_policy,
+                                        lineage_length=None, store_hostname=None, store_port=None):
+        eviction_policy_pb = MetisProtoMessages.construct_eviction_policy_pb(eviction_policy, lineage_length)
+        model_store_specs_pb = MetisProtoMessages.construct_model_store_specs_pb(eviction_policy_pb)
+        if name.upper() == "INMEMORY":
+            model_store_pb = MetisProtoMessages.construct_in_memory_store_pb(model_store_specs_pb)
+            return metis_pb2.ModelStoreConfig(in_memory_store=model_store_pb)
+        elif name.upper() == "REDIS":
+            model_store_pb = MetisProtoMessages.construct_redis_store_pb(
+                model_store_specs_pb, store_hostname, store_port)
+            return metis_pb2.ModelStoreConfig(redis_db_store=model_store_pb)
+        else:
+            raise RuntimeError("Not a supported model store.")
+
+    @classmethod
+    def construct_in_memory_store_pb(cls, model_store_specs_pb):
+        return metis_pb2.InMemoryStore(model_store_specs=model_store_specs_pb)
+
+    @classmethod
+    def construct_redis_store_pb(cls, model_store_specs_pb, hostname, port):
+        server_entity_pb = MetisProtoMessages.construct_server_entity_pb(hostname=hostname, port=port)
+        return metis_pb2.RedisDBStore(model_store_specs=model_store_specs_pb,
+                                      server_entity=server_entity_pb)
+
+    @classmethod
+    def construct_fed_avg_pb(cls):
+        return metis_pb2.FedAvg()
+
+    @classmethod
+    def construct_fed_stride_pb(cls, stride_length):
+        return metis_pb2.FedStride(stride_length=stride_length)
+
+    @classmethod
+    def construct_fed_rec_pb(cls):
+        return metis_pb2.FedRec()
+
+    @classmethod
+    def construct_pwa_pb(cls, he_scheme_pb):
+        return metis_pb2.PWA(he_scheme=he_scheme_pb)
+
+    @classmethod
+    def construct_aggregation_rule_specs_pb(cls, scaling_factor):
+        if scaling_factor.upper() == "NUMCOMPLETEDBATCHES":
+            scaling_factor_pb = metis_pb2.AggregationRuleSpecs.ScalingFactor.NUM_COMPLETED_BATCHES
+        elif scaling_factor.upper() == "NUMPARTICIPANTS":
+            scaling_factor_pb = metis_pb2.AggregationRuleSpecs.ScalingFactor.NUM_PARTICIPANTS
+        elif scaling_factor.upper() == "NUMTRAININGEXAMPLES":
+            scaling_factor_pb = metis_pb2.AggregationRuleSpecs.ScalingFactor.NUM_TRAINING_EXAMPLES
+        else:
+            scaling_factor_pb = metis_pb2.AggregationRuleSpecs.ScalingFactor.UNKNOWN
+            raise RuntimeError("Unsupported scaling factor.")
+
+        return metis_pb2.AggregationRuleSpecs(scaling_factor=scaling_factor_pb)
+
+    @classmethod
+    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, he_scheme_pb):
+        aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(scaling_factor)
+        if rule_name.upper() == "FEDAVG":
+            return metis_pb2.AggregationRule(fed_avg=MetisProtoMessages.construct_fed_avg_pb(),
+                                             aggregation_rule_specs=aggregation_rule_specs_pb)
+        elif rule_name.upper() == "FEDSTRIDE":
+            return metis_pb2.AggregationRule(fed_stride=MetisProtoMessages.construct_fed_stride_pb(stride_length),
+                                             aggregation_rule_specs=aggregation_rule_specs_pb)
+        elif rule_name.upper() == "FEDREC":
+            return metis_pb2.AggregationRule(fed_rec=MetisProtoMessages.construct_fed_rec_pb(),
+                                             aggregation_rule_specs=aggregation_rule_specs_pb)
+        elif rule_name.upper() == "PWA":
+            return metis_pb2.AggregationRule(
+                pwa=MetisProtoMessages.construct_pwa_pb(he_scheme_pb=he_scheme_pb),
+                aggregation_rule_specs=aggregation_rule_specs_pb)
+        else:
+            raise RuntimeError("Unsupported rule name.")
+
+    @classmethod
+    def construct_global_model_specs(cls, aggregation_rule_pb, learners_participation_ratio):
+        return metis_pb2.GlobalModelSpecs(aggregation_rule=aggregation_rule_pb,
+                                          learners_participation_ratio=learners_participation_ratio)
 
     @classmethod
     def construct_communication_specs_pb(cls, protocol, semi_sync_lambda=None, semi_sync_recompute_num_updates=None):
@@ -407,6 +532,39 @@ class ModelProtoMessages(object):
         return model_pb2.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
 
     @classmethod
+    def construct_adam_optimizer_with_weight_decay_pb(cls, learning_rate, weight_decay):
+        return model_pb2.AdamWeightDecay(learning_rate=learning_rate, weight_decay=weight_decay)
+
+    @classmethod
+    def construct_optimizer_config_pb_from_kwargs(cls, optimizer_pb_kwargs):
+        # We remove the optimizer name from the given dictionary, because
+        # no optimizer pb function takes 'name' as a keyword argument.
+        optimizer_pb_kwargs_cp = optimizer_pb_kwargs.copy()
+        optimizer_name = optimizer_pb_kwargs_cp.pop("name", None)
+
+        if optimizer_name == "VanillaSGD":
+            optimizer_pb = ModelProtoMessages \
+                .construct_vanilla_sgd_optimizer_pb(**optimizer_pb_kwargs_cp)
+        elif optimizer_name == "MomentumSGD":
+            optimizer_pb = ModelProtoMessages \
+                .construct_momentum_sgd_optimizer_pb(**optimizer_pb_kwargs_cp)
+        elif optimizer_name == "FedProx":
+            optimizer_pb = ModelProtoMessages \
+                .construct_fed_prox_optimizer_pb(**optimizer_pb_kwargs_cp)
+        elif optimizer_name == "Adam":
+            optimizer_pb = ModelProtoMessages \
+                .construct_adam_optimizer_pb(**optimizer_pb_kwargs_cp)
+        elif optimizer_name == "AdamWeightDecay":
+            optimizer_pb = ModelProtoMessages \
+                .construct_adam_optimizer_with_weight_decay_pb(**optimizer_pb_kwargs_cp)
+        else:
+            raise RuntimeError("Optimizer kwargs refer to a non-supported optimizer.")
+
+        optimizer_config_pb = \
+            ModelProtoMessages.construct_optimizer_config_pb(optimizer_pb)
+        return optimizer_config_pb
+
+    @classmethod
     def construct_optimizer_config_pb(cls, optimizer_pb):
         if isinstance(optimizer_pb, model_pb2.VanillaSGD):
             return model_pb2.OptimizerConfig(vanilla_sgd=optimizer_pb)
@@ -416,6 +574,8 @@ class ModelProtoMessages(object):
             return model_pb2.OptimizerConfig(fed_prox=optimizer_pb)
         elif isinstance(optimizer_pb, model_pb2.Adam):
             return model_pb2.OptimizerConfig(adam=optimizer_pb)
+        elif isinstance(optimizer_pb, model_pb2.AdamWeightDecay):
+            return model_pb2.OptimizerConfig(adam_weight_decay=optimizer_pb)
         else:
             raise RuntimeError("Optimizer proto message refers to a non-supported optimizer.")
 

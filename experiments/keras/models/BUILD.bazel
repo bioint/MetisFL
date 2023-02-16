@@ -5,7 +5,7 @@ package(default_visibility = ["//visibility:public"])
 py_library(
     name = "keras_models_py_lib",
     srcs = [
-        "alzheimer_disease_cnns.py",
+        "alzheimers_disease_cnns.py",
         "brainage_cnns.py",
         "cifar_cnn.py",
         "fashion_mnist_fc.py",

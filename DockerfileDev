@@ -63,7 +63,11 @@ RUN chmod +x ./configure.sh && ./configure.sh $ENV_CONDA_CUDA_ENABLED
 RUN bazel build //projectmetis/python/driver:initialize_controller
 RUN bazel build //projectmetis/python/driver:initialize_learner
 
-RUN cp /etc/redis/redis.conf /etc/redis/redis_template.conf
-RUN cat /etc/redis/redis_template.conf | sed '/# maxmemory/a maxmemory 4gb' > /etc/redis/redis.conf
+# By default do not start the redis service.
+ENTRYPOINT service ssh start && bash
 
-ENTRYPOINT service redis-server start && service ssh start && bash
+# If we need to start the Redis service, we need to edit Redis' configuration
+# and start the Redis service along with the regular ssh session.
+#RUN cp /etc/redis/redis.conf /etc/redis/redis_template.conf
+#RUN cat /etc/redis/redis_template.conf | sed '/# maxmemory/a maxmemory 4gb' > /etc/redis/redis.conf
+#ENTRYPOINT service redis-server start && service ssh start && bash

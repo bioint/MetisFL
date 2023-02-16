@@ -4,12 +4,12 @@
  */
 
 #include <memory>
-//#include <csignal>
 #include <signal.h>
+
+#include <glog/logging.h>
 
 #include "projectmetis/controller/controller.h"
 #include "projectmetis/controller/controller_servicer.h"
-
 #include "projectmetis/core/macros.h"
 
 using ::proto::ParseTextOrDie;
@@ -22,14 +22,22 @@ using projectmetis::CommunicationSpecs;
 std::unique_ptr<ControllerServicer> servicer;
 
 void sigint_handler(int code) {
-  std::cout << "Received SIGINT (code " << code << ")" << std::endl;
+  PLOG(INFO) << "Received SIGINT (code " << code << ")" << std::endl;
   if (servicer != nullptr) {
     servicer->StopService();
   }
-  //exit(code);
 }
 
 int main(int argc, char **argv) {
+
+  // Set flags picked up by glog before initialization.
+  FLAGS_log_dir = "/tmp";
+  FLAGS_alsologtostderr = true;
+  // According to the ISO C11 standard, the first argument,
+  // argv[0], represents the program name. We use this name
+  // to decorate the log entries of glog.
+  google::InitGoogleLogging(argv[0]);
+
   // Initializes controller parameters proto message.
   auto params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
     server_entity {
@@ -42,7 +50,21 @@ int main(int argc, char **argv) {
     }
     global_model_specs {
       learners_participation_ratio: 1
-      aggregation_rule: FED_AVG
+      aggregation_rule {
+        fed_avg {}
+        aggregation_rule_specs {
+          scaling_factor: NUM_TRAINING_EXAMPLES
+        }
+      }
+    }
+    model_store_config {
+      in_memory_store {
+        model_store_specs {
+          lineage_length_eviction {
+            lineage_length: 1
+          }
+        }
+      }      
     }
     communication_specs {
       protocol: SYNCHRONOUS
@@ -60,8 +82,8 @@ int main(int argc, char **argv) {
     }
   )pb2");
 
-  std::cout << "Starting controller with params: " << std::endl;
-  std::cout << params.DebugString() << std::endl;
+  PLOG(INFO) << "Starting controller with params: ";
+  PLOG(INFO) << params.DebugString();
 
   signal(SIGINT, sigint_handler);
 
@@ -71,6 +93,7 @@ int main(int argc, char **argv) {
   servicer->StartService();
   servicer->WaitService();
 
-  std::cout << "Exiting... Bye!" << std::endl;
+  PLOG(INFO) << "Exiting... Bye!";
+
   return 0;
 }

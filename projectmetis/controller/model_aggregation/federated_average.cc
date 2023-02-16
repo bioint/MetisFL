@@ -6,6 +6,9 @@
 namespace projectmetis::controller {
 namespace {
 
+using ::proto::DeserializeTensor;
+using ::proto::SerializeTensor;
+
 template<typename T>
 std::string AddTensors(const TensorSpec &tensor_spec_left,
                        const TensorSpec &tensor_spec_right,
@@ -17,8 +20,8 @@ std::string AddTensors(const TensorSpec &tensor_spec_left,
    * scaled right-hand-side tensor to the left-hand-side tensor. Finally, it serialized
    * the aggregated tensor and returns its string representation.
    */
-  auto t1_l = ::proto::DeserializeTensor<T>(tensor_spec_left);
-  auto t2_r = ::proto::DeserializeTensor<T>(tensor_spec_right);
+  auto t1_l = DeserializeTensor<T>(tensor_spec_left);
+  auto t2_r = DeserializeTensor<T>(tensor_spec_right);
 
   // Scale the right tensor by its scaling factor.
   // Careful here: if the data type is uint or int then there are no precision
@@ -31,7 +34,7 @@ std::string AddTensors(const TensorSpec &tensor_spec_left,
   transform(t1_l.begin(), t1_l.end(), t2_r.begin(), t1_l.begin(), std::plus<T>());
 
   // Serialize aggregated result.
-  auto serialized_tensor = ::proto::SerializeTensor<T>(t1_l);
+  auto serialized_tensor = SerializeTensor<T>(t1_l);
   // Convert serialization to string.
   std::string serialized_tensor_str(serialized_tensor.begin(), serialized_tensor.end());
   return serialized_tensor_str;
@@ -95,25 +98,25 @@ std::vector<char> GenSerializedEmptyTensor(const TensorSpec &tensor_spec) {
   auto data_type = tensor_spec.type().type();
 
   if (data_type == DType_Type_UINT8) {
-    serialized_tensor = ::proto::SerializeTensor<unsigned char>(std::vector<unsigned char>(num_values));
+    serialized_tensor = SerializeTensor<unsigned char>(std::vector<unsigned char>(num_values));
   } else if (data_type == DType_Type_UINT16) {
-    serialized_tensor = ::proto::SerializeTensor<unsigned short>(std::vector<unsigned short>(num_values));
+    serialized_tensor = SerializeTensor<unsigned short>(std::vector<unsigned short>(num_values));
   } else if (data_type == DType_Type_UINT32) {
-    serialized_tensor = ::proto::SerializeTensor<unsigned int>(std::vector<unsigned int>(num_values));
+    serialized_tensor = SerializeTensor<unsigned int>(std::vector<unsigned int>(num_values));
   } else if (data_type == DType_Type_UINT64) {
-    serialized_tensor = ::proto::SerializeTensor<unsigned long>(std::vector<unsigned long>(num_values));
+    serialized_tensor = SerializeTensor<unsigned long>(std::vector<unsigned long>(num_values));
   } else if (data_type == DType_Type_INT8) {
-    serialized_tensor = ::proto::SerializeTensor<signed char>(std::vector<signed char>(num_values));
+    serialized_tensor = SerializeTensor<signed char>(std::vector<signed char>(num_values));
   } else if (data_type == DType_Type_INT16) {
-    serialized_tensor = ::proto::SerializeTensor<signed short>(std::vector<signed short>(num_values));
+    serialized_tensor = SerializeTensor<signed short>(std::vector<signed short>(num_values));
   } else if (data_type == DType_Type_INT32) {
-    serialized_tensor = ::proto::SerializeTensor<signed int>(std::vector<signed int>(num_values));
+    serialized_tensor = SerializeTensor<signed int>(std::vector<signed int>(num_values));
   } else if (data_type == DType_Type_INT64) {
-    serialized_tensor = ::proto::SerializeTensor<signed long>(std::vector<signed long>(num_values));
+    serialized_tensor = SerializeTensor<signed long>(std::vector<signed long>(num_values));
   } else if (data_type == DType_Type_FLOAT32) {
-    serialized_tensor = ::proto::SerializeTensor<float>(std::vector<float>(num_values));
+    serialized_tensor = SerializeTensor<float>(std::vector<float>(num_values));
   } else if (data_type == DType_Type_FLOAT64) {
-    serialized_tensor = ::proto::SerializeTensor<double>(std::vector<double>(num_values));
+    serialized_tensor = SerializeTensor<double>(std::vector<double>(num_values));
   } else {
     throw std::runtime_error("Unsupported tensor data type.");
   }
@@ -132,11 +135,19 @@ std::vector<char> GenSerializedEmptyTensor(const TensorSpec &tensor_spec) {
  */
 FederatedModel
 FederatedAverage::Aggregate(
-    std::vector<std::pair<const Model *, double>> &pairs) {
+    std::vector<std::vector<std::pair<const Model*, double>>>& pairs) {
+
+  // With the new community model aggregation function  
+  // NEW API GUIDE
+  // { {(*model, 0.2)}, {(*model, 0.6)}, {(*model, 0.5)}}
+  // pairs[0] -> {(*model, 0.2)}
+  // pairs[0][0] ->  (*model, 0.2)
+  // pairs[0][0].first -> *model
+  // pairs[0][0].second -> 0.2
 
   // Initializes the community model to zero.
   FederatedModel global_model;
-  const auto &sample_model = pairs.front().first;
+  const auto &sample_model = pairs.front().front().first;
   for (const auto &sample_variable: sample_model->variables()) {
     auto *variable = global_model.mutable_model()->add_variables();
     variable->set_name(sample_variable.name());
@@ -157,8 +168,8 @@ FederatedAverage::Aggregate(
   //  trainable, then what should be the value of the non-trainable weights?
   // Aggregates the given models.
   for (const auto &pair: pairs) {
-    const auto *local_model = pair.first;
-    const double local_model_contrib_value = pair.second;
+    const auto *local_model = pair.front().first;
+    const double local_model_contrib_value = pair.front().second;
     for (int i = 0; i < local_model->variables_size(); ++i) {
       const auto &local_variable = local_model->variables(i);
       auto global_variable = global_model.mutable_model()->mutable_variables(i);
@@ -179,6 +190,10 @@ FederatedAverage::Aggregate(
   global_model.set_num_contributors(pairs.size());
   return global_model;
 
+}
+
+void FederatedAverage::Reset() {
+  // pass
 }
 
 } // namespace projectmetis::controller

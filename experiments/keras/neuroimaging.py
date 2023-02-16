@@ -1,8 +1,10 @@
 import argparse
+
 import cloudpickle
 import collections
 import json
 import os
+import random
 import scipy.stats
 
 import nibabel as nib
@@ -10,12 +12,21 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
-from experiments.keras.models.alzheimer_disease_cnns import AlzheimerDisease2DCNN, AlzheimerDisease3DCNN
+from experiments.keras.models.alzheimers_disease_cnns import AlzheimersDisease2DCNN, AlzheimersDisease3DCNN
 from experiments.keras.models.brainage_cnns import BrainAge2DCNN, BrainAge3DCNN
 from projectmetis.python.driver.driver_session import DriverSession
-from projectmetis.python.models.model_dataset import ModelDatasetRegression
+from projectmetis.python.models.model_dataset import ModelDatasetClassification, ModelDatasetRegression
+from projectmetis.python.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+SCRIPT_CWD = os.path.dirname(__file__)
+print("Script current working directory: ", SCRIPT_CWD, flush=True)
+
+seed_num = 7
+random.seed(seed_num)
+np.random.seed(seed_num)
+tf.random.set_seed(seed_num)
 
 
 class TFDatasetUtils(object):
@@ -119,7 +130,7 @@ class TFDatasetUtils(object):
 
 class MRIScanGen(object):
 
-    def __init__(self, filepath, data_config, req_col,
+    def __init__(self, filepath, image_column, label_column,
                  rows=91, cols=109, depth=91, channels=1):
 
         if not os.path.exists(filepath):
@@ -127,60 +138,56 @@ class MRIScanGen(object):
             exit(1)
 
         self.filepath = filepath
+
+        print(self.filepath)
         self.tfrecord_output = self.filepath + ".tfrecord"
         self.tfrecord_schema_output = self.filepath + ".tfrecord.schema"
 
-        self.data_config = [data_config]
-        self.req_col = [req_col]
+        self.image_column = image_column
+        self.label_column = label_column
         self.rows = rows
         self.cols = cols
         self.depth = depth
         self.channels = channels
 
     def parse_csv_table(self, subj_table):
-        # Collect names of required columns
-        img_col = []
-        for channel in self.data_config:
-            img_col.append(channel)
 
-        # Allow for convenient pred (No AgeAtScan)
-        if "age_at_scan" not in subj_table.columns:
-            subj_table["age_at_scan"] = -1
-
-        if not set(img_col + self.req_col).issubset(subj_table.columns):
+        if not set([self.image_column] + [self.label_column]).issubset(subj_table.columns):
             print("Error: Missing columns in table!")
             exit(1)
 
-        # Combine all image data paths together as one column
-        subj_table["scan_path"] = subj_table[img_col].apply(lambda x: ",".join(x), axis=1)
-
         # Remove all irrelevant columns
-        subj_table = subj_table[self.req_col + ["scan_path"]]
+        subj_table = subj_table[[self.image_column] + [self.label_column]]
 
         return subj_table
 
     def generate_tfrecord(self):
 
+        """
+        If tfrecord already exists, then just return the tfrecord, else parse
+        the .csv file and generate a new tfrecord.
+        :return:
+        """
         if os.path.exists(self.tfrecord_output) \
                 and os.path.exists(self.tfrecord_schema_output):
             tfrecord_schema = cloudpickle.load(file=open(self.tfrecord_schema_output, "rb"))
         else:
             subj_table = pd.read_csv(self.filepath)
-            data_mappings = self.parse_csv_table(subj_table)
+            subj_table = self.parse_csv_table(subj_table)
 
-            ages = data_mappings.values[:, 0].tolist()  # age_at_scan
-            scan_paths = data_mappings.values[:, 1].tolist()  # 9dof_2mm_vol.nii scan path
+            images = subj_table.values[:, 0].tolist()
+            labels = subj_table.values[:, 1].tolist()
 
-            parsed_scans = []
-            for s0, s1 in zip(ages, scan_paths):
-                scan, age = self.load_v1(s0, s1)
-                parsed_scans.append(scan)
-            parsed_scans_np = np.array(parsed_scans, dtype=np.float32)
+            parsed_images = []
+            parsed_labels = []
+            for si, sl in zip(images, labels):
+                image, label = self.load_v1(si, sl)
+                parsed_images.append(image)
+                parsed_labels.append(label)
 
             final_mappings = collections.OrderedDict()
-            final_mappings["scan_images"] = parsed_scans_np
-            for col in self.req_col:
-                final_mappings[col] = data_mappings[col].values
+            final_mappings[self.image_column] = np.array(parsed_images)
+            final_mappings[self.label_column] = np.array(labels)
 
             tfrecord_schema = TFDatasetUtils.serialize_to_tfrecords(
                 final_mappings, self.tfrecord_output)
@@ -188,18 +195,26 @@ class MRIScanGen(object):
 
         return tfrecord_schema
 
-    def load_v1(self, age, scan_path):
+    def load_v1(self, scan_path, label):
         img = nib.load(scan_path).get_fdata()
-        img = (img - img.mean()) / img.std()
+        # Normalize image.
+        img_min = np.amax(img)
+        img_max = np.amin(img)
+        img = (img - img_min) / (img_max - img_min)
+        img = img.astype("float32")
+        # Standardize image.
+        # img = (img - img.mean()) / img.std()
         # scan = np.float32(img[:, :, :, np.newaxis]) \
         #     .reshape([self.rows, self.cols, self.depth, self.channels])
-        age = float(age)
-        return img, age
+        label = float(label)
+        return img, label
 
-    def process_record(self, image, age):
+    def process_record(self, image, label):
+        # The label is the assigned label to the MRI scan.
+        # This could be the age of the scan (regression) or the AD value (classification/binary).
         image = tf.reshape(image, [self.rows, self.cols, self.depth, self.channels])
-        age = tf.squeeze(age)
-        return image, age
+        label = tf.squeeze(label)
+        return image, label
 
     def load_dataset(self, tfrecord_schema):
         dataset = tf.data.TFRecordDataset(self.tfrecord_output)  # automatically interleaves reads from multiple files
@@ -215,22 +230,66 @@ class MRIScanGen(object):
         return dataset
 
 
+class ModelDatasetHelper(object):
+
+    def __init__(self, image_column, label_column):
+        self.image_column = image_column
+        self.label_column = label_column
+
+    def regression_task_dataset_recipe_fn(self, dataset_fp):
+        dataset = MRIScanGen(filepath=dataset_fp,
+                             image_column=self.image_column,
+                             label_column=self.label_column).get_dataset()
+        data_iter = iter(dataset)
+        ages = []
+        for d in data_iter:
+            ages.append(float(d[1]))
+        mode_values, mode_counts = scipy.stats.mode(ages)
+        if np.all((mode_counts == 1)):
+            mode_val = np.max(ages)
+        else:
+            mode_val = mode_values[0]
+        model_dataset = ModelDatasetRegression(
+            dataset=dataset, size=len(ages),
+            min_val=np.min(ages), max_val=np.max(ages),
+            mean_val=np.mean(ages), median_val=np.median(ages),
+            mode_val=mode_val, stddev_val=np.std(ages))
+        return model_dataset
+
+    def classification_task_dataset_recipe_fn(self, dataset_fp):
+        dataset = MRIScanGen(filepath=dataset_fp,
+                             image_column=self.image_column,
+                             label_column=self.label_column).get_dataset()
+        data_iter = iter(dataset)
+        classes = []
+        for d in data_iter:
+            classes.append(int(d[1]))
+        records_num = len(classes)
+        examples_per_class = {cid: 0 for cid in set(classes)}
+        for cid in classes:
+            examples_per_class[cid] += 1
+        model_dataset = ModelDatasetClassification(
+            dataset=dataset, size=records_num,
+            examples_per_class=examples_per_class)
+        return model_dataset
+
+
 if __name__ == "__main__":
 
-    script_cwd = os.path.dirname(__file__)
-    print("Script current working directory: ", script_cwd, flush=True)
     default_neuroimaging_task = "brainage"
     default_neuroimaging_task_model = "3dcnn"
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../federation_environments_config/brainage/brainage_test_localhost_synchronous.yaml")
+        SCRIPT_CWD, "../federation_environments_config/brainage/brainage_test_localhost_synchronous.yaml")
     default_mri_scans_csv_mapping = os.path.join(
-        script_cwd, "datasets/ukbb/ukbb_datapaths_absolute.csv")
+        SCRIPT_CWD, "datasets/ukbb/ukbb_datapaths_absolute.csv")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--neuroimaging_task",
-                        default=default_neuroimaging_task)
+                        default=default_neuroimaging_task,
+                        help="Either `brainage` OR `alzheimers`.")
     parser.add_argument("--neuroimaging_task_model",
-                        default=default_neuroimaging_task_model)
+                        default=default_neuroimaging_task_model,
+                        help="Either `3dcnn` OR `2dcnn`.")
     parser.add_argument("--federation_environment_config_fp",
                         default=default_federation_environment_config_fp)
     parser.add_argument("--dummy_scans_csv_mapping_fp",
@@ -248,65 +307,48 @@ if __name__ == "__main__":
     validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(metis_filepath_prefix)
     test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(metis_filepath_prefix)
 
+    batch_size = FederationEnvironment(
+        args.federation_environment_config_fp).local_model_config.batch_size
     if args.neuroimaging_task == "brainage":
-        volume_attr, label_attr = "9dof_2mm_vol",  "age_at_scan"
+        volume_attr, label_attr = "9dof_2mm_vol", "age_at_scan"
+        dataset_recipe_fn = ModelDatasetHelper(volume_attr, label_attr)\
+            .regression_task_dataset_recipe_fn
         if args.neuroimaging_task_model == "3dcnn":
-            nn_model = BrainAge3DCNN().get_model()
+            nn_model = BrainAge3DCNN(batch_size=batch_size).get_model()
         elif args.neuroimaging_task_model == "2dcnn":
-            nn_model = BrainAge2DCNN().get_model()
+            nn_model = BrainAge2DCNN(batch_size=batch_size).get_model()
         else:
             raise RuntimeError("Unknown error.")
-    elif args.neuroimaging_task == "alzheimer":
+    elif args.neuroimaging_task == "alzheimers":
         volume_attr, label_attr = "volume", "label"
+        dataset_recipe_fn = ModelDatasetHelper(volume_attr, label_attr) \
+            .classification_task_dataset_recipe_fn
         if args.neuroimaging_task_model == "3dcnn":
-            nn_model = AlzheimerDisease3DCNN().get_model()
+            nn_model = AlzheimersDisease3DCNN().get_model()
         elif args.neuroimaging_task_model == "2dcnn":
-            nn_model = AlzheimerDisease2DCNN().get_model()
+            nn_model = AlzheimersDisease2DCNN().get_model()
         else:
             raise RuntimeError("Unknown error.")
     else:
         raise RuntimeError("Unknown task.")
 
     # Load dummy data for model initialization purposes.
-    volume_attr, label_attr = "9dof_2mm_vol",  "age_at_scan"
     dummy_dataset = MRIScanGen(
         filepath=args.dummy_scans_csv_mapping_fp,
-        data_config=volume_attr,
-        req_col=label_attr) \
+        image_column=volume_attr,
+        label_column=label_attr) \
         .get_dataset()
 
     nn_model.summary()
     nn_model.evaluate(x=dummy_dataset.batch(1))
     nn_model.save(model_definition_dir)
 
-    def dataset_recipe_fn(dataset_fp):
-        dataset = MRIScanGen(
-            filepath=dataset_fp,
-            data_config=volume_attr,
-            req_col=label_attr) \
-            .get_dataset()
-
-        data_iter = iter(dataset)
-        ages = []
-        for d in data_iter:
-            ages.append(float(d[1]))
-        mode_values, mode_counts = scipy.stats.mode(ages)
-        if np.all((mode_counts == 1)):
-            mode_val = np.max(ages)
-        else:
-            mode_val = mode_values[0]
-        model_dataset = ModelDatasetRegression(
-            dataset=dataset, size=len(ages),
-            min_val=np.min(ages), max_val=np.max(ages),
-            mean_val=np.mean(ages), median_val=np.median(ages),
-            mode_val=mode_val, stddev_val=np.std(ages))
-        return model_dataset
-
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(train_dataset_recipe_fp_pkl, "wb+"))
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(test_dataset_recipe_fp_pkl, "wb+"))
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
 
-    driver_session = DriverSession(args.federation_environment_config_fp, nn_engine,
+    driver_session = DriverSession(args.federation_environment_config_fp,
+                                   nn_engine=nn_engine,
                                    model_definition_dir=model_definition_dir,
                                    train_dataset_recipe_fp=train_dataset_recipe_fp_pkl,
                                    validation_dataset_recipe_fp=validation_dataset_recipe_fp_pkl,
@@ -316,6 +358,6 @@ if __name__ == "__main__":
     driver_session.shutdown_federation()
     statistics = driver_session.get_federation_statistics()
 
-    with open(os.path.join(script_cwd, "experiment.json"), "w+") as fout:
+    with open(os.path.join(SCRIPT_CWD, "experiment.json"), "w+") as fout:
         print("Execution File Output Path:", fout.name, flush=True)
         json.dump(statistics, fout, indent=4)

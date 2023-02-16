@@ -19,9 +19,10 @@ class ScalingFunction {
 
   virtual absl::flat_hash_map<std::string, double> ComputeScalingFactors(
       const FederatedModel &community_model,
-      const absl::flat_hash_map<std::string, LearnerState> &states) = 0;
+      const absl::flat_hash_map<std::string, LearnerState*> &states,
+      const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &metadata) = 0;
 
-  virtual std::string name() = 0;
+  virtual std::string Name() = 0;
 };
 
 } // namespace projectmetis::controller

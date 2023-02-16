@@ -46,7 +46,7 @@ class ControllerServicerImplTest : public ::testing::Test {
 };
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyRequest) {
+TEST_F(ControllerServicerImplTest, GetParticipatingLearnersEmptyRequest) {
   GetParticipatingLearnersRequest req_;
   GetParticipatingLearnersResponse res_;
 
@@ -60,7 +60,7 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyRequest) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyVector) {
+TEST_F(ControllerServicerImplTest, GetParticipatingLearnersEmptyVector) {
   EXPECT_CALL(controller_, GetLearners())
       .Times(Exactly(1))
       .WillOnce(Return(std::vector<LearnerDescriptor>()));
@@ -74,7 +74,7 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearners_EmptyVector) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, GetParticipatingLearners_NotEmptyVector) {
+TEST_F(ControllerServicerImplTest, GetParticipatingLearnersNotEmptyVector) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto &learner = learner_state.learner();
 
@@ -93,7 +93,7 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearners_NotEmptyVector) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, JoinFederation_EmptyRequest) {
+TEST_F(ControllerServicerImplTest, JoinFederationEmptyRequest) {
   JoinFederationRequest req_;
   JoinFederationResponse res_;
   auto status = service_->JoinFederation(&ctx_, &req_, &res_);
@@ -102,7 +102,7 @@ TEST_F(ControllerServicerImplTest, JoinFederation_EmptyRequest) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, JoinFederation_NewLearner) {
+TEST_F(ControllerServicerImplTest, JoinFederationNewLearner) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
@@ -125,14 +125,14 @@ TEST_F(ControllerServicerImplTest, JoinFederation_NewLearner) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, JoinFederation_LearnerServiceUnreachable) {
+TEST_F(ControllerServicerImplTest, JoinFederationLearnerServiceUnreachable) {
   // TODO(canastas): Implement this after we have the service alive check functionality.
   bool is_learner_reachable = true;
   EXPECT_TRUE(is_learner_reachable);
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, JoinFederation_LearnerCollision) {
+TEST_F(ControllerServicerImplTest, JoinFederationLearnerCollision) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
@@ -158,7 +158,7 @@ TEST_F(ControllerServicerImplTest, JoinFederation_LearnerCollision) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, LeaveFederation_EmptyRequest) {
+TEST_F(ControllerServicerImplTest, LeaveFederationEmptyRequest) {
   LeaveFederationRequest req_;
   LeaveFederationResponse res_;
   auto status = service_->LeaveFederation(&ctx_, &req_, &res_);
@@ -167,7 +167,7 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_EmptyRequest) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerExists) {
+TEST_F(ControllerServicerImplTest, LeaveFederationLearnerExists) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
@@ -186,7 +186,7 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerExists) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerNotExists) {
+TEST_F(ControllerServicerImplTest, LeaveFederationLearnerNotExists) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
@@ -205,7 +205,7 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerNotExists) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerInvalidCredentials) {
+TEST_F(ControllerServicerImplTest, LeaveFederationLearnerInvalidCredentials) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
@@ -224,7 +224,7 @@ TEST_F(ControllerServicerImplTest, LeaveFederation_LearnerInvalidCredentials) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, GetEvaluationLineage_RequestIsNullptr){
+TEST_F(ControllerServicerImplTest, GetEvaluationLineageRequestIsNullptr){
 
   GetLocalModelEvaluationLineageRequest request;
   GetLocalModelEvaluationLineageResponse response;
@@ -235,7 +235,7 @@ TEST_F(ControllerServicerImplTest, GetEvaluationLineage_RequestIsNullptr){
 }
 
 // TODO(aasghar) Need to make the tests more robust with respect to ModelEvaluation values.
-TEST_F(ControllerServicerImplTest, GetEvaluationLineage_EvaluationLineage) {
+TEST_F(ControllerServicerImplTest, GetEvaluationLineageEvaluationLineage) {
 
   LearnerState learnerState = ParseTextOrDie<LearnerState>(kLearnerState);
   const LearnerDescriptor &learnerDescriptor = learnerState.learner();
@@ -254,8 +254,7 @@ TEST_F(ControllerServicerImplTest, GetEvaluationLineage_EvaluationLineage) {
 }
 
 // TODO(aasghar) Could make the tests more robust with respect to ModelEvaluation values.
-TEST_F(ControllerServicerImplTest, GetCommunityEvaluationLineage_EvaluationLineage) {
-
+TEST_F(ControllerServicerImplTest, GetCommunityEvaluationLineageEvaluationLineage) {
 
   GetCommunityModelEvaluationLineageRequest request;
   GetCommunityModelEvaluationLineageResponse response;
@@ -273,7 +272,7 @@ TEST_F(ControllerServicerImplTest, GetCommunityEvaluationLineage_EvaluationLinea
 }
 
 // TODO(aasghar) Can make the test more useful by initializing the request object.
-TEST_F(ControllerServicerImplTest, MarkTaskCompleted_ReturnOk){
+TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnOk){
 
   MarkTaskCompletedRequest request;
   MarkTaskCompletedResponse response;
@@ -289,7 +288,7 @@ TEST_F(ControllerServicerImplTest, MarkTaskCompleted_ReturnOk){
 }
 
 // TODO(aasghar) Can make the test more useful by initializing the request object.
-TEST_F(ControllerServicerImplTest, MarkTaskCompleted_ReturnError){
+TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnError){
 
   MarkTaskCompletedRequest request;
   MarkTaskCompletedResponse response;
@@ -303,7 +302,8 @@ TEST_F(ControllerServicerImplTest, MarkTaskCompleted_ReturnError){
   EXPECT_FALSE(status.ok());
 
 }
-TEST_F(ControllerServicerImplTest, StartService_WithSSL){
+
+TEST_F(ControllerServicerImplTest, StartServiceWithSSL){
 
   projectmetis::ControllerParams params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
     server_entity {
@@ -344,7 +344,7 @@ TEST_F(ControllerServicerImplTest, StartService_WithSSL){
   ASSERT_TRUE(is_enabled);
 }
 
-TEST_F(ControllerServicerImplTest, StartService_WithoutSSL){
+TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL){
 
   projectmetis::ControllerParams params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
     server_entity {

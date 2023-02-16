@@ -76,7 +76,9 @@ class BrainAge2DCNN(ModelDef):
             output = tf.squeeze(output)
             return output
 
-        model = tf.keras.Model(inputs=self.original_input, outputs=infer_ages(self.original_input))
+        model = tf.keras.Model(inputs=self.original_input,
+                               outputs=infer_ages(self.original_input),
+                               name="BrainAge-2DCNN")
         model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=self.learning_rate),
                       loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.NONE),
                       metrics=["mse", "mae"])
@@ -131,7 +133,7 @@ class BrainAge3DCNN(ModelDef):
             bias_initializer=tf.constant_initializer(62.68))(inputs)
         outputs = tf.squeeze(outputs, axis=[1, 2, 3, 4])
 
-        model = tf.keras.Model(inputs=self.original_input, outputs=outputs)
+        model = tf.keras.Model(inputs=self.original_input, outputs=outputs, name="BrainAge-3DCNN")
         model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=self.learning_rate),
                       loss=tf.keras.losses.MeanSquaredError(reduction=tf.keras.losses.Reduction.NONE),
                       metrics=["mse", "mae"])

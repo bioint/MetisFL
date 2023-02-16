@@ -26,6 +26,10 @@ To compile and run the project through docker, navigate to the parent directory 
    - RockyLinux + CUDA `cd docker_images/cuda/rockylinux/11.3 && docker build -t projectmetis_rockylinux_8_cuda -f Dockerfile .`
    - Verify docker cuda driver installation as: `nvidia-docker run --rm --gpus all projectmetis_ubuntu_22_04_cuda nvidia-smi`
 
+## Installing Redis As A Backend Model Store.
+   - In the host server need to execute `docker run -d --name redis-svr -p 6379:6379 redis:latest` to allow Controller to 
+      connect to Redis Backend.
+
 ## Standalone (Docker-Free) Prerequisites
 - Install googletest (MacOS as `brew install googletest`)
 - Install protobuf (MacOS as `brew install protobuf`)

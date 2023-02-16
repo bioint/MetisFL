@@ -45,17 +45,24 @@ class DriverSessionBase(object):
         # This field is populated at different stages of the entire federated training lifecycle.
         self._federation_statistics = dict()
 
-        self.fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb()
-        if self.federation_environment.fhe_scheme:
-            if self.federation_environment.fhe_scheme.scheme_name.lower() == "ckks":
-                self.encryption_scheme = fhe.CKKS(self.federation_environment.fhe_scheme.batch_size,
-                                                  self.federation_environment.fhe_scheme.scaling_bits,
-                                                  "resources/fheparams/cryptoparams/")
-                self.encryption_scheme.load_crypto_params()
-                self.fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb(
-                    enabled=True, name="ckks",
-                    batch_size=self.federation_environment.fhe_scheme.batch_size,
-                    scaling_bits=self.federation_environment.fhe_scheme.scaling_bits)
+        self._he_scheme, self._he_scheme_pb = None, None
+        if self.federation_environment.homomorphic_encryption:
+            if self.federation_environment.homomorphic_encryption.scheme.upper() == "CKKS":
+                # Initialize encryption scheme to encode initial model.
+                batch_size = self.federation_environment.homomorphic_encryption.batch_size
+                scaling_bits = self.federation_environment.homomorphic_encryption.scaling_bits
+                self._he_scheme = fhe.CKKS(batch_size, scaling_bits, "resources/fheparams/cryptoparams/")
+                self._he_scheme.load_crypto_params()
+
+                # Construct serialized proto message.
+                fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb(
+                    batch_size=batch_size, scaling_bits=scaling_bits)
+                self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
+                    enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
+        else:
+            empty_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_empty_he_scheme_pb()
+            self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
+                enabled=False, empty_scheme_pb=empty_scheme_pb)
 
     def __getstate__(self):
         """
@@ -66,11 +73,12 @@ class DriverSessionBase(object):
         See also: https://stackoverflow.com/questions/25382455
         """
         self_dict = self.__dict__.copy()
+        del self_dict['_driver_controller_grpc_client']
+        del self_dict['_driver_learner_grpc_clients']
         del self_dict['_executor']
         del self_dict['_executor_controller_tasks_q']
         del self_dict['_executor_learners_tasks_q']
-        del self_dict['_driver_controller_grpc_client']
-        del self_dict['_driver_learner_grpc_clients']
+        del self_dict['_he_scheme']
         return self_dict
 
     def _create_driver_controller_grpc_client(self):
@@ -96,23 +104,36 @@ class DriverSessionBase(object):
             protocol=self.federation_environment.communication_protocol.name,
             semi_sync_lambda=self.federation_environment.communication_protocol.semi_synchronous_lambda,
             semi_sync_recompute_num_updates=self.federation_environment.communication_protocol.semi_sync_recompute_num_updates)
-        communication_specs_pb_serialized = communication_specs_pb.SerializeToString()
-        optimizer_pb = self.federation_environment.local_model_config.optimizer_config.optimizer_pb
+        optimizer_pb_kwargs = self.federation_environment.local_model_config.optimizer_config.optimizer_pb_kwargs
+        optimizer_pb = \
+            proto_messages_factory.ModelProtoMessages.construct_optimizer_config_pb_from_kwargs(optimizer_pb_kwargs)
         model_hyperparameters_pb = proto_messages_factory.MetisProtoMessages \
             .construct_controller_modelhyperparams_pb(
-             batch_size=self.federation_environment.local_model_config.batch_size,
-             epochs=self.federation_environment.local_model_config.local_epochs,
-             optimizer_pb=optimizer_pb,
-             percent_validation=self.federation_environment.local_model_config.validation_percentage)
-        model_hyperparameters_pb_serialized = model_hyperparameters_pb.SerializeToString()
+                batch_size=self.federation_environment.local_model_config.batch_size,
+                epochs=self.federation_environment.local_model_config.local_epochs,
+                optimizer_pb=optimizer_pb,
+                percent_validation=self.federation_environment.local_model_config.validation_percentage)
+        aggregation_rule_pb = proto_messages_factory.MetisProtoMessages.construct_aggregation_rule_pb(
+            rule_name=self.federation_environment.global_model_config.aggregation_rule.aggregation_rule_name,
+            scaling_factor=self.federation_environment.global_model_config.aggregation_rule.aggregation_rule_scaling_factor,
+            stride_length=self.federation_environment.global_model_config.aggregation_rule.aggregation_rule_stride_length,
+            he_scheme_pb=self._he_scheme_pb)
+        global_model_specs_pb = proto_messages_factory.MetisProtoMessages.construct_global_model_specs(
+            aggregation_rule_pb=aggregation_rule_pb,
+            learners_participation_ratio=self.federation_environment.global_model_config.participation_ratio)
+        model_store_config_pb = proto_messages_factory.MetisProtoMessages.construct_model_store_config_pb(
+            name=self.federation_environment.model_store_config.name,
+            eviction_policy=self.federation_environment.model_store_config.eviction_policy,
+            lineage_length=self.federation_environment.model_store_config.eviction_lineage_length,
+            store_hostname=self.federation_environment.model_store_config.connection_configs.hostname,
+            store_port=self.federation_environment.model_store_config.connection_configs.port)
         bazel_init_controller_cmd = BazelMetisServicesCmdFactory().bazel_init_controller_target(
-             hostname=self.federation_environment.controller.connection_configs.hostname,
-             port=self.federation_environment.controller.grpc_servicer.port,
-             aggregation_rule=self.federation_environment.global_model_config.aggregation_function,
-             participation_ratio=self.federation_environment.global_model_config.participation_ratio,
-             communication_specs_pb=communication_specs_pb_serialized,
-             model_hyperparameters_pb=model_hyperparameters_pb_serialized,
-             fhe_scheme_protobuff=self.fhe_scheme_pb.SerializeToString())
+            hostname=self.federation_environment.controller.connection_configs.hostname,
+            port=self.federation_environment.controller.grpc_servicer.port,
+            global_model_specs_pb_ser=global_model_specs_pb.SerializeToString(),
+            communication_specs_pb_ser=communication_specs_pb.SerializeToString(),
+            model_hyperparameters_pb_ser=model_hyperparameters_pb.SerializeToString(),
+            model_store_config_pb_ser=model_store_config_pb.SerializeToString())
         return bazel_init_controller_cmd
 
     def _init_learner_bazel_cmd(self, learner_instance, controller_instance):
@@ -124,7 +145,7 @@ class DriverSessionBase(object):
             learner_port=learner_instance.grpc_servicer.port,
             controller_hostname=controller_instance.connection_configs.hostname,
             controller_port=controller_instance.grpc_servicer.port,
-            fhe_scheme_protobuff=self.fhe_scheme_pb.SerializeToString(),
+            he_scheme_pb_ser=self._he_scheme_pb.SerializeToString(),
             model_definition=remote_model_def_path,
             train_dataset=learner_instance.dataset_configs.train_dataset_path,
             validation_dataset=learner_instance.dataset_configs.validation_dataset_path,
@@ -147,8 +168,8 @@ class DriverSessionBase(object):
         model_vars_pb = []
         for widx, weight in enumerate(model_weights):
             ciphertext = None
-            if self.fhe_scheme_pb.enabled:
-                ciphertext = self.encryption_scheme.encrypt(weight.flatten(), 1)
+            if self._he_scheme:
+                ciphertext = self._he_scheme.encrypt(weight.flatten(), 1)
             tensor_pb = proto_messages_factory.ModelProtoMessages.construct_tensor_pb(
                 nparray=weight, ciphertext=ciphertext)
             # TODO(dstripelis) Need to change the following to reflect the true variables' names

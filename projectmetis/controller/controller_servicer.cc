@@ -9,9 +9,10 @@
 
 #include "absl/memory/memory.h"
 #include "projectmetis/controller/controller_servicer.h"
+#include "projectmetis/controller/controller_utils.h"
+#include "projectmetis/core/bs_thread_pool.h"
 #include "projectmetis/proto/controller.grpc.pb.h"
 #include "projectmetis/proto/metis.pb.h"
-#include "projectmetis/core/bs_thread_pool.h"
 
 namespace projectmetis::controller {
 namespace {
@@ -22,8 +23,8 @@ using ::grpc::Status;
 using ::grpc::StatusCode;
 
 class ServicerBase {
-public:
-  template <class Service>
+ public:
+  template<class Service>
   void Start(const ServerEntity &server_entity, Service *service) {
     const auto server_address = absl::StrCat(server_entity.hostname(), ":", server_entity.port());
 
@@ -38,8 +39,8 @@ public:
     /*! Read the server certificate & server key
      * and enable SSL accordingly. */
     if (!server_entity.ssl_config().server_cert().empty()
-            && !server_entity.ssl_config().server_key().empty()) {
-                read_ssl = true;
+        && !server_entity.ssl_config().server_key().empty()) {
+      read_ssl = true;
     }
 
     if (read_ssl) {
@@ -47,22 +48,19 @@ public:
       std::string server_key;
       // TODO(aasghar) Understand how we can handle the SSL certificates if passed as commandline argument.
       std::string abs_path = std::filesystem::current_path();
-      std::string temp_cert  = abs_path + server_entity.ssl_config().server_cert();
-      std::string temp_key =  abs_path + server_entity.ssl_config().server_key();
+      std::string temp_cert = abs_path + server_entity.ssl_config().server_cert();
+      std::string temp_key = abs_path + server_entity.ssl_config().server_key();
 
-      if (read_and_parse_file(server_cert, temp_cert) == -1) {
-          std::cerr << "Error Reading Server Cert: " << server_entity.ssl_config().server_cert() << std::endl;
-          std::cerr << "Exiting Program..." << std::endl;
-          exit(1);
+      if (ReadParseFile(server_cert, temp_cert) == -1) {
+        // Logs and terminates the program.
+        PLOG(FATAL) << "Error Reading Server Cert: " << server_entity.ssl_config().server_cert();
       }
 
-      if (read_and_parse_file(server_key, temp_key) == -1) {
-          std::cerr << "Error Reading Key Cert: " << server_entity.ssl_config().server_key() << std::endl;
-          std::cerr << "Exiting Program..." << std::endl;
-          exit(1);
+      if (ReadParseFile(server_key, temp_key) == -1) {
+        PLOG(FATAL) << "Error Reading Key Cert: " << server_entity.ssl_config().server_key();
       }
 
-      std::cout << "SSL enabled" << std::endl;
+      PLOG(INFO) << "SSL enabled";
       grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp = {server_key, server_cert};
       grpc::SslServerCredentialsOptions ssl_opts;
       ssl_opts.pem_root_certs = "";
@@ -70,7 +68,7 @@ public:
       creds = grpc::SslServerCredentials(ssl_opts);
 
     } else {
-      std::cout << "SSL disabled" << std::endl;
+      PLOG(INFO) << "SSL disabled";
       creds = grpc::InsecureServerCredentials();
     }
 
@@ -86,7 +84,7 @@ public:
 
     // Finally assemble the server.
     server_ = builder.BuildAndStart();
-    std::cout << "Controller listening on " << server_address << std::endl;
+    PLOG(INFO) << "Controller listening on " << server_address;
   }
 
   void Stop() {
@@ -94,40 +92,22 @@ public:
       return;
     }
     server_->Shutdown();
-    std::cout << "Controller shut down." << std::endl;
+    PLOG(INFO) << "Controller shut down.";
   }
 
   void Wait() {
     if (server_ == nullptr) {
       return;
     }
-
     server_->Wait();
   }
 
-protected:
+ protected:
   std::unique_ptr<Server> server_;
-private:
-  //Reads a file from disk that contains the key and certificate information
-  //and returns the certificate and a referenced argument, or an error if file
-  //is not being opened
-  int read_and_parse_file(std::string &return_cert, std::string file_name){
-    std::ifstream _file;
-    _file.open(file_name);
-
-    // Manage handling in case the certificates are not generated.
-    std::stringstream buffer;
-    if (_file.is_open()){
-        buffer << _file.rdbuf();
-        return_cert = buffer.str();
-        return 1;
-      }
-    return -1;
-  }
 };
 
 class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
-public:
+ public:
   explicit ControllerServicerImpl(Controller *controller)
       : pool_(1), controller_(controller) {
     GOOGLE_CHECK_NOTNULL(controller_);
@@ -137,13 +117,19 @@ public:
   const Controller *GetController() const override { return controller_; }
 
   void StartService() override {
-      const auto &params = controller_->GetParams();
-      Start(params.server_entity(),this);
+    const auto &params = controller_->GetParams();
+    Start(params.server_entity(), this);
+    PLOG(INFO) << "Started Controller Servicer.";
   }
 
-  void WaitService() override { Wait(); }
+  void WaitService() override { 
+    Wait(); 
+  }
 
-  void StopService() override { Stop(); }
+  void StopService() override {
+    pool_.push_task([this] { controller_->Shutdown(); });
+    pool_.push_task([this] { this->Stop(); });
+  }
 
   Status GetCommunityModelEvaluationLineage(
       ServerContext *context,
@@ -159,7 +145,7 @@ public:
     const auto lineage = controller_->GetEvaluationLineage(
         request->num_backtracks());
 
-    for (const auto &evaluation : lineage) {
+    for (const auto &evaluation: lineage) {
       *response->add_community_evaluation() = evaluation;
     }
 
@@ -176,12 +162,12 @@ public:
               "Request and response cannot be empty."};
     }
 
-    for (const auto &learner_id : request->learner_ids()) {
+    for (const auto &learner_id: request->learner_ids()) {
       const auto lineage = controller_->GetLocalTaskLineage(
           learner_id, request->num_backtracks());
 
       LocalTasksMetadata learner_tasks_metadata;
-      for (const auto &task_meta : lineage) {
+      for (const auto &task_meta: lineage) {
         *learner_tasks_metadata.add_task_metadata() = task_meta;
       }
       (*response->mutable_learner_task())[learner_id] = learner_tasks_metadata;
@@ -203,7 +189,7 @@ public:
     const auto lineage = controller_->GetRuntimeMetadataLineage(
         request->num_backtracks());
 
-    for (const auto &metadata : lineage) {
+    for (const auto &metadata: lineage) {
       *response->add_metadata() = metadata;
     }
 
@@ -221,7 +207,7 @@ public:
 
     // Creates LearnerDescriptor response collection that only
     // contains the learner's id and dataset specifications.
-    for (const auto &learner : controller_->GetLearners()) {
+    for (const auto &learner: controller_->GetLearners()) {
       LearnerDescriptor learner_descriptor;
       *learner_descriptor.mutable_id() = learner.id();
       *learner_descriptor.mutable_dataset_spec() = learner.dataset_spec();
@@ -271,12 +257,12 @@ public:
     if (!learner_or.ok()) {
       response->mutable_ack()->set_status(false);
       switch (learner_or.status().code()) {
-      case absl::StatusCode::kAlreadyExists:
-        return {StatusCode::ALREADY_EXISTS,
-                std::string(learner_or.status().message())};
-      default:
-        return {StatusCode::INVALID_ARGUMENT,
-                std::string(learner_or.status().message())};
+        case absl::StatusCode::kAlreadyExists:
+          return {StatusCode::ALREADY_EXISTS,
+                  std::string(learner_or.status().message())};
+        default:
+          return {StatusCode::INVALID_ARGUMENT,
+                  std::string(learner_or.status().message())};
       }
     } else {
       response->mutable_ack()->set_status(true);
@@ -286,6 +272,7 @@ public:
       response->set_auth_token(learner_state.auth_token());
     }
 
+    PLOG(INFO) << "Learner " << learner_or.value().id() << " joined Federation.";
     return Status::OK;
   }
 
@@ -327,22 +314,20 @@ public:
       return {StatusCode::INVALID_ARGUMENT,
               "Request and response cannot be empty."};
     }
+
+    PLOG(INFO) << "Received Completed Task By " << request->learner_id();
     const auto status = controller_->LearnerCompletedTask(
         request->learner_id(), request->auth_token(), request->task());
     if (!status.ok()) {
       switch (status.code()) {
-      case absl::StatusCode::kInvalidArgument:
-        response->mutable_ack()->set_status(false);
-        return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
-      case absl::StatusCode::kPermissionDenied:
-        response->mutable_ack()->set_status(false);
-        return {StatusCode::PERMISSION_DENIED, std::string(status.message())};
-      case absl::StatusCode::kNotFound:
-        response->mutable_ack()->set_status(false);
-        return {StatusCode::NOT_FOUND, std::string(status.message())};
-      default:
-        response->mutable_ack()->set_status(false);
-        return {StatusCode::INTERNAL, std::string(status.message())};
+        case absl::StatusCode::kInvalidArgument:response->mutable_ack()->set_status(false);
+          return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
+        case absl::StatusCode::kPermissionDenied:response->mutable_ack()->set_status(false);
+          return {StatusCode::PERMISSION_DENIED, std::string(status.message())};
+        case absl::StatusCode::kNotFound:response->mutable_ack()->set_status(false);
+          return {StatusCode::NOT_FOUND, std::string(status.message())};
+        default:response->mutable_ack()->set_status(false);
+          return {StatusCode::INTERNAL, std::string(status.message())};
       }
     }
     response->mutable_ack()->set_status(true);
@@ -361,9 +346,11 @@ public:
     auto status = controller_->ReplaceCommunityModel(request->model());
     if (status.ok()) {
       response->mutable_ack()->set_status(true);
+      PLOG(INFO) << "Replaced Community Model.";
       return Status::OK;
     }
 
+    PLOG(ERROR) << "Couldn't Replace Community Model.";
     return {StatusCode::UNAUTHENTICATED, std::string(status.message())};
   }
 
@@ -380,7 +367,7 @@ public:
     return Status::OK;
   }
 
-private:
+ private:
   // Thread pool for async tasks.
   BS::thread_pool pool_;
   Controller *controller_;

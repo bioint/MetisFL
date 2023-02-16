@@ -1,5 +1,7 @@
 channels:
+  - anaconda
   - conda-forge
+  - esri
   - default
 dependencies:
   - python==3.8.8
@@ -30,6 +32,7 @@ dependencies:
   - scikit-learn
   - SQLAlchemy
   - tensorboard
+  - tensorflow-addons=0.13.0
   - tensorflow-gpu=2.6.2=cuda11* # TF Version associated with cudatoolkit and cudnn versions.
   - termcolor
   - threadpoolctl

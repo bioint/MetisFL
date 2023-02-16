@@ -1,9 +1,9 @@
-#include "projectmetis/controller/controller.h"
 
 #include <mutex>
 #include <utility>
 #include <thread>
 
+#include <glog/logging.h>
 #include <google/protobuf/util/time_util.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
 #include <grpcpp/client_context.h>
@@ -11,11 +11,8 @@
 #include <grpcpp/create_channel.h>
 
 #include "absl/memory/memory.h"
+#include "projectmetis/controller/controller.h"
 #include "projectmetis/controller/controller_utils.h"
-#include "projectmetis/controller/model_aggregation/model_aggregation.h"
-#include "projectmetis/controller/model_scaling/model_scaling.h"
-#include "projectmetis/controller/model_selection/model_selection.h"
-#include "projectmetis/controller/scheduling/scheduling.h"
 #include "projectmetis/core/bs_thread_pool.h"
 #include "projectmetis/core/macros.h"
 #include "projectmetis/core/proto_tensor_serde.h"
@@ -33,13 +30,14 @@ class ControllerDefaultImpl : public Controller {
                         std::unique_ptr<ScalingFunction> scaler,
                         std::unique_ptr<AggregationFunction> aggregator,
                         std::unique_ptr<Scheduler> scheduler,
-                        std::unique_ptr<Selector> selector)
+                        std::unique_ptr<Selector> selector,
+                        std::unique_ptr<ModelStore> model_store)
       : params_(std::move(params)), global_iteration_(0), learners_(),
         learners_stub_(), learners_task_template_(), learners_mutex_(),
         scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
         scheduler_(std::move(scheduler)), selector_(std::move(selector)),
         community_model_(), community_mutex_(), scheduling_pool_(2),
-        run_tasks_cq_(), eval_tasks_cq_() {
+        model_store_(std::move(model_store)), run_tasks_cq_(), eval_tasks_cq_() {
 
     // We perform the following detachment because we want to have only
     // one thread and one completion queue to handle asynchronous request
@@ -69,7 +67,7 @@ class ControllerDefaultImpl : public Controller {
 
     // TODO Shall we 'hide' authentication token from exposure?
     std::vector<LearnerDescriptor> learners;
-    for (const auto &[key, learner_state] : learners_) {
+    for (const auto &[key, learner_state]: learners_) {
       learners.push_back(learner_state.learner());
     }
     return learners;
@@ -90,6 +88,7 @@ class ControllerDefaultImpl : public Controller {
     // When replacing the federation model we only set the number of learners
     // contributed to this model and the actual model. We do not replace the
     // global iteration since it is updated exclusively by the controller.
+    PLOG(INFO) << "Replacing community model.";
     community_model_.set_num_contributors(model.num_contributors());
     *community_model_.mutable_model() = model.model();
     return absl::OkStatus();
@@ -148,7 +147,7 @@ class ControllerDefaultImpl : public Controller {
     // Float conversion because ceil(x/y) with x < y and x, y integers returns 0.
     uint32_t steps_per_epoch = std::ceil(
         (float) dataset_spec.num_training_examples() /
-        (float) params_.model_hyperparams().batch_size());
+            (float) params_.model_hyperparams().batch_size());
 
     task_template.set_num_local_updates(params_.model_hyperparams().epochs() *
         steps_per_epoch);
@@ -183,6 +182,8 @@ class ControllerDefaultImpl : public Controller {
     // Checks requesting learner existence inside the state map.
     if (it != learners_.end()) {
       if (it->second.learner().auth_token() == token) {
+        PLOG(INFO) << "Removing learner from controller: " << learner_id;
+        model_store_->EraseModels(std::vector<std::string>{learner_id});
         learners_.erase(it);
         learners_stub_.erase(learner_id);
         learners_task_template_.erase(learner_id);
@@ -213,11 +214,20 @@ class ControllerDefaultImpl : public Controller {
           TimeUtil::GetCurrentTime();
     }
 
-    // Updates the learner's state.
-    // TODO (dstripelis) Clear local models collection to avoid controller crashes.
-    //  in future releases we might need to keep many more models in-memory.
-    learners_[learner_id].mutable_model()->Clear();
-    *learners_[learner_id].mutable_model()->Add() = task.model();
+    // Inserts learner's new local model. This is a blocking
+    // call and the reason is that we need learner's local
+    // model stored inside the model store before any aggregation
+    // operation can happen.
+    // Future thoughts on multi-threading insertions.
+    //  (1) In the case of InMemory store, we can perform multi-threading,
+    //      since we are using a vector to insert learners models.
+    //  (2) In the case of Redis, we cannot perform multi-threading,
+    //      since Redis is single-thread.
+    PLOG(INFO) << "Insert learner\'s " << learner_id << " model.";
+    model_store_->InsertModel(
+        std::vector<std::pair<std::string, Model>>{
+            std::pair<std::string, Model>(learner_id, task.model())
+        });
 
     // Update learner collection with metrics from last completed training task.
     if (!local_tasks_metadata_.contains(learner_id)) {
@@ -321,6 +331,7 @@ class ControllerDefaultImpl : public Controller {
     run_tasks_cq_.Shutdown();
     eval_tasks_cq_.Shutdown();
     scheduling_pool_.wait_for_tasks();
+    model_store_->Shutdown();
 
   }
 
@@ -369,8 +380,7 @@ class ControllerDefaultImpl : public Controller {
       // federation runtime metadata object.
       FederatedTaskRuntimeMetadata meta = FederatedTaskRuntimeMetadata();
       ++global_iteration_;
-      std::cout << "FedIteration: " << unsigned(global_iteration_)
-                << "\n" << std::flush;
+      PLOG(INFO) << "FedIteration: " << unsigned(global_iteration_);
       meta.set_global_iteration(global_iteration_);
       metadata_.emplace_back(meta);
     }
@@ -406,26 +416,14 @@ class ControllerDefaultImpl : public Controller {
       // Assign a non-negative value to the metadata index.
       auto metadata_index =
           (task_global_iteration == 0) ? 0 : task_global_iteration - 1;
-      auto &old_meta = metadata_.at(metadata_index);
 
       // Select models that will participate in the community model.
-      auto to_select = selector_->Select(to_schedule, GetLearners());
-      // We capture two different timestamps because the protobuf Timestamp
-      // class returns up to seconds. There is no functionality to return
-      // the milliseconds in the timestamp too.
-      // TODO (dstripelis) Need to check if we can re-use timestamps to
-      //  compute total community model aggregation time.
-      auto start_high_res = std::chrono::high_resolution_clock::now();
-      *old_meta.mutable_model_aggregation_started_at() =
-          TimeUtil::GetCurrentTime();
+      auto selected_for_aggregation =
+          selector_->Select(to_schedule, GetLearners());
       // Computes the community model using models that have
       // been selected by the model selector.
-      auto community_model = ComputeCommunityModel(to_select);
-      *old_meta.mutable_model_aggregation_completed_at() =
-          TimeUtil::GetCurrentTime();
-      auto end_high_res = std::chrono::high_resolution_clock::now();
-      std::chrono::duration<double, std::milli> elapsed = end_high_res - start_high_res;
-      old_meta.set_model_aggregation_duration_ms(elapsed.count());
+      auto community_model =
+          ComputeCommunityModel(selected_for_aggregation, metadata_index);
 
       // Record the number of zeros and non-zeros values for
       // each model layer/variable in the metadata collection.
@@ -454,13 +452,15 @@ class ControllerDefaultImpl : public Controller {
       // evaluation task corresponds and needs to store the associated meta data.
       SendEvaluationTasks(to_schedule,
                           community_model,
-                          community_evaluations_.size()-1,
+                          community_evaluations_.size() - 1,
                           metadata_index);
 
       // Increase global iteration counter to reflect the new scheduling round.
       ++global_iteration_;
-      std::cout << "FedIteration: " << unsigned(global_iteration_)
-                << "\n" << std::flush;
+      PLOG(INFO) << "FedIteration: " << unsigned(global_iteration_);
+
+      // Set the specifications of the next training task.
+      UpdateLearnersTaskTemplates(to_schedule);
 
       // Set the specifications of the next training task.
       UpdateLearnersTaskTemplates(to_schedule);
@@ -471,7 +471,7 @@ class ControllerDefaultImpl : public Controller {
       new_meta.set_global_iteration(global_iteration_);
       // Records the id of the learners to which
       // the controller delegates the training task.
-      for (const auto &to_schedule_id : to_schedule) {
+      for (const auto &to_schedule_id: to_schedule) {
         *new_meta.add_assigned_to_learner_id() = to_schedule_id;
       }
 
@@ -501,7 +501,7 @@ class ControllerDefaultImpl : public Controller {
       // Finds the slowest learner.
       // float ms_per_batch_slowest = std::numeric_limits<float>::min();
       float ms_per_epoch_slowest = std::numeric_limits<float>::min();
-      for (const auto &learner_id : learners) {
+      for (const auto &learner_id: learners) {
         const auto &metadata = local_tasks_metadata_[learner_id].front();
         // if (metadata.processing_ms_per_batch() > ms_per_batch_slowest) {
         //   ms_per_batch_slowest = metadata.processing_ms_per_batch();
@@ -517,11 +517,15 @@ class ControllerDefaultImpl : public Controller {
           ms_per_epoch_slowest;
 
       // Updates the task templates based on the slowest learner.
-      for (const auto &learner_id : learners) {
+      for (const auto &learner_id: learners) {
         const auto &metadata = local_tasks_metadata_[learner_id].front();
 
-        int num_local_updates =
-            std::ceil(t_max / metadata.processing_ms_per_batch());
+        auto processing_ms_per_batch = metadata.processing_ms_per_batch();
+        if (processing_ms_per_batch == 0) {
+          PLOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
+          processing_ms_per_batch = 1;
+        }
+        int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
 
         auto &task_template = learners_task_template_[learner_id];
         task_template.set_num_local_updates(num_local_updates);
@@ -538,26 +542,24 @@ class ControllerDefaultImpl : public Controller {
 
     // Our goal is to send the EvaluateModel request to each learner in parallel.
     // We use a single thread to asynchronously send all evaluate model requests
-    // and add every submitted EvaluateModel request inside the `eval_tasks_q`
-    // completion queue. The implementation follows the (recommended) async grpc client:
+    // and add every submitted EvaluateModel request inside a grpc::CompletionQueue.
+    // The implementation follows the (recommended) async grpc client:
     // https://github.com/grpc/grpc/blob/master/examples/cpp/helloworld/greeter_async_client2.cc
-    auto& cq_ = eval_tasks_cq_;
     for (const auto &learner_id: learners) {
       (*metadata_.at(metadata_ref_idx)
           .mutable_eval_task_submitted_at())[learner_id] = TimeUtil::GetCurrentTime();
       SendEvaluationTaskAsync(
-          learner_id, model, cq_, comm_eval_ref_idx, metadata_ref_idx);
+          learner_id, model, comm_eval_ref_idx, metadata_ref_idx);
     }
   }
 
   void SendEvaluationTaskAsync(const std::string &learner_id,
                                const FederatedModel &model,
-                               grpc::CompletionQueue &cq_,
                                const uint32_t &comm_eval_ref_idx,
                                const uint32_t &metadata_ref_idx) {
 
     // TODO (dstripelis,canastas) This needs to be reimplemented by using
-    //  a single channel/stub. We tried to implement this that way, but when
+    //  a single channel or stub. We tried to implement this that way, but when
     //  we run either of the two approaches either through the (reused) channel
     //  or stub, the requests were delayed substantially and not received
     //  immediately by the learners. For instance, under normal conditions
@@ -569,6 +571,7 @@ class ControllerDefaultImpl : public Controller {
     //  CIFAR-10 with 1.6M params and encryption using FHE ~ 100MBs per model.
     auto learner_stub = CreateLearnerStub(learner_id);
 
+    auto &cq = eval_tasks_cq_;
     auto &params = params_;
     EvaluateModelRequest request;
     *request.mutable_model() = model.model();
@@ -578,7 +581,7 @@ class ControllerDefaultImpl : public Controller {
     request.add_evaluation_dataset(EvaluateModelRequest::TEST);
 
     // Call object to store rpc data.
-    auto* call = new AsyncLearnerEvalCall;
+    auto *call = new AsyncLearnerEvalCall;
 
     // Set the learner id this call will be submitted to.
     call->learner_id = learner_id;
@@ -598,7 +601,7 @@ class ControllerDefaultImpl : public Controller {
     // the "call" instance in order to get updates on the ongoing RPC.
     // Opens gRPC channel with learner.
     call->response_reader = learner_stub->
-        PrepareAsyncEvaluateModel(&call->context, request, &cq_);
+        PrepareAsyncEvaluateModel(&call->context, request, &cq);
 
     // Initiate the RPC call.
     call->response_reader->StartCall();
@@ -606,7 +609,7 @@ class ControllerDefaultImpl : public Controller {
     // Request that, upon completion of the RPC, "reply" be updated with the
     // server's response; "status" with the indication of whether the operation
     // was successful. Tag the request with the memory address of the call object.
-    call->response_reader->Finish(&call->reply, &call->status, (void*)call);
+    call->response_reader->Finish(&call->reply, &call->status, (void *) call);
 
   }
 
@@ -616,24 +619,23 @@ class ControllerDefaultImpl : public Controller {
     // It stops when it receives a shutdown signal. Specifically, `cq._Next()`
     // will not return false until `cq_.Shutdown()` is called and all pending
     // tags have been digested.
-    void* got_tag;
+    void *got_tag;
     bool ok = false;
 
-    auto& cq_ = eval_tasks_cq_;
+    auto &cq_ = eval_tasks_cq_;
     // Block until the next result is available in the completion queue "cq".
     while (cq_.Next(&got_tag, &ok)) {
 
       // The tag is the memory location of the call object.
-      auto* call = static_cast<AsyncLearnerEvalCall*>(got_tag);
+      auto *call = static_cast<AsyncLearnerEvalCall *>(got_tag);
 
       // Verify that the request was completed successfully. Note that "ok"
       // corresponds solely to the request for updates introduced by Finish().
       GPR_ASSERT(ok);
 
-
       if (call) {
         // If either a failed or successful response is received
-        // then increase counter of sentinel variable counter.
+        // then handle the content of the received response.
         if (call->status.ok()) {
           (*metadata_.at(call->metadata_ref_idx)
               .mutable_eval_task_received_at())[call->learner_id] = TimeUtil::GetCurrentTime();
@@ -645,14 +647,12 @@ class ControllerDefaultImpl : public Controller {
           *model_evaluations.mutable_test_evaluation() =
               call->reply.evaluations().test_evaluation();
           (*community_evaluations_.at(call->comm_eval_ref_idx)
-          .mutable_evaluations())[call->learner_id] = model_evaluations;
+              .mutable_evaluations())[call->learner_id] = model_evaluations;
         } else {
-          std::cout << "EvaluateModel RPC request to learner: " << call->learner_id
-                    << " failed with error: " << call->status.error_message()
-                    << call->context.debug_error_string()
-                    << "\n" << std::flush;
+          PLOG(ERROR) << "EvaluateModel RPC request to learner: " << call->learner_id
+                      << " failed with error: " << call->status.error_message();
         }
-      }
+      } //end if call
 
       delete call;
 
@@ -666,24 +666,23 @@ class ControllerDefaultImpl : public Controller {
 
     // Our goal is to send the RunTask request to each learner in parallel.
     // We use a single thread to asynchronously send all run task requests
-    // and add every submitted RunTask request inside the `run_tasks_q`
-    // completion queue. The implementation follows the (recommended) async grpc client:
+    // and add every submitted RunTask request inside a grpc::CompletionQueue.
+    // The implementation follows the (recommended) async grpc client:
     // https://github.com/grpc/grpc/blob/master/examples/cpp/helloworld/greeter_async_client2.cc
-    auto& cq_ = run_tasks_cq_;
-    for (const auto &learner_id : learners) {
+    for (const auto &learner_id: learners) {
       (*meta.mutable_train_task_submitted_at())[learner_id] =
           TimeUtil::GetCurrentTime();
-      SendRunTaskAsync(learner_id, model, cq_);
+      SendRunTaskAsync(learner_id, model);
     }
 
   }
 
   void SendRunTaskAsync(const std::string &learner_id,
-                        const FederatedModel &model,
-                        grpc::CompletionQueue &cq_) {
+                        const FederatedModel &model) {
 
     auto learner_stub = CreateLearnerStub(learner_id);
 
+    auto &cq = run_tasks_cq_;
     auto &params = params_;
     auto global_iteration = global_iteration_;
     const auto &task_template = learners_task_template_[learner_id];
@@ -705,7 +704,7 @@ class ControllerDefaultImpl : public Controller {
         params.model_hyperparams().optimizer();
 
     // Call object to store rpc data.
-    auto* call = new AsyncLearnerRunTaskCall;
+    auto *call = new AsyncLearnerRunTaskCall;
 
     call->learner_id = learner_id;
     // stub->PrepareAsyncRunTask() creates an RPC object, returning
@@ -714,7 +713,7 @@ class ControllerDefaultImpl : public Controller {
     // the "call" instance in order to get updates on the ongoing RPC.
     // Opens gRPC channel with learner.
     call->response_reader = learner_stub->
-        PrepareAsyncRunTask(&call->context, request, &cq_);
+        PrepareAsyncRunTask(&call->context, request, &cq);
 
     // Initiate the RPC call.
     call->response_reader->StartCall();
@@ -722,7 +721,7 @@ class ControllerDefaultImpl : public Controller {
     // Request that, upon completion of the RPC, "reply" be updated with the
     // server's response; "status" with the indication of whether the operation
     // was successful. Tag the request with the memory address of the call object.
-    call->response_reader->Finish(&call->reply, &call->status, (void*)call);
+    call->response_reader->Finish(&call->reply, &call->status, (void *) call);
 
   }
 
@@ -732,14 +731,14 @@ class ControllerDefaultImpl : public Controller {
     // It stops when it receives a shutdown signal. Specifically, `cq._Next()`
     // will not return false until `cq_.Shutdown()` is called and all pending
     // tags have been digested.
-    void* got_tag;
+    void *got_tag;
     bool ok = false;
 
-    auto& cq_ = run_tasks_cq_;
+    auto &cq_ = run_tasks_cq_;
     // Block until the next result is available in the completion queue "cq".
     while (cq_.Next(&got_tag, &ok)) {
       // The tag is the memory location of the call object.
-      auto* call = static_cast<AsyncLearnerRunTaskCall*>(got_tag);
+      auto *call = static_cast<AsyncLearnerRunTaskCall *>(got_tag);
 
       // Verify that the request was completed successfully. Note that "ok"
       // corresponds solely to the request for updates introduced by Finish().
@@ -747,23 +746,23 @@ class ControllerDefaultImpl : public Controller {
 
       if (call) {
         // If either a failed or successful response is received
-        // then increase counter of sentinel variable counter.
+        // then handle the content of the received response.
         if (!call->status.ok()) {
-          std::cout << "RunTask RPC request to learner: " << call->learner_id
-                    << " failed with error: " << call->status.error_message()
-                    << call->context.debug_error_string()
-                    << "\n" << std::flush;
+          PLOG(ERROR) << "RunTask RPC request to learner: " << call->learner_id
+                      << " failed with error: " << call->status.error_message();
         }
-      }
+      } //end if call
 
-       delete call;
+      delete call;
 
     } // end of loop
 
   }
 
   FederatedModel
-  ComputeCommunityModel(const std::vector<std::string> &learners_ids) {
+  ComputeCommunityModel(
+      const std::vector<std::string> &learners_ids,
+      const uint32_t &metadata_ref_idx) {
 
     // Handles the case where the community model is requested for the
     // first time and has the original (random) initialization state.
@@ -771,27 +770,142 @@ class ControllerDefaultImpl : public Controller {
       return community_model_;
     }
 
-    // TODO (dstripelis) Remove redundant copying.
-    absl::flat_hash_map<std::string, LearnerState> participating_states;
-    for (const auto &id : learners_ids) {
-      participating_states[id] = learners_.at(id);
+    *metadata_.at(metadata_ref_idx).mutable_model_aggregation_started_at() =
+        TimeUtil::GetCurrentTime();
+    auto start_time_aggregation = std::chrono::high_resolution_clock::now();
+
+    FederatedModel new_community_model; // return variable.
+
+    // Select a sub-set of learners who are participating in the experiment.
+    // The selection needs to be a reference to learnerState to avoid copy.
+    // The LearnerState does not contain any models.
+    // All required models are retrieved from the model store.
+    absl::flat_hash_map<std::string, LearnerState *> participating_states;
+    absl::flat_hash_map<std::string, TaskExecutionMetadata *> participating_metadata;
+    for (const auto &id: learners_ids) {
+      participating_states[id] = &learners_.at(id);
+      participating_metadata[id] = &local_tasks_metadata_.at(id).back();
     }
+
     // Before performing any aggregation, we need first to compute the
     // normalized scaling factor or contribution value of each model in
     // the community/global/aggregated model.
     auto scaling_factors =
-        scaler_->ComputeScalingFactors(community_model_, participating_states);
-    std::vector<std::pair<const Model *, double>> participating_models;
-    for (const auto &[id, state] : participating_states) {
-      if (not state.model().empty()) {
-        const auto history_size = state.model_size();
-        const auto &latest_model = state.model(history_size - 1);
-        const auto scaling_factor = scaling_factors[id];
-        participating_models.emplace_back(
-            std::make_pair(&latest_model, scaling_factor));
+        scaler_->ComputeScalingFactors(
+            community_model_, participating_states, participating_metadata);
+
+    // Defines the length of the aggregation stride, i.e., how many models
+    // to fetch from the model store and feed to the aggregation function.
+    // Only FedStride does this stride-based aggregation. All other aggregation
+    // rules use the entire list of participating models.
+    uint32_t aggregation_stride_length = participating_states.size();
+    if (params_.global_model_specs().aggregation_rule().has_fed_stride()) {
+      auto fed_stride_length =
+          params_.global_model_specs().aggregation_rule().fed_stride().stride_length();
+      if (fed_stride_length > 0) {
+        aggregation_stride_length = fed_stride_length;
       }
     }
-    return aggregator_->Aggregate(participating_models);
+
+    /* Since absl does not support crbeing() or iterator decrement (--) we need to use this.
+       method to find the itr of the last element. */
+    absl::flat_hash_map<std::string, LearnerState *>::iterator last_elem_itr;
+    for (auto itr = participating_states.begin(); itr != participating_states.end(); itr++) {
+      last_elem_itr = itr;
+    }
+
+    std::vector<std::pair<std::string, int>> to_select_block; // e.g., { (learner_id, stride_length), ...}
+    std::vector<std::vector<std::pair<const Model *, double>>>
+        to_aggregate_block; // e.g., { {m1*, 0.1}, {m2*, 0.3}, ...}
+    std::vector<std::pair<const Model *, double>> to_aggregate_learner_models_tmp;
+    for (auto itr = participating_states.begin(); itr != participating_states.end(); itr++) {
+
+      auto const &learner_id = itr->first;
+
+      // This represents the number of models to be fetched from the back-end.
+      // We need to check if the back-end has stored more models than the
+      // required model number of the aggregation strategy.
+      const auto learner_lineage_length =
+          model_store_->GetLearnerLineageLength(learner_id);
+      int select_lineage_length =
+          (learner_lineage_length >= aggregator_->RequiredLearnerLineageLength())
+          ? aggregator_->RequiredLearnerLineageLength() : learner_lineage_length;
+      to_select_block.emplace_back(learner_id, select_lineage_length);
+
+      uint32_t block_size = to_select_block.size();
+      if (block_size == aggregation_stride_length || itr == last_elem_itr) {
+
+        PLOG(INFO) << "Computing for block size: " << block_size;
+        *metadata_.at(metadata_ref_idx).mutable_model_aggregation_block_size()->Add() = block_size;
+
+        /*! --- SELECT MODELS ---
+         * Here, we retrieve models from the back-end model store.
+         * We need to import k-number of models from the model store.
+         * Number k depends on the number of models required by the aggregator or
+         * the number of local models stored for each learner, whichever is smaller.
+         *
+         *  Case (1): Redis Store: we select models from an outside (external) store.
+         *  Case (2): In-Memory Store: we select models from the in-memory hash map.
+         *
+         *  In both cases, a pointer would be returned for the models stored in the model store.
+        */
+        auto start_time_selection = std::chrono::high_resolution_clock::now();
+        std::map<std::string, std::vector<const Model *>> selected_models =
+            model_store_->SelectModels(to_select_block);
+        auto end_time_selection = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed_time_selection =
+            end_time_selection - start_time_selection;
+        auto avg_time_selection_per_model = elapsed_time_selection.count() / block_size;
+        for (auto const &[selected_learner_id, selected_learner_models]: selected_models) {
+          (*metadata_.at(metadata_ref_idx).mutable_model_selection_duration_ms())[selected_learner_id] =
+              avg_time_selection_per_model;
+        }
+
+        /* --- CONSTRUCT MODELS TO AGGREGATE --- */
+        for (auto const &[selected_learner_id, selected_learner_models]: selected_models) {
+          auto scaling_factor = scaling_factors[selected_learner_id];
+          for (auto it: selected_learner_models) {
+            to_aggregate_learner_models_tmp.emplace_back(it, scaling_factor);
+          }
+          to_aggregate_block.push_back(to_aggregate_learner_models_tmp);
+          to_aggregate_learner_models_tmp.clear();
+        }
+
+        /* --- AGGREGATE MODELS --- */
+        auto start_time_block_aggregation = std::chrono::high_resolution_clock::now();
+        new_community_model = aggregator_->Aggregate(to_aggregate_block);
+        auto end_time_block_aggregation = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double, std::milli> elapsed_time_block_aggregation =
+            end_time_block_aggregation - start_time_block_aggregation;
+        *metadata_.at(metadata_ref_idx).mutable_model_aggregation_block_duration_ms()->Add() =
+            elapsed_time_block_aggregation.count();
+
+        long block_memory = GetTotalMemory();
+        PLOG(INFO) << "Aggregate block memory usage (kb): " << block_memory;
+        *metadata_.at(metadata_ref_idx).mutable_model_aggregation_block_memory_kb()->Add() = (double) block_memory;
+
+        // Cleanup. Clear sentinel block variables and reset
+        // model_store's state to reclaim unused memory.
+        to_select_block.clear();
+        to_aggregate_block.clear();
+        model_store_->ResetState();
+
+      } // end-if
+
+    } // end for loop
+
+    // Reset aggregation function's state for the next step.
+    aggregator_->Reset();
+
+    // Compute elapsed time for the entire aggregation - global model computation function.
+    auto end_time_aggregation = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed_time_aggregation =
+        end_time_aggregation - start_time_aggregation;
+    metadata_.at(metadata_ref_idx).set_model_aggregation_total_duration_ms(elapsed_time_aggregation.count());
+    *metadata_.at(metadata_ref_idx).mutable_model_aggregation_completed_at() = TimeUtil::GetCurrentTime();
+
+    return new_community_model;
+
   }
 
   void RecordCommunityModelSize(const FederatedModel &model,
@@ -830,9 +944,20 @@ class ControllerDefaultImpl : public Controller {
 
         // Record the computed tensor measurements.
         *metadata_.at(metadata_ref_idx).mutable_model_tensor_quantifiers()->Add()
-          = tensor_quantifier;
+            = tensor_quantifier;
 
+      } else if (variable.has_ciphertext_tensor()) {
+        auto tensor_quantifier = projectmetis::TensorQuantifier();
+        // Since the controller performs the aggregation in an encrypted space,
+        // it does not have access to the plaintext model and therefore we cannot
+        // find the number of zero and non-zero elements.
+        tensor_quantifier.set_tensor_size_bytes(variable.ciphertext_tensor().tensor_spec().ByteSizeLong());
+        *metadata_.at(metadata_ref_idx).mutable_model_tensor_quantifiers()->Add() =
+            tensor_quantifier;
+      } else {
+        throw std::runtime_error("Unsupported variable tensor type.");
       } // end if
+
     } // end for
 
   }
@@ -873,6 +998,8 @@ class ControllerDefaultImpl : public Controller {
   std::mutex community_mutex_;
   // Thread pool for scheduling tasks.
   BS::thread_pool scheduling_pool_;
+  // Caching function to use for storing learner model(s).
+  std::unique_ptr<ModelStore> model_store_;
   // GRPC completion queue to process submitted learners' RunTasks requests.
   grpc::CompletionQueue run_tasks_cq_;
   // GRPC completion queue to process submitted learners' EvaluateModel requests.
@@ -880,7 +1007,7 @@ class ControllerDefaultImpl : public Controller {
 
   // Templated struct for keeping state and data information
   // from requests submitted to learners services.
-  template <typename T>
+  template<typename T>
   struct AsyncLearnerCall {
 
     std::string learner_id;
@@ -908,50 +1035,33 @@ class ControllerDefaultImpl : public Controller {
     uint32_t comm_eval_ref_idx;
     // Index to the metadata collection vector.
     uint32_t metadata_ref_idx;
-    AsyncLearnerEvalCall() { comm_eval_ref_idx = 0; metadata_ref_idx = 0; }
+    AsyncLearnerEvalCall() {
+      comm_eval_ref_idx = 0;
+      metadata_ref_idx = 0;
+    }
   };
 
 };
-
-std::unique_ptr<AggregationFunction>
-CreateAggregator(const GlobalModelSpecs &specs, const FHEScheme &fhe_scheme) {
-
-  if (specs.aggregation_rule() == GlobalModelSpecs::FED_AVG) {
-    return absl::make_unique<FederatedAverage>();
-  }
-  if (specs.aggregation_rule() == GlobalModelSpecs::PWA) {
-    return absl::make_unique<PWA>(fhe_scheme);
-  }
-  throw std::runtime_error("unsupported aggregation rule.");
-
-}
-
-std::unique_ptr<Scheduler> CreateScheduler(const CommunicationSpecs &specs) {
-
-  if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS ||
-      specs.protocol() == CommunicationSpecs::SEMI_SYNCHRONOUS) {
-    return absl::make_unique<SynchronousScheduler>();
-  }
-  if (specs.protocol() == CommunicationSpecs::ASYNCHRONOUS) {
-    return absl::make_unique<AsynchronousScheduler>();
-  }
-  throw std::runtime_error("unsupported scheduling policy.");
-
-}
-
-std::unique_ptr<Selector> CreateSelector() {
-  return absl::make_unique<ScheduledCardinality>();
-}
 
 } // namespace
 
 std::unique_ptr<Controller> Controller::New(const ControllerParams &params) {
 
-  return absl::make_unique<ControllerDefaultImpl>(
-      ControllerParams(params), absl::make_unique<DatasetSizeScaler>(),
-      CreateAggregator(params.global_model_specs(), params.fhe_scheme()),
-      CreateScheduler(params.communication_specs()), CreateSelector());
+  // Validate parameters correctness prior to Controller initialization.
+  if (params.model_hyperparams().batch_size() == 0 ||
+      params.model_hyperparams().epochs() == 0) {
+    // We need both the batch size and the epochs to compute and assign the
+    // initial number of steps learners will perform when joining the federation.
+    throw std::runtime_error("Batch size and epochs cannot be zero.");
+  }
 
+  return absl::make_unique<ControllerDefaultImpl>(
+      ControllerParams(params),
+      CreateScaler(params.global_model_specs().aggregation_rule().aggregation_rule_specs()),
+      CreateAggregator(params.global_model_specs().aggregation_rule()),
+      CreateScheduler(params.communication_specs()),
+      CreateSelector(),
+      CreateModelStore(params.model_store_config()));
 }
 
 } // namespace projectmetis::controller

@@ -26,16 +26,6 @@ message SSLConfig {
   string server_cert = 2;
 }
 
-message FHEScheme {
-  bool enabled = 1;
-  string name = 2;
-  uint32 batch_size = 3;
-  uint32 scaling_bits = 4;
-  string cryptocontext = 5;
-  string public_key = 6;
-  string private_key = 7;
-}
-
 //////////////
 // Learning //
 //////////////
@@ -193,7 +183,7 @@ message ControllerParams {
   ServerEntity server_entity = 1;
   GlobalModelSpecs global_model_specs = 2;
   CommunicationSpecs communication_specs = 3;
-  FHEScheme fhe_scheme = 4;
+  ModelStoreConfig model_store_config = 4;
 
   message ModelHyperparams {
 
@@ -212,12 +202,92 @@ message ControllerParams {
   ModelHyperparams model_hyperparams = 5;
 }
 
-message GlobalModelSpecs {
-  enum AggregationRule {
-    UNKNOWN = 0;
-    FED_AVG = 1;
-    PWA = 2;
+message ModelStoreConfig {
+  // Model cache config shall never be extended. It is just wrapper over the cache configuration.
+  // It contains only a single member, the cache that needs to be configured: oneof.
+  // Only one cache can be set and used by the controller.
+  oneof config {
+    InMemoryStore in_memory_store = 1;
+    RedisDBStore redis_db_store = 2;
   }
+}
+
+message InMemoryStore {
+  ModelStoreSpecs model_store_specs = 1;
+}
+
+message RedisDBStore {
+  ModelStoreSpecs model_store_specs = 1;
+  ServerEntity server_entity = 2;
+}
+
+message NoEviction {}
+
+message LineageLengthEviction {
+  uint32 lineage_length = 1; // The number of models the store to preserve per learner (i.e., history per learner). If we exceed this number we remove the least frequently used (lfu) model.
+}
+
+message ModelStoreSpecs {
+  oneof eviction_policy {
+    NoEviction no_eviction = 1; // Controller keeps all submitted models from all learners.
+    LineageLengthEviction lineage_length_eviction = 2; // Controller keeps only the last k submitted models of each learner. This is similar to LRU; we only keep the most recent k models.
+  }
+}
+
+message AggregationRule {
+  oneof rule {
+    FedAvg fed_avg = 1;
+    FedStride fed_stride = 2;
+    FedRec fed_rec = 3;
+    PWA pwa = 4;
+  }
+  AggregationRuleSpecs aggregation_rule_specs = 5;
+}
+
+message AggregationRuleSpecs {
+  enum ScalingFactor {
+    UNKNOWN = 0;
+    NUM_COMPLETED_BATCHES = 1;
+    NUM_PARTICIPANTS = 2;
+    NUM_TRAINING_EXAMPLES = 3;
+  }
+  ScalingFactor scaling_factor = 1;
+}
+
+message FedAvg {}
+
+message FedStride {
+  uint32 stride_length = 1;
+}
+
+message FedRec {}
+
+message HEScheme {
+  bool enabled = 1;
+  string name = 2;
+  string cryptocontext = 3;
+  string public_key = 4;
+  string private_key = 5;
+
+  oneof scheme {
+    EmptyHEScheme empty_he_scheme = 6;
+    FHEScheme fhe_scheme = 7;
+  }
+
+}
+
+message EmptyHEScheme {}
+
+message FHEScheme {
+  uint32 batch_size = 1;
+  uint32 scaling_bits = 2;
+}
+
+message PWA {
+  HEScheme he_scheme = 1;
+}
+
+message GlobalModelSpecs {
   AggregationRule aggregation_rule = 1;
   float learners_participation_ratio = 2;
 }
@@ -266,8 +336,13 @@ message FederatedTaskRuntimeMetadata {
   map<string, google.protobuf.Timestamp> train_task_received_at = 5;
   map<string, google.protobuf.Timestamp> eval_task_submitted_at = 6;
   map<string, google.protobuf.Timestamp> eval_task_received_at = 7;
-  google.protobuf.Timestamp model_aggregation_started_at = 8;
-  google.protobuf.Timestamp model_aggregation_completed_at = 9;
-  double model_aggregation_duration_ms = 10;
-  repeated TensorQuantifier model_tensor_quantifiers = 11;
+  map<string, double> model_insertion_duration_ms = 8;
+  map<string, double> model_selection_duration_ms = 9;
+  google.protobuf.Timestamp model_aggregation_started_at = 10;
+  google.protobuf.Timestamp model_aggregation_completed_at = 11;
+  double model_aggregation_total_duration_ms = 12;
+  repeated double model_aggregation_block_size = 13;
+  repeated double model_aggregation_block_memory_kb = 14;
+  repeated double model_aggregation_block_duration_ms = 15;
+  repeated TensorQuantifier model_tensor_quantifiers = 16;
 }

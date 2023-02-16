@@ -222,7 +222,7 @@ class [[nodiscard]] thread_pool
   }
 
   /**
-   * @brief Reset the number of threads in the pool. Waits for all currently running tasks to be completed, then destroys all threads in the pool and creates a new thread pool with the new number of threads. Any tasks that were waiting in the queue before the pool was reset will then be executed by the new threads. If the pool was paused before resetting it, the new pool will be paused as well.
+   * @brief Reset the number of threads in the pool. Waits for all currently running tasks to be completed, then destroys all threads in the pool and creates a new thread pool with the new number of threads. Any tasks that were waiting in the queue before the pool was Reset will then be executed by the new threads. If the pool was paused before resetting it, the new pool will be paused as well.
    *
    * @param thread_count_ The number of threads to use. The default value is the total number of hardware threads available, as reported by the implementation. This is usually determined by the number of cores in the CPU. If a core is hyperthreaded, it will count as two threads.
    */
@@ -332,9 +332,9 @@ class [[nodiscard]] thread_pool
   }
 
   /**
-   * @brief Determine how many threads the pool should have, based on the parameter passed to the constructor or reset().
+   * @brief Determine how many threads the pool should have, based on the parameter passed to the constructor or Reset().
    *
-   * @param thread_count_ The parameter passed to the constructor or reset(). If the parameter is a positive number, then the pool will be created with this number of threads. If the parameter is non-positive, or a parameter was not supplied (in which case it will have the default value of 0), then the pool will be created with the total number of hardware threads available, as obtained from std::thread::hardware_concurrency(). If the latter returns a non-positive number for some reason, then the pool will be created with just one thread.
+   * @param thread_count_ The parameter passed to the constructor or Reset(). If the parameter is a positive number, then the pool will be created with this number of threads. If the parameter is non-positive, or a parameter was not supplied (in which case it will have the default value of 0), then the pool will be created with the total number of hardware threads available, as obtained from std::thread::hardware_concurrency(). If the latter returns a non-positive number for some reason, then the pool will be created with just one thread.
    * @return The number of threads to use for constructing the pool.
    */
   [[nodiscard]] concurrency_t determine_thread_count(const concurrency_t thread_count_)

@@ -1,12 +1,12 @@
 
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
+
 #include "projectmetis/controller/model_aggregation/federated_average.h"
 #include "projectmetis/core/macros.h"
 #include "projectmetis/core/proto_matchers.h"
 #include "projectmetis/core/proto_tensor_serde.h"
 #include "projectmetis/proto/model.pb.h"
-
-#include <gmock/gmock.h>
-#include <gtest/gtest.h>
 
 namespace projectmetis::controller {
 namespace {
@@ -92,12 +92,17 @@ variables {
 
 class FederatedAverageTest : public ::testing::Test {};
 
-TEST(FederatedAverageTest, CorrectAverage_UINT16) {
+TEST_F(FederatedAverageTest, CorrectAverageUINT16) /* NOLINT */ {
 
+  // Step1: We need to parse the models based on the input. 
   auto model1 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_UINT16);
   auto model2 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_UINT16);
 
+  // Step2: This is the expected model which needs to be parsed. 
   auto expected = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_UINT16);
+  
+  // Step3: We would be parsing the expected results. 
+
   // CAUTION! Since the expected values are of type uint16 there is no precision.
   // Therefore, everything is rounded down to the closest / smallest integer:
   //    uint16(0.5 * 1) + uint16(0.5 * 1) = uint16(0.5) + uint16(0.5) = 0
@@ -108,10 +113,10 @@ TEST(FederatedAverageTest, CorrectAverage_UINT16) {
   *expected.mutable_variables(0)->mutable_plaintext_tensor()->mutable_tensor_spec()->mutable_value() =
       serialized_tensor_str;
 
-  std::vector to_aggregate({
-                               std::make_pair<const Model *, double>(&model1, 0.5),
-                               std::make_pair<const Model *, double>(&model2, 0.5)
-                           });
+  // Step4: We would be making pairs of the two models. 
+  std::vector seq1({std::make_pair<const Model *, double>(&model1, 0.5)});
+  std::vector seq2({std::make_pair<const Model *, double>(&model2, 0.5)});
+  std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);
@@ -124,7 +129,7 @@ TEST(FederatedAverageTest, CorrectAverage_UINT16) {
 
 }
 
-TEST(FederatedAverageTest, CorrectAverage_INT32) {
+TEST_F(FederatedAverageTest, CorrectAverageINT32) /* NOLINT */ {
 
   auto model1 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_INT32);
   auto model2 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_INT32);
@@ -140,10 +145,9 @@ TEST(FederatedAverageTest, CorrectAverage_INT32) {
   *expected.mutable_variables(0)->mutable_plaintext_tensor()->mutable_tensor_spec()->mutable_value() =
       serialized_tensor_str;
 
-  std::vector to_aggregate({
-                               std::make_pair<const Model *, double>(&model1, 0.5),
-                               std::make_pair<const Model *, double>(&model2, 0.5)
-                           });
+  std::vector seq1({std::make_pair<const Model *, double>(&model1, 0.5)});
+  std::vector seq2({std::make_pair<const Model *, double>(&model2, 0.5)});
+  std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);
@@ -158,15 +162,14 @@ TEST(FederatedAverageTest, CorrectAverage_INT32) {
 
 }
 
-TEST(FederatedAverageTest, CorrectAverage_FLOAT32) {
+TEST_F(FederatedAverageTest, CorrectAverageFLOAT32) /* NOLINT */ {
 
   auto model1 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
   auto model2 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
 
-  std::vector to_aggregate({
-                               std::make_pair<const Model *, double>(&model1, 0.5),
-                               std::make_pair<const Model *, double>(&model2, 0.5)
-                           });
+  std::vector seq1({std::make_pair<const Model *, double>(&model1, 0.5)});
+  std::vector seq2({std::make_pair<const Model *, double>(&model2, 0.5)});
+  std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);
@@ -181,15 +184,14 @@ TEST(FederatedAverageTest, CorrectAverage_FLOAT32) {
 
 }
 
-TEST(FederatedAverageTest, CorrectAverage_FLOAT64) {
+TEST_F(FederatedAverageTest, CorrectAverageFLOAT64) /* NOLINT */ {
 
   auto model1 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT64);
   auto model2 = ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT64);
 
-  std::vector to_aggregate({
-                               std::make_pair<const Model *, double>(&model1, 0.5),
-                               std::make_pair<const Model *, double>(&model2, 0.5)
-                           });
+  std::vector seq1({std::make_pair<const Model *, double>(&model1, 0.5)});
+  std::vector seq2({std::make_pair<const Model *, double>(&model2, 0.5)});
+  std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);

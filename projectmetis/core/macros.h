@@ -6,7 +6,7 @@
 
 #include <google/protobuf/text_format.h>
 
-#define CHECK(value) \
+#define VALIDATE(value) \
           do {           \
             if (value == false) { \
               throw std::runtime_error("Unable to load proto from text."); \
@@ -29,7 +29,7 @@ namespace proto {
 template<typename T>
 T ParseTextOrDie(const std::string &input) {
   T result;
-  CHECK(google::protobuf::TextFormat::ParseFromString(input, &result));
+  VALIDATE(google::protobuf::TextFormat::ParseFromString(input, &result));
   return result;
 }
 }  // namespace proto

@@ -1,9 +1,10 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_AGGREGATIONS_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_AGGREGATIONS_H_
+#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_MODEL_AGGREGATIONS_H_
+#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_MODEL_AGGREGATIONS_H_
 
-#include "projectmetis/controller/model_aggregation/aggregation_function.h"
 #include "projectmetis/controller/model_aggregation/federated_average.h"
+#include "projectmetis/controller/model_aggregation/federated_recency.h"
+#include "projectmetis/controller/model_aggregation/federated_stride.h"
 #include "projectmetis/controller/model_aggregation/private_weighted_average.h"
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_AGGREGATIONS_H_
+#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_MODEL_AGGREGATIONS_H_

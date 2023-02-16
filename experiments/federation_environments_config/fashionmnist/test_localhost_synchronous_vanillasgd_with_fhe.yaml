@@ -6,13 +6,16 @@ FederationEnvironment:
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
   CommunicationProtocol:
-    Name: "SYNCHRONOUS"
-  FHEScheme: # fully homomorphic encryption scheme - if provided run with it, else disabled.
-    Name: "ckks"
+    Name: "Synchronous"
+  HomomorphicEncryption: # homomorphic encryption scheme - if provided run with it, else disabled.
+    Scheme: "CKKS" # Others are "CKKS" (a fully-homomorphic encryption scheme).
     BatchSize: 4096
     ScalingBits: 52
   GlobalModelConfig:
-    AggregationFunction: "FED_AVG"
+    AggregationRule:
+      Name: "PWA" # Others are FedAvg, FedStride, FedRec, PWA
+      RuleSpecifications:
+        ScalingFactor: "NumTrainingExamples" # Others are NUM_COMPLETED_BATCHES, NUM_PARTICIPANTS, NUM_TRAINING_EXAMPLES
     ParticipationRatio: 1
   LocalModelConfig:
     BatchSize: 32

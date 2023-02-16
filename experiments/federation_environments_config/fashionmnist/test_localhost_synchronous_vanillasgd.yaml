@@ -6,9 +6,17 @@ FederationEnvironment:
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
   CommunicationProtocol:
-    Name: "SYNCHRONOUS"
+    Name: "Synchronous"
+  ModelStoreConfig:
+    Name: "InMemory" # Others are "InMemory", "Redis"
+    EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"
+    LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "LineageLengthEviction"
   GlobalModelConfig:
-    AggregationFunction: "FED_AVG"
+    AggregationRule:
+      Name: "FedStride" # Others are FedAvg, FedStride, FedRec, PWA
+      RuleSpecifications:
+        ScalingFactor: "NumTrainingExamples" # Others are NUM_COMPLETED_BATCHES, NUM_PARTICIPANTS, NUM_TRAINING_EXAMPLES
+        StrideLength: 2
     ParticipationRatio: 1
   LocalModelConfig:
     BatchSize: 32

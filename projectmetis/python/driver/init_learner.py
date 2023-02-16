@@ -46,9 +46,9 @@ if __name__ == "__main__":
     parser.add_argument("-z", "--test_dataset_recipe", type=str,
                         default="",
                         help="validation dataset recipe")
-    parser.add_argument("-f", "--fhe_scheme_protobuff", type=str,
+    parser.add_argument("-f", "--he_scheme_protobuff_serialized_hexadecimal", type=str,
                         default=None,
-                        help="A serialized FHE Scheme protobuf message.")
+                        help="A serialized HE Scheme protobuf message.")
 
     args = parser.parse_args()
 
@@ -71,12 +71,17 @@ if __name__ == "__main__":
     test_dataset_filepath = args.test_dataset
     test_dataset_recipe_fp_pkl = args.test_dataset_recipe
 
-    if args.fhe_scheme_protobuff is not None:
-        fhe_scheme_protobuff = eval(args.fhe_scheme_protobuff)
-        fhe_scheme = metis_pb2.FHEScheme()
-        fhe_scheme.ParseFromString(fhe_scheme_protobuff)
+    if args.he_scheme_protobuff_serialized_hexadecimal is not None:
+        # Parse serialized model hyperparameters object, 'recover' bytes object.
+        # To do so, we need to convert the incoming hexadecimal representation
+        # to bytes and pass it as initialization to the proto message object.
+        he_scheme_protobuff_ser = bytes.fromhex(args.he_scheme_protobuff_serialized_hexadecimal)
+        he_scheme_pb = metis_pb2.HEScheme()
+        he_scheme_pb.ParseFromString(he_scheme_protobuff_ser)
     else:
-        fhe_scheme = MetisProtoMessages.construct_fhe_scheme_pb(enabled=False)
+        empty_scheme_pb = MetisProtoMessages.construct_empty_he_scheme_pb()
+        he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
+            enabled=False, empty_scheme_pb=empty_scheme_pb)
 
     learner_credentials_fp = "/tmp/metis/learner_{}_credentials/".format(learner_port)
     learner_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(learner_hostname, learner_port)
@@ -84,7 +89,7 @@ if __name__ == "__main__":
     learner = Learner(
         learner_server_entity=learner_server_entity_pb,
         controller_server_entity=controller_server_entity_pb,
-        fhe_scheme=fhe_scheme,
+        he_scheme=he_scheme_pb,
         nn_engine=nn_engine,
         model_fp=model_filepath,
         train_dataset_fp=train_dataset_filepath,

@@ -3,7 +3,6 @@
 #define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
 
 #include "encryption/palisade/fhe/fhe_helper.h"
-
 #include "projectmetis/controller/model_aggregation/aggregation_function.h"
 #include "projectmetis/proto/model.pb.h"
 #include "projectmetis/proto/metis.pb.h"
@@ -11,26 +10,25 @@
 namespace projectmetis::controller {
 
 class PWA : public AggregationFunction {
- public:
-  explicit PWA(const FHEScheme &fhe_scheme) :
-  fhe_scheme_(fhe_scheme),
-  fhe_helper_(fhe_scheme.name(), fhe_scheme.batch_size(), fhe_scheme.scaling_bits()) {
-    fhe_helper_.load_crypto_params();
-  }
-  explicit PWA(FHEScheme &&fhe_scheme) :
-  fhe_scheme_(std::move(fhe_scheme)),
-  fhe_helper_(fhe_scheme.name(), fhe_scheme.batch_size(), fhe_scheme.scaling_bits()) {
-    fhe_helper_.load_crypto_params();
-  }
-  FederatedModel Aggregate(std::vector<std::pair<const Model*, double>>& pairs) override;
+ private:
+  HEScheme he_scheme_;
+  FHE_Helper fhe_helper_;
 
-  inline std::string name() override {
+ public:
+  explicit PWA(const HEScheme &he_scheme);
+
+  FederatedModel Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs) override;
+
+  [[nodiscard]] inline std::string Name() const override {
     return "PWA";
   }
 
- private:
-  FHEScheme fhe_scheme_;
-  FHE_Helper fhe_helper_;
+  [[nodiscard]] inline int RequiredLearnerLineageLength() const override {
+    return 1;
+  }
+
+  void Reset() override;
+
 };
 
 } // namespace projectmetis::controller
