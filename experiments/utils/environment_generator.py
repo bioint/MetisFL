@@ -7,17 +7,19 @@ from projectmetis.python.utils.fedenv_parser import FederationEnvironment
 
 class EnvGen(object):
 
-    def __init__(self):
-        self.template_file = os.path.join(
-            os.path.dirname(__file__),
-            "../federation_environments_config/template.yaml")
+    def __init__(self, template_filepath=None):
+        self.template_filepath = template_filepath
+        if not template_filepath:
+            self.template_filepath = os.path.join(
+                os.path.dirname(__file__),
+                "../federation_environments_config/template.yaml")
 
     def generate_localhost(self,
                            federation_rounds=10,
                            learners_num=10,
                            gpu_devices=[-1],
                            gpu_assignment="round_robin"):
-        federation_environment = FederationEnvironment(self.template_file)
+        federation_environment = FederationEnvironment(self.template_filepath)
         federation_environment.termination_signals.federation_rounds \
             = federation_rounds
         learner_template = federation_environment.learners.learners[0]

@@ -59,6 +59,8 @@ void RedisModelStore::EraseModels(const std::vector<std::string> &learner_ids) {
 
 void RedisModelStore::InsertModel(std::vector<std::pair<std::string, Model>> learner_pairs) {
 
+  std::lock_guard<std::mutex> lock(learner_mutex);
+
   for (auto &learner_pair: learner_pairs) {
 
     std::string learner_id = learner_pair.first;
@@ -107,6 +109,7 @@ void RedisModelStore::InsertModel(std::vector<std::pair<std::string, Model>> lea
     learner_lineage_[learner_id].push_back(model_key);
 
   }
+
 }
 
 void RedisModelStore::ResetState() {
@@ -118,12 +121,18 @@ void RedisModelStore::ResetState() {
 std::map<std::string, std::vector<const Model *>>
 RedisModelStore::SelectModels(std::vector<std::pair<std::string, int>> learner_pairs) {
 
+  std::lock_guard<std::mutex> lock(learner_mutex);
+
   // Order of insertion expected {old, old, old, new}
   std::map<std::string, std::vector<const Model *>> reply_models;
 
   // learner_pair - first  - learner_id as string
   // learner_pair - second - the number of models to get.
 
+  // The current select implementation performs a multi-transaction at the model level.
+  // That is it tries to fetch multiple models per learner through a single transaction.
+  // TODO We could extend this to support multi-transaction per learner ids and models.
+  //  This would be the Batch-Selection query.
   for (auto &learner_pair: learner_pairs) {
 
     std::string learner_id = learner_pair.first;

@@ -49,6 +49,10 @@ class RedisModelStore : public ModelStore {
 
   void MakeConnection(const std::string& localhost, int port);
 
+  // This will restrict multiple threads/learners from inserting 
+  // their models in Redis using C API as its not concurrency-safe.
+  std::mutex learner_mutex;
+
 };
 
 }

@@ -7,6 +7,7 @@ import tarfile
 import time
 
 import projectmetis.python.utils.proto_messages_factory as proto_messages_factory
+import multiprocessing as mp
 
 from fabric import Connection
 from google.protobuf.json_format import MessageToDict
@@ -37,7 +38,10 @@ class DriverSessionBase(object):
         self.train_dataset_recipe_fp = train_dataset_recipe_fp
         self.validation_dataset_recipe_fp = validation_dataset_recipe_fp
         self.test_dataset_recipe_fp = test_dataset_recipe_fp
-        self._executor = ProcessPool(max_workers=self.num_participating_learners + 1)
+        # Unix default is "fork", others: "spawn", "forkserver"
+        # We use spawn so that the parent process starts a fresh Python interpreter process.
+        self._mp_ctx = mp.get_context("spawn")
+        self._executor = ProcessPool(max_workers=self.num_participating_learners + 1, context=self._mp_ctx)
         self._executor_controller_tasks_q = queue.LifoQueue(maxsize=0)
         self._executor_learners_tasks_q = queue.LifoQueue(maxsize=0)
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()

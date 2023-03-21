@@ -1,10 +1,12 @@
 import cloudpickle
+import gc
 import queue
 import os
 
+import multiprocessing as mp
 import projectmetis.python.utils.proto_messages_factory as proto_factory
 
-from pebble import ProcessPool
+from pebble import ProcessPool, ProcessExpired
 
 from projectmetis.python.logging.metis_logger import MetisLogger
 from projectmetis.python.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
@@ -65,17 +67,21 @@ class Learner(object):
         # This re-creation adds substantial delay during model training and evaluation. If we do not
         # re-create, that is recreate_queue_task_worker is set to False, then we can re-use the existing
         # graph and avoid graph creation delays.
+        # Unix default context is "fork", others: "spawn", "forkserver".
+        # We use "spawn" because it initiates a new Python interpreter, and
+        # it is more stable when running multiple processes in the same machine.
+        self._mp_ctx = mp.get_context("spawn")
         worker_max_tasks = 0
         if recreate_queue_task_worker:
             worker_max_tasks = 1
         self._training_tasks_pool, self._training_tasks_futures_q = \
-            ProcessPool(max_workers=1, max_tasks=worker_max_tasks), \
+            ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=self._mp_ctx), \
             queue.Queue(maxsize=1)
         self._evaluation_tasks_pool, self._evaluation_tasks_futures_q = \
-            ProcessPool(max_workers=1, max_tasks=worker_max_tasks), \
+            ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=self._mp_ctx), \
             queue.Queue(maxsize=1)
         self._inference_tasks_pool, self._inference_tasks_futures_q = \
-            ProcessPool(max_workers=1, max_tasks=worker_max_tasks), \
+            ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=self._mp_ctx), \
             queue.Queue(maxsize=1)
 
         self._learner_controller_client = GRPCControllerClient(
@@ -162,10 +168,11 @@ class Learner(object):
         # meaning it did complete its running job, then notify the controller.
         if training_future.done() and not training_future.cancelled():
             completed_task_pb = training_future.result()
-            self._learner_controller_client.mark_task_completed(learner_id=self.__learner_id,
-                                                                auth_token=self.__auth_token,
-                                                                completed_task_pb=completed_task_pb,
-                                                                block=False)
+            self._learner_controller_client.mark_task_completed(
+                learner_id=self.__learner_id,
+                auth_token=self.__auth_token,
+                completed_task_pb=completed_task_pb,
+                block=False)
 
     def _model_ops_factory(self, nn_engine):
         if nn_engine == "keras":
@@ -364,5 +371,6 @@ class Learner(object):
         self._training_tasks_pool.join()
         self._evaluation_tasks_pool.join()
         self._inference_tasks_pool.join()
+        gc.collect()
         # TODO - we always return True, but we need to capture any failures that may occur while terminating.
         return True

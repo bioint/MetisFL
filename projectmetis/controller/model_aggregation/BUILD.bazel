@@ -33,6 +33,14 @@ cc_library(
         "//projectmetis/proto:model_cc_proto",
         "//projectmetis/core:proto_tensor_serde",
     ],
+    linkopts = select({
+      "//:linux_x86_64": ["-lgomp"],
+      "//conditions:default": [],
+    }),
+    copts = [
+        "-O3",
+        "-fopenmp",
+    ]
 )
 
 cc_test(

@@ -1,4 +1,6 @@
 
+#include <omp.h>
+
 #include "projectmetis/controller/model_aggregation/federated_average.h"
 #include "projectmetis/core/proto_tensor_serde.h"
 #include "projectmetis/proto/model.pb.h"
@@ -10,9 +12,9 @@ using ::proto::DeserializeTensor;
 using ::proto::SerializeTensor;
 
 template<typename T>
-std::string AddTensors(const TensorSpec &tensor_spec_left,
-                       const TensorSpec &tensor_spec_right,
-                       double scaling_factor_right) {
+void AddTensors(std::vector<T> &tensor_left,
+                const TensorSpec &tensor_spec_right,
+                double scaling_factor_right) {
 
   /**
    * The function first deserializes both tensors based on the provided data type. Then it
@@ -20,7 +22,6 @@ std::string AddTensors(const TensorSpec &tensor_spec_left,
    * scaled right-hand-side tensor to the left-hand-side tensor. Finally, it serialized
    * the aggregated tensor and returns its string representation.
    */
-  auto t1_l = DeserializeTensor<T>(tensor_spec_left);
   auto t2_r = DeserializeTensor<T>(tensor_spec_right);
 
   // Scale the right tensor by its scaling factor.
@@ -31,97 +32,30 @@ std::string AddTensors(const TensorSpec &tensor_spec_left,
             std::bind(std::multiplies<double>(), std::placeholders::_1, scaling_factor_right));
 
   // Add (plus) the scaled right tensor to the left tensor. Addition occurs based on data type T.
-  transform(t1_l.begin(), t1_l.end(), t2_r.begin(), t1_l.begin(), std::plus<T>());
-
-  // Serialize aggregated result.
-  auto serialized_tensor = SerializeTensor<T>(t1_l);
-  // Convert serialization to string.
-  std::string serialized_tensor_str(serialized_tensor.begin(), serialized_tensor.end());
-  return serialized_tensor_str;
+  transform(tensor_left.begin(), tensor_left.end(), t2_r.begin(), tensor_left.begin(), std::plus<T>());
 
 }
 
-std::string AddTensors(const TensorSpec &tensor_spec_left,
-                       const TensorSpec &tensor_spec_right,
-                       double scaling_factor_right) {
+template<typename T>
+std::vector<T> AggregateTensorAtIndex(
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs,
+    int var_idx,
+    uint32_t var_num_values) {
 
-  /**
-   * This is basically a wrapper over the AddTensors function. It calls the AddTensors
-   * function by first casting it to the given data type. Then returns the aggregated tensor.
-   */
-  auto num_values_left = tensor_spec_left.length();
-  auto num_values_right = tensor_spec_right.length();
-
-  auto data_type_left = tensor_spec_left.type().type();
-  auto data_type_right = tensor_spec_right.type().type();
-
-  if (num_values_left != num_values_right) throw std::runtime_error("Left and right tensors have different sizes");
-  if (data_type_left != data_type_right) throw std::runtime_error("Left and right tensors have different data types");
-
-  std::string aggregated_result;
-  if (data_type_left == DType_Type_UINT8) {
-    aggregated_result = AddTensors<unsigned char>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_UINT16) {
-    aggregated_result = AddTensors<unsigned short>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_UINT32) {
-    aggregated_result = AddTensors<unsigned int>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_UINT64) {
-    aggregated_result = AddTensors<unsigned long>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_INT8) {
-    aggregated_result = AddTensors<signed char>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_INT16) {
-    aggregated_result = AddTensors<signed short>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_INT32) {
-    aggregated_result = AddTensors<signed int>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_INT64) {
-    aggregated_result = AddTensors<signed long>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_FLOAT32) {
-    aggregated_result = AddTensors<float>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else if (data_type_left == DType_Type_FLOAT64) {
-    aggregated_result = AddTensors<double>(tensor_spec_left, tensor_spec_right, scaling_factor_right);
-  } else {
-    throw std::runtime_error("Unsupported tensor data type.");
+  auto aggregated_tensor = std::vector<T>(var_num_values);
+  for (const auto &pair: pairs) {
+    const auto *local_model = pair.front().first;
+    const double local_model_contrib_value = pair.front().second;
+    const auto &local_variable = local_model->variables(var_idx);
+    if (local_variable.has_plaintext_tensor()) {
+      AddTensors(aggregated_tensor,
+                 local_variable.plaintext_tensor().tensor_spec(),
+                 local_model_contrib_value);
+    } else {
+      throw std::runtime_error("Unsupported variable type.");
+    }
   }
-
-  return aggregated_result;
-
-}
-
-std::vector<char> GenSerializedEmptyTensor(const TensorSpec &tensor_spec) {
-
-  /**
-   * Creates a tensor of the given size and data type with zero values.
-   * The serializes the tensor and converts its serialized version to string.
-   */
-  std::vector<char> serialized_tensor;
-  auto num_values = tensor_spec.length();
-  auto data_type = tensor_spec.type().type();
-
-  if (data_type == DType_Type_UINT8) {
-    serialized_tensor = SerializeTensor<unsigned char>(std::vector<unsigned char>(num_values));
-  } else if (data_type == DType_Type_UINT16) {
-    serialized_tensor = SerializeTensor<unsigned short>(std::vector<unsigned short>(num_values));
-  } else if (data_type == DType_Type_UINT32) {
-    serialized_tensor = SerializeTensor<unsigned int>(std::vector<unsigned int>(num_values));
-  } else if (data_type == DType_Type_UINT64) {
-    serialized_tensor = SerializeTensor<unsigned long>(std::vector<unsigned long>(num_values));
-  } else if (data_type == DType_Type_INT8) {
-    serialized_tensor = SerializeTensor<signed char>(std::vector<signed char>(num_values));
-  } else if (data_type == DType_Type_INT16) {
-    serialized_tensor = SerializeTensor<signed short>(std::vector<signed short>(num_values));
-  } else if (data_type == DType_Type_INT32) {
-    serialized_tensor = SerializeTensor<signed int>(std::vector<signed int>(num_values));
-  } else if (data_type == DType_Type_INT64) {
-    serialized_tensor = SerializeTensor<signed long>(std::vector<signed long>(num_values));
-  } else if (data_type == DType_Type_FLOAT32) {
-    serialized_tensor = SerializeTensor<float>(std::vector<float>(num_values));
-  } else if (data_type == DType_Type_FLOAT64) {
-    serialized_tensor = SerializeTensor<double>(std::vector<double>(num_values));
-  } else {
-    throw std::runtime_error("Unsupported tensor data type.");
-  }
-  return serialized_tensor;
-
+  return aggregated_tensor;
 }
 
 }
@@ -135,7 +69,7 @@ std::vector<char> GenSerializedEmptyTensor(const TensorSpec &tensor_spec) {
  */
 FederatedModel
 FederatedAverage::Aggregate(
-    std::vector<std::vector<std::pair<const Model*, double>>>& pairs) {
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
 
   // With the new community model aggregation function  
   // NEW API GUIDE
@@ -144,8 +78,7 @@ FederatedAverage::Aggregate(
   // pairs[0][0] ->  (*model, 0.2)
   // pairs[0][0].first -> *model
   // pairs[0][0].second -> 0.2
-
-  // Initializes the community model to zero.
+  // Initializes an empty community model.
   FederatedModel global_model;
   const auto &sample_model = pairs.front().front().first;
   for (const auto &sample_variable: sample_model->variables()) {
@@ -155,35 +88,60 @@ FederatedAverage::Aggregate(
     if (sample_variable.has_plaintext_tensor()) {
       *variable->mutable_plaintext_tensor()->mutable_tensor_spec() =
           sample_variable.plaintext_tensor().tensor_spec();
-      auto serialized_tensor = GenSerializedEmptyTensor(sample_variable.plaintext_tensor().tensor_spec());
-      std::string serialized_tensor_str(serialized_tensor.begin(), serialized_tensor.end());
-      *variable->mutable_plaintext_tensor()->mutable_tensor_spec()->mutable_value() = serialized_tensor_str;
+      *variable->mutable_plaintext_tensor()->mutable_tensor_spec()->mutable_value() = "";
     } else {
-      throw std::runtime_error("Unsupported variable type.");
+      throw std::runtime_error("Only Plaintext variables are supported.");
     }
   }
 
   // TODO(dstripelis) We need to add support to aggregate only the trainable
   //  weights. For now, we aggregate all matrices, but if we aggregate only the
   //  trainable, then what should be the value of the non-trainable weights?
-  // Aggregates the given models.
-  for (const auto &pair: pairs) {
-    const auto *local_model = pair.front().first;
-    const double local_model_contrib_value = pair.front().second;
-    for (int i = 0; i < local_model->variables_size(); ++i) {
-      const auto &local_variable = local_model->variables(i);
-      auto global_variable = global_model.mutable_model()->mutable_variables(i);
-      if (local_variable.has_plaintext_tensor()) {
-        auto aggregated_result =
-            AddTensors(global_variable->plaintext_tensor().tensor_spec(),
-                       local_variable.plaintext_tensor().tensor_spec(),
-                       local_model_contrib_value);
-        // Assigns aggregated result to the global tensor.
-        *global_variable->mutable_plaintext_tensor()->mutable_tensor_spec()->mutable_value() = aggregated_result;
+  auto total_variables = global_model.model().variables_size();
+  #pragma omp parallel for
+  for (int var_idx = 0; var_idx < total_variables; ++var_idx) {
+      auto var_data_type = global_model.model().variables(var_idx).plaintext_tensor().tensor_spec().type().type();
+      auto var_num_values = global_model.model().variables(var_idx).plaintext_tensor().tensor_spec().length();
+
+      std::vector<char> serialized_tensor;
+      if (var_data_type == DType_Type_UINT8) {
+        auto aggregated_tensor = AggregateTensorAtIndex<unsigned char>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<unsigned char>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_UINT16) {
+        auto aggregated_tensor = AggregateTensorAtIndex<unsigned short>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<unsigned short>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_UINT32) {
+        auto aggregated_tensor = AggregateTensorAtIndex<unsigned int>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<unsigned int>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_UINT64) {
+        auto aggregated_tensor = AggregateTensorAtIndex<unsigned long>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<unsigned long>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_INT8) {
+        auto aggregated_tensor = AggregateTensorAtIndex<signed char>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<signed char>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_INT16) {
+        auto aggregated_tensor = AggregateTensorAtIndex<signed short>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<signed short>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_INT32) {
+        auto aggregated_tensor = AggregateTensorAtIndex<signed int>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<signed int>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_INT64) {
+        auto aggregated_tensor = AggregateTensorAtIndex<signed long>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<signed long>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_FLOAT32) {
+        auto aggregated_tensor = AggregateTensorAtIndex<float>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<float>(aggregated_tensor);
+      } else if (var_data_type == DType_Type_FLOAT64) {
+        auto aggregated_tensor = AggregateTensorAtIndex<double>(pairs, var_idx, var_num_values);
+        serialized_tensor = SerializeTensor<double>(aggregated_tensor);
       } else {
-        throw std::runtime_error("Unsupported variable type.");
+        throw std::runtime_error("Unsupported tensor data type.");
       }
-    }
+      // Convert the char vector representing the aggregated result to string and assign to variable.
+      std::string serialized_tensor_str(serialized_tensor.begin(), serialized_tensor.end());
+      *global_model.mutable_model()->mutable_variables(var_idx)->
+          mutable_plaintext_tensor()->mutable_tensor_spec()->mutable_value() =
+              serialized_tensor_str;
   }
 
   // Sets the number of contributors to the number of input models.

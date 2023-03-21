@@ -31,12 +31,13 @@ if __name__ == "__main__":
     parser.add_argument("--nn_params_per_layer", default=10, type=int)
     parser.add_argument("--nn_hidden_layers_num", default=0, type=int)
     parser.add_argument("--data_type", default="float32", type=str)
+    parser.add_argument("--template_filepath", default=None, type=str)
 
     args = parser.parse_args()
     print(args, flush=True)
 
     """ Generate federated environment. """
-    federation_environment = EnvGen().generate_localhost(
+    federation_environment = EnvGen(args.template_filepath).generate_localhost(
         federation_rounds=args.federation_rounds,
         learners_num=args.learners_num,
         gpu_devices=[-1])

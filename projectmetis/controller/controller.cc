@@ -36,8 +36,9 @@ class ControllerDefaultImpl : public Controller {
         learners_stub_(), learners_task_template_(), learners_mutex_(),
         scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
         scheduler_(std::move(scheduler)), selector_(std::move(selector)),
-        community_model_(), community_mutex_(), scheduling_pool_(2),
-        model_store_(std::move(model_store)), run_tasks_cq_(), eval_tasks_cq_() {
+        community_model_(), scheduling_pool_(2),
+        model_store_(std::move(model_store)), model_store_mutex_(),
+        run_tasks_cq_(), eval_tasks_cq_() {
 
     // We perform the following detachment because we want to have only
     // one thread and one completion queue to handle asynchronous request
@@ -84,7 +85,6 @@ class ControllerDefaultImpl : public Controller {
   absl::Status
   ReplaceCommunityModel(const FederatedModel &model) override {
 
-    std::lock_guard<std::mutex> guard(community_mutex_);
     // When replacing the federation model we only set the number of learners
     // contributed to this model and the actual model. We do not replace the
     // global iteration since it is updated exclusively by the controller.
@@ -98,6 +98,11 @@ class ControllerDefaultImpl : public Controller {
   absl::StatusOr<LearnerDescriptor>
   AddLearner(const ServerEntity &server_entity,
              const DatasetSpec &dataset_spec) override {
+
+    // Acquires a lock to avoid having multiple threads overwriting the learners'
+    // data structures. The guard releases the mutex as soon as it goes out of
+    // scope so no need to manually release it in the code.
+    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
     // Validates non-empty hostname and non-negative port.
     if (server_entity.hostname().empty() || server_entity.port() < 0) {
@@ -114,11 +119,6 @@ class ControllerDefaultImpl : public Controller {
 
     // Generates learner id.
     const std::string learner_id = GenerateLearnerId(server_entity);
-
-    // Acquires a lock to avoid having multiple threads overwriting the learners'
-    // data structures. The guard releases the mutex as soon as it goes out of
-    // scope so no need to manually release it in the code.
-    std::lock_guard<std::mutex> guard(learners_mutex_);
 
     if (learners_.contains(learner_id)) {
       // Learner was already registered with the controller.
@@ -176,7 +176,8 @@ class ControllerDefaultImpl : public Controller {
     // Acquires a lock to avoid having multiple threads overwriting the learners
     // data structures. The guard releases the mutex as soon as it goes out of
     // scope so no need to manually release it in the code.
-    std::lock_guard<std::mutex> guard(learners_mutex_);
+    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
+    std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
     auto it = learners_.find(learner_id);
     // Checks requesting learner existence inside the state map.
@@ -203,6 +204,13 @@ class ControllerDefaultImpl : public Controller {
 
     RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
+    // We need to lock the model store when receiving a new local model.
+    // The reason is that there are cases where, a learner might update
+    // his previous model, but that previous model is already being used
+    // for aggregation. Such a race will lead to null pointer exception
+    // during local models aggregation.
+    std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
+
     // Assign a non-negative value to the metadata index.
     auto task_global_iteration = task.execution_metadata().global_iteration();
     auto metadata_index =
@@ -225,7 +233,7 @@ class ControllerDefaultImpl : public Controller {
     //      since Redis is single-thread.
     PLOG(INFO) << "Insert learner\'s " << learner_id << " model.";
     model_store_->InsertModel(
-        std::vector<std::pair<std::string, Model>>{
+        std::vector<std::pair<std::string, Model>> {
             std::pair<std::string, Model>(learner_id, task.model())
         });
 
@@ -374,6 +382,8 @@ class ControllerDefaultImpl : public Controller {
       return;
     }
 
+    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
+
     if (metadata_.empty()) {
       // When the very first local training task is scheduled, we need to
       // increase the global iteration counter and create the first
@@ -405,7 +415,7 @@ class ControllerDefaultImpl : public Controller {
     // Acquires a lock to avoid having multiple threads overwriting the learners
     // data structures. The guard releases the mutex as soon as it goes out of
     // scope so no need to manually release it in the code.
-    std::lock_guard<std::mutex> guard(learners_mutex_);
+    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
     // TODO Maybe for global_iteration_ as well?
 
     auto to_schedule =
@@ -420,6 +430,7 @@ class ControllerDefaultImpl : public Controller {
       // Select models that will participate in the community model.
       auto selected_for_aggregation =
           selector_->Select(to_schedule, GetLearners());
+
       // Computes the community model using models that have
       // been selected by the model selector.
       auto community_model =
@@ -766,9 +777,15 @@ class ControllerDefaultImpl : public Controller {
 
     // Handles the case where the community model is requested for the
     // first time and has the original (random) initialization state.
-    if (global_iteration_ < 2 && community_model_.IsInitialized()) {
+    if (global_iteration_ < 1 && community_model_.IsInitialized()) {
       return community_model_;
     }
+
+    // We need to lock the model store to avoid reading stale models.
+    // Basically, we need to make sure that all local models used
+    // for aggregation are valid pointers, if we do not lock then
+    // unexpected behaviors occur and the controller crashes.
+    std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
     *metadata_.at(metadata_ref_idx).mutable_model_aggregation_started_at() =
         TimeUtil::GetCurrentTime();
@@ -783,8 +800,10 @@ class ControllerDefaultImpl : public Controller {
     absl::flat_hash_map<std::string, LearnerState *> participating_states;
     absl::flat_hash_map<std::string, TaskExecutionMetadata *> participating_metadata;
     for (const auto &id: learners_ids) {
-      participating_states[id] = &learners_.at(id);
-      participating_metadata[id] = &local_tasks_metadata_.at(id).back();
+      if (learners_.contains(id)) {
+        participating_states[id] = &learners_.at(id);
+        participating_metadata[id] = &local_tasks_metadata_.at(id).back();
+      }
     }
 
     // Before performing any aggregation, we need first to compute the
@@ -995,11 +1014,11 @@ class ControllerDefaultImpl : public Controller {
   std::unique_ptr<Selector> selector_;
   // Community model.
   FederatedModel community_model_;
-  std::mutex community_mutex_;
   // Thread pool for scheduling tasks.
   BS::thread_pool scheduling_pool_;
   // Caching function to use for storing learner model(s).
   std::unique_ptr<ModelStore> model_store_;
+  std::mutex model_store_mutex_;
   // GRPC completion queue to process submitted learners' RunTasks requests.
   grpc::CompletionQueue run_tasks_cq_;
   // GRPC completion queue to process submitted learners' EvaluateModel requests.

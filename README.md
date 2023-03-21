@@ -21,7 +21,7 @@ To compile and run the project through docker, navigate to the parent directory 
    - RockyLinux image (not stable): `docker build -t projectmetis_rockylinux_8 -f DockerfileRockyLinux .`
    Approximate size for any of the following images (using docker): ~9GB (without CUDA), ~12GB (with CUDA)
    
-3. Build docker CUDA image (only applicable to Ubuntu and RockyLinux images).
+3. Build docker CUDA image (only applicable to Ubuntu and RockyLinux images). Careful in the image name used by the FROM clause in the CUDA Dockerfile.  
    - Ubuntu + CUDA `cd docker_images/cuda/ubuntu/11.7 && docker build -t projectmetis_ubuntu_22_04_cuda -f Dockerfile .`
    - RockyLinux + CUDA `cd docker_images/cuda/rockylinux/11.3 && docker build -t projectmetis_rockylinux_8_cuda -f Dockerfile .`
    - Verify docker cuda driver installation as: `nvidia-docker run --rm --gpus all projectmetis_ubuntu_22_04_cuda nvidia-smi`

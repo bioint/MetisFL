@@ -84,7 +84,10 @@ long GetTotalMemory() {
   struct rusage usage{};
   int ret = getrusage(RUSAGE_SELF, &usage);
   if (ret == 0) {
-    return usage.ru_maxrss; //value in kilobytes.
+    // Capture value in kilobytes - maximum resident set size
+    // utilized in KB. Metric value reflects the size of the
+    // main and virtual memory of the parent process.
+    return usage.ru_maxrss;
   } else {
     return 0;
   }

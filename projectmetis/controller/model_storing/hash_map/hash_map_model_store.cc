@@ -43,7 +43,7 @@ void HashMapModelStore::InsertModel(std::vector<std::pair<std::string, Model>> l
     learner_pairs -> multiple learners. 
     learner_pair -> pair for one learner.
   */
-  
+
   for (auto &learner_pair: learner_pairs) {
 
     std::string learner_id = learner_pair.first;
@@ -68,6 +68,7 @@ void HashMapModelStore::InsertModel(std::vector<std::pair<std::string, Model>> l
     m_model_store_cache[learner_id].push_back(model);
 
   }
+
 }
 
 void HashMapModelStore::ResetState() {
@@ -97,19 +98,19 @@ HashMapModelStore::SelectModels(std::vector<std::pair<std::string, int>> learner
       PLOG(WARNING) << "Index larger than lineage size";
       reply_models[learner_id].clear();
       continue;
-  }
+    }
 
-  // If non-positive (x <= 0): reply all models
-  if (index <= 0) {
-    // This will return pointer to all the models stored against learner_id. 
-    index = history_size;
-  }
+    // If non-positive (x <= 0): reply all models
+    if (index <= 0) {
+      // This will return pointer to all the models stored against learner_id.
+      index = history_size;
+    }
 
-  // If (x>0) reply current and num-1 latest runtime metadata.
-  for (auto hidx = index; hidx > 0; hidx--) {                                              
-    const Model *ptr_latest_model = &m_model_store_cache[learner_id][history_size - hidx]; 
-    reply_models[learner_id].push_back(ptr_latest_model);
-  }
+    // If (x>0) reply current and num-1 latest runtime metadata.
+    for (auto hidx = index; hidx > 0; hidx--) {
+      const Model *ptr_latest_model = &m_model_store_cache[learner_id][history_size - hidx];
+      reply_models[learner_id].push_back(ptr_latest_model);
+    }
 
   }
 

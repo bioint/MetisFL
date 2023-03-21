@@ -5,10 +5,13 @@ from projectmetis.python.models.model_def import ModelDef
 
 class HousingMLP(ModelDef):
 
-    def __init__(self, params_per_layer=10, hidden_layers_num=1, data_type="float32"):
+    def __init__(self, params_per_layer=10, hidden_layers_num=1, learning_rate=0.0, data_type="float32"):
         super(HousingMLP, self).__init__()
         self.params_per_layer = params_per_layer
         self.hidden_layers_num = hidden_layers_num
+        # We set the default value to 0.0 so not to train,
+        # since this model is solely used for stress testing.
+        self.learning_rate = learning_rate
 
         if data_type == "float32":
             self.data_type = tf.float32
@@ -34,5 +37,7 @@ class HousingMLP(ModelDef):
         model.add(tf.keras.layers.Dense(1,
                                         kernel_initializer='normal',
                                         dtype=self.data_type))
-        model.compile(loss='mean_squared_error', optimizer='adam')
+        # We set a very
+        optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
+        model.compile(loss='mean_squared_error', optimizer=optimizer)
         return model

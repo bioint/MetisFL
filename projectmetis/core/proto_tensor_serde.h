@@ -49,6 +49,80 @@ inline projectmetis::TensorQuantifier QuantifyTensor(const projectmetis::TensorS
   return tensor_quantifier;
 }
 
+std::vector<char> GenSerializedEmptyTensor(const projectmetis::TensorSpec &tensor_spec) {
+
+  /**
+   * Creates a tensor of the given size and data type with zero values.
+   * The serializes the tensor and converts its serialized version to string.
+   */
+  std::vector<char> serialized_tensor;
+  auto num_values = tensor_spec.length();
+  auto data_type = tensor_spec.type().type();
+
+  if (data_type == projectmetis::DType_Type_UINT8) {
+    serialized_tensor = SerializeTensor<unsigned char>(std::vector<unsigned char>(num_values));
+  } else if (data_type == projectmetis::DType_Type_UINT16) {
+    serialized_tensor = SerializeTensor<unsigned short>(std::vector<unsigned short>(num_values));
+  } else if (data_type == projectmetis::DType_Type_UINT32) {
+    serialized_tensor = SerializeTensor<unsigned int>(std::vector<unsigned int>(num_values));
+  } else if (data_type == projectmetis::DType_Type_UINT64) {
+    serialized_tensor = SerializeTensor<unsigned long>(std::vector<unsigned long>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT8) {
+    serialized_tensor = SerializeTensor<signed char>(std::vector<signed char>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT16) {
+    serialized_tensor = SerializeTensor<signed short>(std::vector<signed short>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT32) {
+    serialized_tensor = SerializeTensor<signed int>(std::vector<signed int>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT64) {
+    serialized_tensor = SerializeTensor<signed long>(std::vector<signed long>(num_values));
+  } else if (data_type == projectmetis::DType_Type_FLOAT32) {
+    serialized_tensor = SerializeTensor<float>(std::vector<float>(num_values));
+  } else if (data_type == projectmetis::DType_Type_FLOAT64) {
+    serialized_tensor = SerializeTensor<double>(std::vector<double>(num_values));
+  } else {
+    throw std::runtime_error("Unsupported tensor data type.");
+  }
+  return serialized_tensor;
+
+}
+
+std::vector<char> GenEmptyTensor(const projectmetis::TensorSpec &tensor_spec) {
+
+  /**
+   * Creates a tensor of the given size and data type with zero values.
+   * The serializes the tensor and converts its serialized version to string.
+   */
+  std::vector<char> serialized_tensor;
+  auto num_values = tensor_spec.length();
+  auto data_type = tensor_spec.type().type();
+
+  if (data_type == projectmetis::DType_Type_UINT8) {
+    serialized_tensor = SerializeTensor<unsigned char>(std::vector<unsigned char>(num_values));
+  } else if (data_type == projectmetis::DType_Type_UINT16) {
+    serialized_tensor = SerializeTensor<unsigned short>(std::vector<unsigned short>(num_values));
+  } else if (data_type == projectmetis::DType_Type_UINT32) {
+    serialized_tensor = SerializeTensor<unsigned int>(std::vector<unsigned int>(num_values));
+  } else if (data_type == projectmetis::DType_Type_UINT64) {
+    serialized_tensor = SerializeTensor<unsigned long>(std::vector<unsigned long>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT8) {
+    serialized_tensor = SerializeTensor<signed char>(std::vector<signed char>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT16) {
+    serialized_tensor = SerializeTensor<signed short>(std::vector<signed short>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT32) {
+    serialized_tensor = SerializeTensor<signed int>(std::vector<signed int>(num_values));
+  } else if (data_type == projectmetis::DType_Type_INT64) {
+    serialized_tensor = SerializeTensor<signed long>(std::vector<signed long>(num_values));
+  } else if (data_type == projectmetis::DType_Type_FLOAT32) {
+    serialized_tensor = SerializeTensor<float>(std::vector<float>(num_values));
+  } else if (data_type == projectmetis::DType_Type_FLOAT64) {
+    serialized_tensor = SerializeTensor<double>(std::vector<double>(num_values));
+  } else {
+    throw std::runtime_error("Unsupported tensor data type.");
+  }
+  return serialized_tensor;
+
+}
+
 template<typename T>
 inline void PrintSerializedTensor(const std::string &str, const uint32_t num_values) {
   std::vector<T> loaded_values(num_values);
