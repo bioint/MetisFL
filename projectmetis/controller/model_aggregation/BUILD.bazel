@@ -146,4 +146,12 @@ cc_library(
         "//projectmetis/proto:model_cc_proto",
         "//encryption/palisade/fhe:palisade_fhe_helper",
     ],
+    linkopts = select({
+      "//:linux_x86_64": ["-lgomp"],
+      "//conditions:default": [],
+    }),
+    copts = [
+        "-O3",
+        "-fopenmp",
+    ]
 )

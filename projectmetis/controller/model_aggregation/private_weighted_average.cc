@@ -1,4 +1,6 @@
 
+#include <omp.h>
+
 #include "projectmetis/controller/model_aggregation/private_weighted_average.h"
 #include "projectmetis/proto/model.pb.h"
 
@@ -37,6 +39,7 @@ PWA::Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs)
   FederatedModel community_model;
   const auto& sample_model = pairs.front().front().first;
   // Loop over each variable one-by-one.
+  #pragma omp parallel for
   for (int i = 0; i < sample_model->variables_size(); ++i) {
     auto* variable = community_model.mutable_model()->add_variables();
     variable->set_name(sample_model->variables(i).name());
