@@ -392,6 +392,7 @@ class ControllerDefaultImpl : public Controller {
       ++global_iteration_;
       PLOG(INFO) << "FedIteration: " << unsigned(global_iteration_);
       meta.set_global_iteration(global_iteration_);
+      *meta.mutable_started_at() = TimeUtil::GetCurrentTime();
       metadata_.emplace_back(meta);
     }
 
@@ -426,6 +427,11 @@ class ControllerDefaultImpl : public Controller {
       // Assign a non-negative value to the metadata index.
       auto metadata_index =
           (task_global_iteration == 0) ? 0 : task_global_iteration - 1;
+
+      if (not metadata_.empty() && metadata_index < metadata_.size()) {
+        *metadata_.at(metadata_index).mutable_completed_at() =
+            TimeUtil::GetCurrentTime();
+      }
 
       // Select models that will participate in the community model.
       auto selected_for_aggregation =
@@ -480,6 +486,7 @@ class ControllerDefaultImpl : public Controller {
       // object for the new scheduling round.
       FederatedTaskRuntimeMetadata new_meta = FederatedTaskRuntimeMetadata();
       new_meta.set_global_iteration(global_iteration_);
+      *new_meta.mutable_started_at() = TimeUtil::GetCurrentTime();
       // Records the id of the learners to which
       // the controller delegates the training task.
       for (const auto &to_schedule_id: to_schedule) {
