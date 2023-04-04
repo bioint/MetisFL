@@ -811,7 +811,7 @@ class ControllerDefaultImpl : public Controller {
     // the community/global/aggregated model.
     auto scaling_factors =
         scaler_->ComputeScalingFactors(
-            community_model_, participating_states, participating_metadata);
+            community_model_, learners_, participating_states, participating_metadata);
 
     // Defines the length of the aggregation stride, i.e., how many models
     // to fetch from the model store and feed to the aggregation function.

@@ -11,8 +11,9 @@ class ParticipantsScaler : public ScalingFunction {
  public:
   absl::flat_hash_map<std::string, double> ComputeScalingFactors(
       const FederatedModel &community_model,
-      const absl::flat_hash_map<std::string, LearnerState*> &states,
-      const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &metadata) override;
+      const absl::flat_hash_map<std::string, LearnerState> &all_states,
+      const absl::flat_hash_map<std::string, LearnerState*> &participating_states,
+      const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &participating_metadata) override;
 
   inline std::string Name() override {
     return "ParticipantsScaler";

@@ -17,10 +17,15 @@ class ScalingFunction {
  public:
   virtual ~ScalingFunction() = default;
 
+  // The argument community_model refers to the latest community/global model.
+  // The argument all_states refers to all the learners currently available in the federation.
+  // The argument participating_states refers to all the learners used for aggregation.
+  // The argument participating_metadata refers to the metadata of the learners used for aggregation.
   virtual absl::flat_hash_map<std::string, double> ComputeScalingFactors(
       const FederatedModel &community_model,
-      const absl::flat_hash_map<std::string, LearnerState*> &states,
-      const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &metadata) = 0;
+      const absl::flat_hash_map<std::string, LearnerState> &all_states,
+      const absl::flat_hash_map<std::string, LearnerState*> &participating_states,
+      const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &participating_metadata) = 0;
 
   virtual std::string Name() = 0;
 };
