@@ -1,5 +1,6 @@
 build --action_env=BAZEL_CXXOPTS=-std=c++17
 build -c opt
+build --linkopt="-lstdc++fs -ldl"
 build --copt "-Wno-sign-compare"
 build --copt "-Wno-comment"
 build --cxxopt "-std=c++17"
