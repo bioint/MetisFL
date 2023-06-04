@@ -19,7 +19,7 @@ py_binary(
     ],
     deps = [
         "//experiments/keras/models:keras_models_py_lib",
-        "//projectmetis/python/driver:driver_py_lib",
+        "//src/python/driver:driver_py_lib",
     ],
 )
 
@@ -40,8 +40,8 @@ py_binary(
     deps = [
         "//experiments/utils:experiments_utils_py_lib",
         "//experiments/keras/models:keras_models_py_lib",
-        "//projectmetis/python/driver:driver_py_lib",
-        "//projectmetis/python/models/keras/optimizers:models_keras_optimizers_py_lib",
+        "//src/python/driver:driver_py_lib",
+        "//src/python/models/keras/optimizers:models_keras_optimizers_py_lib",
     ],
 )
 
@@ -62,8 +62,8 @@ py_binary(
     deps = [
         "//experiments/utils:experiments_utils_py_lib",
         "//experiments/keras/models:keras_models_py_lib",
-        "//projectmetis/python/driver:driver_py_lib",
-        "//projectmetis/python/models/keras/optimizers:models_keras_optimizers_py_lib",
+        "//src/python/driver:driver_py_lib",
+        "//src/python/models/keras/optimizers:models_keras_optimizers_py_lib",
     ],
 )
 
@@ -84,7 +84,7 @@ py_binary(
     deps = [
         "//experiments/utils:experiments_utils_py_lib",
         "//experiments/keras/models:keras_models_py_lib",
-        "//projectmetis/python/driver:driver_py_lib",
-        "//projectmetis/python/models/keras/optimizers:models_keras_optimizers_py_lib",
+        "//src/python/driver:driver_py_lib",
+        "//src/python/models/keras/optimizers:models_keras_optimizers_py_lib",
     ],
 )

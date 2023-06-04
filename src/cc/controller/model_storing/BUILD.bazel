@@ -1,0 +1,38 @@
+package(default_visibility = ["//src/cc/controller:__subpackages__"])
+
+cc_library(
+    name = "model_storing",
+    hdrs = [
+        "model_storing.h",
+    ],
+    deps = [
+        ":model_store",
+        "//src/cc/controller/model_storing/hash_map:hash_map_model_store",
+        "//src/cc/controller/model_storing/redis:redis_model_store",
+    ]
+)
+
+cc_library(
+    name = "model_store",
+    hdrs = ["model_store.h"],
+    srcs = ["model_store.cc"],
+    deps = [
+        "//src/proto:metis_cc_proto",
+        "//src/proto:model_cc_proto",
+        "@com_github_google_glog//:glog",
+    ]
+)
+
+# https://docs.bazel.build/versions/master/be/c-cpp.html#cc_binary
+cc_test(
+    name = "model_store_test",
+    srcs = ["model_store_test.cc"],
+    deps = [
+        ":model_storing",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+        "//src/proto:metis_cc_proto",
+        "//src/proto:model_cc_proto",
+        "//src/cc/core:proto_tensor_serde",
+    ],
+)

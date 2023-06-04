@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 # from tensorflow.keras import layers, models, regularizers
-from projectmetis.python.models.model_def import ModelDef
+from src.python.models.model_def import ModelDef
 
 
 class IMDB_LSTM(ModelDef):

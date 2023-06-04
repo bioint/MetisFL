@@ -1,0 +1,177 @@
+syntax = "proto3";
+package projectmetis;
+
+import "src/proto/metis.proto";
+import "src/proto/model.proto";
+import "src/proto/service_common.proto";
+
+service ControllerService {
+
+  // Unary RPC. Retrieves community models' metadata related to the models' evaluation.
+  rpc GetCommunityModelEvaluationLineage (GetCommunityModelEvaluationLineageRequest) returns (GetCommunityModelEvaluationLineageResponse) {}
+
+  // Unary RPC. Controller replies with community models
+  // (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
+  rpc GetCommunityModelLineage (GetCommunityModelLineageRequest) returns (GetCommunityModelLineageResponse) {}
+
+  // Unary RPC. Retrieves most recent and historically trained learners local models
+  // (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
+  rpc GetLearnerLocalModelLineage (GetLearnerLocalModelLineageRequest) returns (GetLearnerLocalModelLineageResponse) {}
+
+  // Unary RPC. Retrieves learners local models' metadata related to the models'
+  // evaluation (num_backtracks value 0:all, 1:last, 2:previous to last, etc...).
+  rpc GetLocalTaskLineage (GetLocalTaskLineageRequest) returns (GetLocalTaskLineageResponse) {}
+
+  // Unary RPC. Replies with runtime metadata related to the
+  // federation environment (e.g., number of community update requests).
+  rpc GetRuntimeMetadataLineage (GetRuntimeMetadataLineageRequest) returns (GetRuntimeMetadataLineageResponse) {}
+
+  // Unary RPC. Retrieves a collection of all participating learners in the federation.
+  rpc GetParticipatingLearners (GetParticipatingLearnersRequest) returns (GetParticipatingLearnersResponse) {}
+
+  // Unary RPC. Replies with the health status (beat) of its internal services.
+  rpc GetServicesHealthStatus (GetServicesHealthStatusRequest) returns (GetServicesHealthStatusResponse) {}
+
+  // Unary RPC. A new participating learner asks the controller to join the federation.
+  rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
+
+  // Unary RPC. An existing learner informs the controller that it leaves the federation.
+  rpc LeaveFederation (LeaveFederationRequest) returns (LeaveFederationResponse) {}
+
+  // Unary RPC. Receives the local model of a learner when it completes its (locally) assigned task.
+  rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (MarkTaskCompletedResponse) {}
+
+  // Unary RPC. Receives a new model to replace the current community model.
+  rpc ReplaceCommunityModel (ReplaceCommunityModelRequest) returns (ReplaceCommunityModelResponse) {}
+
+  // Shuts down the controller service and clears any resources.
+  rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
+}
+
+message GetCommunityModelEvaluationLineageRequest {
+  // Refers to the number of evaluation request rounds that we need to re-track.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest community models evaluations.
+  int32 num_backtracks = 1;
+}
+
+message GetCommunityModelEvaluationLineageResponse {
+  // A list of HashMaps where each position in the list refers to a community model
+  // and the HashMap contains the evaluation of the community model across the learners
+  // on their local private datasets (train/val/test).
+  repeated CommunityModelEvaluation community_evaluation = 1;
+}
+
+message GetCommunityModelLineageRequest {
+  // Number of models that we need to re-track. If non-positive (x <= 0): reply all,
+  // otherwise (x>0) reply current and num-1 latest community models.
+  int32 num_backtracks = 1;
+}
+
+message GetCommunityModelLineageResponse {
+  // Replies a sequence of models.
+  repeated FederatedModel federated_models = 1;
+}
+
+message GetLocalTaskLineageRequest {
+  // Refers to the number of local tasks that we need to re-track.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and
+  // num-1 latest learners' local models evaluations.
+  int32 num_backtracks = 1;
+
+  // Retrieves the num_backtracks evaluations for every learner
+  // that exists in the provided LearnerEntity collection.
+  repeated string learner_ids = 2;
+}
+
+message GetLocalTaskLineageResponse {
+  // A HashMap containing the evaluation of the locally trained model (i.e., result of run task)
+  // of each learner on its local private datasets (train/val/test) and other metadata related
+  // to the locally completed training task.
+  map<string, LocalTasksMetadata> learner_task = 1;
+}
+
+message GetLearnerLocalModelLineageRequest {
+  // Refers to the number of local models that we need to re-track.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest learners' local models.
+  int32 num_backtracks = 1;
+
+  // Retrieves the num_backtracks local models for every learner that exists in the provided LearnerEntity collection.
+  repeated ServerEntity server_entity = 2;
+}
+
+message GetLearnerLocalModelLineageResponse {
+  // Replies a sequence of LocalModelResponses. One record for each requested learner:
+  // [ (LearnerEntity, [LocalModel1, LocalModel2, ...]), (,[]), ... ].
+  repeated LearnerLocalModelResponse learner_local_model = 1;
+}
+
+message GetRuntimeMetadataLineageRequest {
+  // Refers to the number of runtime metadata we need to request for / retrack.
+  // If non-positive (x <= 0): reply all, otherwise (x>0) reply current and num-1 latest runtime metadata.
+  int32 num_backtracks = 1;
+}
+
+message GetRuntimeMetadataLineageResponse {
+  repeated FederatedTaskRuntimeMetadata metadata = 1;
+  // TODO No structured response yet, but in a future release this should follow a specific format.
+  string json_metadata = 2;
+}
+
+message GetParticipatingLearnersRequest {}
+
+message GetParticipatingLearnersResponse {
+  // Returns a collection with all the participating learners in the federation.
+  // Even though the response is a collection of LearnerDescriptor type, for security
+  // reasons the controller only populates the learner id and dataset specifications fields.
+  repeated LearnerDescriptor learner = 1;
+}
+
+message JoinFederationRequest {
+  //  TODO This field seems redundant - not used anywhere! Controller generates the learner_ids based on ServerEntity!
+  // string learner_id = 1; // If this field is empty/None then this learner is new. If it not empty its (id,token) must match with the existing records inside controller's book keeping collection.
+  ServerEntity server_entity = 2;
+  DatasetSpec local_dataset_spec = 3;
+}
+
+message JoinFederationResponse {
+  Ack ack = 1;
+  string learner_id = 2; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
+  string auth_token = 3; // For security reasons, the controller generates a random 64-characters string that is associated with the joining learner. The (learner_id, token) composite key is required throughout training when a learner contacts the controller.
+}
+
+message LearnerLocalModelResponse {
+  ServerEntity server_entity = 1; // The description of the learner entity.
+  repeated Model model = 2; // For a single learner we can return a collection of locally trained models. We encapsulate the local models as federation models because there is no difference in the structure of the two model types.
+}
+
+message MarkTaskCompletedRequest {
+  string learner_id = 1; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
+  string auth_token = 2; // This is associated with the auth_token in `JoinFederationResponse` message.
+  CompletedLearningTask task = 3;
+}
+
+message LearnerExecutionAuxMetadata {
+  string json_response = 1;
+}
+
+message MarkTaskCompletedResponse {
+  Ack ack = 1;
+}
+
+message LeaveFederationRequest {
+  string learner_id = 1; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
+  string auth_token = 2; // This is associated with the auth_token in `JoinFederationResponse` message.
+}
+
+message LeaveFederationResponse {
+  Ack ack = 1;
+}
+
+message ReplaceCommunityModelRequest {
+  // TODO: Require some sort of auth to ensure that whoever is replacing the model, e.g., driver, is authorized to do so.
+  FederatedModel model = 1;
+}
+
+message ReplaceCommunityModelResponse {
+  Ack ack = 1;
+}

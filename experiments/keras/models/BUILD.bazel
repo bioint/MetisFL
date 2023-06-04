@@ -16,6 +16,6 @@ py_library(
     ],
     srcs_version = "PY3",
     deps = [
-        "//projectmetis/python/models:models_py_lib",
+        "//src/python/models:models_py_lib",
     ],
 )

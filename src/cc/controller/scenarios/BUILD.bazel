@@ -1,0 +1,31 @@
+package(default_visibility = ["//src/cc/controller:__subpackages__"])
+
+cc_library(
+    name = "scenarios",
+    srcs = [
+        "scenarios_common.cc",
+    ],
+    hdrs = [
+        "scenarios_common.h",
+    ],
+    deps = [
+        "//src/cc/controller:controller",
+        "//src/cc/controller/model_aggregation",
+        "//src/cc/controller/model_scaling",
+        "//src/cc/controller/model_storing",
+        "//src/proto:metis_cc_proto",
+        "//src/proto:model_cc_proto",
+        "@absl//absl/container:flat_hash_map",
+        "//src/cc/core:proto_tensor_serde",
+    ]
+)
+
+cc_binary(
+    name = "sync_model_aggregation_performance",
+    srcs = [
+        "sync_model_aggregation_performance_main.cc"
+    ],
+    deps = [
+        ":scenarios"
+    ],
+)

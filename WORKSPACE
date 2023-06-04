@@ -1,4 +1,4 @@
-workspace(name = "projectmetis")
+workspace(name = "metisfl")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 # Imports grpc.

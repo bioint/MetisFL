@@ -2,7 +2,7 @@ import copy
 import itertools
 import os
 
-from projectmetis.python.utils.fedenv_parser import FederationEnvironment
+from src.python.utils.fedenv_parser import FederationEnvironment
 
 
 class EnvGen(object):

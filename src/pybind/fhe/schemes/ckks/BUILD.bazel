@@ -1,0 +1,12 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_binary(
+    name = "ckks_lib",
+    srcs = [
+      "ckks.cc",
+    ],
+    deps = [
+      "//src/encryption/palisade:palisade_cmake",
+      "//pybind/fhe/schemes:fhe_schemes_lib",
+    ],
+)

@@ -1,0 +1,350 @@
+syntax = "proto3";
+package projectmetis;
+
+import "src/proto/model.proto";
+
+import "google/protobuf/timestamp.proto";
+
+/////////////
+// Generic //
+/////////////
+
+// A server entity that participates in the collaborative learning environment.
+message ServerEntity {
+  // Either the hostname or the IP address of the server.
+  string hostname = 1;
+
+  // The server port that the service is running on.
+  uint32 port = 2;
+
+  // For enabling https between the learners and controller
+  SSLConfig ssl_config = 3;
+}
+
+message SSLConfig {
+  string server_key = 1;
+  string server_cert = 2;
+}
+
+//////////////
+// Learning //
+//////////////
+
+message DatasetSpec {
+  uint32 num_training_examples = 1;
+  uint32 num_validation_examples = 2;
+  uint32 num_test_examples = 3;
+
+  message ClassificationDatasetSpec {
+    map<uint32, uint32> class_examples_num = 1;
+  }
+
+  message RegressionDatasetSpec {
+    // TODO(canast02): Need to add histogram support; the following statistics
+    //                 should refer to a histogram bucket.
+    double min = 1;
+    double max = 2;
+    double mean = 3;
+    double median = 4;
+    double mode = 5;
+    double stddev = 6;
+  }
+
+  oneof training_dataset_spec {
+    ClassificationDatasetSpec training_classification_spec = 4;
+    RegressionDatasetSpec training_regression_spec = 5;
+  }
+
+  oneof validation_dataset_spec {
+    ClassificationDatasetSpec validation_classification_spec = 6;
+    RegressionDatasetSpec validation_regression_spec = 7;
+  }
+
+  oneof test_dataset_spec {
+    ClassificationDatasetSpec test_classification_spec = 8;
+    RegressionDatasetSpec test_regression_spec = 9;
+  }
+}
+
+message LearningTaskTemplate {
+  // This reflects the number of local steps the learner needs to perform.
+  uint32 num_local_updates = 1;
+}
+
+message LearningTask {
+  // Records the id of the global iteration, i.e., id of the community model sent to the learner for local training.
+  uint32 global_iteration = 1;
+  // This reflects the number of local steps the learner needs to perform.
+  // It is similar to epochs if we take |num_training_examples| / batch_size.
+  uint32 num_local_updates = 2;
+
+  float training_dataset_percentage_for_stratified_validation = 3;
+  EvaluationMetrics metrics = 4;
+}
+
+message CompletedLearningTask {
+  // This is the model trained by the learner locally.
+  Model model = 1;
+
+  // These are the basic metadata sent by the learner to the
+  // controller whenever a locally assigned training task is complete.
+  TaskExecutionMetadata execution_metadata = 2;
+
+  // TODO These are additional metadata sent by the learner to the controller.
+  //  No structured response yet, but in a future release this should follow
+  //  a specific format.
+  string aux_metadata = 3;
+}
+
+message TaskExecutionMetadata {
+  // Records the id of the global iteration, i.e., id of the global task or of the received community model.
+  // Need it for bookkeeping when contacting the controller the completed local task.
+  uint32 global_iteration = 1;
+
+  TaskEvaluation task_evaluation = 2;
+
+  // Learner may perform partial epochs, thus the float data type.
+  float completed_epochs = 3;
+
+  uint32 completed_batches = 4;
+
+  uint32 batch_size = 5;
+
+  // Time-per-epoch in milliseconds.
+  float processing_ms_per_epoch = 6;
+
+  // Time-per-batch in milliseconds.
+  float processing_ms_per_batch = 7;
+}
+
+message TaskEvaluation {
+  // A list with all training evaluations across all epochs.
+  repeated EpochEvaluation training_evaluation = 1;
+
+  // A list with all validation evaluations across all epochs.
+  repeated EpochEvaluation validation_evaluation = 2;
+
+  // A list of all test evaluations across all epochs.
+  repeated EpochEvaluation test_evaluation = 3;
+}
+
+message EpochEvaluation {
+  // The id of the epoch. This is an incremental value, i.e., serial number.
+  // A learner is training continuously and therefore it can increment its epoch
+  // id as it progresses its training.
+  uint32 epoch_id = 1;
+
+  ModelEvaluation model_evaluation = 2;
+}
+
+message EvaluationMetrics {
+  repeated string metric = 1;
+}
+
+message ModelEvaluation {
+  // TODO: Not sure if we need a simple json response or scores! For instance,
+  //       we might need additional metrics such as confusion matrices...
+
+  // FOR NOW, we need to return the key-value formatted value! That is for every
+  // string metric passed through the EvaluationMetrics object we reply with a
+  // <metric, value> collection.
+  map<string, string> metric_values = 1;
+}
+
+// Wrapper for multiple model evaluations.
+message ModelEvaluations {
+  ModelEvaluation training_evaluation = 1;
+  ModelEvaluation validation_evaluation = 2;
+  ModelEvaluation test_evaluation = 3;
+}
+
+message LocalTasksMetadata {
+  repeated TaskExecutionMetadata task_metadata = 1;
+}
+
+message CommunityModelEvaluation {
+  // Records the id of the global iteration, i.e., id of the community model being evaluated.
+  uint32 global_iteration = 1;
+  // A HashMap with learner as the key and the evaluation of the
+  // community model on its local datasets as the value.
+  map<string, ModelEvaluations> evaluations = 2;
+}
+
+message Hyperparameters {
+  uint32 batch_size = 1;
+  OptimizerConfig optimizer = 2;
+}
+
+////////////////
+// Controller //
+////////////////
+
+message ControllerParams {
+  ServerEntity server_entity = 1;
+  GlobalModelSpecs global_model_specs = 2;
+  CommunicationSpecs communication_specs = 3;
+  ModelStoreConfig model_store_config = 4;
+
+  message ModelHyperparams {
+
+    // TODO Shall we replace (batch_size, optimizer) with Hyperparameters message?
+    uint32 batch_size = 1;
+
+    uint32 epochs = 2;
+
+    OptimizerConfig optimizer = 3;
+
+    // TODO Need to figure out, if this quantity will be used as part of the aggregation scheme or
+    //  as part of the actual validation evaluation.
+    float percent_validation = 4;
+  }
+
+  ModelHyperparams model_hyperparams = 5;
+}
+
+message ModelStoreConfig {
+  // Model cache config shall never be extended. It is just wrapper over the cache configuration.
+  // It contains only a single member, the cache that needs to be configured: oneof.
+  // Only one cache can be set and used by the controller.
+  oneof config {
+    InMemoryStore in_memory_store = 1;
+    RedisDBStore redis_db_store = 2;
+  }
+}
+
+message InMemoryStore {
+  ModelStoreSpecs model_store_specs = 1;
+}
+
+message RedisDBStore {
+  ModelStoreSpecs model_store_specs = 1;
+  ServerEntity server_entity = 2;
+}
+
+message NoEviction {}
+
+message LineageLengthEviction {
+  uint32 lineage_length = 1; // The number of models the store to preserve per learner (i.e., history per learner). If we exceed this number we remove the least frequently used (lfu) model.
+}
+
+message ModelStoreSpecs {
+  oneof eviction_policy {
+    NoEviction no_eviction = 1; // Controller keeps all submitted models from all learners.
+    LineageLengthEviction lineage_length_eviction = 2; // Controller keeps only the last k submitted models of each learner. This is similar to LRU; we only keep the most recent k models.
+  }
+}
+
+message AggregationRule {
+  oneof rule {
+    FedAvg fed_avg = 1;
+    FedStride fed_stride = 2;
+    FedRec fed_rec = 3;
+    PWA pwa = 4;
+  }
+  AggregationRuleSpecs aggregation_rule_specs = 5;
+}
+
+message AggregationRuleSpecs {
+  enum ScalingFactor {
+    UNKNOWN = 0;
+    NUM_COMPLETED_BATCHES = 1;
+    NUM_PARTICIPANTS = 2;
+    NUM_TRAINING_EXAMPLES = 3;
+  }
+  ScalingFactor scaling_factor = 1;
+}
+
+message FedAvg {}
+
+message FedStride {
+  uint32 stride_length = 1;
+}
+
+message FedRec {}
+
+message HEScheme {
+  bool enabled = 1;
+  string name = 2;
+  string cryptocontext = 3;
+  string public_key = 4;
+  string private_key = 5;
+
+  oneof scheme {
+    EmptyHEScheme empty_he_scheme = 6;
+    FHEScheme fhe_scheme = 7;
+  }
+
+}
+
+message EmptyHEScheme {}
+
+message FHEScheme {
+  uint32 batch_size = 1;
+  uint32 scaling_bits = 2;
+}
+
+message PWA {
+  HEScheme he_scheme = 1;
+}
+
+message GlobalModelSpecs {
+  AggregationRule aggregation_rule = 1;
+  float learners_participation_ratio = 2;
+}
+
+message CommunicationSpecs {
+  enum Protocol {
+    UNKNOWN = 0;
+    SYNCHRONOUS = 1;
+    ASYNCHRONOUS = 2;
+    SEMI_SYNCHRONOUS = 3;
+  }
+  Protocol protocol = 1;
+  ProtocolSpecs protocol_specs = 2;
+}
+
+message ProtocolSpecs {
+  // Parameters specific to the semi-synchronous protocol.
+  int32 semi_sync_lambda = 1;
+  bool semi_sync_recompute_num_updates = 2;
+}
+
+message LearnerDescriptor {
+  string id = 1;
+  string auth_token = 2;
+  ServerEntity server_entity = 3;
+  DatasetSpec dataset_spec = 4;
+}
+
+message LearnerState {
+  // Describes the learner. It also includes the generated authorization token for the learner.
+  LearnerDescriptor learner = 1;
+
+  // Learner's model lineage.
+  repeated Model model = 2;
+}
+
+message FederatedTaskRuntimeMetadata {
+  uint32 global_iteration = 1;
+  google.protobuf.Timestamp started_at = 2;
+  google.protobuf.Timestamp completed_at = 3;
+  repeated string assigned_to_learner_id = 4;
+  repeated string completed_by_learner_id = 5;
+  // The times for train and eval tasks are based on the time they are submitted/sent
+  // to the learners. They do not reflect the "true" time it takes for actual training
+  // and evaluation, since the period (submitted_at, received_at) also contains the
+  // communication time - message exchanges roundtrip.
+  map<string, google.protobuf.Timestamp> train_task_submitted_at = 6;
+  map<string, google.protobuf.Timestamp> train_task_received_at = 7;
+  map<string, google.protobuf.Timestamp> eval_task_submitted_at = 8;
+  map<string, google.protobuf.Timestamp> eval_task_received_at = 9;
+  map<string, double> model_insertion_duration_ms = 10;
+  map<string, double> model_selection_duration_ms = 11;
+  google.protobuf.Timestamp model_aggregation_started_at = 12;
+  google.protobuf.Timestamp model_aggregation_completed_at = 13;
+  double model_aggregation_total_duration_ms = 14;
+  repeated double model_aggregation_block_size = 15;
+  repeated double model_aggregation_block_memory_kb = 16;
+  repeated double model_aggregation_block_duration_ms = 17;
+  repeated TensorQuantifier model_tensor_quantifiers = 18;
+}

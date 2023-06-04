@@ -13,8 +13,8 @@ import pandas as pd
 
 from experiments.keras.models.housing_mlp import HousingMLP
 from experiments.utils.environment_generator import EnvGen
-from projectmetis.python.driver.driver_session import DriverSession
-from projectmetis.python.models.model_dataset import ModelDatasetRegression
+from src.python.driver.driver_session import DriverSession
+from src.python.models.model_dataset import ModelDatasetRegression
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 

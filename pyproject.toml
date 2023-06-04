@@ -15,7 +15,9 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 keywords = ["federated learning", "machine learning"]
-dependencies = [] # TODO:
+dependencies = [
+
+] # TODO:
 requires-python = ">=3.7"
 
 [project.optional-dependencies]

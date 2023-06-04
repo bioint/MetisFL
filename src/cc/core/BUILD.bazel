@@ -1,0 +1,44 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "macros",
+    srcs = [],
+    hdrs = ["macros.h"],
+    deps = [],
+)
+
+cc_library(
+    name = "thread_pool",
+    srcs = [],
+    hdrs = ["bs_thread_pool.h"],
+)
+
+cc_library(
+    name = "proto_matchers",
+    srcs = [],
+    hdrs = ["proto_matchers.h"],
+    deps = [
+        "@gtest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "proto_tensor_serde",
+    hdrs = ["proto_tensor_serde.h"],
+    srcs = [],
+    deps = [
+        "//src/proto:model_cc_proto",
+    ],
+)
+
+cc_test (
+    name = "proto_tensor_serde_test",
+    srcs = ["proto_tensor_serde_test.cc"],
+    deps = [
+        ":macros",
+        ":proto_tensor_serde",
+        "//src/proto:model_cc_proto",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ],
+)

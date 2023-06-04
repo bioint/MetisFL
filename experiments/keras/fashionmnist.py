@@ -8,9 +8,9 @@ import tensorflow as tf
 
 from experiments.keras.models.fashion_mnist_fc import FashionMnistModel
 from experiments.utils.data_partitioning import DataPartitioning
-from projectmetis.python.driver.driver_session import DriverSession
-from projectmetis.python.models.model_dataset import ModelDatasetClassification
-from projectmetis.python.utils.fedenv_parser import FederationEnvironment
+from src.python.driver.driver_session import DriverSession
+from src.python.models.model_dataset import ModelDatasetClassification
+from src.python.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 

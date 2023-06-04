@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
 
-from projectmetis.python.models.model_def import ModelDef
+from src.python.models.model_def import ModelDef
 from tensorflow.keras import regularizers
 
 
