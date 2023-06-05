@@ -1,0 +1,15 @@
+package(default_visibility = ["//projectmetis/controller:__subpackages__"])
+
+cc_library(
+    name = "model_scaling",
+    srcs = ["dataset_size_scaler.cc"],
+    hdrs = [
+        "scaling_function.h",
+        "model_scaling.h",
+        "dataset_size_scaler.h"
+    ],
+    deps = [
+        "//projectmetis/proto:metis_cc_proto",
+        "@absl//absl/container:flat_hash_map",
+    ],
+)

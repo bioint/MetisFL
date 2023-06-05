@@ -1,0 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "experiments_utils_py_lib",
+    srcs = [
+        "data_partitioning.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        "//projectmetis/python/logging:logging_py_lib",
+    ],
+)

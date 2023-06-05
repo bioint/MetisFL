@@ -1,0 +1,126 @@
+load("@rules_proto//proto:defs.bzl", "proto_library")
+load("@rules_proto_grpc//cpp:defs.bzl", "cc_grpc_library")
+load("@rules_proto_grpc//python:defs.bzl", "py_proto_library", "python_grpc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Core proto.
+proto_library(
+    name = "model_proto",
+    srcs = ["model.proto"],
+    deps = [],
+)
+
+cc_proto_library(
+    name = "model_cc_proto",
+    deps = [":model_proto"],
+)
+
+py_proto_library(
+    name = "model_py_proto",
+    protos = [":model_proto"]
+)
+
+proto_library(
+    name = "metis_proto",
+    srcs = ["metis.proto"],
+    deps = [
+        ":model_proto",
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:duration_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "metis_cc_proto",
+    deps = [":metis_proto"],
+)
+
+py_proto_library(
+    name = "metis_py_proto",
+    protos = [":metis_proto"]
+)
+
+proto_library(
+    name = "service_common_proto",
+    srcs = ["service_common.proto"],
+    deps = [
+        "@com_google_protobuf//:timestamp_proto",
+    ],
+)
+
+cc_proto_library(
+    name = "service_common_cc_proto",
+    deps = [":service_common_proto"],
+)
+
+py_proto_library(
+    name = "service_common_py_proto",
+    protos = [":service_common_proto"],
+)
+
+# Controller proto.
+proto_library(
+    name = "controller_grpc",
+    srcs = ["controller.proto"],
+    deps = [
+        ":metis_proto",
+        ":model_proto",
+        ":service_common_proto",
+    ],
+)
+
+cc_grpc_library(
+    name = "controller_cc_grpc",
+    protos = [
+        ":controller_grpc",
+    ],
+    deps = [
+        ":metis_cc_proto",
+        ":model_cc_proto",
+        ":service_common_cc_proto",
+    ]
+)
+
+python_grpc_library(
+    name = "controller_py_grpc",
+    protos = [
+        ":controller_grpc",
+    ],
+    deps = [
+        ":metis_py_proto",
+        ":model_py_proto",
+        ":service_common_py_proto",
+    ]
+)
+
+# Learner proto.
+proto_library(
+    name = "learner_grpc",
+    srcs = ["learner.proto"],
+    deps = [
+        ":metis_proto",
+        ":model_proto",
+        ":service_common_proto",
+    ],
+)
+
+cc_grpc_library(
+    name = "learner_cc_grpc",
+    protos = [":learner_grpc"],
+    deps = [
+        ":metis_cc_proto",
+        ":model_cc_proto",
+        ":service_common_cc_proto",
+    ],
+)
+
+python_grpc_library(
+    name = "learner_py_grpc",
+    protos = [":learner_grpc"],
+    deps = [
+        ":metis_py_proto",
+        ":model_py_proto",
+        ":service_common_py_proto",
+    ]
+)

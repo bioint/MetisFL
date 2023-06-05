@@ -1,0 +1,14 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "models_pytorch_py_lib",
+    srcs = [
+        "pytorch_model_ops.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        "//projectmetis/python/models:models_py_lib",
+    ],
+)

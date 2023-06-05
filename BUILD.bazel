@@ -1,0 +1,31 @@
+package(default_visibility = ["//visibility:public"])
+
+exports_files([
+    "LICENSE",
+    "configure",
+    "configure.py",
+])
+
+filegroup(
+    name = "configuration_files",
+    srcs = glob(["configure, configure.py"]),
+    visibility = ["//visibility:public"]
+)
+
+config_setting(
+    name = "linux_x86_64",
+    constraint_values = ["@platforms//os:linux"],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = ["@platforms//os:macos"],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "windows",
+    constraint_values = ["@platforms//os:windows"],
+    visibility = ["//visibility:public"],
+)

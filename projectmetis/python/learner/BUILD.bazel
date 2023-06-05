@@ -1,0 +1,36 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+package(default_visibility = ["//visibility:public"])
+
+py_library(
+    name = "learner_py_lib",
+    srcs = [
+        "learner.py",
+        "learner_trainer.py",
+        "learner_evaluator.py",
+        "learner_servicer.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        "//projectmetis/proto:learner_py_grpc",
+        "//projectmetis/python/utils:utils_py_lib",
+        "//projectmetis/python/logging:logging_py_lib",
+        "//projectmetis/python/models/keras:models_keras_py_lib",
+        "//projectmetis/python/models/pytorch:models_pytorch_py_lib",
+    ],
+)
+
+py_binary(
+    name = "learner_servicer_py_test",
+    main = "learner_servicer_test.py",
+    srcs = [
+        "learner_servicer_test.py",
+    ],
+    srcs_version = "PY3",
+    legacy_create_init = False,
+    deps = [
+        "//experiments/keras/models:keras_models_py_lib",
+        "//projectmetis/proto:learner_py_grpc",
+        "//projectmetis/python/utils:utils_py_lib",
+    ],
+)
