@@ -8,10 +8,10 @@ import src.python.utils.proto_messages_factory as proto_factory
 
 from pebble import ProcessPool, ProcessExpired
 
-from src.python.logging.metis_logger import MetisLogger
-from src.python.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
-from src.python.learner.learner_evaluator import LearnerEvaluator
-from src.python.learner.learner_trainer import LearnerTrainer
+from src.python.utils.metis_logger import MetisLogger
+from src.python.learner.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
+from src.python.learner.core.learner_evaluator import LearnerEvaluator
+from src.python.learner.core.learner_trainer import LearnerTrainer
 from src.python.utils.grpc_controller_client import GRPCControllerClient
 from src.python.utils.formatting import DictionaryFormatter
 from src.proto import learner_pb2, model_pb2, metis_pb2
@@ -181,7 +181,7 @@ class Learner(object):
             return self._model_ops_factory_pytorch
 
     def _model_ops_factory_keras(self, *args, **kwargs):
-        from src.python.models.keras.keras_model_ops import KerasModelOps
+        from src.python.learner.models.keras.keras_model_ops import KerasModelOps
         he_scheme = None
         if self._he_scheme.enabled:
             if self._he_scheme.HasField("fhe_scheme"):
@@ -194,7 +194,7 @@ class Learner(object):
         return model_ops
 
     def _model_ops_factory_pytorch(self, *args, **kwargs):
-        from src.python.models.pytorch.pytorch_model_ops import PyTorchModelOps
+        from src.python.learner.models.pytorch.pytorch_model_ops import PyTorchModelOps
         he_scheme = None
         if self._he_scheme.enabled:
             if self._he_scheme.HasField("fhe_scheme"):

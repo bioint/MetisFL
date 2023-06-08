@@ -1,5 +1,0 @@
-filegroup(
-    name = "experiment_data",
-    srcs = glob(["original/data.csv"]),
-    visibility = ["//:__subpackages__"]
-)

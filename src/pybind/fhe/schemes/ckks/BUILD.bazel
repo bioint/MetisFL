@@ -6,7 +6,7 @@ cc_binary(
       "ckks.cc",
     ],
     deps = [
-      "//src/encryption/palisade:palisade_cmake",
-      "//pybind/fhe/schemes:fhe_schemes_lib",
+      "//src/cc/encryption/palisade:palisade_cmake",
+      "//src/pybind/fhe/schemes:fhe_schemes_lib",
     ],
 )

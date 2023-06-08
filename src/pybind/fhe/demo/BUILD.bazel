@@ -10,7 +10,7 @@ py_binary(
     python_version = "PY3",
     legacy_create_init = False,
     deps = [
-      "//pybind/fhe:fhe_pybind_lib",
+      "//src/pybind/fhe:fhe_so",
     ],
     data = [
       "//resources:fhe_cryptoparams"
@@ -25,7 +25,7 @@ py_binary(
     python_version = "PY3",
     legacy_create_init = False,
     deps = [
-      "//pybind/fhe:fhe_pybind_lib",
+      "//src/pybind/fhe:fhe_so",
     ],
     data = [
       "//resources:fhe_randomparams"

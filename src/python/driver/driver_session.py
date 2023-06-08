@@ -14,7 +14,7 @@ from google.protobuf.json_format import MessageToDict
 from pebble import ProcessPool
 from src.python.utils.grpc_controller_client import GRPCControllerClient
 from src.python.utils.grpc_learner_client import GRPCLearnerClient
-from src.python.logging.metis_logger import MetisASCIIArt, MetisLogger
+from src.python.utils.metis_logger import MetisASCIIArt, MetisLogger
 from src.python.utils.bazel_services_factory import BazelMetisServicesCmdFactory
 from src.python.utils.docker_services_factory import DockerMetisServicesCmdFactory
 from src.python.utils.fedenv_parser import FederationEnvironment

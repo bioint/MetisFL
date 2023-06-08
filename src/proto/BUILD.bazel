@@ -124,3 +124,23 @@ python_grpc_library(
         ":service_common_py_proto",
     ]
 )
+
+
+proto_library(
+    name = "proto_lib",
+    srcs = glob(["*.proto"]),
+    deps = [
+        "@com_google_protobuf//:timestamp_proto",
+        "@com_google_protobuf//:duration_proto",
+    ]
+)
+
+python_grpc_library(
+    name = "metisfl_py_proto_lib",
+    protos = [":proto_lib"]
+)
+
+cc_grpc_library(
+    name = "metisfl_cc_proto_lib",
+    protos = [":proto_lib"]
+)

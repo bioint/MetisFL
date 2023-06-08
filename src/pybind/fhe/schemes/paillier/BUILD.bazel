@@ -13,6 +13,6 @@ cc_library(
     ],
     deps = [
       "@cryptopp",
-      "//pybind/fhe/schemes:fhe_schemes_lib",
+      "//src/pybind/fhe/schemes:fhe_schemes_lib",
     ],
 )

@@ -2,7 +2,7 @@ import abc
 
 import numpy as np
 
-from src.python.models.model_dataset import ModelDataset
+from src.python.learner.models.model_dataset import ModelDataset
 from src.proto import metis_pb2, model_pb2
 from src.python.utils.proto_messages_factory import ModelProtoMessages
 

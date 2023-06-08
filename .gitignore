@@ -131,4 +131,6 @@ user.bazelrc
 /tfcodetemplates
 /tfmodels
 /venv*
+/.venv/*
+/.venv
 __pycache__/

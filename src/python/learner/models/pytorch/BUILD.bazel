@@ -9,6 +9,6 @@ py_library(
     ],
     srcs_version = "PY3",
     deps = [
-        "//src/python/models:models_py_lib",
+        "//src/python/learner/models:models_py_lib",
     ],
 )

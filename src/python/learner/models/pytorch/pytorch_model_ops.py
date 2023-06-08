@@ -1,9 +1,9 @@
 import torch
 
 from src.proto import metis_pb2
-from src.python.logging.metis_logger import MetisLogger
-from src.python.models.model_dataset import ModelDataset
-from src.python.models.model_ops import ModelOps
+from src.python.utils.metis_logger import MetisLogger
+from src.python.learner.models import ModelDataset
+from src.python.learner.models.model_ops import ModelOps
 
 
 class PyTorchModelOps(ModelOps):

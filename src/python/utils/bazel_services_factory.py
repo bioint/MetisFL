@@ -24,6 +24,8 @@ class BazelMetisServicesCmdFactory(object):
 
         # CAUTION: For the hexadecimal to be valid we need to leave
         # a space to the right of the string replacing placeholder.
+
+        # NOTE: Needs to go; simply run `python initialize_controller.py`
         bazel_cmd = \
             "bazel " \
             "run --incompatible_strict_action_env=true " \

@@ -13,7 +13,8 @@ pybind_extension(
     deps = [
         "//src/cc/controller:controller",
         "//src/cc/controller:controller_servicer",
-    ]
+    ],
+    linkstatic=True,
 )
 
 py_library(

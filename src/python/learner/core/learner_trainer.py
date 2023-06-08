@@ -1,4 +1,4 @@
-from src.python.models.model_dataset import ModelDataset
+from src.python.learner.models.model_dataset import ModelDataset
 
 
 class LearnerTrainer(object):

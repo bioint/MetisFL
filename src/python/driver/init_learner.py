@@ -2,11 +2,11 @@ import argparse
 
 import src.proto.metis_pb2 as metis_pb2
 
-from src.python.learner.learner import Learner
-from src.python.learner.learner_servicer import LearnerServicer
+from src.python.learner.core import Learner
+from src.python.learner.core.learner_servicer import LearnerServicer
 from src.python.utils.proto_messages_factory import MetisProtoMessages
 
-from src.python.logging.metis_logger import MetisLogger
+from src.python.utils.metis_logger import MetisLogger
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

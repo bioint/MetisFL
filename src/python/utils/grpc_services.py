@@ -3,7 +3,7 @@ import grpc
 import queue
 import time
 
-from src.python.logging.metis_logger import MetisLogger
+from src.python.utils.metis_logger import MetisLogger
 
 from concurrent import futures
 from grpc._cython import cygrpc

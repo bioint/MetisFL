@@ -1,6 +1,15 @@
 workspace(name = "metisfl")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+# Imports Python rules.
+http_archive(
+    name = "rules_python",
+    sha256 = "a644da969b6824cc87f8fe7b18101a8a6c57da5db39caa6566ec6109f37d2141",
+    strip_prefix = "rules_python-0.20.0",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.20.0/rules_python-0.20.0.tar.gz",
+)
+
 # Imports grpc.
 http_archive(
     name = "rules_proto_grpc",
@@ -62,36 +71,22 @@ http_archive(
   urls = ["https://github.com/pybind/pybind11/archive/refs/tags/v2.8.0.tar.gz"],
 )
 
-# Imports Python rules.
+# Import pkg rules
 http_archive(
-    name = "rules_python",
-    url = "https://github.com/bazelbuild/rules_python/releases/download/0.5.0/rules_python-0.5.0.tar.gz",
-    sha256 = "cd6730ed53a002c56ce4e2f396ba3b3be262fd7cb68339f0377a45e8227fe332",
+    name = "rules_pkg",
+    sha256 = "eea0f59c28a9241156a47d7a8e32db9122f3d50b505fae0f33de6ce4d9b61834",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.8.0/rules_pkg-0.8.0.tar.gz",
+        "https://github.com/bazelbuild/rules_pkg/releases/download/0.8.0/rules_pkg-0.8.0.tar.gz",
+    ],
 )
 
-# Imports Conda rules.
-http_archive(
-    name = "rules_conda",
-    sha256 = "9793f86162ec5cfb32a1f1f13f5bf776e2c06b243c4f1ee314b9ec870144220d",
-    url = "https://github.com/spietras/rules_conda/releases/download/0.1.0/rules_conda-0.1.0.zip"
-)
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
 
-load("@rules_conda//:defs.bzl", "conda_create", "load_conda", "register_toolchain")
-
-load_conda(
-    conda_version = "4.10.3",  # version of conda to download, default is 4.10.3
-    installer = "miniconda",  # which conda installer to download, either miniconda or miniforge, default is miniconda
-)
-
-conda_create(
-    name = "py3_env",
-    environment = "//python:conda_env.yaml",
-    quiet = False,
-)
-
-register_toolchain(py3_env = "py3_env")
+rules_pkg_dependencies()
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+
 # Imports Palisades library.
 new_git_repository(
     name = "palisade_git",
@@ -111,7 +106,6 @@ filegroup(
 )
 """,
 )
-
 
 # Imports SHELFI-FHE library.
 new_git_repository(

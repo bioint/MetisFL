@@ -7,10 +7,10 @@ from grpc._cython import cygrpc
 import datetime
 import time
 
-from experiments.keras.models.brainage_cnns import BrainAge3DCNN
-from experiments.keras.models.cifar_cnn import CifarCNN
-from experiments.keras.models.fashion_mnist_fc import FashionMnistModel
-from experiments.keras.models.housing_mlp import HousingMLP
+from examples.keras.models.brainage_cnns import BrainAge3DCNN
+from examples.keras.models.cifar_cnn import CifarCNN
+from examples.keras.models.fashion_mnist_fc import FashionMnistModel
+from examples.keras.models.housing_mlp import HousingMLP
 from src.proto import learner_pb2_grpc
 from src.python.utils.grpc_services import GRPCChannelMaxMsgLength, GRPCServerMaxMsgLength
 from src.python.utils.proto_messages_factory import \

@@ -37,8 +37,8 @@ COPY . .
 RUN chmod +x ./configure.sh && ./configure.sh
 
 #RUN bazel query //... | xargs bazel build --incompatible_strict_action_env=true
-#RUN bazel build --incompatible_strict_action_env=true //src/encryption/palisade/samples:test_palisade_hello_world
-#RUN bazel run //src/encryption/palisade/samples:test_palisade_bgvrns_example
+#RUN bazel build --incompatible_strict_action_env=true //src/cc/encryption/palisade/samples:test_palisade_hello_world
+#RUN bazel run //src/cc/encryption/palisade/samples:test_palisade_bgvrns_example
 
 # Build all core projectmetis modules before publishing the docker image.
 ##RUN bazel query //... | grep -i -e "//encryption" | xargs bazel build

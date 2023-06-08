@@ -2,7 +2,7 @@ import argparse
 
 import src.proto.metis_pb2 as metis_pb2
 
-from src.python.logging.metis_logger import MetisLogger
+from src.python.utils.metis_logger import MetisLogger
 from src.python.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from pybind.controller.controller_instance import ControllerInstance
 

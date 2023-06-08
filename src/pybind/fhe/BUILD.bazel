@@ -5,13 +5,13 @@ package(default_visibility = ["//visibility:public"])
 
 pybind_extension(
     # The name of this rule is associated with how the module will be imported
-    # in python scripts. The rule will generate the lib controller.so, which is
+    # in python scripts. The rule will generate the lib fhe.so, which is
     # also a data dependency for the py_library() rule below; therefore it needs
     # to remain UNCHANGED!
     name = "fhe",
     srcs = ["fhe_pybind.cc"],
     deps = [
-      "//src/encryption/palisade:palisade_cmake",
+      "//src/cc/encryption/palisade:palisade_cmake",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],
@@ -33,7 +33,8 @@ pybind_extension(
           ],
     data = [
       "//resources:fhe_cryptoparams"
-    ]
+    ],
+    linkstatic=True
 )
 
 py_library(

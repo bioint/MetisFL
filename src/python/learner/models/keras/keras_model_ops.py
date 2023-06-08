@@ -4,12 +4,12 @@ import tensorflow_addons as tfa
 
 from src.proto import model_pb2
 from src.python.logging.metis_logger import MetisLogger
-from src.python.models.keras.optimizers.fed_prox import FedProx
-from src.python.models.keras.keras_proto_factory import KerasProtoFactory
-from src.python.models.model_dataset import ModelDataset
-from src.python.models.model_ops import ModelOps
-from src.python.models.keras.callbacks.step_counter import StepCounter
-from src.python.models.keras.callbacks.performance_profiler import PerformanceProfiler
+from src.python.learner.models.keras.optimizers.fed_prox import FedProx
+from src.python.learner.models.keras.keras_proto_factory import KerasProtoFactory
+from src.python.learner.models.model_dataset import ModelDataset
+from src.python.learner.models.model_ops import ModelOps
+from src.python.learner.models.keras.callbacks.step_counter import StepCounter
+from src.python.learner.models.keras.callbacks.performance_profiler import PerformanceProfiler
 
 
 class KerasModelOps(ModelOps):

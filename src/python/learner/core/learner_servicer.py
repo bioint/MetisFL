@@ -7,8 +7,8 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from src.python.utils.grpc_services import GRPCServerMaxMsgLength
 from src.proto import learner_pb2_grpc
 from src.proto.metis_pb2 import ServerEntity
-from src.python.learner.learner import Learner
-from src.python.logging.metis_logger import MetisLogger
+from src.python.learner.core import Learner
+from src.python.utils.metis_logger import MetisLogger
 
 
 class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):

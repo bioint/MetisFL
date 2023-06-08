@@ -2,7 +2,7 @@
 #ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
 #define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
 
-#include "src/encryption/palisade/fhe/fhe_helper.h"
+#include "src/cc/encryption/palisade/fhe/fhe_helper.h"
 #include "src/cc/controller/model_aggregation/aggregation_function.h"
 #include "src/proto/model.pb.h"
 #include "src/proto/metis.pb.h"

@@ -8,7 +8,7 @@ import src.python.utils.proto_messages_factory as proto_factory
 from pebble import ProcessPool
 
 from src.python.logging.metis_logger import MetisLogger
-from src.python.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
+from src.python.learner.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
 from src.python.utils.grpc_controller_client import GRPCControllerClient
 from src.proto import learner_pb2, model_pb2, metis_pb2
 

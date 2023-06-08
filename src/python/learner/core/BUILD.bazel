@@ -14,9 +14,8 @@ py_library(
     deps = [
         "//src/proto:learner_py_grpc",
         "//src/python/utils:utils_py_lib",
-        "//src/python/logging:logging_py_lib",
-        "//src/python/models/keras:models_keras_py_lib",
-        "//src/python/models/pytorch:models_pytorch_py_lib",
+        "//src/python/learner/models/keras:models_keras_py_lib",
+        "//src/python/learner/models/pytorch:models_pytorch_py_lib",
     ],
 )
 
@@ -31,8 +30,7 @@ py_binary(
     deps = [
         "//experiments/keras/models:keras_models_py_lib",
         "//src/proto:learner_py_grpc",
-        "//src/python/logging:logging_py_lib",
-        "//src/python/models/keras:models_keras_py_lib",
+        "//src/python/learner/models/keras:models_keras_py_lib",
         "//src/python/utils:utils_py_lib",
     ],
 )

@@ -2,7 +2,7 @@ import grpc
 
 import src.python.utils.proto_messages_factory as proto_factory
 
-from src.python.logging.metis_logger import MetisLogger
+from src.python.utils.metis_logger import MetisLogger
 from src.python.utils.grpc_services import GRPCServerClient
 from src.proto import controller_pb2_grpc
 

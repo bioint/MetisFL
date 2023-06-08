@@ -18,7 +18,6 @@ py_binary(
     legacy_create_init = False,
     deps = [
         ":controller_demo_utils",
-        "//src/python/logging:logging_py_lib",
-        "//pybind/controller:controller_py_lib",
+        "//src/pybind/controller:controller_py_lib",
     ],
 )
