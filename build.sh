@@ -1,7 +1,7 @@
 #!/bin/bash          
 
 BAZEL_CMD=bazel-4.2.1
-VENV_LIB_DIR="$(pwd)/.venv/lib/python3.7/site-packages"
+VENV_LIB_DIR="$(pwd)/.venv/lib/python3.8/site-packages"
 BAZEL_BIN_DIR="$(pwd)/bazel-bin"
 BAZEL_PROTO_DIR=$BAZEL_BIN_DIR/src/proto/metisfl_py_proto_lib_pb/src/proto
 
