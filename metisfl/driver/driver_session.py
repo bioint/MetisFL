@@ -2,7 +2,6 @@ import abc
 import datetime
 import queue
 import os
-import statistics
 import tarfile
 import time
 
@@ -15,7 +14,7 @@ from pebble import ProcessPool
 from metisfl.learner.utils.grpc_controller_client import GRPCControllerClient
 from metisfl.learner.utils.grpc_learner_client import GRPCLearnerClient
 from metisfl.learner.utils.metis_logger import MetisASCIIArt, MetisLogger
-from metisfl.learner.utils.bazel_services_factory import BazelMetisServicesCmdFactory
+from metisfl.learner.utils.init_services_factory import MetisInitServicesCmdFactory
 from metisfl.learner.utils.docker_services_factory import DockerMetisServicesCmdFactory
 from metisfl.learner.utils.fedenv_parser import FederationEnvironment
 from metisfl.pybind.fhe import fhe
@@ -131,7 +130,7 @@ class DriverSessionBase(object):
             lineage_length=self.federation_environment.model_store_config.eviction_lineage_length,
             store_hostname=self.federation_environment.model_store_config.connection_configs.hostname,
             store_port=self.federation_environment.model_store_config.connection_configs.port)
-        bazel_init_controller_cmd = BazelMetisServicesCmdFactory().bazel_init_controller_target(
+        bazel_init_controller_cmd = MetisInitServicesCmdFactory().bazel_init_controller_target(
             hostname=self.federation_environment.controller.connection_configs.hostname,
             port=self.federation_environment.controller.grpc_servicer.port,
             global_model_specs_pb_ser=global_model_specs_pb.SerializeToString(),
@@ -144,7 +143,7 @@ class DriverSessionBase(object):
         model_def_name = "model_definition"
         remote_metis_model_path = "/tmp/metis/model_learner_{}".format(learner_instance.grpc_servicer.port)
         remote_model_def_path = os.path.join(remote_metis_model_path, model_def_name)
-        init_learner_cmd = BazelMetisServicesCmdFactory().bazel_init_learner_target(
+        init_learner_cmd = MetisInitServicesCmdFactory().bazel_init_learner_target(
             learner_hostname=learner_instance.connection_configs.hostname,
             learner_port=learner_instance.grpc_servicer.port,
             controller_hostname=controller_instance.connection_configs.hostname,
