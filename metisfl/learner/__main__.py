@@ -2,7 +2,7 @@ import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
-from metisfl.learner.core import Learner
+from metisfl.learner.core.learner import Learner
 from metisfl.learner.core.learner_servicer import LearnerServicer
 from metisfl.learner.utils.proto_messages_factory import MetisProtoMessages
 
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         neural_engine=args.neural_engine,
         learner_hostname=args.learner_hostname,
         learner_port=args.learner_port,
-        controller_port=args.controller_hostname,
+        controller_hostname=args.controller_hostname,
         controller_port=args.controller_port,
         model_definition=args.model_definition,
         train_dataset=args.train_dataset,
@@ -129,5 +129,5 @@ if __name__ == "__main__":
         train_dataset_recipe=args.train_dataset_recipe,
         validation_dataset_recipe=args.validation_dataset_recipe,
         test_dataset_recipe=args.test_dataset_recipe,
-        he_scheme_protobuff_serialized_hexadecimal=args.he_scheme_protobuff_serialized_hexadecimalb)
+        he_scheme_protobuff_serialized_hexadecimal=args.he_scheme_protobuff_serialized_hexadecimal)
 

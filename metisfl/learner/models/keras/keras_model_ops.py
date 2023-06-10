@@ -3,7 +3,7 @@ import tensorflow as tf
 import tensorflow_addons as tfa
 
 from metisfl.proto import model_pb2
-from metisfl.python.logging.metis_logger import MetisLogger
+from metisfl.learner.utils.metis_logger import MetisLogger
 from metisfl.learner.models.keras.optimizers.fed_prox import FedProx
 from metisfl.learner.models.keras.keras_proto_factory import KerasProtoFactory
 from metisfl.learner.models.model_dataset import ModelDataset

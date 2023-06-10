@@ -15,7 +15,7 @@ from metisfl.learner.core.learner_trainer import LearnerTrainer
 from metisfl.learner.utils.grpc_controller_client import GRPCControllerClient
 from metisfl.learner.utils.formatting import DictionaryFormatter
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
-from pybind.fhe import fhe
+from metisfl.pybind.fhe import fhe
 
 
 class Learner(object):
