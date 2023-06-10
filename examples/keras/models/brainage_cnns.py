@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from tensorflow.keras.layers import Input
-from src.python.learner.models.model_def import ModelDef
+from metisfl.learner.models.model_def import ModelDef
 
 
 class BrainAge2DCNN(ModelDef):

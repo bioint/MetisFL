@@ -1,7 +1,7 @@
 import tensorflow as tf
 
-from src.python.learner.models.model_def import ModelDef
-from src.python.learner.models.keras.optimizers.fed_prox import FedProx
+from metisfl.learner.models.model_def import ModelDef
+from metisfl.learner.models.keras.optimizers.fed_prox import FedProx
 
 
 class CifarCNN(ModelDef):

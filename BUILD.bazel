@@ -10,13 +10,13 @@ METISFL_VERSION = "1.0.0"
 py_library(
     name="metisfl-lib",
     deps = [
-        "//src/python/driver:driver_py_lib",
+        "//metisfl/driver:driver_py_lib",
         "//examples:metisfl-examples"
     ],
     data = [
         "//resources:fhe_cryptoparams",
-        "//src/pybind/fhe:fhe.so",
-        "//src/pybind/controller:controller.so"
+        "//metisfl/pybind/fhe:fhe.so",
+        "//metisfl/pybind/controller:controller.so"
     ]
 )
 
@@ -77,9 +77,6 @@ py_wheel(
         "termcolor>=1.1.0",
         "threadpoolctl>=2.2.0",
         "urllib3>=1.26.11",
-    ],
-    strip_path_prefixes = [
-        "src/python",
     ],
     version = METISFL_VERSION,
     visibility = ["//visibility:public"],

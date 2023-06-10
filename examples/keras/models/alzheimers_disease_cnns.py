@@ -1,7 +1,7 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
 
-from src.python.learner.models.model_def import ModelDef
+from metisfl.learner.models.model_def import ModelDef
 from tensorflow.keras import regularizers
 
 

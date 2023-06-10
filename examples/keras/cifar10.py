@@ -8,9 +8,9 @@ import tensorflow as tf
 
 from examples.utils.data_partitioning import DataPartitioning
 from examples.keras.models.cifar_cnn import CifarCNN
-from src.python.driver.driver_session import DriverSession
-from src.python.learner.models.model_dataset import ModelDatasetClassification
-from src.python.utils.fedenv_parser import FederationEnvironment
+from metisfl.driver.driver_session import DriverSession
+from metisfl.learner.models.model_dataset import ModelDatasetClassification
+from metisfl.learner.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -64,6 +64,7 @@ if __name__ == "__main__":
             x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners) \
                 .non_iid_partition(classes_per_partition=2)
 
+        # FIXME: this is gonna break if any of the sub-folders does not exist
         datasets_path = "datasets/cifar/"
         np.savez(os.path.join(script_cwd, datasets_path, "test.npz"), x=x_test, y=y_test)
         for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):

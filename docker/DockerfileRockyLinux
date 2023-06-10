@@ -37,27 +37,27 @@ COPY . .
 RUN chmod +x ./configure.sh && ./configure.sh
 
 #RUN bazel query //... | xargs bazel build --incompatible_strict_action_env=true
-#RUN bazel build --incompatible_strict_action_env=true //src/cc/encryption/palisade/samples:test_palisade_hello_world
-#RUN bazel run //src/cc/encryption/palisade/samples:test_palisade_bgvrns_example
+#RUN bazel build --incompatible_strict_action_env=true //metisfl/encryption/palisade/samples:test_palisade_hello_world
+#RUN bazel run //metisfl/encryption/palisade/samples:test_palisade_bgvrns_example
 
 # Build all core projectmetis modules before publishing the docker image.
 ##RUN bazel query //... | grep -i -e "//encryption" | xargs bazel build
 #RUN bazel query //... | grep -i -e "//projectmetis" | xargs bazel build
 #RUN bazel query //... | grep -i -e "//projectmetis" | xargs bazel --output_user_root=/tmp/metis/bazel build
 #RUN bazel --output_user_root=/tmp/metis/bazel build //...
-#RUN bazel --output_user_root=/tmp/metis/bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_controller
-#RUN bazel --output_user_root=/tmp/metis/bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_learner
-#RUN bazel --output_user_root=/tmp/bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_controller
-#RUN bazel --output_user_root=/tmp/bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_learner
-#RUN bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_controller
-#RUN bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_learner
-#RUN bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_controller
-#RUN bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_controller
-#RUN bazel build --incompatible_strict_action_env=true //src/python/driver:initialize_learner
-#RUN bazel --output_user_root=/tmp/metis/bazel run //src/python/driver:initialize_learner
-#RUN bazel --output_user_root=/tmp/metis/bazel build --disk_cache=/tmp/metis/bazel //src/python/driver:initialize_learner
+#RUN bazel --output_user_root=/tmp/metis/bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_controller
+#RUN bazel --output_user_root=/tmp/metis/bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_learner
+#RUN bazel --output_user_root=/tmp/bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_controller
+#RUN bazel --output_user_root=/tmp/bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_learner
+#RUN bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_controller
+#RUN bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_learner
+#RUN bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_controller
+#RUN bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_controller
+#RUN bazel build --incompatible_strict_action_env=true //metisfl/python/driver:initialize_learner
+#RUN bazel --output_user_root=/tmp/metis/bazel run //metisfl/python/driver:initialize_learner
+#RUN bazel --output_user_root=/tmp/metis/bazel build --disk_cache=/tmp/metis/bazel //metisfl/python/driver:initialize_learner
 #RUN cd /$PROJECT_HOME
-#RUN bazel --output_user_root=/tmp/metis/bazel build //src/python/driver:initialize_learner
+#RUN bazel --output_user_root=/tmp/metis/bazel build //metisfl/python/driver:initialize_learner
 # bazel --output_base=/tmp/metis/bazel
 # build --disk_cache=/tmp/metis/bazel
 

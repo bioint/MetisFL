@@ -1,0 +1,18 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "pallier_lib",
+    hdrs = [
+      "paillier.h",
+      "paillier_utils.h"
+    ],
+    srcs = [
+      "paillier.cc",
+      "paillier.c",
+      "paillier_utils.cc"
+    ],
+    deps = [
+      "@cryptopp",
+      "//metisfl/pybind/fhe/schemes:fhe_schemes_lib",
+    ],
+)

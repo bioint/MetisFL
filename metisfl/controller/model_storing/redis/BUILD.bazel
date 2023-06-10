@@ -1,0 +1,13 @@
+package(default_visibility = ["//metisfl/controller:__subpackages__"])
+
+cc_library(
+    name = "redis_model_store",
+    srcs = ["redis_model_store.cc"],
+    hdrs = [
+        "redis_model_store.h"
+    ],
+    deps = [
+        "@hiredis_git//:hiredis",
+        "//metisfl/controller/model_storing:model_store",
+    ]
+)

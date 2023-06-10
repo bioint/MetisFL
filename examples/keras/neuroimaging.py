@@ -14,9 +14,9 @@ import tensorflow as tf
 
 from examples.keras.models.alzheimers_disease_cnns import AlzheimersDisease2DCNN, AlzheimersDisease3DCNN
 from examples.keras.models.brainage_cnns import BrainAge2DCNN, BrainAge3DCNN
-from src.python.driver.driver_session import DriverSession
-from src.python.learner.models.model_dataset import ModelDatasetClassification, ModelDatasetRegression
-from src.python.utils.fedenv_parser import FederationEnvironment
+from metisfl.driver.driver_session import DriverSession
+from metisfl.learner.models.model_dataset import ModelDatasetClassification, ModelDatasetRegression
+from metisfl.learner.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 

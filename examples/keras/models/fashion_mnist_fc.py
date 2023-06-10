@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from src.python.learner.models.model_def import ModelDef
+from metisfl.learner.models.model_def import ModelDef
 
 
 class FashionMnistModel(ModelDef):
