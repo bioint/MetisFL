@@ -2,7 +2,7 @@ import signal
 import time
 
 from metisfl.proto.metis_pb2 import ControllerParams
-# This imports the controller python module defined inside the `controller_pybind.cc` script.
+# This imports the controller python module defined inside the `pybind/controller_pybind.cc` script.
 from metisfl.controller import controller
 
 
@@ -15,7 +15,8 @@ class ControllerInstance(object):
     def build_and_start(self, controller_params_pb):
         assert isinstance(controller_params_pb, ControllerParams)
         controller_params_ser = controller_params_pb.SerializeToString()
-        self.__service_wrapper = controller.BuildAndStart(controller_params_ser)
+        self.__service_wrapper = controller.BuildAndStart(
+            controller_params_ser)
         return self.__service_wrapper
 
     def wait(self):

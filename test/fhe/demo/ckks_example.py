@@ -1,10 +1,9 @@
-from metisfl.pybind.fhe import fhe
+from metisfl.encryption import fhe
 import numpy as np
 
 if __name__ == "__main__":
     batchsize, scalingfactorbits = 4096, 52
     ckks = fhe.CKKS(4096, 52, "resources/fheparams/cryptoparams/")
-
 
     # Generate the necessary CryptoParameters
     ckks.gen_crypto_context_and_key_gen()
@@ -29,9 +28,12 @@ if __name__ == "__main__":
 
     # decrypting
     print("Decrypting...")
-    print("Learner1 (decrypted): ", ckks.decrypt(enc_res_learner_1, data_dimesions, 1))
-    print("Learner2 (decrypted): ", ckks.decrypt(enc_res_learner_2, data_dimesions, 1))
-    print("Learner3 (decrypted): ", ckks.decrypt(enc_res_learner_3, data_dimesions, 1))
+    print("Learner1 (decrypted): ", ckks.decrypt(
+        enc_res_learner_1, data_dimesions, 1))
+    print("Learner2 (decrypted): ", ckks.decrypt(
+        enc_res_learner_2, data_dimesions, 1))
+    print("Learner3 (decrypted): ", ckks.decrypt(
+        enc_res_learner_3, data_dimesions, 1))
     print("Decryption done")
 
     # learner1_data_actual = []

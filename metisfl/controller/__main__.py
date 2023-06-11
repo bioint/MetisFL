@@ -4,17 +4,17 @@ import metisfl.proto.metis_pb2 as metis_pb2
 
 from metisfl.learner.utils.metis_logger import MetisLogger
 from metisfl.learner.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
-from metisfl.pybind.controller.controller_instance import ControllerInstance
+from metisfl.controller.controller_instance import ControllerInstance
 
 
 def init_controller(
-        controller_hostname,
-        controller_port,
-        global_model_specs_protobuff_serialized_hexadecimal=None,
-        communication_specs_protobuff_serialized_hexadecimal=None,
-        model_hyperparameters_protobuff_serialized_hexadecimal=None,
-        model_store_config_protobuff_serialized_hexadecimal=None
-    ): 
+    controller_hostname,
+    controller_port,
+    global_model_specs_protobuff_serialized_hexadecimal=None,
+    communication_specs_protobuff_serialized_hexadecimal=None,
+    model_hyperparameters_protobuff_serialized_hexadecimal=None,
+    model_store_config_protobuff_serialized_hexadecimal=None
+):
     # Parse serialized model hyperparameters object, 'recover' bytes object.
     # To do so, we need to convert the incoming hexadecimal representation
     # to bytes and pass it as initialization to the proto message object.
@@ -22,11 +22,12 @@ def init_controller(
 
     # Use parsed protobuff to initialize Metis.CommunicationSpecs() object.
     if global_model_specs_protobuff_serialized_hexadecimal is not None:
-        global_model_specs_protobuff_ser = bytes.fromhex(global_model_specs_protobuff_serialized_hexadecimal)
+        global_model_specs_protobuff_ser = bytes.fromhex(
+            global_model_specs_protobuff_serialized_hexadecimal)
         global_model_specs = metis_pb2.GlobalModelSpecs()
         global_model_specs.ParseFromString(global_model_specs_protobuff_ser)
     else:
-        ## NOTE: last arg was fhe_scheme_pb, corrected it o he_scheme_pb
+        # NOTE: last arg was fhe_scheme_pb, corrected it o he_scheme_pb
         aggregation_rule_pb = MetisProtoMessages.construct_aggregation_rule_pb(rule_name="FEDAVG",
                                                                                scaling_factor="NUMTRAININGEXAMPLES",
                                                                                stride_length=None,
@@ -36,7 +37,8 @@ def init_controller(
 
     # Use parsed protobuff to initialize Metis.CommunicationSpecs() object.
     if communication_specs_protobuff_serialized_hexadecimal is not None:
-        communication_specs_protobuff_ser = bytes.fromhex(communication_specs_protobuff_serialized_hexadecimal)
+        communication_specs_protobuff_ser = bytes.fromhex(
+            communication_specs_protobuff_serialized_hexadecimal)
         communication_specs = metis_pb2.CommunicationSpecs()
         communication_specs.ParseFromString(communication_specs_protobuff_ser)
     else:
@@ -46,7 +48,8 @@ def init_controller(
 
     # Use parsed protobuff to initialize ControllerParams.ModelHyperparams() object.
     if model_hyperparameters_protobuff_serialized_hexadecimal is not None:
-        model_hyperparameters_protobuff_ser = bytes.fromhex(model_hyperparameters_protobuff_serialized_hexadecimal)
+        model_hyperparameters_protobuff_ser = bytes.fromhex(
+            model_hyperparameters_protobuff_serialized_hexadecimal)
         model_hyperparams = metis_pb2.ControllerParams.ModelHyperparams()
         model_hyperparams.ParseFromString(model_hyperparameters_protobuff_ser)
     else:
@@ -57,7 +60,8 @@ def init_controller(
 
     # Use parsed protobuff to initialize Metis.ModelStoreConfig() object.
     if model_store_config_protobuff_serialized_hexadecimal is not None:
-        model_store_config_protobuff_ser = bytes.fromhex(model_store_config_protobuff_serialized_hexadecimal)
+        model_store_config_protobuff_ser = bytes.fromhex(
+            model_store_config_protobuff_serialized_hexadecimal)
         model_store_config = metis_pb2.ModelStoreConfig()
         model_store_config.ParseFromString(model_store_config_protobuff_ser)
     else:
@@ -75,7 +79,8 @@ def init_controller(
         model_store_config=model_store_config,
         model_hyperparams=model_hyperparams)
 
-    MetisLogger.info("Controller Parameters: \"\"\"{}\"\"\"".format(controller_params))
+    MetisLogger.info(
+        "Controller Parameters: \"\"\"{}\"\"\"".format(controller_params))
     controller_instance = ControllerInstance()
     controller_instance.build_and_start(controller_params)
 
@@ -83,6 +88,9 @@ def init_controller(
 
 
 if __name__ == "__main__":
+    ## FIXME: the existance of hex-encoded args is not a user-friednly way to start the controller
+    ## Since the hex encoding is required for sending the args over the wire, let's keep those
+    ## and add an additional wrapper that accepts user-friendly arg input
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--controller_hostname", type=str,
                         default="[::]",
@@ -105,10 +113,10 @@ if __name__ == "__main__":
                         help="A serialized Model Store Config protobuf message.")
     args = parser.parse_args()
     init_controller(
-            args.controller_hostname, 
-            args.controller_port,
-            global_model_specs_protobuff_serialized_hexadecimal=args.global_model_specs_protobuff_serialized_hexadecimal,
-            communication_specs_protobuff_serialized_hexadecimal=args.communication_specs_protobuff_serialized_hexadecimal,
-            model_hyperparameters_protobuff_serialized_hexadecimal=args.model_hyperparameters_protobuff_serialized_hexadecimal,
-            model_store_config_protobuff_serialized_hexadecimal=args.model_store_config_protobuff_serialized_hexadecimal
-        )
+        args.controller_hostname,
+        args.controller_port,
+        global_model_specs_protobuff_serialized_hexadecimal=args.global_model_specs_protobuff_serialized_hexadecimal,
+        communication_specs_protobuff_serialized_hexadecimal=args.communication_specs_protobuff_serialized_hexadecimal,
+        model_hyperparameters_protobuff_serialized_hexadecimal=args.model_hyperparameters_protobuff_serialized_hexadecimal,
+        model_store_config_protobuff_serialized_hexadecimal=args.model_store_config_protobuff_serialized_hexadecimal
+    )
