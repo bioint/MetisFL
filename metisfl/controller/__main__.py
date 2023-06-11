@@ -88,9 +88,11 @@ def init_controller(
 
 
 if __name__ == "__main__":
-    ## FIXME: the existance of hex-encoded args is not a user-friednly way to start the controller
-    ## Since the hex encoding is required for sending the args over the wire, let's keep those
-    ## and add an additional wrapper that accepts user-friendly arg input
+    # FIXME: the existance of hex-encoded args is not a user-friednly way to start the controller
+    # Since the hex encoding is required for sending the args over the wire, let's keep those
+    # and add an additional wrapper that accepts user-friendly arg input
+
+    # FIXME: need to bind to Cmd+C keystroke; users are usually mad if they can't kill a process by Cmd-C
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--controller_hostname", type=str,
                         default="[::]",

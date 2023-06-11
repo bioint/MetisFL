@@ -1,12 +1,56 @@
 workspace(name = "metisfl")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
+http_archive(
+    name = "bazel_skylib",
+    sha256 = "66ffd9315665bfaafc96b52278f57c7e2dd09f5ede279ea6d39b2be471e7e3aa",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/bazel-skylib/releases/download/1.4.2/bazel-skylib-1.4.2.tar.gz",
+        "https://github.com/bazelbuild/bazel-skylib/releases/download/1.4.2/bazel-skylib-1.4.2.tar.gz",
+    ],
+)
+load("@bazel_skylib//:workspace.bzl", "bazel_skylib_workspace")
+bazel_skylib_workspace()
+
+# Imports PyBind11 Bazel plugin.
+http_archive(
+  name = "pybind11_bazel",
+  sha256 = "3700ef34597cda8e9fa4a43a6f177bec87d6d07fb400f3dfdf636a71332282e1",
+  urls = ["https://github.com/raschild/pybind11_bazel/archive/refs/heads/main.zip"],
+  strip_prefix = "pybind11_bazel-main",
+)
+
+# Imports PyBind11 library.
+http_archive(
+  name = "pybind11",
+  sha256 = "9ca7770fc5453b10b00a4a2f99754d7a29af8952330be5f5602e7c2635fa3e79",
+  build_file = "@pybind11_bazel//:pybind11.BUILD",
+  strip_prefix = "pybind11-2.8.0",
+  urls = ["https://github.com/pybind/pybind11/archive/refs/tags/v2.8.0.tar.gz"],
+)
+
 # Imports Python rules.
 http_archive(
     name = "rules_python",
     sha256 = "a644da969b6824cc87f8fe7b18101a8a6c57da5db39caa6566ec6109f37d2141",
     strip_prefix = "rules_python-0.20.0",
     url = "https://github.com/bazelbuild/rules_python/releases/download/0.20.0/rules_python-0.20.0.tar.gz",
+)
+
+# Imports abseil.
+http_archive(
+    name = "absl",
+    sha256 = "59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f",
+    strip_prefix = "abseil-cpp-20210324.2",
+    urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.tar.gz"],
+)
+
+# Imports googletest.
+http_archive(
+    name = "gtest",
+    sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
+    strip_prefix = "googletest-release-1.10.0",
+    urls = ["https://github.com/google/googletest/archive/release-1.10.0.tar.gz"],
 )
 
 # Imports grpc.
@@ -37,53 +81,7 @@ protobuf_deps()
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 grpc_deps()
 
-# Imports abseil.
-http_archive(
-    name = "absl",
-    sha256 = "59b862f50e710277f8ede96f083a5bb8d7c9595376146838b9580be90374ee1f",
-    strip_prefix = "abseil-cpp-20210324.2",
-    urls = ["https://github.com/abseil/abseil-cpp/archive/refs/tags/20210324.2.tar.gz"],
-)
-
-# Imports googletest.
-http_archive(
-    name = "gtest",
-    sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
-    strip_prefix = "googletest-release-1.10.0",
-    urls = ["https://github.com/google/googletest/archive/release-1.10.0.tar.gz"],
-)
-
-# Imports PyBind11 Bazel plugin.
-http_archive(
-  name = "pybind11_bazel",
-  sha256 = "3700ef34597cda8e9fa4a43a6f177bec87d6d07fb400f3dfdf636a71332282e1",
-  urls = ["https://github.com/raschild/pybind11_bazel/archive/refs/heads/main.zip"],
-  strip_prefix = "pybind11_bazel-main",
-)
-
-# Imports PyBind11 library.
-http_archive(
-  name = "pybind11",
-  sha256 = "9ca7770fc5453b10b00a4a2f99754d7a29af8952330be5f5602e7c2635fa3e79",
-  build_file = "@pybind11_bazel//:pybind11.BUILD",
-  strip_prefix = "pybind11-2.8.0",
-  urls = ["https://github.com/pybind/pybind11/archive/refs/tags/v2.8.0.tar.gz"],
-)
-
-# Import pkg rules
-http_archive(
-    name = "rules_pkg",
-    sha256 = "eea0f59c28a9241156a47d7a8e32db9122f3d50b505fae0f33de6ce4d9b61834",
-    urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.8.0/rules_pkg-0.8.0.tar.gz",
-        "https://github.com/bazelbuild/rules_pkg/releases/download/0.8.0/rules_pkg-0.8.0.tar.gz",
-    ],
-)
-
-load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
-
-rules_pkg_dependencies()
-
+# Import new git repo rule
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 # Imports Palisades library.

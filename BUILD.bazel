@@ -1,11 +1,27 @@
-load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
-load("@rules_pkg//pkg:pkg.bzl", "pkg_tar")
+package(default_visibility = ["//visibility:public"])
+
 load("@rules_python//python:defs.bzl", "py_library")
 load("@rules_python//python:packaging.bzl", "py_package", "py_wheel")
 
-package(default_visibility = ["//visibility:public"])
-METISFL_VERSION = "1.0.0"
+load(":build.bzl", "metis_build_wheel")
+
+config_setting(
+    name = "linux_x86_64",
+    constraint_values = ["@platforms//os:linux"],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = ["@platforms//os:macos"],
+    visibility = ["//visibility:public"],
+)
+
+config_setting(
+    name = "windows",
+    constraint_values = ["@platforms//os:windows"],
+    visibility = ["//visibility:public"],
+)
 
 py_library(
     name="metisfl-lib",
@@ -27,79 +43,4 @@ py_package(
     deps = [":metisfl-lib"],
 )
 
-py_wheel(
-    name = "metisfl-wheel",
-    classifiers = [
-        "Development Status :: 2 - Pre-Alpha",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: Apache Software License",
-        "Operating System :: UNIX",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: MacOS :: MacOS X",
-        "Topic :: Software Development :: Testing",
-        "Topic :: Software Development :: Libraries",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: C++"
-    ],
-    description_file = "README.md",
-    distribution = "metisfl",
-    homepage = "https://www.nevron.ai",
-    license = "Apache 2.0",
-    python_requires = ">=3.7",
-    python_tag = "py3",
-    requires = [
-        "cloudpickle",
-        "fabric",
-        "future",
-        "grpcio",
-        "matplotlib",
-        "nibabel",
-        "numpy",
-        "pandas",
-        "Pebble",
-        "protobuf",
-        "psycopg-binary",
-        "pycparser",
-        "pyfiglet",
-        "pyparsing",
-        "torch",
-        "PyYAML",
-        "requests",
-        "scikit-learn",
-        "scipy",
-        "simplejson",
-        "six",
-        "SQLAlchemy",
-        "tensorboard",
-        "tensorflow",
-        "tensorflow-addons",
-        "termcolor",
-        "threadpoolctl"
-    ],
-    version = METISFL_VERSION,
-    visibility = ["//visibility:public"],
-    deps = [
-        ":metisfl-pkg",
-    ]
-)
-
-config_setting(
-    name = "linux_x86_64",
-    constraint_values = ["@platforms//os:linux"],
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "macos",
-    constraint_values = ["@platforms//os:macos"],
-    visibility = ["//visibility:public"],
-)
-
-config_setting(
-    name = "windows",
-    constraint_values = ["@platforms//os:windows"],
-    visibility = ["//visibility:public"],
-)
+metis_build_wheel(name="metis_build_wheel")
