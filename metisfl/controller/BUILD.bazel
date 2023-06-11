@@ -1,108 +1,30 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
+load("@rules_python//python:defs.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
-# Binaries.
-cc_binary(
-    name = "controller_main",
-    srcs = ["controller_main.cc"],
-    deps = [
-        ":controller",
-        ":controller_servicer",
-        "@absl//absl/strings",
-        "@com_github_google_glog//:glog",
-    ],
-)
-
-# Libraries.
-cc_library(
-    name = "controller_interface",
-    hdrs = ["controller.h"],
-    deps = [
-        "//metisfl/proto:controller_cc_grpc",
-        "//metisfl/proto:metis_cc_proto",
-        "//metisfl/proto:model_cc_proto",
-        "//metisfl/proto:service_common_cc_proto",
-        "@absl//absl/status:statusor",
-        "@absl//absl/container:flat_hash_map",
-    ],
-    visibility = ["//metisfl/controller:__subpackages__"]
-)
-
-cc_library(
+pybind_extension(
+    # The name of this rule is associated with how the module will be imported
+    # in python scripts. The rule will generate the lib controller.so, which is
+    # also a data dependency for the py_library() rule below; therefore it needs
+    # to remain UNCHANGED!
     name = "controller",
-    srcs = ["controller.cc"],
-    hdrs = ["controller.h"],
+    srcs = ["pybind/controller_pybind.cc"],
     deps = [
-        ":controller_utils",
-        "//metisfl/proto:controller_cc_grpc",
-        "//metisfl/proto:learner_cc_grpc",
-        "//metisfl/controller/core:macros",
-        "//metisfl/controller/core:thread_pool",
-        "@absl//absl/status:statusor",
-        "@absl//absl/container:flat_hash_map",
-        "@absl//absl/memory",
-        "@com_github_google_glog//:glog",
+        "//metisfl/controller/core:controller",
+        "//metisfl/controller/core:controller_servicer",
     ],
+    linkstatic=True,
 )
 
-cc_library(
-    name = "controller_mock",
-    hdrs = ["controller_mock.h"],
-    deps = [
-        ":controller_interface",
-        "@gtest//:gtest",
-    ],
+py_library(
+    name = "controller_pybind_lib",
+    data = [":controller.so"],
 )
 
-cc_library(
-    name = "controller_utils",
-    srcs = ["controller_utils.cc"],
-    hdrs = ["controller_utils.h"],
-    deps = [
-        "//metisfl/controller/model_aggregation",
-        "//metisfl/controller/model_scaling",
-        "//metisfl/controller/model_selection",
-        "//metisfl/controller/model_storing",
-        "//metisfl/controller/scheduling:scheduling",
-        "//metisfl/proto:metis_cc_proto",
-        "@absl//absl/memory",
-        "@absl//absl/strings"
-    ],
-)
-
-cc_library(
-    name = "controller_servicer",
-    srcs = ["controller_servicer.cc"],
-    hdrs = ["controller_servicer.h"],
-    data = ["//resources:ssl_pem"],
-    deps = [
-        ":controller",
-        "//metisfl/proto:controller_cc_grpc",
-        "@absl//absl/memory",
-    ],
-)
-
-# Tests.
-cc_test(
-    name = "controller_test",
-    srcs = ["controller_test.cc"],
-    deps = [
-        ":controller",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main"
-    ],
-)
-
-cc_test(
-    name = "controller_servicer_test",
-    srcs = ["controller_servicer_test.cc"],
-    deps = [
-        ":controller_servicer",
-        ":controller_mock",
-        "//metisfl/controller/core:macros",
-        "//metisfl/controller/core:proto_matchers",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main",
-    ],
+py_library(
+    name = "controller_py_lib",
+    srcs = ["controller_instance.py"],
+    srcs_version = "PY3",
+    deps = [":controller_pybind_lib"],
 )

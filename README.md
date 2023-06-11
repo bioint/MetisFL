@@ -1,46 +1,36 @@
-## Project Installation Steps - Docker
-Due to some library inconsistencies that appeared across operating systems (e.g., Centos vs MacOS) we concluded that we
-should build a docker image and run the entire project within a container. The Dockerfile(s) contain all required steps.
+# MetisFL - The developer-friendly federated learning framework
 
-System prerequisites:
+MetisFL is a federated learning framework that allows developers to easily federate their machine learning workflows and train their models across distributed datasets without having to collect the data in a centralized location. 
 
-1. python
-2. docker
+# Project Structure Overview
+The project uses a unified codebase for both the Python and C++ code. 
 
-To compile and run the project through docker, navigate to the parent directory of the project and then:
+    .
+    ├── docker                # Docker files for packaging MetisFL in a docker container       
+    ├── examples              # Examples and use-cases for MetisF
+    ├── metisfl               # Main source code directory
+        ├── controller        # C++ implementation of the Controller/Aggregator
+        ├── driver            # Python library for the MetisFL Driver
+        ├── encryption        # C++ Palisade helper files
+        ├── learner           # MetisFL Python Learner library 
+        ├── proto             # Protobuf definitions for controller/learner/driver communication
+        ├── pybind            # Controller and Palisade python bindings 
+    ├── resources             # Resource files (public keys, certs etc)
+    ├── test                  # Testing folder
+    ├── build.sh              # Build script 
+    ├── BUILD.bazel           # Bazel build file; contains main target definitions
+    ├── WORKSPACE             # Bazel workspace; contains external dependancies
 
-1. Run `chmod +x ./configure.sh && ./configure.sh` to configure metis fl project.
-   
-   Note: we run the above command before building the docker image because to configure all project dependencies.
+## Controller 
+The controller (or aggregator) is responsible for collecting the (encrypted) model weights from the learners, aggregating them, encrypting them and distributing the encrypted weights back to the learners for another federation round. 
 
-2. Build docker image for the entire project. If the server hosting the docker container has GPUs, then we need to also enable the CUDA GPU environment. To do this, we need to also pass as argument the following during build: `--build-arg ENV_CONDA_CUDA_ENABLED=0` 
-   - Ubuntu Dev image (development purposes): `docker build -t projectmetis_dev -f DockerfileDev .`
-   - Ubuntu Dev image + CONDA CUDA (development purposes): `docker build -t projectmetis_dev --build-arg ENV_CONDA_CUDA_ENABLED=1 -f DockerfileDev .`
-   - Ubuntu image (stable, preferable): `docker build -t projectmetis_ubuntu_22_04 -f DockerfileUbuntu .`
-   - Ubuntu image + CONDA CUDA (stable, preferable): `docker build -t projectmetis_ubuntu_22_04 --build-arg ENV_CONDA_CUDA_ENABLED=1 -f DockerfileUbuntu .`
-   - RockyLinux image (not stable): `docker build -t projectmetis_rockylinux_8 -f DockerfileRockyLinux .`
-   Approximate size for any of the following images (using docker): ~9GB (without CUDA), ~12GB (with CUDA)
-   
-3. Build docker CUDA image (only applicable to Ubuntu and RockyLinux images). Careful in the image name used by the FROM clause in the CUDA Dockerfile.  
-   - Ubuntu + CUDA `cd docker_images/cuda/ubuntu/11.7 && docker build -t projectmetis_ubuntu_22_04_cuda -f Dockerfile .`
-   - RockyLinux + CUDA `cd docker_images/cuda/rockylinux/11.3 && docker build -t projectmetis_rockylinux_8_cuda -f Dockerfile .`
-   - Verify docker cuda driver installation as: `nvidia-docker run --rm --gpus all projectmetis_ubuntu_22_04_cuda nvidia-smi`
+## Driver
+The driver is a python library that starts the controller and learners and initiates the training. 
 
-## Installing Redis As A Backend Model Store.
-   - In the host server need to execute `docker run -d --name redis-svr -p 6379:6379 redis:latest` to allow Controller to 
-      connect to Redis Backend.
+## Encryption 
 
-## Standalone (Docker-Free) Prerequisites
-- Install googletest (MacOS as `brew install googletest`)
-- Install protobuf (MacOS as `brew install protobuf`)
-- Run ./configure script 
+## Learner 
 
-## Bazel CLion comments 
-If project files are not identifiable then you need to sync Bazel. To do so:
+## Proto 
 
-1. select the Bazel tab above
-2. select the Sync subtab
-3. and then Sync Project with BUILD Files
-
-## Trello UI
-https://trello.com/b/bYLUYqGK/metis-v01
+## Pybind

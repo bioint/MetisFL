@@ -10,13 +10,13 @@ cc_library(
     ],
     deps = [
         "//metisfl/controller:controller",
-        "//metisfl/controller/model_aggregation",
-        "//metisfl/controller/model_scaling",
-        "//metisfl/controller/model_storing",
+        "//metisfl/controller/aggregation",
+        "//metisfl/controller/scaling",
+        "//metisfl/controller/storing",
         "//metisfl/proto:metis_cc_proto",
         "//metisfl/proto:model_cc_proto",
         "@absl//absl/container:flat_hash_map",
-        "//metisfl/controller/core:proto_tensor_serde",
+        "//metisfl/controller/proto:proto_tensor_serde",
     ]
 )
 

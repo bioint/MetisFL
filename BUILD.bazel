@@ -15,8 +15,8 @@ py_library(
     ]),
     data = [
         "//resources:fhe_cryptoparams",
-        "//metisfl/pybind/fhe:fhe.so",
-        "//metisfl/pybind/controller:controller.so",
+        "//metisfl/encryption:fhe.so",
+        "//metisfl/controller:controller.so",
     ] + glob([
             "examples/**/*.yaml"
     ])
