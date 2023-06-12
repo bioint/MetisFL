@@ -1,0 +1,6 @@
+TODO: 
+- Figure out how/when/where to generate any fhe related keys/files and how to share them with those that must know them. The resources folder needs to go.
+
+- Prefer to use abs paths thought the code. 
+
+- Any user related data that the code needs to know or generates must be stored outside this project root. E.g., somewhere like /home/user/.metisfl 

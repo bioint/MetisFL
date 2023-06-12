@@ -9,10 +9,6 @@ build --host_copt "-Wno-comment"
 build --host_cxxopt=-std=c++17
 build --incompatible_strict_action_env=true
 build --incompatible_enable_cc_toolchain_resolution
-
-build --action_env=PYTHON_BIN_PATH=/opt/conda/envs/py39/python
-build --action_env=PYTHON_LIB_PATH=/opt/conda/envs/py39/lib
-
 run --incompatible_strict_action_env=true
 build:debug -c dbg
 build:debug --javacopt="-g"
