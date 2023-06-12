@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# TODO: (dstripelis) clarify where this is used and how/when/where these keys should be generated and distributed.
+
 # Note: Running this file requires that openssl is installed on the target system.
 rm *.pem
 

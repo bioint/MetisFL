@@ -42,6 +42,9 @@ int main(int argc, char **argv)
   google::InitGoogleLogging(argv[0]);
 
   // Initializes controller parameters proto message.
+
+  //  TODO: (dstripelis) remove/fix this path. The python lib won't have access to the root dir.
+  // Any user data should be store somewhere like /home/user/.metisfl.
   auto params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
     server_entity {
       hostname: "0.0.0.0"

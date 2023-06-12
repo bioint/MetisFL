@@ -1,3 +1,4 @@
+## TODO:(dstripelis) I remember you saying that this folder is old one, if so please confirm so we delete it
 FederationEnvironment:
   TerminationSignals:
     FederationRounds: 100

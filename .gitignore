@@ -137,5 +137,5 @@ user.bazelrc
 /.venv/*
 /.venv
 __pycache__/
-
+.build/*
 

@@ -4,3 +4,11 @@ TODO:
 - Prefer to use abs paths thought the code. 
 
 - The content (py + .so) of the project root will be place under the 'site-packages' dir of the user's python env. We should only put code there. If there is any config file that must be read at runtime that should be static and public. Any user related data that the code needs to know or generates must be stored outside this project root. E.g., somewhere like /home/user/.metisfl 
+
+- python 3.11 does not work. Pybind wont compile. Perhaps upgrade to newer version.
+
+FIXME: (pkyriakis)
+- The wheel for some reason packages the proto/*.h files instead of the py files. 
+
+NOTE: (dstripelis)
+- I removed all lines from .bazelrc except  "--action_env=BAZEL_CXXOPTS=-std=c++17" build was just fine. Check if we actually need them.

@@ -12,18 +12,27 @@ generate_wheel(){
     ENV_NAME="py${PY_VERSION//"."/""}"
     ENV_PATH=$CONDA_ENV_BASE_PATH/$ENV_NAME
     if [ ! -d $ENV_PATH ]; then
-        echo "Conda environment for Python $PY_VERSION not found. Creating it."
-        conda create -n $ENV_NAME python=$PY_VERSION
+        echo "Conda environment for Python $PY_VERSION not found. Exiting."
+        exit
     fi
     
     if [ ! -d $OUTPUT_DIR ]; then
         mkdir $OUTPUT_DIR
     fi
     
+    # FIXME: (dstripelis, pkyriakis). MAJOR ISSUE with python version.
+    # The pybind_bazel extension is used to configure the python env used for compilation.
+    # Look here  https://github.com/pybind/pybind11_bazel/blob/master/python_configure.bzl
+    # The controller is build using bazel and the python env can be set using PYTHON_BIN_PATH and PYTHON_LIB_PATH
+    # However, the FHE is build using cmake and it's not clear which python version is used and how to change it
+    
     PYTHON_BIN_PATH=$ENV_PATH/bin/python
     PYTHON_LIB_PATH=$ENV_PATH/lib
     $BAZEL_CMD clean --expunge
     $BAZEL_CMD build //:metisfl-wheel \
+    --incompatible_strict_action_env=true \
+    --action_env=BAZEL_CXXOPTS=-std=c++17 \
+    --action_env=PYTHON_EXECUTABLE=$PYTHON_BIN_PATH \
     --action_env=PYTHON_BIN_PATH=$PYTHON_BIN_PATH \
     --action_env=PYTHON_LIB_PATH=$PYTHON_LIB_PATH \
     --define python=$PY_VERSION
