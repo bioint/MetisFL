@@ -1,0 +1,18 @@
+filegroup(
+    name = "fhe_cryptoparams",
+    srcs = glob(["fheparams/cryptoparams/*.txt"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "fhe_randomparams",
+    srcs = glob(["fheparams/randomparams/**/*.txt"]),
+    visibility = ["//visibility:public"],
+)
+
+filegroup(
+    name = "ssl_pem",
+    srcs = ["ssl/server-key.pem",
+            "ssl/server-cert.pem"],
+    visibility = ["//visibility:public"],
+)
