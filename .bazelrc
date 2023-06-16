@@ -1,15 +1,1 @@
-build --action_env=BAZEL_CXXOPTS=-std=c++17
-build -c opt
-build --copt "-Wno-sign-compare"
-build --copt "-Wno-comment"
-build --cxxopt "-std=c++17"
-build --host_copt "-Wno-sign-compare"
-build --host_copt "-Wno-comment"
-build --host_cxxopt=-std=c++17
-build --incompatible_strict_action_env=true
-build --incompatible_enable_cc_toolchain_resolution
-run --incompatible_strict_action_env=true
-build:debug -c dbg
-build:debug --javacopt="-g"
-build:debug --copt="-g"
-build:debug --strip="never"
+/home/panoskyriakis/metisfl/.bazelrc
