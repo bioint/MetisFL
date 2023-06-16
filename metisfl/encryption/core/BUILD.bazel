@@ -48,7 +48,7 @@ cmake(
         "-Xpreprocessor",
         "-fopenmp",
         "-Wno-unused-command-line-argument",
-    ],
+    ]
 )
 
 cc_library(

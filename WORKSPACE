@@ -80,7 +80,6 @@ protobuf_deps()
 
 load("@com_github_grpc_grpc//bazel:grpc_deps.bzl", "grpc_deps")
 grpc_deps()
-
 # Import new git repo rule
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
@@ -132,20 +131,6 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 # https://bazelbuild.github.io/rules_foreign_cc/0.8.0/flatten.html#rules_foreign_cc_dependencies
 rules_foreign_cc_dependencies()
 
-# Add boost library rule for future development.
-#http_archive(
-#    name = "boost",
-#    build_file_content = """
-#filegroup(
-#    name = "all",
-#    srcs = glob(["**"]),
-#    visibility = ["//visibility:public"])
-#""",
-#    strip_prefix = "boost_1_78_0",
-#    sha256 = "94ced8b72956591c4775ae2207a9763d3600b30d9d7446562c552f0a14a63be7",
-#    urls = ["https://boostorg.jfrog.io/artifactory/main/release/1.78.0/source/boost_1_78_0.tar.gz"],
-#)
-
 # Use Google Logging (glog) to implement application-level logging at the controller.
 http_archive(
     name = "com_github_gflags_gflags",
@@ -161,146 +146,6 @@ http_archive(
     url = "https://github.com/google/glog/archive/v0.6.0.zip",
 )
 
-# Imports Cryptopp library.
-new_git_repository(
-    name = "cryptopp",
-    commit = "59895be61b03f973416724cfe0274693ce73b6a1",
-    shallow_since = "1649218442 -0400",
-    remote = "https://github.com/weidai11/cryptopp.git",
-    verbose = True,
-    build_file_content = """
-cc_library(
-    name = "cryptopp",
-    visibility = ['//visibility:public'],
-    hdrs = glob([
-        '*.h',
-        '*.cpp',
-      ]),
-    srcs = [
-      '3way.cpp',
-      'adler32.cpp',
-      'algebra.cpp',
-      'algparam.cpp',
-      'arc4.cpp',
-      'asn.cpp',
-      'authenc.cpp',
-      'base32.cpp',
-      'base64.cpp',
-      'basecode.cpp',
-      'bfinit.cpp',
-      'blowfish.cpp',
-      'blumshub.cpp',
-      'camellia.cpp',
-      'cast.cpp',
-      'casts.cpp',
-      'cbcmac.cpp',
-      'ccm.cpp',
-      'channels.cpp',
-      'cmac.cpp',
-      'cpu.cpp',
-      'crc.cpp',
-      'cryptlib.cpp',
-      'default.cpp',
-      'des.cpp',
-      'dessp.cpp',
-      'dh2.cpp',
-      'dh.cpp',
-      'dll.cpp',
-      'dsa.cpp',
-      'eax.cpp',
-      'ec2n.cpp',
-      'eccrypto.cpp',
-      'ecp.cpp',
-      'elgamal.cpp',
-      'emsa2.cpp',
-      'eprecomp.cpp',
-      'esign.cpp',
-      'files.cpp',
-      'filters.cpp',
-      'fips140.cpp',
-      'fipstest.cpp',
-      'gcm.cpp',
-      'gf2_32.cpp',
-      'gf256.cpp',
-      'gf2n.cpp',
-      'gfpcrypt.cpp',
-      'gost.cpp',
-      'gzip.cpp',
-      'hex.cpp',
-      'hmac.cpp',
-      'hrtimer.cpp',
-      'ida.cpp',
-      'idea.cpp',
-      'integer.cpp',
-      'iterhash.cpp',
-      'luc.cpp',
-      'mars.cpp',
-      'marss.cpp',
-      'md2.cpp',
-      'md4.cpp',
-      'md5.cpp',
-      'misc.cpp',
-      'modes.cpp',
-      'mqueue.cpp',
-      'mqv.cpp',
-      'nbtheory.cpp',
-      'oaep.cpp',
-      'osrng.cpp',
-      'panama.cpp',
-      'pch.cpp',
-      'pkcspad.cpp',
-      'polynomi.cpp',
-      'pssr.cpp',
-      'pubkey.cpp',
-      'queue.cpp',
-      'rabin.cpp',
-      'randpool.cpp',
-      'rc2.cpp',
-      'rc5.cpp',
-      'rc6.cpp',
-      'rdtables.cpp',
-      'rijndael.cpp',
-      'ripemd.cpp',
-      'rng.cpp',
-      'rsa.cpp',
-      'rw.cpp',
-      'safer.cpp',
-      'salsa.cpp',
-      'seal.cpp',
-      'seed.cpp',
-      'serpent.cpp',
-      'sha3.cpp',
-      'shacal2.cpp',
-      'sha.cpp',
-      'sharkbox.cpp',
-      'shark.cpp',
-      'simple.cpp',
-      'skipjack.cpp',
-      'sosemanuk.cpp',
-      'square.cpp',
-      'squaretb.cpp',
-      'strciphr.cpp',
-      'tea.cpp',
-      'tftables.cpp',
-      'tiger.cpp',
-      'tigertab.cpp',
-      'ttmac.cpp',
-      'twofish.cpp',
-      'vmac.cpp',
-      'wake.cpp',
-      'whrlpool.cpp',
-      'xtr.cpp',
-      'xtrcrypt.cpp',
-      'zdeflate.cpp',
-      'zinflate.cpp',
-      'zlib.cpp'
-    ],
-    linkopts = [
-      '-lm',
-    ]
-)
-""",
-)
 
 http_archive(
     name = "hiredis_git",

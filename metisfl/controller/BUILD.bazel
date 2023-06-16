@@ -14,17 +14,15 @@ pybind_extension(
         "//metisfl/controller/core:controller",
         "//metisfl/controller/core:controller_servicer",
     ],
-    linkstatic=True,
+    linkstatic=True
 )
 
 py_library(
-    name = "controller_pybind_lib",
+    name = "controller_lib",
+    srcs = [
+        "controller_instance.py",
+        "__main__.py",
+    ],
     data = [":controller.so"],
-)
-
-py_library(
-    name = "controller_py_lib",
-    srcs = ["controller_instance.py"],
     srcs_version = "PY3",
-    deps = [":controller_pybind_lib"],
 )

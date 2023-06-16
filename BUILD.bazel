@@ -47,26 +47,17 @@ config_setting(
     }
 )
 
-config_setting(
-    name = "py311",
-    define_values = {
-        "python": "3.11"
-    }
-)
-
 py_library(
     name="metisfl-lib",
-    srcs = glob([
-        "metisfl/**/*.py",
-        "examples/**/*.py",
-    ]),
     data = [
         "//resources:fhe_cryptoparams",
-        "//metisfl/encryption:fhe.so",
-        "//metisfl/controller:controller.so",
-    ] + glob([
-            "examples/**/*.yaml"
-    ])
+    ], 
+    deps = [
+        "//metisfl/controller:controller_lib",
+        "//metisfl/encryption:encryption_lib",
+        "//metisfl/driver:driver_lib",
+        "//metisfl/learner:learner_lib",
+    ]
 )
 
 py_package(
@@ -79,7 +70,7 @@ py_wheel(
         classifiers = [
             "Development Status :: 2 - Pre-Alpha",
             "Intended Audience :: Developers",
-            "License :: OSI Approved :: Apache Software License",
+            "License :: OSI Approved :: BSD",
             "Operating System :: UNIX",
             "Operating System :: Microsoft :: Windows",
             "Operating System :: MacOS :: MacOS X",
@@ -89,7 +80,6 @@ py_wheel(
             "Programming Language :: Python :: 3.8",
             "Programming Language :: Python :: 3.9",
             "Programming Language :: Python :: 3.10",
-            "Programming Language :: Python :: 3.11",
             "Programming Language :: C++"
         ],
         distribution = "metisfl",
@@ -100,8 +90,8 @@ py_wheel(
             ":py38": "py38",
             ":py39": "py39",
             ":py310": "py310",
-            ":py311": "py311", 
         }),
+        # TODO: Fix versions
         requires = [
             "cloudpickle",
             "fabric",

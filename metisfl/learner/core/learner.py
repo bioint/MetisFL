@@ -15,7 +15,7 @@ from metisfl.learner.core.learner_trainer import LearnerTrainer
 from metisfl.learner.utils.grpc_controller_client import GRPCControllerClient
 from metisfl.learner.utils.formatting import DictionaryFormatter
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
-from metisfl.encryption.fhe import fhe
+from metisfl.encryption import fhe
 
 
 class Learner(object):
@@ -40,7 +40,7 @@ class Learner(object):
                  validation_dataset_fp="", validation_dataset_recipe_pkl="",
                  test_dataset_fp="", test_dataset_recipe_pkl="",
                  recreate_queue_task_worker=False,
-                 learner_credentials_fp="/tmp/metis/learner/"):
+                 learner_credentials_fp="/tmp/metis/learner/"): # FIXME: (dstripelis) make sure dir exists; better to write such files under ~/.metisfl, even if tmp  
         self._learner_server_entity = learner_server_entity
         self._controller_server_entity = controller_server_entity
         self._he_scheme = he_scheme

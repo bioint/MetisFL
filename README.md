@@ -24,7 +24,9 @@ The project uses a unified codebase for both the Python and C++ code.
 ## Controller 
 The controller (or aggregator) is responsible for collecting the (encrypted) model weights from the learners, aggregating them, encrypting them and distributing the encrypted weights back to the learners for another federation round. To ensure fast performance and short federation rounds, we have implemented the MetisFL Controller in C++ and we have exposed its main functionality (start, wait, stop) via python bindings. The main build target of the `controller` folder is a Pybind extension defined in `controller/BUILD.bazel` which produces the `controller.so` shared object. The shared object and the python files in the folder are packaged in a `controller` python module. The `__main__.py` folder makes this module runnable, i.e., the controller instance can be started by running 
 
-```python -m metisfl.controller``` 
+```Python
+python -m metisfl.controller
+``` 
 
 and supplying the arguments listed in `__main__.py` file.
 
@@ -36,5 +38,3 @@ The driver is a python library that starts the controller and learners and initi
 ## Learner 
 
 ## Proto 
-
-## Pybind

@@ -12,3 +12,12 @@ FIXME: (pkyriakis)
 
 NOTE: (dstripelis)
 - I removed all lines from .bazelrc except  "--action_env=BAZEL_CXXOPTS=-std=c++17" build was just fine. Check if we actually need them.
+
+- Py pkg does not include some py files; those under proto/ and the controller/__main__.py
+
+- Not clear which python version is used for each .so that's being built 
+
+```
+ImportError: /home/panoskyriakis/.local/lib/python3.10/site-packages/metisfl/controller/controller.so: undefined symbol: _ZNSt10filesystem12current_pathB5cxx11Ev
+```
+Apparently the palisades so are not linked statically into the controller.so or the fhe.so and 

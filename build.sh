@@ -28,26 +28,27 @@ generate_wheel(){
     
     PYTHON_BIN_PATH=$ENV_PATH/bin/python
     PYTHON_LIB_PATH=$ENV_PATH/lib
-    $BAZEL_CMD clean --expunge
+    # $BAZEL_CMD clean --expunge
     $BAZEL_CMD build //:metisfl-wheel \
     --incompatible_strict_action_env=true \
     --action_env=BAZEL_CXXOPTS=-std=c++17 \
     --action_env=PYTHON_EXECUTABLE=$PYTHON_BIN_PATH \
     --action_env=PYTHON_BIN_PATH=$PYTHON_BIN_PATH \
     --action_env=PYTHON_LIB_PATH=$PYTHON_LIB_PATH \
-    --define python=$PY_VERSION
-    cp -f $BAZEL_BIN_DIR/*.whl $OUTPUT_DIR
+    --define python=$PY_VERSION``
+    cp -f $BAZEL_BIN_DIR/*.whl $OUTPUT_DIR``
     
 }
 
 build_dev() {
     BAZEL_BIN_DIR="$(pwd)/bazel-bin"
-    BAZEL_PROTO_DIR=$BAZEL_BIN_DIR/metisfl/proto/metisfl_py_proto_lib_pb/metisfl/proto
+    BAZEL_PROTO_DIR=$BAZEL_BIN_DIR/metisfl/proto/python_grpc_srcs/metisfl/proto
+    
     export PYTHONPATH=$(pwd)
     
     $BAZEL_CMD build //metisfl/controller:controller.so
     $BAZEL_CMD build //metisfl/encryption:fhe.so
-    $BAZEL_CMD build //metisfl/proto:metisfl_py_proto_lib
+    $BAZEL_CMD build //metisfl/proto:metisfl_cc_proto_lib
     
     cp -f $BAZEL_BIN_DIR/metisfl/controller/controller.so metisfl/controller/controller.so
     cp -f "$BAZEL_BIN_DIR/metisfl/encryption/fhe.so" metisfl/encryption/fhe.so
