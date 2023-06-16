@@ -2,8 +2,8 @@ import os
 import signal
 import sys
 
-from metisfl.pybind.controller.controller_instance import ControllerInstance
-from metisfl.pybind.controller.demo import utils
+from metisfl.controller.controller_instance import ControllerInstance
+from utils import utils
 from metisfl.learner.utils.metis_logger import MetisLogger
 
 if __name__ == "__main__":

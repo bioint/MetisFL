@@ -25,7 +25,7 @@ int main() {
   uint batchsize = 4096;
   uint scalingfactorbits = 52;
 
-  FHE_Helper fhe_helper(scheme, batchsize, scalingfactorbits, cryptodir);
+  FHE_Helper fhe_helper(scheme, batchsize, scalingfactorbits);
   // Generates CryptoParams for the entire session and the driver shares the
   // files with all learners and controller. Whenever we change the `batchsize`
   // and the `scalingfactorbits` params we always need to invoke the

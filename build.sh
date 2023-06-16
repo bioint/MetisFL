@@ -42,13 +42,13 @@ generate_wheel(){
 
 build_dev() {
     BAZEL_BIN_DIR="$(pwd)/bazel-bin"
-    BAZEL_PROTO_DIR=$BAZEL_BIN_DIR/metisfl/proto/python_grpc_srcs/metisfl/proto
+    BAZEL_PROTO_DIR=$BAZEL_BIN_DIR/metisfl/proto/py_grpc_lib/metisfl/proto
     
     export PYTHONPATH=$(pwd)
     
     $BAZEL_CMD build //metisfl/controller:controller.so
     $BAZEL_CMD build //metisfl/encryption:fhe.so
-    $BAZEL_CMD build //metisfl/proto:metisfl_cc_proto_lib
+    $BAZEL_CMD build //metisfl/proto:py_grpc_lib
     
     cp -f $BAZEL_BIN_DIR/metisfl/controller/controller.so metisfl/controller/controller.so
     cp -f "$BAZEL_BIN_DIR/metisfl/encryption/fhe.so" metisfl/encryption/fhe.so

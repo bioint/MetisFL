@@ -8,7 +8,9 @@ cmake(
       "BUILD_BENCHMARKS": "OFF",
       "BUILD_UNITTESTS": "OFF",
       "CMAKE_BUILD_TYPE": "Release",
-	},
+      "BUILD_STATIC": "ON"
+	  },
+    alwayslink=True,
     defines = ["MATHBACKEND=2"],
     env = {
         "CMAKE_BUILD_PARALLEL_LEVEL": "16",
@@ -21,18 +23,11 @@ cmake(
     ],
     lib_source = "@palisade_git//:palisade_srcs",
     out_include_dir = "include",
-    out_shared_libs = select({
-      "//:linux_x86_64": [
-        "libPALISADEcore.so.1",
-        "libPALISADEbinfhe.so.1",
-        "libPALISADEpke.so.1",
-      ],
-      "//conditions:default": [
-        "libPALISADEcore.1.11.7.dylib",
-        "libPALISADEbinfhe.1.11.7.dylib",
-        "libPALISADEpke.1.11.7.dylib",
-      ],
-    }),
+    out_static_libs = [
+        "libPALISADEcore_static.a",
+        "libPALISADEbinfhe_static.a",
+        "libPALISADEpke_static.a",
+    ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],
       "//conditions:default": [""],
@@ -86,5 +81,6 @@ cc_binary(
   ],
   data = [
     "//resources:fhe_cryptoparams"
-  ]
+  ],
+  linkstatic=True
 )
