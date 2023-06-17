@@ -1,14 +1,11 @@
 # Install Ubuntu image from docker hub.
 FROM ubuntu:jammy as ubuntu
 
-# Whether to install python libraries with CUDA support.
-ARG ENV_CONDA_CUDA_ENABLED=0
-
 # Assign simple root password.
 RUN echo "root:root" | chpasswd
 
 # Set environmental variables.
-ENV PROJECT_HOME=/projectmetis-rc
+ENV PROJECT_HOME=/metisfl
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Minsk
 
@@ -45,29 +42,5 @@ RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
 RUN apt-get -y install openssh-server
 RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /etc/ssh/sshd_config
 
-# Setup Redis
-RUN apt-get -y install redis-server
-
 # Clean up.
 RUN apt-get clean
-
-# MetisFL configuration.
-WORKDIR /projectmetis-rc
-COPY . .
-
-# Configure MetisFL.
-RUN chmod +x ./configure.sh && ./configure.sh $ENV_CONDA_CUDA_ENABLED
-
-# Build all bazel targets.
-#RUN bazel query //... | xargs bazel build
-RUN bazel build //metisfl/python/driver:initialize_controller
-RUN bazel build //metisfl/python/driver:initialize_learner
-
-# By default do not start the redis service.
-ENTRYPOINT service ssh start && bash
-
-# If we need to start the Redis service, we need to edit Redis' configuration
-# and start the Redis service along with the regular ssh session.
-#RUN cp /etc/redis/redis.conf /etc/redis/redis_template.conf
-#RUN cat /etc/redis/redis_template.conf | sed '/# maxmemory/a maxmemory 4gb' > /etc/redis/redis.conf
-#ENTRYPOINT service redis-server start && service ssh start && bash

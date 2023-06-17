@@ -58,7 +58,7 @@ py_library(
         "//metisfl/driver:driver_lib",
         "//metisfl/learner:learner_lib",
         "//metisfl/proto:proto_lib",
-        "//metisfl/examples:examples_lib"
+        # "//metisfl/examples:examples_lib" # TODO: Decide if we will ship examples as part of the lib 
     ]
 )
 
@@ -93,7 +93,6 @@ py_wheel(
             ":py39": "py39",
             ":py310": "py310",
         }),
-        strip_path_prefixes = ["py_grpc_src/metisfl/proto/"],
         # TODO: Fix versions
         requires = [
             "cloudpickle",

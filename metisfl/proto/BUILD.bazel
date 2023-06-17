@@ -1,6 +1,6 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_proto_grpc//cpp:defs.bzl", "cc_grpc_library")
-load("@rules_proto_grpc//python:defs.bzl", "py_proto_library", "python_grpc_library", "python_grpc_compile")
+load("@rules_proto_grpc//python:defs.bzl", "py_proto_library", "python_grpc_compile")
 
 package(default_visibility = ["//visibility:public"])
 

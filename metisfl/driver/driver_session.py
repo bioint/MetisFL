@@ -17,7 +17,7 @@ from metisfl.learner.utils.metis_logger import MetisASCIIArt, MetisLogger
 from metisfl.learner.utils.init_services_factory import MetisInitServicesCmdFactory
 from metisfl.learner.utils.docker_services_factory import DockerMetisServicesCmdFactory
 from metisfl.learner.utils.fedenv_parser import FederationEnvironment
-from metisfl.pybind.fhe import fhe
+from metisfl.encryption import fhe
 
 
 class DriverSessionBase(object):
