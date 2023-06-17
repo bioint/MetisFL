@@ -128,7 +128,7 @@ py_wheel(
             ]
         },
         platform = select({
-            "//:linux_x86_64": "manylinux_x86_64"
+            "//:linux_x86_64": "manylinux2014_x86_64"
         }),
         version = METISFL_VERSION,
         visibility = ["//visibility:public"],

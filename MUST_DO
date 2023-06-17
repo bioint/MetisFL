@@ -7,3 +7,6 @@ TODO:
 
 - python 3.11 does not work. Pybind wont compile. Perhaps upgrade to newer version.
 
+- In local dev mode, cwd is not in PYTHONPATH and examples. package is not discoverable
+
+- metisfl-1.0.0-py310-none-manylinux_x86_64.whl is not a supported wheel on this platform.
