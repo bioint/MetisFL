@@ -10,7 +10,7 @@ cc_library(
         "model_selection.h",
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
     ],
 )
 
@@ -22,7 +22,7 @@ cc_test(
         "selector.h",
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/strings",
         "@gtest//:gtest",
         "@gtest//:gtest_main"

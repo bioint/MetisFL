@@ -17,8 +17,7 @@ cc_library(
     hdrs = ["model_store.h"],
     srcs = ["model_store.cc"],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
-        "//metisfl/proto:model_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@com_github_google_glog//:glog",
     ]
 )
@@ -31,8 +30,7 @@ cc_test(
         ":model_storing",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
-        "//metisfl/proto:metis_cc_proto",
-        "//metisfl/proto:model_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "//metisfl/controller/proto:proto_tensor_serde",
     ],
 )

@@ -14,7 +14,6 @@ cc_library(
         "//metisfl/controller/scaling",
         "//metisfl/controller/storing",
         "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_map",
         "//metisfl/controller/proto:proto_tensor_serde",
     ]

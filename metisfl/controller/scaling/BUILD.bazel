@@ -23,7 +23,7 @@ cc_library(
         "scaling_function.h",
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_map",
     ],
 )
@@ -38,7 +38,7 @@ cc_library(
         "scaling_function.h",
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_map",
     ],
 )
@@ -53,7 +53,7 @@ cc_library(
         "scaling_function.h",
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_map",
     ],
 )

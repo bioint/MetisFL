@@ -19,9 +19,7 @@ cc_library(
     name = "controller_interface",
     hdrs = ["controller.h"],
     deps = [
-        "//metisfl/proto:controller_cc_grpc",
-        "//metisfl/proto:metis_cc_proto",
-        "//metisfl/proto:model_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "//metisfl/proto:service_common_cc_proto",
         "@absl//absl/status:statusor",
         "@absl//absl/container:flat_hash_map",
@@ -35,8 +33,7 @@ cc_library(
     hdrs = ["controller.h"],
     deps = [
         ":controller_utils",
-        "//metisfl/proto:controller_cc_grpc",
-        "//metisfl/proto:learner_cc_grpc",
+        "//metisfl/proto:cc_grpc_lib",
         "//metisfl/controller/proto:macros",
         "//metisfl/controller/proto:thread_pool",
         "@absl//absl/status:statusor",
@@ -65,7 +62,7 @@ cc_library(
         "//metisfl/controller/selection",
         "//metisfl/controller/storing",
         "//metisfl/controller/scheduling:scheduling",
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/memory",
         "@absl//absl/strings"
     ],
@@ -78,7 +75,7 @@ cc_library(
     data = ["//resources:ssl_pem"],
     deps = [
         ":controller",
-        "//metisfl/proto:controller_cc_grpc",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/memory",
     ],
 )

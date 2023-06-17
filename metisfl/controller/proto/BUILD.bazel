@@ -27,7 +27,7 @@ cc_library(
     hdrs = ["proto_tensor_serde.h"],
     srcs = [],
     deps = [
-        "//metisfl/proto:model_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
     ],
 )
 
@@ -37,7 +37,7 @@ cc_test (
     deps = [
         ":macros",
         ":proto_tensor_serde",
-        "//metisfl/proto:model_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ],

@@ -11,7 +11,7 @@ cc_library(
         "scheduling.h",
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_set",
     ],
 )
@@ -24,7 +24,7 @@ cc_test(
         "synchronous_scheduler_test.cc"
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_set",
         "@absl//absl/strings",
         "@gtest//:gtest",
@@ -40,7 +40,7 @@ cc_test(
         "scheduler.h",
     ],
     deps = [
-        "//metisfl/proto:metis_cc_proto",
+        "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_set",
         "@absl//absl/strings",
         "@gtest//:gtest",
