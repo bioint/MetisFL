@@ -1,6 +1,3 @@
-import grpc
-import time
-
 import metisfl.learner.utils.proto_messages_factory as proto_factory
 
 from metisfl.learner.utils.metis_logger import MetisLogger

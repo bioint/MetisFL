@@ -1,7 +1,5 @@
 import yaml
 
-import metisfl.learner.utils.proto_messages_factory as proto_messages_factory
-
 
 class Docker(object):
 
