@@ -13,9 +13,6 @@ cc_library(
         ":private_weighted_average",
         "//metisfl/controller/proto:proto_tensor_serde",
         "//metisfl/proto:cc_grpc_lib",
-    ],
-    data = [
-      "//resources:fhe_cryptoparams",
     ]
 )
 

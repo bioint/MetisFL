@@ -5,7 +5,7 @@ load("@rules_proto_grpc//python:defs.bzl", "py_proto_library", "python_grpc_libr
 package(default_visibility = ["//visibility:public"])
 
 proto_library(
-    name = "proto_lib",
+    name = "protos",
     srcs = glob(["*.proto"]),
     deps = [
         "@com_google_protobuf//:timestamp_proto",
@@ -15,15 +15,15 @@ proto_library(
 
 python_grpc_compile(
     name = "py_grpc_src",
-    protos = [":proto_lib"]
+    protos = [":protos"]
 )
 
 cc_grpc_library(
     name = "cc_grpc_lib",
-    protos = [":proto_lib"]
+    protos = [":protos"]
 )
 
 py_library(
-    name = "py_grpc_lib",
+    name = "proto_lib",
     srcs = glob(["**/*.py"])
 )

@@ -1,0 +1,8 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+py_library(
+    name="examples_lib",
+    srcs=glob(["**/*.py"]),
+    data=glob(["**/*.yaml"]),
+    visibility = ["//visibility:public"],
+)

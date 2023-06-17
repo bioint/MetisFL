@@ -21,3 +21,7 @@ NOTE: (dstripelis)
 ImportError: /home/panoskyriakis/.local/lib/python3.10/site-packages/metisfl/controller/controller.so: undefined symbol: _ZNSt10filesystem12current_pathB5cxx11Ev
 ```
 Apparently the palisades so are not linked statically into the controller.so or the fhe.so and 
+
+If you cannot immediately regenerate your protos, some other possible workarounds are:
+ 1. Downgrade the protobuf package to 3.20.x or lower.
+ 2. Set PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python (but this will use pure-Python parsing and will be much slower).

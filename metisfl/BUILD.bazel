@@ -16,10 +16,3 @@ filegroup(
             "ssl/server-cert.pem"],
     visibility = ["//visibility:public"],
 )
-
-filegroup(
-    name = "res",
-    srcs = glob(["**/*"]),
-    visibility = ["//visibility:public"],
-)
-

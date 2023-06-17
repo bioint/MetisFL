@@ -72,7 +72,6 @@ cc_library(
     name = "controller_servicer",
     srcs = ["controller_servicer.cc"],
     hdrs = ["controller_servicer.h"],
-    data = ["//resources:ssl_pem"],
     deps = [
         ":controller",
         "//metisfl/proto:cc_grpc_lib",

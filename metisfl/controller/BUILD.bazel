@@ -11,7 +11,8 @@ pybind_extension(
     name = "controller",
     srcs = ["pybind/controller_pybind.cc"],
     deps = [
-        "//metisfl/controller/core:controller",
+        # TODO: controller_servicer depends on controller
+        # "//metisfl/controller/core:controller",
         "//metisfl/controller/core:controller_servicer",
     ],
     linkstatic=True
@@ -23,6 +24,6 @@ py_library(
         "controller_instance.py",
         "__main__.py",
     ],
-    data = [":controller.so"],
+    data = ["controller.so"],
     srcs_version = "PY3",
 )

@@ -103,22 +103,6 @@ filegroup(
 """,
 )
 
-# Imports SHELFI-FHE library.
-new_git_repository(
-    name = "shelfi_fhe_git",
-    commit = "5cba05be07320b5a5a828a40bd148fcd59720c19",
-    shallow_since = "1635215298 -0700",
-    remote = "https://github.com/tanmayghai18/he-encryption-shelfi.git",
-    verbose = True,
-    build_file_content = """
-filegroup(
-    name = "all",
-    srcs = glob(["**/*"]),
-    visibility = ["//visibility:public"],
-)
-""",
-)
-
 http_archive(
     name = "rules_foreign_cc",
     sha256 = "6041f1374ff32ba711564374ad8e007aef77f71561a7ce784123b9b4b88614fc",
@@ -145,7 +129,6 @@ http_archive(
     strip_prefix = "glog-0.6.0",
     url = "https://github.com/google/glog/archive/v0.6.0.zip",
 )
-
 
 http_archive(
     name = "hiredis_git",

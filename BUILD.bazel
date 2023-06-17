@@ -50,13 +50,15 @@ config_setting(
 py_library(
     name="metisfl-lib",
     data = [
-        "//resources:fhe_cryptoparams",
+        "//metisfl/resources:res"
     ], 
     deps = [
         "//metisfl/controller:controller_lib",
         "//metisfl/encryption:encryption_lib",
         "//metisfl/driver:driver_lib",
         "//metisfl/learner:learner_lib",
+        "//metisfl/proto:proto_lib",
+        "//metisfl/examples:examples_lib"
     ]
 )
 
@@ -91,6 +93,7 @@ py_wheel(
             ":py39": "py39",
             ":py310": "py310",
         }),
+        strip_path_prefixes = ["py_grpc_src/metisfl/proto/"],
         # TODO: Fix versions
         requires = [
             "cloudpickle",
@@ -125,6 +128,9 @@ py_wheel(
                 "tensorflow-addons"
             ]
         },
+        platform = select({
+            "//:linux_x86_64": "manylinux_x86_64"
+        }),
         version = METISFL_VERSION,
         visibility = ["//visibility:public"],
         deps = [

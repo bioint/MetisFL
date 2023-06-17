@@ -79,8 +79,5 @@ cc_binary(
   deps = [
     ":palisade_fhe_helper",
   ],
-  data = [
-    "//resources:fhe_cryptoparams"
-  ],
   linkstatic=True
 )

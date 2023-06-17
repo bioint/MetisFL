@@ -30,9 +30,6 @@ pybind_extension(
             "-fopenmp",
             "-lomp",
             "-fvisibility=default"
-          ],
-    data = [
-      "//resources:fhe_cryptoparams"
     ],
     linkstatic=True
 )
