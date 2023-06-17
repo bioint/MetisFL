@@ -5,10 +5,8 @@ BAZEL_BIN_DIR="$(pwd)/bazel-bin"
 BAZEL_PROTO_DIR=$BAZEL_BIN_DIR/metisfl/proto/py_grpc_src/metisfl/proto
 
 PY_VERSION=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
-
 if [[ $PY_VERSION != "3.8" ]] && [[ $PY_VERSION != "3.9" ]] && [[ $PY_VERSION != "3.10" ]]; then 
-    echo $PY_VERSION
-    echo "Requires Python >= 3.8 and <=3.10";
+    echo "Requires Python >= 3.8 and <=3.10. Found Python $PY_VERSION"
     exit 
 fi
 
