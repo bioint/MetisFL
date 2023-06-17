@@ -112,8 +112,7 @@ py_wheel(
         ],
         extra_requires = {
             "tensorflow": [
-                "tensorflow",
-                "tensorflow-addons"
+                "tensorflow>=2.0.0",
             ]
         },
         platform = select({
