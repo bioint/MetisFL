@@ -7,7 +7,9 @@ RUN echo "root:root" | chpasswd
 # Set environmental variables.
 ENV PROJECT_HOME=/metisfl
 ENV DEBIAN_FRONTEND=noninteractive
-ENV TZ=Europe/Minsk
+ENV TZ=America/Los_Angeles
+
+WORKDIR /metisfl
 
 # Simple update.
 RUN apt-get -y update

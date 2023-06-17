@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BAZEL_CMD=bazelisk
+BAZEL_CMD=bazel
 BAZEL_BIN_DIR="$(pwd)/bazel-bin"
 BAZEL_PROTO_DIR=$BAZEL_BIN_DIR/metisfl/proto/py_grpc_src/metisfl/proto
 
@@ -24,7 +24,7 @@ cp -r examples/* metisfl/examples/
 cp -r resources/* metisfl/resources/
 
 $BAZEL_CMD build //:metisfl-wheel --define python=$PY_VERSION
-cp -f $BAZEL_BIN_DIR/*.whl .
+cp -f $BAZEL_BIN_DIR/*.whl build
 
 rm -fr metisfl/examples
 rm -fr metisfl/resources
