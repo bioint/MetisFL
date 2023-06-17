@@ -23,13 +23,13 @@ RUN apt-get -y install build-essential gcc
 # Install Palisades dependencies.
 RUN apt-get -y install autoconf libomp-dev
 
-# Install and setup python3.8
+# Install and setup python3.7
 RUN apt-get -y install software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get -y update
-RUN apt-get -y install -f python3.8-dev
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+RUN apt-get -y install -f python3.7-dev
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.7 1
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.7 1
 
 # Clean up.
 RUN apt-get clean
