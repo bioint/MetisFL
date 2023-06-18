@@ -89,30 +89,30 @@ py_wheel(
         license = "Apache 2.0",
         python_requires = ">=3.8",     
         python_tag = select({
-            ":py38": "py38",
-            ":py39": "py39",
-            ":py310": "py310",
+            ":py38": "cp38",
+            ":py39": "cp39",
+            ":py310": "cp310",
         }),
         # TODO: Fix versions
         requires = [
             "cloudpickle>=2.2.1",
             "fabric>=3.1.0",
             "future>=0.18.3",
-            "grpcio>=1.48.1",
-            "numpy>=1.23.5",
-            "pandas>=1.5.3",
+            "grpcio>=1.54.2",
+            "numpy>=1.24.3",
+            "pandas>=2.0.2",
             "Pebble>=5.0.3",
-            "protobuf==3.20.3",
+            "protobuf<=3.20",
             "pyfiglet>=0.8.post1",
-            "torch>=2.0.1",
-            "PyYAML>=5.4.1",
+            "torch>=2.0",
+            "PyYAML>=6.0",
             "scikit-learn>=1.2.2",
-            "scipy>=1.9.3",
+            "scipy>=1.10.1",
             "termcolor>=2.3.0",
         ],
         extra_requires = {
             "tensorflow": [
-                "tensorflow>=2.0.0",
+                "tensorflow>=2.0",
             ]
         },
         platform = select({

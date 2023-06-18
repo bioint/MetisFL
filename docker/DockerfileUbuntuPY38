@@ -12,10 +12,10 @@ WORKDIR /metisfl
 RUN apt-get -y update
 
 # Install helper packages and bazelisk (i.e., bazel versioning resolution tool at runtime).
-RUN apt-get -y install wget
+RUN apt-get -y install wget git
 RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-amd64
 RUN chmod +x ./bazelisk-linux-amd64
-RUN mv ./bazelisk-linux-amd64 /usr/bin/bazel
+RUN mv ./bazelisk-linux-amd64 /usr/bin/bazelisk
 
 # Install and setup gcc-10, g++-10.
 RUN apt-get -y install build-essential gcc
@@ -27,7 +27,7 @@ RUN apt-get -y install autoconf libomp-dev
 RUN apt-get -y install software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get -y update
-RUN apt-get -y install -f python3.8-dev
+RUN apt-get -y install -f python3.8-dev python3.8-distutils
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
 

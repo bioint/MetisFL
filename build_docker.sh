@@ -15,7 +15,7 @@ done;
 echo "Container started. Building"
 
 # Run build
-docker exec -it $CID /bin/bash -c build.sh
+docker exec -it $CID /bin/bash -c /metisfl/build.sh
 
 # Stop and remove container
 docker stop $CID
