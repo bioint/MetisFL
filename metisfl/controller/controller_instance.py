@@ -35,7 +35,7 @@ class ControllerInstance(object):
         # Registering signal termination/shutdown calls.
         signal.signal(signal.SIGTERM, sigint_handler)
         signal.signal(signal.SIGINT, sigint_handler)
-
+        
         # Infinite loop till shutdown signal is triggered.
         while not self.__should_stop:
             time.sleep(3)

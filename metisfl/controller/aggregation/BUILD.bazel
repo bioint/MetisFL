@@ -11,7 +11,7 @@ cc_library(
         ":federated_recency",
         ":federated_stride",
         ":private_weighted_average",
-        "//metisfl/controller/proto:proto_tensor_serde",
+        "//metisfl/controller/common:proto_tensor_serde",
         "//metisfl/proto:cc_grpc_lib",
     ]
 )
@@ -27,7 +27,7 @@ cc_library(
     ],
     deps = [
         "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/controller/proto:proto_tensor_serde",
+        "//metisfl/controller/common:proto_tensor_serde",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],
@@ -46,8 +46,8 @@ cc_test(
     ],
     deps = [
         ":federated_average",
-        "//metisfl/controller/proto:macros",
-        "//metisfl/controller/proto:proto_matchers",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:proto_matchers",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ],
@@ -63,7 +63,7 @@ cc_library(
     ],
     deps = [
          "//metisfl/proto:cc_grpc_lib",
-         "//metisfl/controller/proto:proto_tensor_serde",
+         "//metisfl/controller/common:proto_tensor_serde",
     ],
 )
 
@@ -90,8 +90,8 @@ cc_test(
     ],
     deps = [
         ":federated_recency",
-        "//metisfl/controller/proto:macros",
-        "//metisfl/controller/proto:proto_matchers",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:proto_matchers",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ],
@@ -119,8 +119,8 @@ cc_test(
     ],
     deps = [
         ":federated_stride",
-        "//metisfl/controller/proto:macros",
-        "//metisfl/controller/proto:proto_matchers",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:proto_matchers",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ],
@@ -137,7 +137,7 @@ cc_library(
     ],
     deps = [
         "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/encryption/core:palisade_fhe_helper",
+        "//metisfl/encryption/palisade:palisade_fhe_helper",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],

@@ -2,7 +2,7 @@
 #ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_H_
 #define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_H_
 
-#include "metisfl/controller/proto/proto_tensor_serde.h"
+#include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
 using ::proto::PrintSerializedTensor;

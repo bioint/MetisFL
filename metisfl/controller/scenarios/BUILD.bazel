@@ -10,12 +10,12 @@ cc_library(
     ],
     deps = [
         "//metisfl/controller:controller",
-        "//metisfl/controller/aggregation",
+        "//metisfl/controller/aggregation/",
         "//metisfl/controller/scaling",
-        "//metisfl/controller/storing",
+        "//metisfl/controller/store/",
         "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/container:flat_hash_map",
-        "//metisfl/controller/proto:proto_tensor_serde",
+        "//metisfl/controller/common:proto_tensor_serde",
     ]
 )
 

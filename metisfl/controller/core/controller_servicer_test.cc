@@ -6,8 +6,8 @@
 
 #include "metisfl/controller/core/controller_mock.h"
 #include "metisfl/controller/core/controller_servicer.h"
-#include "metisfl/controller/proto/macros.h"
-#include "metisfl/controller/proto/proto_matchers.h"
+#include "metisfl/controller/core/macros.h"
+#include "metisfl/controller/core/proto_matchers.h"
 #include "metisfl/proto/controller.grpc.pb.h"
 #include "metisfl/proto/metis.pb.h"
 

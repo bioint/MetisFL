@@ -13,9 +13,9 @@
 #include "absl/memory/memory.h"
 #include "metisfl/controller/core/controller.h"
 #include "metisfl/controller/core/controller_utils.h"
-#include "metisfl/controller/proto/bs_thread_pool.h"
-#include "metisfl/controller/proto/macros.h"
-#include "metisfl/controller/proto/proto_tensor_serde.h"
+#include "metisfl/controller/common/bs_thread_pool.h"
+#include "metisfl/controller/common/macros.h"
+#include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/learner.grpc.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
@@ -351,8 +351,23 @@ class ControllerDefaultImpl : public Controller {
     auto server_entity = learners_[learner_id].learner().server_entity();
     auto target =
         absl::StrCat(server_entity.hostname(), ":", server_entity.port());
-    auto channel =
-        ::grpc::CreateChannel(target, ::grpc::InsecureChannelCredentials());
+
+    auto creds = grpc::InsecureChannelCredentials();
+    if (server_entity.has_ssl_config()) {
+        grpc::SslCredentialsOptions ssl_opts;
+        if (server_entity.ssl_config().enable_ssl()) {
+          if (server_entity.ssl_config().has_ssl_config_stream()) {
+            ssl_opts.pem_root_certs =
+                server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
+            creds = grpc::SslCredentials(ssl_opts);
+          } else {
+            PLOG(WARNING) << "Even though learner: " << learner_id <<
+            "has requested TLS/SSL connection, it has not sent a public "
+            "certificate stream to establish connection.";
+          }
+        }
+    }
+    auto channel = grpc::CreateChannel(target, creds);
     return LearnerService::NewStub(channel);
 
   }

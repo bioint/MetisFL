@@ -127,16 +127,15 @@ message GetParticipatingLearnersResponse {
 }
 
 message JoinFederationRequest {
-  //  TODO This field seems redundant - not used anywhere! Controller generates the learner_ids based on ServerEntity!
-  // string learner_id = 1; // If this field is empty/None then this learner is new. If it not empty its (id,token) must match with the existing records inside controller's book keeping collection.
-  ServerEntity server_entity = 2;
-  DatasetSpec local_dataset_spec = 3;
+  ServerEntity server_entity = 1; // Through the ServerEntity field the learner also submits its local certificate to the controller to enable secure communication.
+  DatasetSpec local_dataset_spec = 2;
 }
 
 message JoinFederationResponse {
   Ack ack = 1;
   string learner_id = 2; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
   string auth_token = 3; // For security reasons, the controller generates a random 64-characters string that is associated with the joining learner. The (learner_id, token) composite key is required throughout training when a learner contacts the controller.
+  SSLConfig ssl_config = 4; // Controller sends back to the learner its certificate in order to submit requests through the secure channel.
 }
 
 message LearnerLocalModelResponse {

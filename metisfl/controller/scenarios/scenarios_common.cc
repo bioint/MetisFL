@@ -7,7 +7,7 @@
 #include "metisfl/controller/core/controller.h"
 #include "metisfl/controller/core/controller_utils.h"
 #include "metisfl/controller/scenarios/scenarios_common.h"
-#include "metisfl/controller/proto/proto_tensor_serde.h"
+#include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 #include "metisfl/proto/metis.pb.h"
 

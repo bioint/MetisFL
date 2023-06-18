@@ -3,9 +3,9 @@
 #include <gtest/gtest.h>
 
 #include "metisfl/controller/aggregation/federated_stride.h"
-#include "metisfl/controller/proto/macros.h"
-#include "metisfl/controller/proto/proto_matchers.h"
-#include "metisfl/controller/proto/proto_tensor_serde.h"
+#include "metisfl/controller/common/macros.h"
+#include "metisfl/controller/common/proto_matchers.h"
+#include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 #include "metisfl/proto/metis.pb.h"
 

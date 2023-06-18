@@ -72,7 +72,7 @@ py_wheel(
         classifiers = [
             "Development Status :: 2 - Pre-Alpha",
             "Intended Audience :: Developers",
-            "License :: OSI Approved :: BSD",
+            "License :: OSI Approved :: The Clear BSD License",
             "Operating System :: UNIX",
             "Operating System :: Microsoft :: Windows",
             "Operating System :: MacOS :: MacOS X",

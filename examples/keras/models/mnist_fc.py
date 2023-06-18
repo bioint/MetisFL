@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from metisfl.learner.models.model_def import ModelDef
+from metisfl.models.model_def import ModelDef
 
 
 class MnistModel(ModelDef):

@@ -5,7 +5,7 @@
 #include "metisfl/controller/aggregation/model_aggregation.h"
 #include "metisfl/controller/scaling/model_scaling.h"
 #include "metisfl/controller/selection/model_selection.h"
-#include "metisfl/controller/storing/model_storing.h"
+#include "metisfl/controller/store/store.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 
 namespace projectmetis::controller {

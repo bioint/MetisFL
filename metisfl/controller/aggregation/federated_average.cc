@@ -2,7 +2,7 @@
 #include <omp.h>
 
 #include "metisfl/controller/aggregation/federated_average.h"
-#include "metisfl/controller/proto/proto_tensor_serde.h"
+#include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
 namespace projectmetis::controller {
@@ -71,14 +71,14 @@ FederatedModel
 FederatedAverage::Aggregate(
     std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
 
-  // With the new community model aggregation function  
+  // With the new global model aggregation function
   // NEW API GUIDE
   // { {(*model, 0.2)}, {(*model, 0.6)}, {(*model, 0.5)}}
   // pairs[0] -> {(*model, 0.2)}
   // pairs[0][0] ->  (*model, 0.2)
   // pairs[0][0].first -> *model
   // pairs[0][0].second -> 0.2
-  // Initializes an empty community model.
+  // Initializes an empty global model.
   FederatedModel global_model;
   const auto &sample_model = pairs.front().front().first;
   for (const auto &sample_variable: sample_model->variables()) {

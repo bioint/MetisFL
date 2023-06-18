@@ -10,7 +10,7 @@
 #include "absl/memory/memory.h"
 #include "metisfl/controller/core/controller_servicer.h"
 #include "metisfl/controller/core/controller_utils.h"
-#include "metisfl/controller/proto/bs_thread_pool.h"
+#include "metisfl/controller/common/bs_thread_pool.h"
 #include "metisfl/proto/controller.grpc.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
@@ -34,34 +34,34 @@ class ServicerBase {
     ServerBuilder builder;
     std::shared_ptr<grpc::ServerCredentials> creds;
 
-    bool read_ssl = false;
+    if (server_entity.ssl_config().enable_ssl()) {
 
-    /*! Read the server certificate & server key
-     * and enable SSL accordingly. */
-    if (!server_entity.ssl_config().server_cert().empty()
-        && !server_entity.ssl_config().server_key().empty()) {
-      read_ssl = true;
-    }
+      std::string server_cert_loaded;
+      std::string server_key_loaded;
+      if (server_entity.ssl_config().has_ssl_config_files()) {
+        auto cert_path = server_entity.ssl_config().ssl_config_files().public_certificate_file();
+        auto key_path = server_entity.ssl_config().ssl_config_files().private_key_file();
 
-    if (read_ssl) {
-      std::string server_cert;
-      std::string server_key;
-      // TODO(aasghar) Understand how we can handle the SSL certificates if passed as commandline argument.
-      std::string abs_path = std::filesystem::current_path();
-      std::string temp_cert = abs_path + server_entity.ssl_config().server_cert();
-      std::string temp_key = abs_path + server_entity.ssl_config().server_key();
+        if (ReadParseFile(server_cert_loaded, cert_path) == -1) {
+          // Logs and terminates the program if public certificate filepath is invalid.
+          PLOG(FATAL) << "Error Reading Controller Certificate: " << cert_path;
+        }
 
-      if (ReadParseFile(server_cert, temp_cert) == -1) {
-        // Logs and terminates the program.
-        PLOG(FATAL) << "Error Reading Server Cert: " << server_entity.ssl_config().server_cert();
-      }
-
-      if (ReadParseFile(server_key, temp_key) == -1) {
-        PLOG(FATAL) << "Error Reading Key Cert: " << server_entity.ssl_config().server_key();
+        if (ReadParseFile(server_key_loaded, key_path) == -1) {
+          // Logs and terminates the program if private key filepath is invalid.
+          PLOG(FATAL) << "Error Reading Controller Key: " << key_path;
+        }
+      } else if (server_entity.ssl_config().has_ssl_config_stream()) {
+        server_cert_loaded = server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
+        server_key_loaded = server_entity.ssl_config().ssl_config_stream().private_key_stream();
+      } else {
+        PLOG(FATAL) << "Even though SSL was enabled the (private, public) key pair was not provided.";
       }
 
       PLOG(INFO) << "SSL enabled";
-      grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp = {server_key, server_cert};
+
+      grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp =
+          {server_key_loaded, server_cert_loaded};
       grpc::SslServerCredentialsOptions ssl_opts;
       ssl_opts.pem_root_certs = "";
       ssl_opts.pem_key_cert_pairs.push_back(pkcp);

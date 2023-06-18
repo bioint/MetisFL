@@ -84,7 +84,7 @@ def init_controller(
     controller_instance = ControllerInstance()
     controller_instance.build_and_start(controller_params)
 
-    controller_instance.wait()
+    controller_instance.wait_until_signaled()
 
 
 if __name__ == "__main__":

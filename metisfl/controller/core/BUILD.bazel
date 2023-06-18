@@ -2,18 +2,6 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 
 package(default_visibility = ["//visibility:public"])
 
-# Binaries.
-cc_binary(
-    name = "controller_main",
-    srcs = ["controller_main.cc"],
-    deps = [
-        ":controller",
-        ":controller_servicer",
-        "@absl//absl/strings",
-        "@com_github_google_glog//:glog",
-    ],
-)
-
 # Libraries.
 cc_library(
     name = "controller_interface",
@@ -28,14 +16,25 @@ cc_library(
 )
 
 cc_library(
+    name = "controller_servicer",
+    srcs = ["controller_servicer.cc"],
+    hdrs = ["controller_servicer.h"],
+    deps = [
+        ":controller",
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/memory",
+    ],
+)
+
+cc_library(
     name = "controller",
     srcs = ["controller.cc"],
     hdrs = ["controller.h"],
     deps = [
         ":controller_utils",
         "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/controller/proto:macros",
-        "//metisfl/controller/proto:thread_pool",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:thread_pool",
         "@absl//absl/status:statusor",
         "@absl//absl/container:flat_hash_map",
         "@absl//absl/memory",
@@ -57,25 +56,14 @@ cc_library(
     srcs = ["controller_utils.cc"],
     hdrs = ["controller_utils.h"],
     deps = [
-        "//metisfl/controller/aggregation",
+        "//metisfl/controller/aggregation:aggregation",
         "//metisfl/controller/scaling",
         "//metisfl/controller/selection",
-        "//metisfl/controller/storing",
+        "//metisfl/controller/store:storing",
         "//metisfl/controller/scheduling:scheduling",
         "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/memory",
         "@absl//absl/strings"
-    ],
-)
-
-cc_library(
-    name = "controller_servicer",
-    srcs = ["controller_servicer.cc"],
-    hdrs = ["controller_servicer.h"],
-    deps = [
-        ":controller",
-        "//metisfl/proto:cc_grpc_lib",
-        "@absl//absl/memory",
     ],
 )
 
@@ -96,8 +84,8 @@ cc_test(
     deps = [
         ":controller_servicer",
         ":controller_mock",
-        "//metisfl/controller/proto:macros",
-        "//metisfl/controller/proto:proto_matchers",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:proto_matchers",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ],

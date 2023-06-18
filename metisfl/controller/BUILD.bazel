@@ -25,3 +25,14 @@ py_library(
     data = ["controller.so"],
     srcs_version = "PY3",
 )
+
+# Binary.
+cc_binary(
+    name = "controller_main",
+    srcs = ["controller_main.cc"],
+    deps = [
+        "//metisfl/controller/core:controller_servicer",
+        "@absl//absl/strings",
+        "@com_github_google_glog//:glog",
+    ],
+)

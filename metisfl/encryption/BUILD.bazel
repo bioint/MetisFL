@@ -11,7 +11,7 @@ pybind_extension(
     name = "fhe",
     srcs = ["pybind/fhe_pybind.cc"],
     deps = [
-      "//metisfl/encryption/core:palisade_cmake",
+      "//metisfl/encryption/palisade:palisade_cmake",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],

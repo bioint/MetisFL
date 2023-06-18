@@ -1,7 +1,7 @@
 FederationEnvironment:
   DockerImage: null # null indicates to run Metis without docker, if it is provided then run using the specified image
   TerminationSignals:
-    FederationRounds: 10 # only in synchronous execution
+    FederationRounds: 3 # only in synchronous execution
     ExecutionCutoffTimeMins: null
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"

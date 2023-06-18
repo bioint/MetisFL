@@ -5,7 +5,7 @@
 #include <gmock/gmock.h>
 
 #include "absl/strings/str_cat.h"
-#include "metisfl/controller/scheduling/synchronous_scheduler.h"
+#include "projectmetis/controller/scheduling/synchronous_scheduler.h"
 
 namespace projectmetis::controller {
 namespace {

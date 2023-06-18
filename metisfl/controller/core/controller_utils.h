@@ -12,7 +12,7 @@
 #include "metisfl/controller/aggregation/model_aggregation.h"
 #include "metisfl/controller/scaling/model_scaling.h"
 #include "metisfl/controller/selection/model_selection.h"
-#include "metisfl/controller/storing/model_storing.h"
+#include "metisfl/controller/store/store.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 
 namespace projectmetis::controller {
@@ -40,14 +40,12 @@ inline std::string GenerateLearnerId(const ServerEntity &server_entity) {
   return absl::StrCat(server_entity.hostname(), ":", server_entity.port());
 }
 
-// Reads a file from disk containing the key and certificate information
-// and returns the certificate and a referenced argument. Error is raised
-// if the file cannot be opened.
+// Reads a file from disk. Error is raised if the file cannot be opened.
 inline int ReadParseFile(std::string &file_content, std::string &file_name) {
   std::ifstream _file;
   _file.open(file_name);
 
-  // Manage handling in case the certificates are not generated.
+  // Manage handling in case the stream buffer cannot be generated.
   std::stringstream buffer;
   if (_file.is_open()) {
     buffer << _file.rdbuf();

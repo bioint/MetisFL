@@ -4,7 +4,7 @@ cc_binary(
   name = "test_palisade_hello_world",
   srcs = ["hello_world.cc"],
   deps = [
-      "//metisfl/encryption/core:palisade_cmake"
+      "//metisfl/encryption/palisade:palisade_cmake"
   ],
 )
 
@@ -12,7 +12,7 @@ cc_binary(
   name = "test_palisade_bgvrns_example",
   srcs = ["simple_integers_serial_bgvrns_example.cc"],
   deps = [
-    "//metisfl/encryption/core:palisade_cmake"
+    "//metisfl/encryption/palisade:palisade_cmake"
   ],
   linkopts = select({
     "//:linux_x86_64": ["-lgomp"],

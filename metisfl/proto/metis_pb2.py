@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x19metisfl/proto/metis.proto\x12\x0cprojectmetis\x1a\x19metisfl/proto/model.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"v\n\x0cServerEntity\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x36\n\nssl_config\x18\x03 \x01(\x0b\x32\x17.projectmetis.SSLConfigR\tsslConfig\"K\n\tSSLConfig\x12\x1d\n\nserver_key\x18\x01 \x01(\tR\tserverKey\x12\x1f\n\x0bserver_cert\x18\x02 \x01(\tR\nserverCert\"\x8a\n\n\x0b\x44\x61tasetSpec\x12\x32\n\x15num_training_examples\x18\x01 \x01(\rR\x13numTrainingExamples\x12\x36\n\x17num_validation_examples\x18\x02 \x01(\rR\x15numValidationExamples\x12*\n\x11num_test_examples\x18\x03 \x01(\rR\x0fnumTestExamples\x12w\n\x1ctraining_classification_spec\x18\x04 \x01(\x0b\x32\x33.projectmetis.DatasetSpec.ClassificationDatasetSpecH\x00R\x1atrainingClassificationSpec\x12k\n\x18training_regression_spec\x18\x05 \x01(\x0b\x32/.projectmetis.DatasetSpec.RegressionDatasetSpecH\x00R\x16trainingRegressionSpec\x12{\n\x1evalidation_classification_spec\x18\x06 \x01(\x0b\x32\x33.projectmetis.DatasetSpec.ClassificationDatasetSpecH\x01R\x1cvalidationClassificationSpec\x12o\n\x1avalidation_regression_spec\x18\x07 \x01(\x0b\x32/.projectmetis.DatasetSpec.RegressionDatasetSpecH\x01R\x18validationRegressionSpec\x12o\n\x18test_classification_spec\x18\x08 \x01(\x0b\x32\x33.projectmetis.DatasetSpec.ClassificationDatasetSpecH\x02R\x16testClassificationSpec\x12\x63\n\x14test_regression_spec\x18\t \x01(\x0b\x32/.projectmetis.DatasetSpec.RegressionDatasetSpecH\x02R\x12testRegressionSpec\x1a\xd9\x01\n\x19\x43lassificationDatasetSpec\x12w\n\x12\x63lass_examples_num\x18\x01 \x03(\x0b\x32I.projectmetis.DatasetSpec.ClassificationDatasetSpec.ClassExamplesNumEntryR\x10\x63lassExamplesNum\x1a\x43\n\x15\x43lassExamplesNumEntry\x12\x10\n\x03key\x18\x01 \x01(\rR\x03key\x12\x14\n\x05value\x18\x02 \x01(\rR\x05value:\x02\x38\x01\x1a\x93\x01\n\x15RegressionDatasetSpec\x12\x10\n\x03min\x18\x01 \x01(\x01R\x03min\x12\x10\n\x03max\x18\x02 \x01(\x01R\x03max\x12\x12\n\x04mean\x18\x03 \x01(\x01R\x04mean\x12\x16\n\x06median\x18\x04 \x01(\x01R\x06median\x12\x12\n\x04mode\x18\x05 \x01(\x01R\x04mode\x12\x16\n\x06stddev\x18\x06 \x01(\x01R\x06stddevB\x17\n\x15training_dataset_specB\x19\n\x17validation_dataset_specB\x13\n\x11test_dataset_spec\"B\n\x14LearningTaskTemplate\x12*\n\x11num_local_updates\x18\x01 \x01(\rR\x0fnumLocalUpdates\"\x91\x02\n\x0cLearningTask\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12*\n\x11num_local_updates\x18\x02 \x01(\rR\x0fnumLocalUpdates\x12o\n5training_dataset_percentage_for_stratified_validation\x18\x03 \x01(\x02R0trainingDatasetPercentageForStratifiedValidation\x12\x39\n\x07metrics\x18\x04 \x01(\x0b\x32\x1f.projectmetis.EvaluationMetricsR\x07metrics\"\xb9\x01\n\x15\x43ompletedLearningTask\x12)\n\x05model\x18\x01 \x01(\x0b\x32\x13.projectmetis.ModelR\x05model\x12R\n\x12\x65xecution_metadata\x18\x02 \x01(\x0b\x32#.projectmetis.TaskExecutionMetadataR\x11\x65xecutionMetadata\x12!\n\x0c\x61ux_metadata\x18\x03 \x01(\tR\x0b\x61uxMetadata\"\xee\x02\n\x15TaskExecutionMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x45\n\x0ftask_evaluation\x18\x02 \x01(\x0b\x32\x1c.projectmetis.TaskEvaluationR\x0etaskEvaluation\x12)\n\x10\x63ompleted_epochs\x18\x03 \x01(\x02R\x0f\x63ompletedEpochs\x12+\n\x11\x63ompleted_batches\x18\x04 \x01(\rR\x10\x63ompletedBatches\x12\x1d\n\nbatch_size\x18\x05 \x01(\rR\tbatchSize\x12\x35\n\x17processing_ms_per_epoch\x18\x06 \x01(\x02R\x14processingMsPerEpoch\x12\x35\n\x17processing_ms_per_batch\x18\x07 \x01(\x02R\x14processingMsPerBatch\"\xfc\x01\n\x0eTaskEvaluation\x12N\n\x13training_evaluation\x18\x01 \x03(\x0b\x32\x1d.projectmetis.EpochEvaluationR\x12trainingEvaluation\x12R\n\x15validation_evaluation\x18\x02 \x03(\x0b\x32\x1d.projectmetis.EpochEvaluationR\x14validationEvaluation\x12\x46\n\x0ftest_evaluation\x18\x03 \x03(\x0b\x32\x1d.projectmetis.EpochEvaluationR\x0etestEvaluation\"v\n\x0f\x45pochEvaluation\x12\x19\n\x08\x65poch_id\x18\x01 \x01(\rR\x07\x65pochId\x12H\n\x10model_evaluation\x18\x02 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x0fmodelEvaluation\"+\n\x11\x45valuationMetrics\x12\x16\n\x06metric\x18\x01 \x03(\tR\x06metric\"\xa8\x01\n\x0fModelEvaluation\x12T\n\rmetric_values\x18\x01 \x03(\x0b\x32/.projectmetis.ModelEvaluation.MetricValuesEntryR\x0cmetricValues\x1a?\n\x11MetricValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xfe\x01\n\x10ModelEvaluations\x12N\n\x13training_evaluation\x18\x01 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x12trainingEvaluation\x12R\n\x15validation_evaluation\x18\x02 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x14validationEvaluation\x12\x46\n\x0ftest_evaluation\x18\x03 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x0etestEvaluation\"^\n\x12LocalTasksMetadata\x12H\n\rtask_metadata\x18\x01 \x03(\x0b\x32#.projectmetis.TaskExecutionMetadataR\x0ctaskMetadata\"\x80\x02\n\x18\x43ommunityModelEvaluation\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12Y\n\x0b\x65valuations\x18\x02 \x03(\x0b\x32\x37.projectmetis.CommunityModelEvaluation.EvaluationsEntryR\x0b\x65valuations\x1a^\n\x10\x45valuationsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32\x1e.projectmetis.ModelEvaluationsR\x05value:\x02\x38\x01\"m\n\x0fHyperparameters\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12;\n\toptimizer\x18\x02 \x01(\x0b\x32\x1d.projectmetis.OptimizerConfigR\toptimizer\"\xd8\x04\n\x10\x43ontrollerParams\x12?\n\rserver_entity\x18\x01 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12L\n\x12global_model_specs\x18\x02 \x01(\x0b\x32\x1e.projectmetis.GlobalModelSpecsR\x10globalModelSpecs\x12Q\n\x13\x63ommunication_specs\x18\x03 \x01(\x0b\x32 .projectmetis.CommunicationSpecsR\x12\x63ommunicationSpecs\x12L\n\x12model_store_config\x18\x04 \x01(\x0b\x32\x1e.projectmetis.ModelStoreConfigR\x10modelStoreConfig\x12\\\n\x11model_hyperparams\x18\x05 \x01(\x0b\x32/.projectmetis.ControllerParams.ModelHyperparamsR\x10modelHyperparams\x1a\xb5\x01\n\x10ModelHyperparams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x16\n\x06\x65pochs\x18\x02 \x01(\rR\x06\x65pochs\x12;\n\toptimizer\x18\x03 \x01(\x0b\x32\x1d.projectmetis.OptimizerConfigR\toptimizer\x12-\n\x12percent_validation\x18\x04 \x01(\x02R\x11percentValidation\"\xa7\x01\n\x10ModelStoreConfig\x12\x45\n\x0fin_memory_store\x18\x01 \x01(\x0b\x32\x1b.projectmetis.InMemoryStoreH\x00R\rinMemoryStore\x12\x42\n\x0eredis_db_store\x18\x02 \x01(\x0b\x32\x1a.projectmetis.RedisDBStoreH\x00R\x0credisDbStoreB\x08\n\x06\x63onfig\"Z\n\rInMemoryStore\x12I\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x1d.projectmetis.ModelStoreSpecsR\x0fmodelStoreSpecs\"\x9a\x01\n\x0cRedisDBStore\x12I\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x1d.projectmetis.ModelStoreSpecsR\x0fmodelStoreSpecs\x12?\n\rserver_entity\x18\x02 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\"\x0c\n\nNoEviction\">\n\x15LineageLengthEviction\x12%\n\x0elineage_length\x18\x01 \x01(\rR\rlineageLength\"\xc0\x01\n\x0fModelStoreSpecs\x12;\n\x0bno_eviction\x18\x01 \x01(\x0b\x32\x18.projectmetis.NoEvictionH\x00R\nnoEviction\x12]\n\x17lineage_length_eviction\x18\x02 \x01(\x0b\x32#.projectmetis.LineageLengthEvictionH\x00R\x15lineageLengthEvictionB\x11\n\x0f\x65viction_policy\"\xb6\x02\n\x0f\x41ggregationRule\x12/\n\x07\x66\x65\x64_avg\x18\x01 \x01(\x0b\x32\x14.projectmetis.FedAvgH\x00R\x06\x66\x65\x64\x41vg\x12\x38\n\nfed_stride\x18\x02 \x01(\x0b\x32\x17.projectmetis.FedStrideH\x00R\tfedStride\x12/\n\x07\x66\x65\x64_rec\x18\x03 \x01(\x0b\x32\x14.projectmetis.FedRecH\x00R\x06\x66\x65\x64Rec\x12%\n\x03pwa\x18\x04 \x01(\x0b\x32\x11.projectmetis.PWAH\x00R\x03pwa\x12X\n\x16\x61ggregation_rule_specs\x18\x05 \x01(\x0b\x32\".projectmetis.AggregationRuleSpecsR\x14\x61ggregationRuleSpecsB\x06\n\x04rule\"\xd9\x01\n\x14\x41ggregationRuleSpecs\x12W\n\x0escaling_factor\x18\x01 \x01(\x0e\x32\x30.projectmetis.AggregationRuleSpecs.ScalingFactorR\rscalingFactor\"h\n\rScalingFactor\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x19\n\x15NUM_COMPLETED_BATCHES\x10\x01\x12\x14\n\x10NUM_PARTICIPANTS\x10\x02\x12\x19\n\x15NUM_TRAINING_EXAMPLES\x10\x03\"\x08\n\x06\x46\x65\x64\x41vg\"0\n\tFedStride\x12#\n\rstride_length\x18\x01 \x01(\rR\x0cstrideLength\"\x08\n\x06\x46\x65\x64Rec\"\xa9\x02\n\x08HEScheme\x12\x18\n\x07\x65nabled\x18\x01 \x01(\x08R\x07\x65nabled\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12$\n\rcryptocontext\x18\x03 \x01(\tR\rcryptocontext\x12\x1d\n\npublic_key\x18\x04 \x01(\tR\tpublicKey\x12\x1f\n\x0bprivate_key\x18\x05 \x01(\tR\nprivateKey\x12\x45\n\x0f\x65mpty_he_scheme\x18\x06 \x01(\x0b\x32\x1b.projectmetis.EmptyHESchemeH\x00R\remptyHeScheme\x12\x38\n\nfhe_scheme\x18\x07 \x01(\x0b\x32\x17.projectmetis.FHESchemeH\x00R\tfheSchemeB\x08\n\x06scheme\"\x0f\n\rEmptyHEScheme\"M\n\tFHEScheme\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12!\n\x0cscaling_bits\x18\x02 \x01(\rR\x0bscalingBits\":\n\x03PWA\x12\x33\n\the_scheme\x18\x01 \x01(\x0b\x32\x16.projectmetis.HESchemeR\x08heScheme\"\x9e\x01\n\x10GlobalModelSpecs\x12H\n\x10\x61ggregation_rule\x18\x01 \x01(\x0b\x32\x1d.projectmetis.AggregationRuleR\x0f\x61ggregationRule\x12@\n\x1clearners_participation_ratio\x18\x02 \x01(\x02R\x1alearnersParticipationRatio\"\xf1\x01\n\x12\x43ommunicationSpecs\x12\x45\n\x08protocol\x18\x01 \x01(\x0e\x32).projectmetis.CommunicationSpecs.ProtocolR\x08protocol\x12\x42\n\x0eprotocol_specs\x18\x02 \x01(\x0b\x32\x1b.projectmetis.ProtocolSpecsR\rprotocolSpecs\"P\n\x08Protocol\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0f\n\x0bSYNCHRONOUS\x10\x01\x12\x10\n\x0c\x41SYNCHRONOUS\x10\x02\x12\x14\n\x10SEMI_SYNCHRONOUS\x10\x03\"\x7f\n\rProtocolSpecs\x12(\n\x10semi_sync_lambda\x18\x01 \x01(\x05R\x0esemiSyncLambda\x12\x44\n\x1fsemi_sync_recompute_num_updates\x18\x02 \x01(\x08R\x1bsemiSyncRecomputeNumUpdates\"\xc1\x01\n\x11LearnerDescriptor\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12?\n\rserver_entity\x18\x03 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12<\n\x0c\x64\x61taset_spec\x18\x04 \x01(\x0b\x32\x19.projectmetis.DatasetSpecR\x0b\x64\x61tasetSpec\"t\n\x0cLearnerState\x12\x39\n\x07learner\x18\x01 \x01(\x0b\x32\x1f.projectmetis.LearnerDescriptorR\x07learner\x12)\n\x05model\x18\x02 \x03(\x0b\x32\x13.projectmetis.ModelR\x05model\"\x94\x11\n\x1c\x46\x65\x64\x65ratedTaskRuntimeMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x39\n\nstarted_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n\x0c\x63ompleted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x0b\x63ompletedAt\x12\x33\n\x16\x61ssigned_to_learner_id\x18\x04 \x03(\tR\x13\x61ssignedToLearnerId\x12\x35\n\x17\x63ompleted_by_learner_id\x18\x05 \x03(\tR\x14\x63ompletedByLearnerId\x12{\n\x17train_task_submitted_at\x18\x06 \x03(\x0b\x32\x44.projectmetis.FederatedTaskRuntimeMetadata.TrainTaskSubmittedAtEntryR\x14trainTaskSubmittedAt\x12x\n\x16train_task_received_at\x18\x07 \x03(\x0b\x32\x43.projectmetis.FederatedTaskRuntimeMetadata.TrainTaskReceivedAtEntryR\x13trainTaskReceivedAt\x12x\n\x16\x65val_task_submitted_at\x18\x08 \x03(\x0b\x32\x43.projectmetis.FederatedTaskRuntimeMetadata.EvalTaskSubmittedAtEntryR\x13\x65valTaskSubmittedAt\x12u\n\x15\x65val_task_received_at\x18\t \x03(\x0b\x32\x42.projectmetis.FederatedTaskRuntimeMetadata.EvalTaskReceivedAtEntryR\x12\x65valTaskReceivedAt\x12\x87\x01\n\x1bmodel_insertion_duration_ms\x18\n \x03(\x0b\x32H.projectmetis.FederatedTaskRuntimeMetadata.ModelInsertionDurationMsEntryR\x18modelInsertionDurationMs\x12\x87\x01\n\x1bmodel_selection_duration_ms\x18\x0b \x03(\x0b\x32H.projectmetis.FederatedTaskRuntimeMetadata.ModelSelectionDurationMsEntryR\x18modelSelectionDurationMs\x12[\n\x1cmodel_aggregation_started_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x19modelAggregationStartedAt\x12_\n\x1emodel_aggregation_completed_at\x18\r \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x1bmodelAggregationCompletedAt\x12L\n#model_aggregation_total_duration_ms\x18\x0e \x01(\x01R\x1fmodelAggregationTotalDurationMs\x12?\n\x1cmodel_aggregation_block_size\x18\x0f \x03(\x01R\x19modelAggregationBlockSize\x12H\n!model_aggregation_block_memory_kb\x18\x10 \x03(\x01R\x1dmodelAggregationBlockMemoryKb\x12L\n#model_aggregation_block_duration_ms\x18\x11 \x03(\x01R\x1fmodelAggregationBlockDurationMs\x12X\n\x18model_tensor_quantifiers\x18\x12 \x03(\x0b\x32\x1e.projectmetis.TensorQuantifierR\x16modelTensorQuantifiers\x1a\x63\n\x19TrainTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18TrainTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18\x45valTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x61\n\x17\x45valTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1aK\n\x1dModelInsertionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x1aK\n\x1dModelSelectionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x62\x06proto3'
+  serialized_pb=b'\n\x19metisfl/proto/metis.proto\x12\x0cprojectmetis\x1a\x19metisfl/proto/model.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"v\n\x0cServerEntity\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x36\n\nssl_config\x18\x03 \x01(\x0b\x32\x17.projectmetis.SSLConfigR\tsslConfig\"r\n\x0eSSLConfigFiles\x12\x36\n\x17public_certificate_file\x18\x01 \x01(\tR\x15publicCertificateFile\x12(\n\x10private_key_file\x18\x02 \x01(\tR\x0eprivateKeyFile\"{\n\x0fSSLConfigStream\x12:\n\x19public_certificate_stream\x18\x01 \x01(\x0cR\x17publicCertificateStream\x12,\n\x12private_key_stream\x18\x02 \x01(\x0cR\x10privateKeyStream\"\xcb\x01\n\tSSLConfig\x12\x1d\n\nenable_ssl\x18\x01 \x01(\x08R\tenableSsl\x12H\n\x10ssl_config_files\x18\x06 \x01(\x0b\x32\x1c.projectmetis.SSLConfigFilesH\x00R\x0esslConfigFiles\x12K\n\x11ssl_config_stream\x18\x07 \x01(\x0b\x32\x1d.projectmetis.SSLConfigStreamH\x00R\x0fsslConfigStreamB\x08\n\x06\x63onfig\"\x8a\n\n\x0b\x44\x61tasetSpec\x12\x32\n\x15num_training_examples\x18\x01 \x01(\rR\x13numTrainingExamples\x12\x36\n\x17num_validation_examples\x18\x02 \x01(\rR\x15numValidationExamples\x12*\n\x11num_test_examples\x18\x03 \x01(\rR\x0fnumTestExamples\x12w\n\x1ctraining_classification_spec\x18\x04 \x01(\x0b\x32\x33.projectmetis.DatasetSpec.ClassificationDatasetSpecH\x00R\x1atrainingClassificationSpec\x12k\n\x18training_regression_spec\x18\x05 \x01(\x0b\x32/.projectmetis.DatasetSpec.RegressionDatasetSpecH\x00R\x16trainingRegressionSpec\x12{\n\x1evalidation_classification_spec\x18\x06 \x01(\x0b\x32\x33.projectmetis.DatasetSpec.ClassificationDatasetSpecH\x01R\x1cvalidationClassificationSpec\x12o\n\x1avalidation_regression_spec\x18\x07 \x01(\x0b\x32/.projectmetis.DatasetSpec.RegressionDatasetSpecH\x01R\x18validationRegressionSpec\x12o\n\x18test_classification_spec\x18\x08 \x01(\x0b\x32\x33.projectmetis.DatasetSpec.ClassificationDatasetSpecH\x02R\x16testClassificationSpec\x12\x63\n\x14test_regression_spec\x18\t \x01(\x0b\x32/.projectmetis.DatasetSpec.RegressionDatasetSpecH\x02R\x12testRegressionSpec\x1a\xd9\x01\n\x19\x43lassificationDatasetSpec\x12w\n\x12\x63lass_examples_num\x18\x01 \x03(\x0b\x32I.projectmetis.DatasetSpec.ClassificationDatasetSpec.ClassExamplesNumEntryR\x10\x63lassExamplesNum\x1a\x43\n\x15\x43lassExamplesNumEntry\x12\x10\n\x03key\x18\x01 \x01(\rR\x03key\x12\x14\n\x05value\x18\x02 \x01(\rR\x05value:\x02\x38\x01\x1a\x93\x01\n\x15RegressionDatasetSpec\x12\x10\n\x03min\x18\x01 \x01(\x01R\x03min\x12\x10\n\x03max\x18\x02 \x01(\x01R\x03max\x12\x12\n\x04mean\x18\x03 \x01(\x01R\x04mean\x12\x16\n\x06median\x18\x04 \x01(\x01R\x06median\x12\x12\n\x04mode\x18\x05 \x01(\x01R\x04mode\x12\x16\n\x06stddev\x18\x06 \x01(\x01R\x06stddevB\x17\n\x15training_dataset_specB\x19\n\x17validation_dataset_specB\x13\n\x11test_dataset_spec\"B\n\x14LearningTaskTemplate\x12*\n\x11num_local_updates\x18\x01 \x01(\rR\x0fnumLocalUpdates\"\x91\x02\n\x0cLearningTask\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12*\n\x11num_local_updates\x18\x02 \x01(\rR\x0fnumLocalUpdates\x12o\n5training_dataset_percentage_for_stratified_validation\x18\x03 \x01(\x02R0trainingDatasetPercentageForStratifiedValidation\x12\x39\n\x07metrics\x18\x04 \x01(\x0b\x32\x1f.projectmetis.EvaluationMetricsR\x07metrics\"\xb9\x01\n\x15\x43ompletedLearningTask\x12)\n\x05model\x18\x01 \x01(\x0b\x32\x13.projectmetis.ModelR\x05model\x12R\n\x12\x65xecution_metadata\x18\x02 \x01(\x0b\x32#.projectmetis.TaskExecutionMetadataR\x11\x65xecutionMetadata\x12!\n\x0c\x61ux_metadata\x18\x03 \x01(\tR\x0b\x61uxMetadata\"\xee\x02\n\x15TaskExecutionMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x45\n\x0ftask_evaluation\x18\x02 \x01(\x0b\x32\x1c.projectmetis.TaskEvaluationR\x0etaskEvaluation\x12)\n\x10\x63ompleted_epochs\x18\x03 \x01(\x02R\x0f\x63ompletedEpochs\x12+\n\x11\x63ompleted_batches\x18\x04 \x01(\rR\x10\x63ompletedBatches\x12\x1d\n\nbatch_size\x18\x05 \x01(\rR\tbatchSize\x12\x35\n\x17processing_ms_per_epoch\x18\x06 \x01(\x02R\x14processingMsPerEpoch\x12\x35\n\x17processing_ms_per_batch\x18\x07 \x01(\x02R\x14processingMsPerBatch\"\xfc\x01\n\x0eTaskEvaluation\x12N\n\x13training_evaluation\x18\x01 \x03(\x0b\x32\x1d.projectmetis.EpochEvaluationR\x12trainingEvaluation\x12R\n\x15validation_evaluation\x18\x02 \x03(\x0b\x32\x1d.projectmetis.EpochEvaluationR\x14validationEvaluation\x12\x46\n\x0ftest_evaluation\x18\x03 \x03(\x0b\x32\x1d.projectmetis.EpochEvaluationR\x0etestEvaluation\"v\n\x0f\x45pochEvaluation\x12\x19\n\x08\x65poch_id\x18\x01 \x01(\rR\x07\x65pochId\x12H\n\x10model_evaluation\x18\x02 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x0fmodelEvaluation\"+\n\x11\x45valuationMetrics\x12\x16\n\x06metric\x18\x01 \x03(\tR\x06metric\"\xa8\x01\n\x0fModelEvaluation\x12T\n\rmetric_values\x18\x01 \x03(\x0b\x32/.projectmetis.ModelEvaluation.MetricValuesEntryR\x0cmetricValues\x1a?\n\x11MetricValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xfe\x01\n\x10ModelEvaluations\x12N\n\x13training_evaluation\x18\x01 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x12trainingEvaluation\x12R\n\x15validation_evaluation\x18\x02 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x14validationEvaluation\x12\x46\n\x0ftest_evaluation\x18\x03 \x01(\x0b\x32\x1d.projectmetis.ModelEvaluationR\x0etestEvaluation\"^\n\x12LocalTasksMetadata\x12H\n\rtask_metadata\x18\x01 \x03(\x0b\x32#.projectmetis.TaskExecutionMetadataR\x0ctaskMetadata\"\x80\x02\n\x18\x43ommunityModelEvaluation\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12Y\n\x0b\x65valuations\x18\x02 \x03(\x0b\x32\x37.projectmetis.CommunityModelEvaluation.EvaluationsEntryR\x0b\x65valuations\x1a^\n\x10\x45valuationsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32\x1e.projectmetis.ModelEvaluationsR\x05value:\x02\x38\x01\"m\n\x0fHyperparameters\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12;\n\toptimizer\x18\x02 \x01(\x0b\x32\x1d.projectmetis.OptimizerConfigR\toptimizer\"\xd8\x04\n\x10\x43ontrollerParams\x12?\n\rserver_entity\x18\x01 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12L\n\x12global_model_specs\x18\x02 \x01(\x0b\x32\x1e.projectmetis.GlobalModelSpecsR\x10globalModelSpecs\x12Q\n\x13\x63ommunication_specs\x18\x03 \x01(\x0b\x32 .projectmetis.CommunicationSpecsR\x12\x63ommunicationSpecs\x12L\n\x12model_store_config\x18\x04 \x01(\x0b\x32\x1e.projectmetis.ModelStoreConfigR\x10modelStoreConfig\x12\\\n\x11model_hyperparams\x18\x05 \x01(\x0b\x32/.projectmetis.ControllerParams.ModelHyperparamsR\x10modelHyperparams\x1a\xb5\x01\n\x10ModelHyperparams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x16\n\x06\x65pochs\x18\x02 \x01(\rR\x06\x65pochs\x12;\n\toptimizer\x18\x03 \x01(\x0b\x32\x1d.projectmetis.OptimizerConfigR\toptimizer\x12-\n\x12percent_validation\x18\x04 \x01(\x02R\x11percentValidation\"\xa7\x01\n\x10ModelStoreConfig\x12\x45\n\x0fin_memory_store\x18\x01 \x01(\x0b\x32\x1b.projectmetis.InMemoryStoreH\x00R\rinMemoryStore\x12\x42\n\x0eredis_db_store\x18\x02 \x01(\x0b\x32\x1a.projectmetis.RedisDBStoreH\x00R\x0credisDbStoreB\x08\n\x06\x63onfig\"Z\n\rInMemoryStore\x12I\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x1d.projectmetis.ModelStoreSpecsR\x0fmodelStoreSpecs\"\x9a\x01\n\x0cRedisDBStore\x12I\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x1d.projectmetis.ModelStoreSpecsR\x0fmodelStoreSpecs\x12?\n\rserver_entity\x18\x02 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\"\x0c\n\nNoEviction\">\n\x15LineageLengthEviction\x12%\n\x0elineage_length\x18\x01 \x01(\rR\rlineageLength\"\xc0\x01\n\x0fModelStoreSpecs\x12;\n\x0bno_eviction\x18\x01 \x01(\x0b\x32\x18.projectmetis.NoEvictionH\x00R\nnoEviction\x12]\n\x17lineage_length_eviction\x18\x02 \x01(\x0b\x32#.projectmetis.LineageLengthEvictionH\x00R\x15lineageLengthEvictionB\x11\n\x0f\x65viction_policy\"\xb6\x02\n\x0f\x41ggregationRule\x12/\n\x07\x66\x65\x64_avg\x18\x01 \x01(\x0b\x32\x14.projectmetis.FedAvgH\x00R\x06\x66\x65\x64\x41vg\x12\x38\n\nfed_stride\x18\x02 \x01(\x0b\x32\x17.projectmetis.FedStrideH\x00R\tfedStride\x12/\n\x07\x66\x65\x64_rec\x18\x03 \x01(\x0b\x32\x14.projectmetis.FedRecH\x00R\x06\x66\x65\x64Rec\x12%\n\x03pwa\x18\x04 \x01(\x0b\x32\x11.projectmetis.PWAH\x00R\x03pwa\x12X\n\x16\x61ggregation_rule_specs\x18\x05 \x01(\x0b\x32\".projectmetis.AggregationRuleSpecsR\x14\x61ggregationRuleSpecsB\x06\n\x04rule\"\xd9\x01\n\x14\x41ggregationRuleSpecs\x12W\n\x0escaling_factor\x18\x01 \x01(\x0e\x32\x30.projectmetis.AggregationRuleSpecs.ScalingFactorR\rscalingFactor\"h\n\rScalingFactor\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x19\n\x15NUM_COMPLETED_BATCHES\x10\x01\x12\x14\n\x10NUM_PARTICIPANTS\x10\x02\x12\x19\n\x15NUM_TRAINING_EXAMPLES\x10\x03\"\x08\n\x06\x46\x65\x64\x41vg\"0\n\tFedStride\x12#\n\rstride_length\x18\x01 \x01(\rR\x0cstrideLength\"\x08\n\x06\x46\x65\x64Rec\"\xa9\x02\n\x08HEScheme\x12\x18\n\x07\x65nabled\x18\x01 \x01(\x08R\x07\x65nabled\x12\x12\n\x04name\x18\x02 \x01(\tR\x04name\x12$\n\rcryptocontext\x18\x03 \x01(\tR\rcryptocontext\x12\x1d\n\npublic_key\x18\x04 \x01(\tR\tpublicKey\x12\x1f\n\x0bprivate_key\x18\x05 \x01(\tR\nprivateKey\x12\x45\n\x0f\x65mpty_he_scheme\x18\x06 \x01(\x0b\x32\x1b.projectmetis.EmptyHESchemeH\x00R\remptyHeScheme\x12\x38\n\nfhe_scheme\x18\x07 \x01(\x0b\x32\x17.projectmetis.FHESchemeH\x00R\tfheSchemeB\x08\n\x06scheme\"\x0f\n\rEmptyHEScheme\"M\n\tFHEScheme\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12!\n\x0cscaling_bits\x18\x02 \x01(\rR\x0bscalingBits\":\n\x03PWA\x12\x33\n\the_scheme\x18\x01 \x01(\x0b\x32\x16.projectmetis.HESchemeR\x08heScheme\"\x9e\x01\n\x10GlobalModelSpecs\x12H\n\x10\x61ggregation_rule\x18\x01 \x01(\x0b\x32\x1d.projectmetis.AggregationRuleR\x0f\x61ggregationRule\x12@\n\x1clearners_participation_ratio\x18\x02 \x01(\x02R\x1alearnersParticipationRatio\"\xf1\x01\n\x12\x43ommunicationSpecs\x12\x45\n\x08protocol\x18\x01 \x01(\x0e\x32).projectmetis.CommunicationSpecs.ProtocolR\x08protocol\x12\x42\n\x0eprotocol_specs\x18\x02 \x01(\x0b\x32\x1b.projectmetis.ProtocolSpecsR\rprotocolSpecs\"P\n\x08Protocol\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0f\n\x0bSYNCHRONOUS\x10\x01\x12\x10\n\x0c\x41SYNCHRONOUS\x10\x02\x12\x14\n\x10SEMI_SYNCHRONOUS\x10\x03\"\x7f\n\rProtocolSpecs\x12(\n\x10semi_sync_lambda\x18\x01 \x01(\x05R\x0esemiSyncLambda\x12\x44\n\x1fsemi_sync_recompute_num_updates\x18\x02 \x01(\x08R\x1bsemiSyncRecomputeNumUpdates\"\xc1\x01\n\x11LearnerDescriptor\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12?\n\rserver_entity\x18\x03 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12<\n\x0c\x64\x61taset_spec\x18\x04 \x01(\x0b\x32\x19.projectmetis.DatasetSpecR\x0b\x64\x61tasetSpec\"t\n\x0cLearnerState\x12\x39\n\x07learner\x18\x01 \x01(\x0b\x32\x1f.projectmetis.LearnerDescriptorR\x07learner\x12)\n\x05model\x18\x02 \x03(\x0b\x32\x13.projectmetis.ModelR\x05model\"\x94\x11\n\x1c\x46\x65\x64\x65ratedTaskRuntimeMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x39\n\nstarted_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n\x0c\x63ompleted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x0b\x63ompletedAt\x12\x33\n\x16\x61ssigned_to_learner_id\x18\x04 \x03(\tR\x13\x61ssignedToLearnerId\x12\x35\n\x17\x63ompleted_by_learner_id\x18\x05 \x03(\tR\x14\x63ompletedByLearnerId\x12{\n\x17train_task_submitted_at\x18\x06 \x03(\x0b\x32\x44.projectmetis.FederatedTaskRuntimeMetadata.TrainTaskSubmittedAtEntryR\x14trainTaskSubmittedAt\x12x\n\x16train_task_received_at\x18\x07 \x03(\x0b\x32\x43.projectmetis.FederatedTaskRuntimeMetadata.TrainTaskReceivedAtEntryR\x13trainTaskReceivedAt\x12x\n\x16\x65val_task_submitted_at\x18\x08 \x03(\x0b\x32\x43.projectmetis.FederatedTaskRuntimeMetadata.EvalTaskSubmittedAtEntryR\x13\x65valTaskSubmittedAt\x12u\n\x15\x65val_task_received_at\x18\t \x03(\x0b\x32\x42.projectmetis.FederatedTaskRuntimeMetadata.EvalTaskReceivedAtEntryR\x12\x65valTaskReceivedAt\x12\x87\x01\n\x1bmodel_insertion_duration_ms\x18\n \x03(\x0b\x32H.projectmetis.FederatedTaskRuntimeMetadata.ModelInsertionDurationMsEntryR\x18modelInsertionDurationMs\x12\x87\x01\n\x1bmodel_selection_duration_ms\x18\x0b \x03(\x0b\x32H.projectmetis.FederatedTaskRuntimeMetadata.ModelSelectionDurationMsEntryR\x18modelSelectionDurationMs\x12[\n\x1cmodel_aggregation_started_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x19modelAggregationStartedAt\x12_\n\x1emodel_aggregation_completed_at\x18\r \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x1bmodelAggregationCompletedAt\x12L\n#model_aggregation_total_duration_ms\x18\x0e \x01(\x01R\x1fmodelAggregationTotalDurationMs\x12?\n\x1cmodel_aggregation_block_size\x18\x0f \x03(\x01R\x19modelAggregationBlockSize\x12H\n!model_aggregation_block_memory_kb\x18\x10 \x03(\x01R\x1dmodelAggregationBlockMemoryKb\x12L\n#model_aggregation_block_duration_ms\x18\x11 \x03(\x01R\x1fmodelAggregationBlockDurationMs\x12X\n\x18model_tensor_quantifiers\x18\x12 \x03(\x0b\x32\x1e.projectmetis.TensorQuantifierR\x16modelTensorQuantifiers\x1a\x63\n\x19TrainTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18TrainTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18\x45valTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x61\n\x17\x45valTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1aK\n\x1dModelInsertionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x1aK\n\x1dModelSelectionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x62\x06proto3'
   ,
   dependencies=[metisfl_dot_proto_dot_model__pb2.DESCRIPTOR,google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -57,8 +57,8 @@ _AGGREGATIONRULESPECS_SCALINGFACTOR = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=5530,
-  serialized_end=5634,
+  serialized_start=5900,
+  serialized_end=6004,
 )
 _sym_db.RegisterEnumDescriptor(_AGGREGATIONRULESPECS_SCALINGFACTOR)
 
@@ -92,8 +92,8 @@ _COMMUNICATIONSPECS_PROTOCOL = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=6485,
-  serialized_end=6565,
+  serialized_start=6855,
+  serialized_end=6935,
 )
 _sym_db.RegisterEnumDescriptor(_COMMUNICATIONSPECS_PROTOCOL)
 
@@ -144,28 +144,28 @@ _SERVERENTITY = _descriptor.Descriptor(
 )
 
 
-_SSLCONFIG = _descriptor.Descriptor(
-  name='SSLConfig',
-  full_name='projectmetis.SSLConfig',
+_SSLCONFIGFILES = _descriptor.Descriptor(
+  name='SSLConfigFiles',
+  full_name='projectmetis.SSLConfigFiles',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='server_key', full_name='projectmetis.SSLConfig.server_key', index=0,
+      name='public_certificate_file', full_name='projectmetis.SSLConfigFiles.public_certificate_file', index=0,
       number=1, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='serverKey', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, json_name='publicCertificateFile', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='server_cert', full_name='projectmetis.SSLConfig.server_cert', index=1,
+      name='private_key_file', full_name='projectmetis.SSLConfigFiles.private_key_file', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='serverCert', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, json_name='privateKeyFile', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -179,7 +179,97 @@ _SSLCONFIG = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=223,
-  serialized_end=298,
+  serialized_end=337,
+)
+
+
+_SSLCONFIGSTREAM = _descriptor.Descriptor(
+  name='SSLConfigStream',
+  full_name='projectmetis.SSLConfigStream',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='public_certificate_stream', full_name='projectmetis.SSLConfigStream.public_certificate_stream', index=0,
+      number=1, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='publicCertificateStream', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='private_key_stream', full_name='projectmetis.SSLConfigStream.private_key_stream', index=1,
+      number=2, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='privateKeyStream', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=339,
+  serialized_end=462,
+)
+
+
+_SSLCONFIG = _descriptor.Descriptor(
+  name='SSLConfig',
+  full_name='projectmetis.SSLConfig',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='enable_ssl', full_name='projectmetis.SSLConfig.enable_ssl', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='enableSsl', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='ssl_config_files', full_name='projectmetis.SSLConfig.ssl_config_files', index=1,
+      number=6, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='sslConfigFiles', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='ssl_config_stream', full_name='projectmetis.SSLConfig.ssl_config_stream', index=2,
+      number=7, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='sslConfigStream', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='config', full_name='projectmetis.SSLConfig.config',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=465,
+  serialized_end=668,
 )
 
 
@@ -217,8 +307,8 @@ _DATASETSPEC_CLASSIFICATIONDATASETSPEC_CLASSEXAMPLESNUMENTRY = _descriptor.Descr
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1301,
-  serialized_end=1368,
+  serialized_start=1671,
+  serialized_end=1738,
 )
 
 _DATASETSPEC_CLASSIFICATIONDATASETSPEC = _descriptor.Descriptor(
@@ -248,8 +338,8 @@ _DATASETSPEC_CLASSIFICATIONDATASETSPEC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1151,
-  serialized_end=1368,
+  serialized_start=1521,
+  serialized_end=1738,
 )
 
 _DATASETSPEC_REGRESSIONDATASETSPEC = _descriptor.Descriptor(
@@ -314,8 +404,8 @@ _DATASETSPEC_REGRESSIONDATASETSPEC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1371,
-  serialized_end=1518,
+  serialized_start=1741,
+  serialized_end=1888,
 )
 
 _DATASETSPEC = _descriptor.Descriptor(
@@ -416,8 +506,8 @@ _DATASETSPEC = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=301,
-  serialized_end=1591,
+  serialized_start=671,
+  serialized_end=1961,
 )
 
 
@@ -448,8 +538,8 @@ _LEARNINGTASKTEMPLATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1593,
-  serialized_end=1659,
+  serialized_start=1963,
+  serialized_end=2029,
 )
 
 
@@ -501,8 +591,8 @@ _LEARNINGTASK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1662,
-  serialized_end=1935,
+  serialized_start=2032,
+  serialized_end=2305,
 )
 
 
@@ -547,8 +637,8 @@ _COMPLETEDLEARNINGTASK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1938,
-  serialized_end=2123,
+  serialized_start=2308,
+  serialized_end=2493,
 )
 
 
@@ -621,8 +711,8 @@ _TASKEXECUTIONMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2126,
-  serialized_end=2492,
+  serialized_start=2496,
+  serialized_end=2862,
 )
 
 
@@ -667,8 +757,8 @@ _TASKEVALUATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2495,
-  serialized_end=2747,
+  serialized_start=2865,
+  serialized_end=3117,
 )
 
 
@@ -706,8 +796,8 @@ _EPOCHEVALUATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2749,
-  serialized_end=2867,
+  serialized_start=3119,
+  serialized_end=3237,
 )
 
 
@@ -738,8 +828,8 @@ _EVALUATIONMETRICS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2869,
-  serialized_end=2912,
+  serialized_start=3239,
+  serialized_end=3282,
 )
 
 
@@ -777,8 +867,8 @@ _MODELEVALUATION_METRICVALUESENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3020,
-  serialized_end=3083,
+  serialized_start=3390,
+  serialized_end=3453,
 )
 
 _MODELEVALUATION = _descriptor.Descriptor(
@@ -808,8 +898,8 @@ _MODELEVALUATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2915,
-  serialized_end=3083,
+  serialized_start=3285,
+  serialized_end=3453,
 )
 
 
@@ -854,8 +944,8 @@ _MODELEVALUATIONS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3086,
-  serialized_end=3340,
+  serialized_start=3456,
+  serialized_end=3710,
 )
 
 
@@ -886,8 +976,8 @@ _LOCALTASKSMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3342,
-  serialized_end=3436,
+  serialized_start=3712,
+  serialized_end=3806,
 )
 
 
@@ -925,8 +1015,8 @@ _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3601,
-  serialized_end=3695,
+  serialized_start=3971,
+  serialized_end=4065,
 )
 
 _COMMUNITYMODELEVALUATION = _descriptor.Descriptor(
@@ -963,8 +1053,8 @@ _COMMUNITYMODELEVALUATION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3439,
-  serialized_end=3695,
+  serialized_start=3809,
+  serialized_end=4065,
 )
 
 
@@ -1002,8 +1092,8 @@ _HYPERPARAMETERS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3697,
-  serialized_end=3806,
+  serialized_start=4067,
+  serialized_end=4176,
 )
 
 
@@ -1055,8 +1145,8 @@ _CONTROLLERPARAMS_MODELHYPERPARAMS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4228,
-  serialized_end=4409,
+  serialized_start=4598,
+  serialized_end=4779,
 )
 
 _CONTROLLERPARAMS = _descriptor.Descriptor(
@@ -1114,8 +1204,8 @@ _CONTROLLERPARAMS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3809,
-  serialized_end=4409,
+  serialized_start=4179,
+  serialized_end=4779,
 )
 
 
@@ -1158,8 +1248,8 @@ _MODELSTORECONFIG = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=4412,
-  serialized_end=4579,
+  serialized_start=4782,
+  serialized_end=4949,
 )
 
 
@@ -1190,8 +1280,8 @@ _INMEMORYSTORE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4581,
-  serialized_end=4671,
+  serialized_start=4951,
+  serialized_end=5041,
 )
 
 
@@ -1229,8 +1319,8 @@ _REDISDBSTORE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4674,
-  serialized_end=4828,
+  serialized_start=5044,
+  serialized_end=5198,
 )
 
 
@@ -1254,8 +1344,8 @@ _NOEVICTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4830,
-  serialized_end=4842,
+  serialized_start=5200,
+  serialized_end=5212,
 )
 
 
@@ -1286,8 +1376,8 @@ _LINEAGELENGTHEVICTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4844,
-  serialized_end=4906,
+  serialized_start=5214,
+  serialized_end=5276,
 )
 
 
@@ -1330,8 +1420,8 @@ _MODELSTORESPECS = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=4909,
-  serialized_end=5101,
+  serialized_start=5279,
+  serialized_end=5471,
 )
 
 
@@ -1395,8 +1485,8 @@ _AGGREGATIONRULE = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=5104,
-  serialized_end=5414,
+  serialized_start=5474,
+  serialized_end=5784,
 )
 
 
@@ -1428,8 +1518,8 @@ _AGGREGATIONRULESPECS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5417,
-  serialized_end=5634,
+  serialized_start=5787,
+  serialized_end=6004,
 )
 
 
@@ -1453,8 +1543,8 @@ _FEDAVG = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5636,
-  serialized_end=5644,
+  serialized_start=6006,
+  serialized_end=6014,
 )
 
 
@@ -1485,8 +1575,8 @@ _FEDSTRIDE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5646,
-  serialized_end=5694,
+  serialized_start=6016,
+  serialized_end=6064,
 )
 
 
@@ -1510,8 +1600,8 @@ _FEDREC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=5696,
-  serialized_end=5704,
+  serialized_start=6066,
+  serialized_end=6074,
 )
 
 
@@ -1589,8 +1679,8 @@ _HESCHEME = _descriptor.Descriptor(
       create_key=_descriptor._internal_create_key,
     fields=[]),
   ],
-  serialized_start=5707,
-  serialized_end=6004,
+  serialized_start=6077,
+  serialized_end=6374,
 )
 
 
@@ -1614,8 +1704,8 @@ _EMPTYHESCHEME = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6006,
-  serialized_end=6021,
+  serialized_start=6376,
+  serialized_end=6391,
 )
 
 
@@ -1653,8 +1743,8 @@ _FHESCHEME = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6023,
-  serialized_end=6100,
+  serialized_start=6393,
+  serialized_end=6470,
 )
 
 
@@ -1685,8 +1775,8 @@ _PWA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6102,
-  serialized_end=6160,
+  serialized_start=6472,
+  serialized_end=6530,
 )
 
 
@@ -1724,8 +1814,8 @@ _GLOBALMODELSPECS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6163,
-  serialized_end=6321,
+  serialized_start=6533,
+  serialized_end=6691,
 )
 
 
@@ -1764,8 +1854,8 @@ _COMMUNICATIONSPECS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6324,
-  serialized_end=6565,
+  serialized_start=6694,
+  serialized_end=6935,
 )
 
 
@@ -1803,8 +1893,8 @@ _PROTOCOLSPECS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6567,
-  serialized_end=6694,
+  serialized_start=6937,
+  serialized_end=7064,
 )
 
 
@@ -1856,8 +1946,8 @@ _LEARNERDESCRIPTOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6697,
-  serialized_end=6890,
+  serialized_start=7067,
+  serialized_end=7260,
 )
 
 
@@ -1895,8 +1985,8 @@ _LEARNERSTATE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=6892,
-  serialized_end=7008,
+  serialized_start=7262,
+  serialized_end=7378,
 )
 
 
@@ -1934,8 +2024,8 @@ _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY = _descriptor.Descriptor
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8655,
-  serialized_end=8754,
+  serialized_start=9025,
+  serialized_end=9124,
 )
 
 _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY = _descriptor.Descriptor(
@@ -1972,8 +2062,8 @@ _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8756,
-  serialized_end=8854,
+  serialized_start=9126,
+  serialized_end=9224,
 )
 
 _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY = _descriptor.Descriptor(
@@ -2010,8 +2100,8 @@ _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8856,
-  serialized_end=8954,
+  serialized_start=9226,
+  serialized_end=9324,
 )
 
 _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY = _descriptor.Descriptor(
@@ -2048,8 +2138,8 @@ _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=8956,
-  serialized_end=9053,
+  serialized_start=9326,
+  serialized_end=9423,
 )
 
 _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY = _descriptor.Descriptor(
@@ -2086,8 +2176,8 @@ _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY = _descriptor.Descri
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9055,
-  serialized_end=9130,
+  serialized_start=9425,
+  serialized_end=9500,
 )
 
 _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY = _descriptor.Descriptor(
@@ -2124,8 +2214,8 @@ _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY = _descriptor.Descri
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=9132,
-  serialized_end=9207,
+  serialized_start=9502,
+  serialized_end=9577,
 )
 
 _FEDERATEDTASKRUNTIMEMETADATA = _descriptor.Descriptor(
@@ -2274,11 +2364,19 @@ _FEDERATEDTASKRUNTIMEMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=7011,
-  serialized_end=9207,
+  serialized_start=7381,
+  serialized_end=9577,
 )
 
 _SERVERENTITY.fields_by_name['ssl_config'].message_type = _SSLCONFIG
+_SSLCONFIG.fields_by_name['ssl_config_files'].message_type = _SSLCONFIGFILES
+_SSLCONFIG.fields_by_name['ssl_config_stream'].message_type = _SSLCONFIGSTREAM
+_SSLCONFIG.oneofs_by_name['config'].fields.append(
+  _SSLCONFIG.fields_by_name['ssl_config_files'])
+_SSLCONFIG.fields_by_name['ssl_config_files'].containing_oneof = _SSLCONFIG.oneofs_by_name['config']
+_SSLCONFIG.oneofs_by_name['config'].fields.append(
+  _SSLCONFIG.fields_by_name['ssl_config_stream'])
+_SSLCONFIG.fields_by_name['ssl_config_stream'].containing_oneof = _SSLCONFIG.oneofs_by_name['config']
 _DATASETSPEC_CLASSIFICATIONDATASETSPEC_CLASSEXAMPLESNUMENTRY.containing_type = _DATASETSPEC_CLASSIFICATIONDATASETSPEC
 _DATASETSPEC_CLASSIFICATIONDATASETSPEC.fields_by_name['class_examples_num'].message_type = _DATASETSPEC_CLASSIFICATIONDATASETSPEC_CLASSEXAMPLESNUMENTRY
 _DATASETSPEC_CLASSIFICATIONDATASETSPEC.containing_type = _DATASETSPEC
@@ -2409,6 +2507,8 @@ _FEDERATEDTASKRUNTIMEMETADATA.fields_by_name['model_aggregation_started_at'].mes
 _FEDERATEDTASKRUNTIMEMETADATA.fields_by_name['model_aggregation_completed_at'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _FEDERATEDTASKRUNTIMEMETADATA.fields_by_name['model_tensor_quantifiers'].message_type = metisfl_dot_proto_dot_model__pb2._TENSORQUANTIFIER
 DESCRIPTOR.message_types_by_name['ServerEntity'] = _SERVERENTITY
+DESCRIPTOR.message_types_by_name['SSLConfigFiles'] = _SSLCONFIGFILES
+DESCRIPTOR.message_types_by_name['SSLConfigStream'] = _SSLCONFIGSTREAM
 DESCRIPTOR.message_types_by_name['SSLConfig'] = _SSLCONFIG
 DESCRIPTOR.message_types_by_name['DatasetSpec'] = _DATASETSPEC
 DESCRIPTOR.message_types_by_name['LearningTaskTemplate'] = _LEARNINGTASKTEMPLATE
@@ -2453,6 +2553,20 @@ ServerEntity = _reflection.GeneratedProtocolMessageType('ServerEntity', (_messag
   # @@protoc_insertion_point(class_scope:projectmetis.ServerEntity)
   })
 _sym_db.RegisterMessage(ServerEntity)
+
+SSLConfigFiles = _reflection.GeneratedProtocolMessageType('SSLConfigFiles', (_message.Message,), {
+  'DESCRIPTOR' : _SSLCONFIGFILES,
+  '__module__' : 'metisfl.proto.metis_pb2'
+  # @@protoc_insertion_point(class_scope:projectmetis.SSLConfigFiles)
+  })
+_sym_db.RegisterMessage(SSLConfigFiles)
+
+SSLConfigStream = _reflection.GeneratedProtocolMessageType('SSLConfigStream', (_message.Message,), {
+  'DESCRIPTOR' : _SSLCONFIGSTREAM,
+  '__module__' : 'metisfl.proto.metis_pb2'
+  # @@protoc_insertion_point(class_scope:projectmetis.SSLConfigStream)
+  })
+_sym_db.RegisterMessage(SSLConfigStream)
 
 SSLConfig = _reflection.GeneratedProtocolMessageType('SSLConfig', (_message.Message,), {
   'DESCRIPTOR' : _SSLCONFIG,

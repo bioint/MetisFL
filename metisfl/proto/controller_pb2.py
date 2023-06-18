@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x1emetisfl/proto/controller.proto\x12\x0cprojectmetis\x1a\x19metisfl/proto/metis.proto\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"R\n)GetCommunityModelEvaluationLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"\x87\x01\n*GetCommunityModelEvaluationLineageResponse\x12Y\n\x14\x63ommunity_evaluation\x18\x01 \x03(\x0b\x32&.projectmetis.CommunityModelEvaluationR\x13\x63ommunityEvaluation\"H\n\x1fGetCommunityModelLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"k\n GetCommunityModelLineageResponse\x12G\n\x10\x66\x65\x64\x65rated_models\x18\x01 \x03(\x0b\x32\x1c.projectmetis.FederatedModelR\x0f\x66\x65\x64\x65ratedModels\"d\n\x1aGetLocalTaskLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\x12\x1f\n\x0blearner_ids\x18\x02 \x03(\tR\nlearnerIds\"\xde\x01\n\x1bGetLocalTaskLineageResponse\x12]\n\x0clearner_task\x18\x01 \x03(\x0b\x32:.projectmetis.GetLocalTaskLineageResponse.LearnerTaskEntryR\x0blearnerTask\x1a`\n\x10LearnerTaskEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x36\n\x05value\x18\x02 \x01(\x0b\x32 .projectmetis.LocalTasksMetadataR\x05value:\x02\x38\x01\"\x8c\x01\n\"GetLearnerLocalModelLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\x12?\n\rserver_entity\x18\x02 \x03(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\"~\n#GetLearnerLocalModelLineageResponse\x12W\n\x13learner_local_model\x18\x01 \x03(\x0b\x32\'.projectmetis.LearnerLocalModelResponseR\x11learnerLocalModel\"I\n GetRuntimeMetadataLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"\x90\x01\n!GetRuntimeMetadataLineageResponse\x12\x46\n\x08metadata\x18\x01 \x03(\x0b\x32*.projectmetis.FederatedTaskRuntimeMetadataR\x08metadata\x12#\n\rjson_metadata\x18\x02 \x01(\tR\x0cjsonMetadata\"!\n\x1fGetParticipatingLearnersRequest\"]\n GetParticipatingLearnersResponse\x12\x39\n\x07learner\x18\x01 \x03(\x0b\x32\x1f.projectmetis.LearnerDescriptorR\x07learner\"\xa1\x01\n\x15JoinFederationRequest\x12?\n\rserver_entity\x18\x02 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12G\n\x12local_dataset_spec\x18\x03 \x01(\x0b\x32\x19.projectmetis.DatasetSpecR\x10localDatasetSpec\"{\n\x16JoinFederationResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k\x12\x1d\n\nlearner_id\x18\x02 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x03 \x01(\tR\tauthToken\"\x87\x01\n\x19LearnerLocalModelResponse\x12?\n\rserver_entity\x18\x01 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12)\n\x05model\x18\x02 \x03(\x0b\x32\x13.projectmetis.ModelR\x05model\"\x91\x01\n\x18MarkTaskCompletedRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12\x37\n\x04task\x18\x03 \x01(\x0b\x32#.projectmetis.CompletedLearningTaskR\x04task\"B\n\x1bLearnerExecutionAuxMetadata\x12#\n\rjson_response\x18\x01 \x01(\tR\x0cjsonResponse\"@\n\x19MarkTaskCompletedResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k\"V\n\x16LeaveFederationRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\">\n\x17LeaveFederationResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k\"R\n\x1cReplaceCommunityModelRequest\x12\x32\n\x05model\x18\x01 \x01(\x0b\x32\x1c.projectmetis.FederatedModelR\x05model\"D\n\x1dReplaceCommunityModelResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k2\x82\x0b\n\x11\x43ontrollerService\x12\x99\x01\n\"GetCommunityModelEvaluationLineage\x12\x37.projectmetis.GetCommunityModelEvaluationLineageRequest\x1a\x38.projectmetis.GetCommunityModelEvaluationLineageResponse\"\x00\x12{\n\x18GetCommunityModelLineage\x12-.projectmetis.GetCommunityModelLineageRequest\x1a..projectmetis.GetCommunityModelLineageResponse\"\x00\x12\x84\x01\n\x1bGetLearnerLocalModelLineage\x12\x30.projectmetis.GetLearnerLocalModelLineageRequest\x1a\x31.projectmetis.GetLearnerLocalModelLineageResponse\"\x00\x12l\n\x13GetLocalTaskLineage\x12(.projectmetis.GetLocalTaskLineageRequest\x1a).projectmetis.GetLocalTaskLineageResponse\"\x00\x12~\n\x19GetRuntimeMetadataLineage\x12..projectmetis.GetRuntimeMetadataLineageRequest\x1a/.projectmetis.GetRuntimeMetadataLineageResponse\"\x00\x12{\n\x18GetParticipatingLearners\x12-.projectmetis.GetParticipatingLearnersRequest\x1a..projectmetis.GetParticipatingLearnersResponse\"\x00\x12x\n\x17GetServicesHealthStatus\x12,.projectmetis.GetServicesHealthStatusRequest\x1a-.projectmetis.GetServicesHealthStatusResponse\"\x00\x12]\n\x0eJoinFederation\x12#.projectmetis.JoinFederationRequest\x1a$.projectmetis.JoinFederationResponse\"\x00\x12`\n\x0fLeaveFederation\x12$.projectmetis.LeaveFederationRequest\x1a%.projectmetis.LeaveFederationResponse\"\x00\x12\x66\n\x11MarkTaskCompleted\x12&.projectmetis.MarkTaskCompletedRequest\x1a\'.projectmetis.MarkTaskCompletedResponse\"\x00\x12r\n\x15ReplaceCommunityModel\x12*.projectmetis.ReplaceCommunityModelRequest\x1a+.projectmetis.ReplaceCommunityModelResponse\"\x00\x12K\n\x08ShutDown\x12\x1d.projectmetis.ShutDownRequest\x1a\x1e.projectmetis.ShutDownResponse\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x1emetisfl/proto/controller.proto\x12\x0cprojectmetis\x1a\x19metisfl/proto/metis.proto\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"R\n)GetCommunityModelEvaluationLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"\x87\x01\n*GetCommunityModelEvaluationLineageResponse\x12Y\n\x14\x63ommunity_evaluation\x18\x01 \x03(\x0b\x32&.projectmetis.CommunityModelEvaluationR\x13\x63ommunityEvaluation\"H\n\x1fGetCommunityModelLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"k\n GetCommunityModelLineageResponse\x12G\n\x10\x66\x65\x64\x65rated_models\x18\x01 \x03(\x0b\x32\x1c.projectmetis.FederatedModelR\x0f\x66\x65\x64\x65ratedModels\"d\n\x1aGetLocalTaskLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\x12\x1f\n\x0blearner_ids\x18\x02 \x03(\tR\nlearnerIds\"\xde\x01\n\x1bGetLocalTaskLineageResponse\x12]\n\x0clearner_task\x18\x01 \x03(\x0b\x32:.projectmetis.GetLocalTaskLineageResponse.LearnerTaskEntryR\x0blearnerTask\x1a`\n\x10LearnerTaskEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x36\n\x05value\x18\x02 \x01(\x0b\x32 .projectmetis.LocalTasksMetadataR\x05value:\x02\x38\x01\"\x8c\x01\n\"GetLearnerLocalModelLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\x12?\n\rserver_entity\x18\x02 \x03(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\"~\n#GetLearnerLocalModelLineageResponse\x12W\n\x13learner_local_model\x18\x01 \x03(\x0b\x32\'.projectmetis.LearnerLocalModelResponseR\x11learnerLocalModel\"I\n GetRuntimeMetadataLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"\x90\x01\n!GetRuntimeMetadataLineageResponse\x12\x46\n\x08metadata\x18\x01 \x03(\x0b\x32*.projectmetis.FederatedTaskRuntimeMetadataR\x08metadata\x12#\n\rjson_metadata\x18\x02 \x01(\tR\x0cjsonMetadata\"!\n\x1fGetParticipatingLearnersRequest\"]\n GetParticipatingLearnersResponse\x12\x39\n\x07learner\x18\x01 \x03(\x0b\x32\x1f.projectmetis.LearnerDescriptorR\x07learner\"\xa1\x01\n\x15JoinFederationRequest\x12?\n\rserver_entity\x18\x01 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12G\n\x12local_dataset_spec\x18\x02 \x01(\x0b\x32\x19.projectmetis.DatasetSpecR\x10localDatasetSpec\"\xb3\x01\n\x16JoinFederationResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k\x12\x1d\n\nlearner_id\x18\x02 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x03 \x01(\tR\tauthToken\x12\x36\n\nssl_config\x18\x04 \x01(\x0b\x32\x17.projectmetis.SSLConfigR\tsslConfig\"\x87\x01\n\x19LearnerLocalModelResponse\x12?\n\rserver_entity\x18\x01 \x01(\x0b\x32\x1a.projectmetis.ServerEntityR\x0cserverEntity\x12)\n\x05model\x18\x02 \x03(\x0b\x32\x13.projectmetis.ModelR\x05model\"\x91\x01\n\x18MarkTaskCompletedRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12\x37\n\x04task\x18\x03 \x01(\x0b\x32#.projectmetis.CompletedLearningTaskR\x04task\"B\n\x1bLearnerExecutionAuxMetadata\x12#\n\rjson_response\x18\x01 \x01(\tR\x0cjsonResponse\"@\n\x19MarkTaskCompletedResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k\"V\n\x16LeaveFederationRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\">\n\x17LeaveFederationResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k\"R\n\x1cReplaceCommunityModelRequest\x12\x32\n\x05model\x18\x01 \x01(\x0b\x32\x1c.projectmetis.FederatedModelR\x05model\"D\n\x1dReplaceCommunityModelResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63k2\x82\x0b\n\x11\x43ontrollerService\x12\x99\x01\n\"GetCommunityModelEvaluationLineage\x12\x37.projectmetis.GetCommunityModelEvaluationLineageRequest\x1a\x38.projectmetis.GetCommunityModelEvaluationLineageResponse\"\x00\x12{\n\x18GetCommunityModelLineage\x12-.projectmetis.GetCommunityModelLineageRequest\x1a..projectmetis.GetCommunityModelLineageResponse\"\x00\x12\x84\x01\n\x1bGetLearnerLocalModelLineage\x12\x30.projectmetis.GetLearnerLocalModelLineageRequest\x1a\x31.projectmetis.GetLearnerLocalModelLineageResponse\"\x00\x12l\n\x13GetLocalTaskLineage\x12(.projectmetis.GetLocalTaskLineageRequest\x1a).projectmetis.GetLocalTaskLineageResponse\"\x00\x12~\n\x19GetRuntimeMetadataLineage\x12..projectmetis.GetRuntimeMetadataLineageRequest\x1a/.projectmetis.GetRuntimeMetadataLineageResponse\"\x00\x12{\n\x18GetParticipatingLearners\x12-.projectmetis.GetParticipatingLearnersRequest\x1a..projectmetis.GetParticipatingLearnersResponse\"\x00\x12x\n\x17GetServicesHealthStatus\x12,.projectmetis.GetServicesHealthStatusRequest\x1a-.projectmetis.GetServicesHealthStatusResponse\"\x00\x12]\n\x0eJoinFederation\x12#.projectmetis.JoinFederationRequest\x1a$.projectmetis.JoinFederationResponse\"\x00\x12`\n\x0fLeaveFederation\x12$.projectmetis.LeaveFederationRequest\x1a%.projectmetis.LeaveFederationResponse\"\x00\x12\x66\n\x11MarkTaskCompleted\x12&.projectmetis.MarkTaskCompletedRequest\x1a\'.projectmetis.MarkTaskCompletedResponse\"\x00\x12r\n\x15ReplaceCommunityModel\x12*.projectmetis.ReplaceCommunityModelRequest\x1a+.projectmetis.ReplaceCommunityModelResponse\"\x00\x12K\n\x08ShutDown\x12\x1d.projectmetis.ShutDownRequest\x1a\x1e.projectmetis.ShutDownResponse\"\x00\x62\x06proto3'
   ,
   dependencies=[metisfl_dot_proto_dot_metis__pb2.DESCRIPTOR,metisfl_dot_proto_dot_model__pb2.DESCRIPTOR,metisfl_dot_proto_dot_service__common__pb2.DESCRIPTOR,])
 
@@ -475,14 +475,14 @@ _JOINFEDERATIONREQUEST = _descriptor.Descriptor(
   fields=[
     _descriptor.FieldDescriptor(
       name='server_entity', full_name='projectmetis.JoinFederationRequest.server_entity', index=0,
-      number=2, type=11, cpp_type=10, label=1,
+      number=1, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='serverEntity', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='local_dataset_spec', full_name='projectmetis.JoinFederationRequest.local_dataset_spec', index=1,
-      number=3, type=11, cpp_type=10, label=1,
+      number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -533,6 +533,13 @@ _JOINFEDERATIONRESPONSE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='authToken', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='ssl_config', full_name='projectmetis.JoinFederationResponse.ssl_config', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='sslConfig', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -545,8 +552,8 @@ _JOINFEDERATIONRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1657,
-  serialized_end=1780,
+  serialized_start=1658,
+  serialized_end=1837,
 )
 
 
@@ -584,8 +591,8 @@ _LEARNERLOCALMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1783,
-  serialized_end=1918,
+  serialized_start=1840,
+  serialized_end=1975,
 )
 
 
@@ -630,8 +637,8 @@ _MARKTASKCOMPLETEDREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1921,
-  serialized_end=2066,
+  serialized_start=1978,
+  serialized_end=2123,
 )
 
 
@@ -662,8 +669,8 @@ _LEARNEREXECUTIONAUXMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2068,
-  serialized_end=2134,
+  serialized_start=2125,
+  serialized_end=2191,
 )
 
 
@@ -694,8 +701,8 @@ _MARKTASKCOMPLETEDRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2136,
-  serialized_end=2200,
+  serialized_start=2193,
+  serialized_end=2257,
 )
 
 
@@ -733,8 +740,8 @@ _LEAVEFEDERATIONREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2202,
-  serialized_end=2288,
+  serialized_start=2259,
+  serialized_end=2345,
 )
 
 
@@ -765,8 +772,8 @@ _LEAVEFEDERATIONRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2290,
-  serialized_end=2352,
+  serialized_start=2347,
+  serialized_end=2409,
 )
 
 
@@ -797,8 +804,8 @@ _REPLACECOMMUNITYMODELREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2354,
-  serialized_end=2436,
+  serialized_start=2411,
+  serialized_end=2493,
 )
 
 
@@ -829,8 +836,8 @@ _REPLACECOMMUNITYMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2438,
-  serialized_end=2506,
+  serialized_start=2495,
+  serialized_end=2563,
 )
 
 _GETCOMMUNITYMODELEVALUATIONLINEAGERESPONSE.fields_by_name['community_evaluation'].message_type = metisfl_dot_proto_dot_metis__pb2._COMMUNITYMODELEVALUATION
@@ -845,6 +852,7 @@ _GETPARTICIPATINGLEARNERSRESPONSE.fields_by_name['learner'].message_type = metis
 _JOINFEDERATIONREQUEST.fields_by_name['server_entity'].message_type = metisfl_dot_proto_dot_metis__pb2._SERVERENTITY
 _JOINFEDERATIONREQUEST.fields_by_name['local_dataset_spec'].message_type = metisfl_dot_proto_dot_metis__pb2._DATASETSPEC
 _JOINFEDERATIONRESPONSE.fields_by_name['ack'].message_type = metisfl_dot_proto_dot_service__common__pb2._ACK
+_JOINFEDERATIONRESPONSE.fields_by_name['ssl_config'].message_type = metisfl_dot_proto_dot_metis__pb2._SSLCONFIG
 _LEARNERLOCALMODELRESPONSE.fields_by_name['server_entity'].message_type = metisfl_dot_proto_dot_metis__pb2._SERVERENTITY
 _LEARNERLOCALMODELRESPONSE.fields_by_name['model'].message_type = metisfl_dot_proto_dot_model__pb2._MODEL
 _MARKTASKCOMPLETEDREQUEST.fields_by_name['task'].message_type = metisfl_dot_proto_dot_metis__pb2._COMPLETEDLEARNINGTASK
@@ -1048,8 +1056,8 @@ _CONTROLLERSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=2509,
-  serialized_end=3919,
+  serialized_start=2566,
+  serialized_end=3976,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetCommunityModelEvaluationLineage',

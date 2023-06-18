@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from metisfl.learner.utils.metis_logger import MetisLogger
+from metisfl.utils.metis_logger import MetisLogger
 
 
 class DataPartitioning(object):

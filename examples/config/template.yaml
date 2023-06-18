@@ -1,8 +1,7 @@
-## TODO: (dstripelis) check if all these are needed, eg ProjectHome is probably not
 FederationEnvironment:
   DockerImage: null # null indicates to run Metis without docker, if it is provided then run using the specified image
   TerminationSignals:
-    FederationRounds: 10 # only in synchronous execution
+    FederationRounds: 3 # only in synchronous execution
     ExecutionCutoffTimeMins: null
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
@@ -34,6 +33,7 @@ FederationEnvironment:
       Password: "root"
       OnLogin: "source /etc/profile;"
     GRPCServicer:
+      Hostname: "localhost"
       Port: 50051
   Learners:
     - LearnerID: "localhost-1"
@@ -44,6 +44,7 @@ FederationEnvironment:
         Password: "root"
         OnLogin: "source /etc/profile;"
       GRPCServicer:
+        Hostname: "localhost"
         Port: 50052
       CudaDevices: [0]
       DatasetConfigs:
