@@ -24,6 +24,7 @@ cp -r examples/* metisfl/examples/
 cp -r resources/* metisfl/resources/
 
 $BAZEL_CMD build //:metisfl-wheel --define python=$PY_VERSION
+
 [[ -d build ]] || mkdir build
 cp -f $BAZEL_BIN_DIR/*.whl build
 

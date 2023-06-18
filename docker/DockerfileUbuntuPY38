@@ -1,4 +1,5 @@
 # Install Ubuntu image from docker hub.
+# Selecting Ubuntu focal for backward compatiblity with libc/stdlibc 2.31
 FROM ubuntu:focal as ubuntu
 
 # Set environmental variables.
