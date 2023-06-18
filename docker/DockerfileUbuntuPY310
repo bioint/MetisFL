@@ -17,7 +17,7 @@ RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazeli
 RUN chmod +x ./bazelisk-linux-amd64
 RUN mv ./bazelisk-linux-amd64 /usr/bin/bazelisk
 
-# Install and setup gcc-10, g++-10.
+# Install and setup gcc
 RUN apt-get -y install build-essential gcc
 
 # Install Palisades dependencies.
@@ -27,6 +27,7 @@ RUN apt-get -y install autoconf libomp-dev
 RUN apt-get -y install software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get -y update
+ENV PYTHON_LIB_PATH=/usr/include/python3.10
 RUN apt-get -y install -f python3.10-dev python3.10-distutils
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.10 1

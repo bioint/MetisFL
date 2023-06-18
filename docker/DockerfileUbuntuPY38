@@ -17,7 +17,7 @@ RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazeli
 RUN chmod +x ./bazelisk-linux-amd64
 RUN mv ./bazelisk-linux-amd64 /usr/bin/bazelisk
 
-# Install and setup gcc-10, g++-10.
+# Install and setup gcc
 RUN apt-get -y install build-essential gcc
 
 # Install Palisades dependencies.
