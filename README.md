@@ -1,20 +1,17 @@
 # MetisFL: The blazing-fast and developer-friendly federated learning framework.
 
-<p align="center">
-  <a href="https://docs.nevron.ai/">
-    <img src="https://media.licdn.com/dms/image/D560BAQHdJnF1NuU9MA/company-logo_100_100/0/1685136419242?e=1695254400&v=beta&t=UJWrwf5yOITFfm2e0pRUlqVk5ja47ZXZoYMlz8x3k2A" width="140px" alt="MetisFL Website" />
-  </a>
-</p>
+<div align="center">
+ <img src="docs/img/logos/logo_png_01.png" width="600px">
+</div>
 
-<p align="center">
-<a href="https://docs.nevron.ai">Docs</a> |    
-<a href="https://nevron.ai/">Website</a> |
-
-[//]: # (<a href="">Slack</a>)
-<br /><br />
-</p>
 
 MetisFL is a federated learning framework that allows developers to easily federate their machine learning workflows and train their models across distributed datasets without having to collect the data in a centralized location. 
+
+Homepage: https://nevron.ai/ \
+Github: https://github.com/NevronAI \
+Docs: https://docs.nevron.ai/ \
+Slack: https://nevronai.slack.com \
+
 
 ### Federated Training
 

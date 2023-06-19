@@ -87,6 +87,7 @@ def create_image(platform, python):
         path="docker",
         buildargs={"python": python},
         quiet=False,
+        tag=image_name,
         rm=True
     )
     image[0].tag(image_name)
@@ -118,7 +119,7 @@ if __name__ == "__main__":
         type=str,
         choices=["3.8", "3.9", "3.10"],
         default="3.10",
-        help="Python version. If platform is 'host', will use host os python",
+        help="Python version. If platform is 'host', will use host os python.",
     )
     args = parser.parse_args()
 
