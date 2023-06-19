@@ -1,6 +1,7 @@
 # Install Ubuntu image from docker hub.
 # Selecting Ubuntu focal for backward compatiblity with libc/stdlibc 2.31
 FROM ubuntu:focal as ubuntu
+ARG python="3.10"
 
 # Set environmental variables.
 ENV PROJECT_HOME=/metisfl
@@ -13,7 +14,7 @@ WORKDIR /metisfl
 RUN apt-get -y update
 
 # Install helper packages and bazelisk (i.e., bazel versioning resolution tool at runtime).
-RUN apt-get -y install wget git
+RUN apt-get -y install wget git nano 
 RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-amd64
 RUN chmod +x ./bazelisk-linux-amd64
 RUN mv ./bazelisk-linux-amd64 /usr/bin/bazelisk
@@ -24,13 +25,13 @@ RUN apt-get -y install build-essential gcc
 # Install Palisades dependencies.
 RUN apt-get -y install autoconf libomp-dev
 
-# Install and setup python3.9
+# Install and setup python ${python}
 RUN apt-get -y install software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get -y update
-RUN apt-get -y install -f python3.9-dev python3.9-distutils
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.9 1
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+RUN apt-get -y install -f python${python}-dev python${python}-distutils
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python${python} 1
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python${python} 1
 
 # Clean up.
 RUN apt-get clean
