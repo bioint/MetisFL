@@ -58,7 +58,6 @@ py_library(
         "//metisfl/driver:driver_lib",
         "//metisfl/learner:learner_lib",
         "//metisfl/proto:proto_lib",
-        # "//metisfl/examples:examples_lib" # TODO: Decide if we will ship examples as part of the lib 
     ]
 )
 

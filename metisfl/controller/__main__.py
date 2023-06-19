@@ -2,8 +2,8 @@ import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
-from metisfl.learner.utils.metis_logger import MetisLogger
-from metisfl.learner.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from metisfl.controller.controller_instance import ControllerInstance
 
 
