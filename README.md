@@ -1,7 +1,7 @@
 # MetisFL: The blazing-fast and developer-friendly federated learning framework.
 
 <div align="center">
- <img src="docs/img/logos/logo_png_01.png" width="600px">
+ <img src="docs/img/logos/logo_png_01.svg" width="600px">
 </div>
 
 
