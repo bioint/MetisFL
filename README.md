@@ -1,7 +1,9 @@
 # MetisFL: The blazing-fast and developer-friendly federated learning framework.
 
 <div align="center">
- <img src="docs/img/logos/logo_png_01.png" width="600px">
+ <img 
+    style="padding: 20px 0px"
+    src="docs/img/logos/logo_png_01.png" width="400px">
 </div>
 
 
@@ -10,33 +12,18 @@ MetisFL is a federated learning framework that allows developers to easily feder
 Homepage: https://nevron.ai/ \
 Github: https://github.com/NevronAI \
 Docs: https://docs.nevron.ai/ \
-Slack: https://nevronai.slack.com \
+Slack: https://nevronai.slack.com 
 
+This open-source project sprung up from the Information and Science Institute (ISI) in the University of Southern California (USC). It is backed by several years of Ph.D. and Post-Doctoral research and several publications in top-tier machine learning and system conferences. MetisFL is being developed with the following guiding principles in mind:
 
-### Federated Training
+* **Scalability**: MetisFL is the only federated learning framework with the core controller infrastructure developed solely on C++. This allows for the system to scale and support up to 100K+ learners! 
 
-This is a high-level overview of how federated training is performed and when and how the synchronization points between
-the learners and the controller are created.
+* **Speed**: The core operations at the controller as well as the controller-learner communication overhead has been optimized for efficiency. This allows MetisFL to achieve improvements of up to 1000x on the federation round time compared to other federated learning frameworks. 
 
-**1. Controller Training Assignment**\
-The controller creates and assigns the task that each learner needs to run by sending to every learner (the state of)
-the community model and any other learning parameters, such as the number of local updates, the learning hyperparameters
-and any other necessary training information. Subsequently, the controller pings each learner though the respective gRPC
-endpoint (see `RunTask` gRPC endpoint in `learner.proto`). 
+* **Efficiency and Flexibility**: MetisFL supports synchronous, semi-synchronous and asynchronous protocols. The different choices make our framework flexible enough to adapt to the needs of each use-case. Additionally, the support of fully asynchronous protocol makes MetisFL a highly efficient solution for use-cases with high heterogeneity on the compute/communication capabilities of the learners.
 
-**2. Learner Local Training** \
-Upon receiving the training task, the learner starts training locally on its local dataset and once it completes its
-training, it sends its local model along with any associated training metadata to the controller. At this point, the 
-learner pings the controller and sends a local training completion request (see `MarkTaskCompleted` gRPC endpoint in `controller.proto`).
-
-**3. Synchronization Points (a.k.a. Federation Round)** \
-The controller receives the local models and if a quorum exists (e.g., received local models from all learners), then it
-computes the new community model using the local models and their associated scaling factors
-(e.g., number of training examples) and creates and reassigns the new training task to each learner. At this point a new
-global training iteration begins. 
+Currently, MetisFL is transitioning from a private, experimental version to a public, beta testing phase. We are actively encouraging developers, researchers and data scientists to experiment with the framework and contribute to the codebase. 
    
-
-
 # Project Structure Overview
 The project uses a unified codebase for both the Python and C++ code. 
 
@@ -48,8 +35,10 @@ The project uses a unified codebase for both the Python and C++ code.
         ├── driver            # Python library for the MetisFL Driver
         ├── encryption        # C++ Palisade helper files
         ├── learner           # MetisFL Python Learner library 
+        ├── models            # MetisFL Python Learner library         
         ├── proto             # Protobuf definitions for controller/learner/driver communication
-        ├── pybind            # Controller and Palisade python bindings 
+        ├── resources         # FHE/SSL
+        ├── proto             # Protobuf definitions for controller/learner/driver communication
     ├── resources             # Resource files (public keys, certs etc)
     ├── test                  # Testing folder
     ├── build.sh              # Build script 
