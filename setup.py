@@ -6,18 +6,18 @@ import glob
 import docker
 
 BAZEL_CMD = "bazelisk"
-PY_VERSIONS = ["3.8", "3.9", "3.10"]
-DOCKER_REPO = "us-west2-docker.pkg.dev/nevron-385600/builders/ubuntu_focal_x86_64_py38"
-CONTROLER_SO_TARGET = "//metisfl/controller:controller.so"
-FHE_SO_TARGET = "//metisfl/encryption:fhe.so"
-PROTO_GRPC_TARGET = "//metisfl/proto:py_grpc_src"
-CONTROLER_SO_SRC = "bazel-bin/metisfl/controller/controller.so"
-CONTROLER_SO_DST = "metisfl/controller/controller.so"
-FHE_SO_SRC = "bazel-bin/metisfl/encryption/fhe.so"
-FHE_SO_DST = "metisfl/encryption/fhe.so"
-PROTO_SRC_DIR = "bazel-bin/metisfl/proto/py_grpc_src/metisfl/proto/"
-PROT_DST_DIR = "metisfl/proto"
 BUILD_DIR = "build"
+CONTROLER_SO_DST = "metisfl/controller/controller.so"
+CONTROLER_SO_SRC = "bazel-bin/metisfl/controller/controller.so"
+CONTROLER_SO_TARGET = "//metisfl/controller:controller.so"
+DOCKER_REPO = "us-west2-docker.pkg.dev/nevron-385600/builders/ubuntu_focal_x86_64_py38"
+FHE_SO_DST = "metisfl/encryption/fhe.so"
+FHE_SO_SRC = "bazel-bin/metisfl/encryption/fhe.so"
+FHE_SO_TARGET = "//metisfl/encryption:fhe.so"
+PROT_DST_DIR = "metisfl/proto"
+PROTO_GRPC_TARGET = "//metisfl/proto:py_grpc_src"
+PROTO_SRC_DIR = "bazel-bin/metisfl/proto/py_grpc_src/metisfl/proto/"
+PY_VERSIONS = ["3.8", "3.9", "3.10"]
 
 
 def run_build(python_verion):
@@ -78,6 +78,7 @@ def spawn_container(image_name):
     container.exec_run('/bin/bash -c "python setup.py"')
     container.kill()
     container.remove()
+
 
 def create_image(platform, python):
     image_name = get_image(platform, python)
