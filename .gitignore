@@ -110,7 +110,6 @@ user.bazelrc
 **.npz
 **.xlsx
 **.csv
-**.png
 **.gz
 **.ipynb_checkpoints
 .vscode/
