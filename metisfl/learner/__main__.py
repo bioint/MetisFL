@@ -2,9 +2,9 @@ import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
-from metisfl.learner.core.learner import Learner
-from metisfl.learner.core.learner_servicer import LearnerServicer
-from metisfl.learner.utils.proto_messages_factory import MetisProtoMessages
+from metisfl.learner import Learner
+from metisfl.learner.learner_servicer import LearnerServicer
+from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 
 def init_learner(

@@ -4,16 +4,16 @@ import queue
 import os
 
 import multiprocessing as mp
-import metisfl.learner.utils.proto_messages_factory as proto_factory
+import metisfl.utils.proto_messages_factory as proto_factory
 
 from pebble import ProcessPool, ProcessExpired
 
-from metisfl.learner.utils.metis_logger import MetisLogger
-from metisfl.learner.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
-from metisfl.learner.core.learner_evaluator import LearnerEvaluator
-from metisfl.learner.core.learner_trainer import LearnerTrainer
-from metisfl.learner.utils.grpc_controller_client import GRPCControllerClient
-from metisfl.learner.utils.formatting import DictionaryFormatter
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
+from metisfl.learner.learner_evaluator import LearnerEvaluator
+from metisfl.learner.learner_trainer import LearnerTrainer
+from metisfl.utils.grpc_controller_client import GRPCControllerClient
+from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 from metisfl.encryption import fhe
 
@@ -181,7 +181,7 @@ class Learner(object):
             return self._model_ops_factory_pytorch
 
     def _model_ops_factory_keras(self, *args, **kwargs):
-        from metisfl.learner.models.keras.keras_model_ops import KerasModelOps
+        from metisfl.models.keras.keras_model_ops import KerasModelOps
         he_scheme = None
         if self._he_scheme.enabled:
             if self._he_scheme.HasField("fhe_scheme"):
@@ -194,7 +194,7 @@ class Learner(object):
         return model_ops
 
     def _model_ops_factory_pytorch(self, *args, **kwargs):
-        from metisfl.learner.models.pytorch.pytorch_model_ops import PyTorchModelOps
+        from metisfl.models.pytorch.pytorch_model_ops import PyTorchModelOps
         he_scheme = None
         if self._he_scheme.enabled:
             if self._he_scheme.HasField("fhe_scheme"):

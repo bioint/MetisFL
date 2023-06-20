@@ -4,7 +4,7 @@ import sys
 
 from metisfl.controller.controller_instance import ControllerInstance
 from utils import utils
-from metisfl.learner.utils.metis_logger import MetisLogger
+from metisfl.utils.metis_logger import MetisLogger
 
 if __name__ == "__main__":
     MetisLogger.info('\n'.join(os.environ['PYTHONPATH'].split(':')))

@@ -5,6 +5,7 @@ FROM --platform=linux/amd64 python:3.10
 ENV PROJECT_HOME=/metisfl
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=America/Los_Angeles
+ENV PYTHONPATH=/workspaces/metisfl
 
 WORKDIR /metisfl
 

@@ -3,13 +3,13 @@ import gc
 import time
 import os
 
-import metisfl.learner.utils.proto_messages_factory as proto_factory
+import metisfl.utils.proto_messages_factory as proto_factory
 
 from pebble import ProcessPool
 
-from metisfl.learner.utils.metis_logger import MetisLogger
-from metisfl.learner.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
-from metisfl.learner.utils.grpc_controller_client import GRPCControllerClient
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
+from metisfl.utils.grpc_controller_client import GRPCControllerClient
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 
 

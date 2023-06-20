@@ -2,13 +2,13 @@ import numpy as np
 import tensorflow as tf
 
 from metisfl.proto import metis_pb2, model_pb2
-from metisfl.learner.utils.metis_logger import MetisLogger
-from metisfl.learner.models.keras.optimizers.fed_prox import FedProx
-from metisfl.learner.models.model_dataset import ModelDataset
-from metisfl.learner.models.model_ops import ModelOps
-from metisfl.learner.models.model_proto_factory import ModelProtoFactory
-from metisfl.learner.models.keras.callbacks.step_counter import StepCounter
-from metisfl.learner.models.keras.callbacks.performance_profiler import PerformanceProfiler
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.models.keras.optimizers.fed_prox import FedProx
+from metisfl.models.model_dataset import ModelDataset
+from metisfl.models.model_ops import ModelOps
+from metisfl.models.model_proto_factory import ModelProtoFactory
+from metisfl.models.keras.callbacks.step_counter import StepCounter
+from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
 from typing import List
 
 

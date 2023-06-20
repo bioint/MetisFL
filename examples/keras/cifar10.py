@@ -110,6 +110,7 @@ if __name__ == "__main__":
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(test_dataset_recipe_fp_pkl, "wb+"))
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
 
+    # TODO: @stripeli model_definition_dir does not appear in DriverSession
     driver_session = DriverSession(federation_environment, nn_engine,
                                    model_definition_dir=model_filepath,
                                    train_dataset_recipe_fp=train_dataset_recipe_fp_pkl,
