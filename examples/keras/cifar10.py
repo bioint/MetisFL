@@ -24,6 +24,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
                         default=default_federation_environment_config_fp)
+    
+    # @stripeli aren't these two arguments mutually exclusive?
     parser.add_argument("--generate_iid_partitions", default=False)
     parser.add_argument("--generate_noniid_partitions", default=False)
 

@@ -1,9 +1,7 @@
-import argparse
 import sys
 import os
 import shutil
 import glob
-import docker
 
 BAZEL_CMD = "bazelisk"
 BUILD_DIR = "build"
@@ -56,8 +54,7 @@ def copy_helper(src_file, dst):
         os.remove(dst)
     shutil.copy(src_file, dst)
 
-
-def build_for_host():
+if __name__ == "__main__":
     py_version = ".".join(map(str, sys.version_info[:2]))
     if py_version not in PY_VERSIONS:
         print(
@@ -65,65 +62,3 @@ def build_for_host():
         )
         exit(1)
     run_build(py_version)
-
-
-def spawn_container(image_name):
-    client = docker.from_env()
-    image_url = os.path.join(DOCKER_REPO, image_name)
-    client.images.pull(image_url)
-    cwd = os.getcwd()
-    container = client.containers.run(
-        image=image_name, detach=True, volumes=[cwd, "/metisfl"]
-    )
-    container.exec_run('/bin/bash -c "python setup.py"')
-    container.kill()
-    container.remove()
-
-
-def create_image(platform, python):
-    image_name = get_image(platform, python)
-    client = docker.from_env()
-    image = client.images.build(
-        path="docker",
-        buildargs={"python": python},
-        quiet=False,
-        tag=image_name,
-        rm=True
-    )
-    image[0].tag(image_name)
-    return image
-
-def get_image(platform, python):
-    image_name = get_image_name(platform, python)
-    try:
-        return docker.image.get(image_name)
-    except:
-        return None
-
-def get_image_name(platform, python):
-    return "{}_py{}".format(platform, python.replace(".", ""))
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-P",
-        "--platform",
-        type=str,
-        choices=["host", "ubuntu_x86_64"],
-        default="host",
-        help="Platform to build for.",
-    )
-    parser.add_argument(
-        "-p",
-        "--python",
-        type=str,
-        choices=["3.8", "3.9", "3.10"],
-        default="3.10",
-        help="Python version. If platform is 'host', will use host os python.",
-    )
-    args = parser.parse_args()
-
-    if args.platform == "host":
-        build_for_host()
-    else:
-        create_image(args.platform, args.python)
