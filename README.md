@@ -9,14 +9,12 @@
 
 MetisFL is a federated learning framework that allows developers to federate their machine learning workflows and train their models across distributed datasets without having to collect the data in a centralized location. Currently, the project is transitioning from a private, experimental version to a public, beta phase. We are actively encouraging developers, researchers and data scientists to experiment with the framework and contribute to the codebase. 
 
-&nbsp;
 
 Homepage: https://nevron.ai/ \
 Github: https://github.com/NevronAI \
 Docs: https://docs.nevron.ai/ \
 Slack: https://nevronai.slack.com 
 
-&nbsp;
 
 MetisFL sprung up from the Information and Science Institute (ISI) in the University of Southern California (USC). It is backed by several years of Ph.D. and Post-Doctoral research and several publications in top-tier machine learning and system conferences. It is being developed with the following guiding principles in mind:
 
@@ -28,7 +26,6 @@ MetisFL sprung up from the Information and Science Institute (ISI) in the Univer
 
 * **Strong Security**: MetisFL supports secure aggregations with fully homomorphic encryption using the [Palisade](https://gitlab.com/palisade/palisade-release) C++ cryptographic library.  This ensure that the weights of the produced models remain private and secure in transit. 
 
-&nbsp;
 # Quickstart 
 As an introductory example to quickly demonstrate the MetisFL framework in practice, we will run the `Hello World` example of deep learning. To get started, first install ensure that you system meets the requirements:
 
@@ -53,7 +50,6 @@ python examples/keras/fashionmnist.py
 ```
 Conglaturations! You are now running your first federated learning experiment using MetisFL!
 
-&nbsp;
 # Development Environment 
 Developers interested in making core contributions should setup up their environment accordingly. 
 There are currently 3 options for setting up your development environment: 
@@ -93,7 +89,6 @@ Finally, the remaining requirements contain the compiler, autoconf and libomp (w
 apt-get -y install build-essential autoconf libomp-dev
 ```
 
-&nbsp;
 # Build Project
 Whether you are in your host machine or inside the container, you can build MetisFL from source by running the following command:
 ```Bash 
@@ -101,7 +96,6 @@ python setup.py
 ```
 The build target of this script is a Python Wheel which will be placed in the `build` folder. In the process of producing that build, several other targets will be built such as the controller binaries `metisfl/controller/controller.so`, the Palisade/encryption binaries `metisfl/encryption/fhe.so` and the Protobuf/gRPC Python classes in `metisfl/proto` directory. 
 
-&nbsp;
 # Project Structure Overview
 The project uses a unified codebase for both the Python and C++ code. The C++ modules, i.e., `controller` and `encryption`, have simple python bindings to expose their functionality to python code. The python bindings of the encryption module are directly used by the Learner for encrypting the weight before sending them to the controller. Even though no module has a dependency on the python bindings of the controller, we do provide those bindings as well, as they provide a simple way to interact with the controller from pure Python code. 
 
@@ -123,23 +117,18 @@ The project uses a unified codebase for both the Python and C++ code. The C++ mo
     ├── setup.py              # Setup script; compiles and produces a Python Wheel
     ├── WORKSPACE             # Bazel workspace; contains external dependencies
 
-&nbsp;
 # Architecture Overview
-
 The architecture of MetisFL is inspired by Apache Spark. It consist of there main entities: the **Federation Controller**, the **Federation Learner** and the **Federation Driver**. 
 
 ## Federation Controller 
-
 The Federation Controller acts as the federation cluster manager and it is responsible for selecting and delegating training and evaluating tasks to the federation learners (cluster nodes) and storing and
 aggregating the learners’ local models (w/ or w/out encryption).
 
 ## Federation Learner 
-
 The Federation Learner(s) are the cluster node responsible for training and evaluating the federation model assigned to the by the Controller on the local, private dataset.  
 
 
 ## Federation Driver
-
 The Federation Driver parses the federated learning workflow defined by
 the system user and creates the Metis Context. The Metis Context is responsible for initializing and monitoring the federation cluster, initializing the original federation model state, defining the data loading recipe for each learner, and generating the security keys where needed (e.g., SSL certificates,
 and FHE key pair).
