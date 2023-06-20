@@ -92,7 +92,7 @@ py_wheel(
             ":py39": "cp39",
             ":py310": "cp310",
         }),
-        # TODO: Fix versions
+        # TODO: Make sure to sync req with txt
         requires = [
             "cloudpickle>=2.2.1",
             "fabric>=3.1.0",
@@ -108,12 +108,8 @@ py_wheel(
             "scikit-learn>=1.2.2",
             "scipy>=1.10.1",
             "termcolor>=2.3.0",
+            "tensorflow>=2.0",
         ],
-        extra_requires = {
-            "tensorflow": [
-                "tensorflow>=2.0",
-            ]
-        },
         platform = select({
             "//:linux_x86_64": "manylinux2014_x86_64"
         }),
