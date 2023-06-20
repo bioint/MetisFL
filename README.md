@@ -26,7 +26,7 @@ MetisFL sprung up from the Information and Science Institute (ISI) in the Univer
 
 * **Strong Security**: MetisFL supports secure aggregations with fully homomorphic encryption using the [Palisade](https://gitlab.com/palisade/palisade-release) C++ cryptographic library.  This ensure that the weights of the produced models remain private and secure in transit. 
 
-# Quickstart 
+# Quickstart (coming soon)
 As an introductory example to quickly demonstrate the MetisFL framework in practice, we will run the `Hello World` example of deep learning. To get started, first install ensure that you system meets the requirements:
 
 * Python 3.8 to 3.10
