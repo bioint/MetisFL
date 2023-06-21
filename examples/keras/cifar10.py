@@ -19,7 +19,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../config/cifar10/test_localhost_synchronous_momentumsgd.yaml")
+        script_cwd, "../federation_environments_config/cifar10/test_localhost_synchronous_momentumsgd.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -66,34 +66,24 @@ if __name__ == "__main__":
             x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners) \
                 .non_iid_partition(classes_per_partition=2)
 
-        # FIXME: this is gonna break if any of the sub-folders does not exist
-        datasets_path = "datasets/cifar/"
-        np.savez(os.path.join(script_cwd, datasets_path, "test.npz"), x=x_test, y=y_test)
+        datasets_path = os.path.join(script_cwd, "datasets/cifar/")
+        if not os.path.exists(datasets_path):
+            os.makedirs(datasets_path)
+        np.savez(os.path.join(datasets_path, "test.npz"), x=x_test, y=y_test)
         for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):
-            np.savez(os.path.join(script_cwd, datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
+            np.savez(os.path.join(datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
         for lidx, learner in enumerate(federation_environment.learners.learners):
             learner.dataset_configs.test_dataset_path = \
-                os.path.join(script_cwd, datasets_path, "test.npz")
+                os.path.join(datasets_path, "test.npz")
             learner.dataset_configs.train_dataset_path = \
-                os.path.join(script_cwd, datasets_path, "train_{}.npz".format(lidx))
-
-    nn_engine = "keras"
-    metis_filepath_prefix = "/tmp/metis/model/"
-    if not os.path.exists(metis_filepath_prefix):
-        os.makedirs(metis_filepath_prefix)
-
-    model_filepath = "{}/model_definition".format(metis_filepath_prefix)
-    train_dataset_recipe_fp_pkl = "{}/model_train_dataset_ops.pkl".format(metis_filepath_prefix)
-    validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(metis_filepath_prefix)
-    test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(metis_filepath_prefix)
+                os.path.join(datasets_path, "train_{}.npz".format(lidx))
 
     optimizer_name = federation_environment.local_model_config.optimizer_config.optimizer_name
-    nn_model = CifarCNN(metrics=["accuracy"], optimizer_name="MomentumSGD").get_model()
+    nn_model = CifarCNN(metrics=["accuracy"], optimizer_name=optimizer_name).get_model()
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
     # properly and any subsequent fit step will never train the model properly. We could apply the .fit() step instead
     # of the .evaluation() step, but since the driver does not hold any data it simply evaluates a random sample.
     nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
-    nn_model.save(model_filepath)
 
     def dataset_recipe_fn(dataset_fp):
         loaded_dataset = np.load(dataset_fp)
@@ -106,6 +96,7 @@ if __name__ == "__main__":
             x=x, y=y, size=y.size, examples_per_class=distribution)
         return model_dataset
 
+<<<<<<< HEAD
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(train_dataset_recipe_fp_pkl, "wb+"))
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(test_dataset_recipe_fp_pkl, "wb+"))
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
@@ -117,6 +108,14 @@ if __name__ == "__main__":
                                    validation_dataset_recipe_fp=validation_dataset_recipe_fp_pkl,
                                    test_dataset_recipe_fp=test_dataset_recipe_fp_pkl)
     driver_session.initialize_federation(model_weights=nn_model.get_weights())
+=======
+    driver_session = DriverSession(federation_environment,
+                                   nn_model,
+                                   train_dataset_recipe_fn=dataset_recipe_fn,
+                                   validation_dataset_recipe_fn=dataset_recipe_fn,
+                                   test_dataset_recipe_fn=dataset_recipe_fn)
+    driver_session.initialize_federation()
+>>>>>>> bugfix/migration_path_deps_issues
     driver_session.monitor_federation()
     driver_session.shutdown_federation()
     statistics = driver_session.get_federation_statistics()

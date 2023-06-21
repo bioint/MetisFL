@@ -1,4 +1,5 @@
 
+#include <csignal>
 #include <future>
 #include <memory>
 #include <utility>
@@ -122,8 +123,8 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
     PLOG(INFO) << "Started Controller Servicer.";
   }
 
-  void WaitService() override { 
-    Wait(); 
+  void WaitService() override {
+    Wait();
   }
 
   void StopService() override {
@@ -362,8 +363,7 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
               "Request and response cannot be empty."};
     }
     response->mutable_ack()->set_status(true);
-    pool_.push_task([this] {controller_->Shutdown();});
-    pool_.push_task([this] {this->StopService();});
+    this->StopService();
     return Status::OK;
   }
 

@@ -25,7 +25,7 @@ FederationEnvironment:
       OptimizerName: "VanillaSGD"
       LearningRate: 0.00005
   Controller:
-    ProjectHome: "/projectmetis-rc"
+    ProjectHome: "/metisfl"
     ConnectionConfigs:
       Hostname: "localhost"
       Username: "root"
@@ -35,7 +35,7 @@ FederationEnvironment:
       Port: 50051
   Learners:
     - LearnerID: "localhost-1"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -45,6 +45,6 @@ FederationEnvironment:
         Port: 50052
       CudaDevices: [0]
       DatasetConfigs:
-        TrainDatasetPath: "/nas/bioint-data/neuroimaging-data/UKBB/data_mapping/centralized_federated_experiments_partitions/centralized_train_20pct_original.csv"
+        TrainDatasetPath: ""
         ValidationDatasetPath: ""
-        TestDatasetPath: "/nas/bioint-data/neuroimaging-data/UKBB/data_mapping/centralized_federated_experiments_partitions/test.csv"
+        TestDatasetPath: ""

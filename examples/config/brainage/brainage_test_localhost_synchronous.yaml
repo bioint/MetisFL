@@ -25,7 +25,7 @@ FederationEnvironment:
       OptimizerName: "VanillaSGD"
       LearningRate: 0.00005
   Controller:
-    ProjectHome: "/projectmetis-rc"
+    ProjectHome: "/metisfl"
     ConnectionConfigs:
       Hostname: "localhost"
       Username: "root"
@@ -35,7 +35,7 @@ FederationEnvironment:
       Port: 50051
   Learners:
     - LearnerID: "localhost-1"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -45,11 +45,11 @@ FederationEnvironment:
         Port: 50052
       CudaDevices: [0]
       DatasetConfigs:
-        TrainDatasetPath: "/projectmetis-rc/experiments/keras/datasets/ukbb/ukbb_datapaths_absolute.csv"
+        TrainDatasetPath: ""
         ValidationDatasetPath: ""
-        TestDatasetPath: "/projectmetis-rc/experiments/keras/datasets/ukbb/ukbb_datapaths_absolute.csv"
+        TestDatasetPath: ""
     - LearnerID: "localhost-2"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -59,11 +59,11 @@ FederationEnvironment:
         Port: 50053
       CudaDevices: [1]
       DatasetConfigs:
-        TrainDatasetPath: "/projectmetis-rc/experiments/keras/datasets/ukbb/ukbb_datapaths_absolute.csv"
+        TrainDatasetPath: ""
         ValidationDatasetPath: ""
-        TestDatasetPath: "/projectmetis-rc/experiments/keras/datasets/ukbb/ukbb_datapaths_absolute.csv"
+        TestDatasetPath: ""
     - LearnerID: "localhost-3"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -73,6 +73,6 @@ FederationEnvironment:
         Port: 50054
       CudaDevices: [2]
       DatasetConfigs:
-        TrainDatasetPath: "/projectmetis-rc/experiments/keras/datasets/ukbb/ukbb_datapaths_absolute.csv"
+        TrainDatasetPath: ""
         ValidationDatasetPath: ""
-        TestDatasetPath: "/projectmetis-rc/experiments/keras/datasets/ukbb/ukbb_datapaths_absolute.csv"
+        TestDatasetPath: ""

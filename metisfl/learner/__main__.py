@@ -2,26 +2,46 @@ import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
+<<<<<<< HEAD
 from metisfl.learner import Learner
+=======
+from metisfl.learner.learner import Learner
+>>>>>>> bugfix/migration_path_deps_issues
 from metisfl.learner.learner_servicer import LearnerServicer
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 
-def init_learner(
-    neural_engine="keras",
-    learner_hostname="[::]",
-    learner_port=50052,
-    controller_hostname="[::]",
-    controller_port=50051,
-    model_definition="/tmp/metis/model/model_definition",
-    train_dataset="/tmp/metis/model/model_train_dataset.npz",
-    validation_dataset="",
-    test_dataset="",
-    train_dataset_recipe="/tmp/metis/model/model_train_dataset_ops.pkl",
-    validation_dataset_recipe="",
-    test_dataset_recipe="",
-    he_scheme_protobuff_serialized_hexadecimal=None
-):
+def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
+                 controller_server_entity_protobuff_serialized_hexadecimal,
+                 he_scheme_protobuff_serialized_hexadecimal,
+                 neural_engine,
+                 model_dir,
+                 train_dataset="/tmp/metis/model/model_train_dataset.npz",
+                 validation_dataset="",
+                 test_dataset="",
+                 train_dataset_recipe="/tmp/metis/model/model_train_dataset_ops.pkl",
+                 validation_dataset_recipe="",
+                 test_dataset_recipe=""):
+    if learner_server_entity_protobuff_serialized_hexadecimal is not None:
+        learner_server_entity_pb = metis_pb2.ServerEntity()
+        learner_server_entity_pb_ser = bytes.fromhex(args.learner_server_entity_protobuff_serialized_hexadecimal)
+        learner_server_entity_pb.ParseFromString(learner_server_entity_pb_ser)
+    else:
+        learner_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(
+            hostname="[::]", port=50052)
+
+    if controller_server_entity_protobuff_serialized_hexadecimal is not None:
+        controller_server_entity_pb = metis_pb2.ServerEntity()
+        controller_server_entity_pb_ser = bytes.fromhex(args.controller_server_entity_protobuff_serialized_hexadecimal)
+        controller_server_entity_pb.ParseFromString(controller_server_entity_pb_ser)
+    else:
+        controller_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(
+            hostname="[::]", port=50051)
+
+    # Training model engine and architecture definition.
+    nn_engine = neural_engine
+    model_dir = model_dir
+
     # Load train dataset specifications.
     train_dataset_filepath = train_dataset
     train_dataset_recipe_fp_pkl = train_dataset_recipe
@@ -46,15 +66,13 @@ def init_learner(
         he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
             enabled=False, empty_scheme_pb=empty_scheme_pb)
 
-    learner_credentials_fp = "/tmp/metis/learner_{}_credentials/".format(learner_port)
-    learner_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(learner_hostname, learner_port)
-    controller_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(controller_hostname, controller_port)
+    learner_credentials_fp = "/tmp/metis/learner_{}_credentials/".format(learner_server_entity_pb.port)
     learner = Learner(
         learner_server_entity=learner_server_entity_pb,
         controller_server_entity=controller_server_entity_pb,
         he_scheme=he_scheme_pb,
-        nn_engine=neural_engine,
-        model_fp=model_definition,
+        nn_engine=nn_engine,
+        model_dir=model_dir,
         train_dataset_fp=train_dataset_filepath,
         train_dataset_recipe_pkl=train_dataset_recipe_fp_pkl,
         test_dataset_fp=test_dataset_filepath,
@@ -64,7 +82,6 @@ def init_learner(
         learner_credentials_fp=learner_credentials_fp)
     learner_servicer = LearnerServicer(
         learner=learner,
-        learner_server_entity=learner_server_entity_pb,
         servicer_workers=5)
     # First, initialize learner servicer for receiving train/evaluate/inference tasks.
     learner_servicer.init_servicer()
@@ -74,26 +91,23 @@ def init_learner(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("-l", "--learner_server_entity_protobuff_serialized_hexadecimal", type=str,
+                        default="",
+                        help="Learner server entity.")
+    parser.add_argument("-c", "--controller_server_entity_protobuff_serialized_hexadecimal", type=str,
+                        default="",
+                        help="Controller server entity.")
+    parser.add_argument("-f", "--he_scheme_protobuff_serialized_hexadecimal", type=str,
+                        default="",
+                        help="A serialized HE Scheme protobuf message.")
     parser.add_argument("-e", "--neural_engine", type=str,
                         default="keras",
                         help="neural network training library")
-    parser.add_argument("-l", "--learner_hostname", type=str,
-                        default="[::]",
-                        help="learner binding hostname")
-    parser.add_argument("-p", "--learner_port", type=int,
-                        default=50052,
-                        help="learner binding port")
-    parser.add_argument("-c", "--controller_hostname", type=str,
-                        default="[::]",
-                        help="controller binding hostname")
-    parser.add_argument("-o", "--controller_port", type=int,
-                        default=50051,
-                        help="controller binding port")
-    parser.add_argument("-m", "--model_definition", type=str,
-                        default="/tmp/metis/model/model_definition",
-                        help="model definition filepath")
+    parser.add_argument("-m", "--model_dir", type=str,
+                        default="",
+                        help="model definition directory")
     parser.add_argument("-t", "--train_dataset", type=str,
-                        default="/tmp/metis/model/model_train_dataset.npz",
+                        default="",
                         help="train dataset filepath")
     parser.add_argument("-v", "--validation_dataset", type=str,
                         default="",
@@ -102,32 +116,26 @@ if __name__ == "__main__":
                         default="",
                         help="test dataset filepath")
     parser.add_argument("-u", "--train_dataset_recipe", type=str,
-                        default="/tmp/metis/model/model_train_dataset_ops.pkl",
+                        default="",
                         help="train dataset recipe")
     parser.add_argument("-w", "--validation_dataset_recipe", type=str,
                         default="",
                         help="validation dataset recipe")
     parser.add_argument("-z", "--test_dataset_recipe", type=str,
                         default="",
-                        help="validation dataset recipe")
-    parser.add_argument("-f", "--he_scheme_protobuff_serialized_hexadecimal", type=str,
-                        default=None,
-                        help="A serialized HE Scheme protobuf message.")
+                        help="test dataset recipe")
 
     args = parser.parse_args()
 
     init_learner(
+        learner_server_entity_protobuff_serialized_hexadecimal=args.learner_server_entity_protobuff_serialized_hexadecimal,
+        controller_server_entity_protobuff_serialized_hexadecimal=args.controller_server_entity_protobuff_serialized_hexadecimal,
+        he_scheme_protobuff_serialized_hexadecimal=args.he_scheme_protobuff_serialized_hexadecimal,
         neural_engine=args.neural_engine,
-        learner_hostname=args.learner_hostname,
-        learner_port=args.learner_port,
-        controller_hostname=args.controller_hostname,
-        controller_port=args.controller_port,
-        model_definition=args.model_definition,
+        model_dir=args.model_dir,
         train_dataset=args.train_dataset,
         validation_dataset=args.validation_dataset,
         test_dataset=args.test_dataset,
         train_dataset_recipe=args.train_dataset_recipe,
         validation_dataset_recipe=args.validation_dataset_recipe,
-        test_dataset_recipe=args.test_dataset_recipe,
-        he_scheme_protobuff_serialized_hexadecimal=args.he_scheme_protobuff_serialized_hexadecimal)
-
+        test_dataset_recipe=args.test_dataset_recipe)

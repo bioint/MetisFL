@@ -29,7 +29,7 @@ FederationEnvironment:
       LearningRate: 0.05
       L2Reg: 0.0
   Controller:
-    ProjectHome: "/projectmetis-rc"
+    ProjectHome: "/metisfl"
     ConnectionConfigs:
       Hostname: "localhost"
       Username: "root"
@@ -39,7 +39,7 @@ FederationEnvironment:
       Port: 50051
   Learners:
     - LearnerID: "localhost-1"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -53,7 +53,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-2"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -67,7 +67,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-3"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -81,7 +81,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-4"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -95,7 +95,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-5"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -109,7 +109,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-6"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -123,7 +123,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-7"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -137,7 +137,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-8"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -151,7 +151,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-9"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -165,7 +165,7 @@ FederationEnvironment:
         ValidationDatasetPath: ""
         TestDatasetPath: ""
     - LearnerID: "localhost-10"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"

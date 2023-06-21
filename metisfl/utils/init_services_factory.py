@@ -1,15 +1,12 @@
-
 class MetisInitServicesCmdFactory(object):
 
     @classmethod
     def init_controller_target(cls,
-                               hostname,
-                               port,
+                               controller_server_entity_pb_ser,
                                global_model_specs_pb_ser,
                                communication_specs_pb_ser,
                                model_hyperparameters_pb_ser,
                                model_store_config_pb_ser):
-
         # We convert the serialized protobuf version to hexadecimal in order
         # to send it over the wire. The reason is that the serialized protobuff
         # may contain unexpected order of single and double quotes,
@@ -18,6 +15,7 @@ class MetisInitServicesCmdFactory(object):
         # Simply casting the byte representation to string will remove the
         # backslashes, therefore it is more convenient to compute the hexadecimal
         # representation and thereafter decode the hex to bytes.
+        controller_server_entity_pb_ser_hex = controller_server_entity_pb_ser.hex()
         global_model_specs_pb_ser_hex = global_model_specs_pb_ser.hex()
         communication_specs_pb_ser_hex = communication_specs_pb_ser.hex()
         model_hyperparameters_pb_ser_hex = model_hyperparameters_pb_ser.hex()
@@ -25,33 +23,27 @@ class MetisInitServicesCmdFactory(object):
 
         # CAUTION: For the hexadecimal to be valid we need to leave
         # a space to the right of the string replacing placeholder.
-
-        # NOTE: Needs to go; simply run `python initialize_controller.py`
-        init_cmd = \
+        bazel_cmd = \
             "python " \
             "-m metisfl.controller " \
-            "--controller_hostname=\"{hostname}\" " \
-            "--controller_port={port} " \
+            "--controller_server_entity_protobuff_serialized_hexadecimal={controller_server_entity_pb_ser_hex} " \
             "--global_model_specs_protobuff_serialized_hexadecimal={global_model_specs_pb_ser_hex} " \
             "--communication_specs_protobuff_serialized_hexadecimal={communication_specs_pb_ser_hex} " \
             "--model_hyperparameters_protobuff_serialized_hexadecimal={model_hyperparameters_pb_ser_hex} " \
             "--model_store_config_protobuff_serialized_hexadecimal={model_store_config_pb_ser_hex} ".format(
-                hostname=hostname,
-                port=port,
+                controller_server_entity_pb_ser_hex=controller_server_entity_pb_ser_hex,
                 global_model_specs_pb_ser_hex=global_model_specs_pb_ser_hex,
                 communication_specs_pb_ser_hex=communication_specs_pb_ser_hex,
                 model_hyperparameters_pb_ser_hex=model_hyperparameters_pb_ser_hex,
                 model_store_config_pb_ser_hex=model_store_config_pb_ser_hex)
-        return init_cmd
+        return bazel_cmd
 
     @classmethod
     def init_learner_target(cls,
-                            learner_hostname,
-                            learner_port,
-                            controller_hostname,
-                            controller_port,
+                            learner_server_entity_pb_ser,
+                            controller_server_entity_pb_ser,
                             he_scheme_pb_ser,
-                            model_definition,
+                            model_dir,
                             train_dataset,
                             train_dataset_recipe,
                             validation_dataset="",
@@ -59,38 +51,35 @@ class MetisInitServicesCmdFactory(object):
                             validation_dataset_recipe="",
                             test_dataset_recipe="",
                             neural_engine="keras"):
-
         # Similarly as in the controller process invocation, we need to
         # convert the serialized protobuff to its hexadecimal representation.
+        learner_server_entity_pb_ser_hex = learner_server_entity_pb_ser.hex()
+        controller_server_entity_pb_ser_hex = controller_server_entity_pb_ser.hex()
         he_scheme_pb_ser_hex = he_scheme_pb_ser.hex()
 
-        init_cmd = \
+        bazel_cmd = \
             "python " \
             "-m metisfl.learner " \
+            "--learner_server_entity_protobuff_serialized_hexadecimal={learner_server_entity_pb_ser_hex} " \
+            "--controller_server_entity_protobuff_serialized_hexadecimal={controller_server_entity_pb_ser_hex} " \
+            "--he_scheme_protobuff_serialized_hexadecimal={he_scheme_pb_ser_hex} " \
             "--neural_engine=\"{neural_engine}\" " \
-            "--learner_hostname=\"{learner_hostname}\" " \
-            "--learner_port={learner_port} " \
-            "--controller_hostname=\"{controller_hostname}\" " \
-            "--controller_port={controller_port} " \
-            "--model_definition=\"{model_definition}\" " \
+            "--model_dir=\"{model_dir}\" " \
             "--train_dataset=\"{train_dataset}\" " \
             "--validation_dataset=\"{validation_dataset}\" " \
             "--test_dataset=\"{test_dataset}\" " \
             "--train_dataset_recipe=\"{train_dataset_recipe}\" " \
             "--validation_dataset_recipe=\"{validation_dataset_recipe}\" " \
-            "--test_dataset_recipe=\"{test_dataset_recipe}\" " \
-            "--he_scheme_protobuff_serialized_hexadecimal={he_scheme_pb_ser_hex} ".format(
+            "--test_dataset_recipe=\"{test_dataset_recipe}\" ".format(
+                learner_server_entity_pb_ser_hex=learner_server_entity_pb_ser_hex,
+                controller_server_entity_pb_ser_hex=controller_server_entity_pb_ser_hex,
+                he_scheme_pb_ser_hex=he_scheme_pb_ser_hex,
                 neural_engine=neural_engine,
-                learner_hostname=learner_hostname,
-                learner_port=learner_port,
-                controller_hostname=controller_hostname,
-                controller_port=controller_port,
-                model_definition=model_definition,
+                model_dir=model_dir,
                 train_dataset=train_dataset,
                 validation_dataset=validation_dataset,
                 test_dataset=test_dataset,
                 train_dataset_recipe=train_dataset_recipe,
                 validation_dataset_recipe=validation_dataset_recipe,
-                test_dataset_recipe=test_dataset_recipe,
-                he_scheme_pb_ser_hex=he_scheme_pb_ser_hex)
-        return init_cmd
+                test_dataset_recipe=test_dataset_recipe)
+        return bazel_cmd
