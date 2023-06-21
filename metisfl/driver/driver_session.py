@@ -369,7 +369,7 @@ class DriverSessionBase(object):
     def _collect_local_statistics(self):
         learners_pb = self._driver_controller_grpc_client.get_participating_learners()
         learners_collection = learners_pb.learner
-        learners_id = [id for learner in learners_collection]
+        learners_id = [learner.id for learner in learners_collection]
         learners_descriptors_dict = MessageToDict(learners_pb,
                                                   preserving_proto_field_name=True)
         learners_results = self._driver_controller_grpc_client \

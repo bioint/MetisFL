@@ -24,9 +24,9 @@ FederationEnvironment:
     OptimizerConfig:
       OptimizerName: "VanillaSGD"
       LearningRate: 0.0004
-#      WeightDecay: 0.0004
+      WeightDecay: 0.0004
   Controller:
-    ProjectHome: "/projectmetis-rc"
+    ProjectHome: "/metisfl"
     ConnectionConfigs:
       Hostname: "localhost"
       Username: "root"
@@ -36,7 +36,7 @@ FederationEnvironment:
       Port: 50051
   Learners:
     - LearnerID: "localhost-1"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
@@ -46,34 +46,6 @@ FederationEnvironment:
         Port: 50052
       CudaDevices: [0]
       DatasetConfigs:
-        TrainDatasetPath: "/projectmetis-rc/experiments/keras/datasets/adni/adni_datapaths_absolute.csv"
+        TrainDatasetPath: ""
         ValidationDatasetPath: ""
-        TestDatasetPath: "/projectmetis-rc/experiments/keras/datasets/adni/adni_datapaths_absolute.csv"
-#    - LearnerID: "localhost-2"
-#      ProjectHome: "/projectmetis-rc"
-#      ConnectionConfigs:
-#        Hostname: "localhost"
-#        Username: "root"
-#        Password: "root"
-#        OnLogin: "source /etc/profile;"
-#      GRPCServicer:
-#        Port: 50053
-#      CudaDevices: [1]
-#      DatasetConfigs:
-#        TrainDatasetPath: "/projectmetis-rc/experiments/keras/datasets/adni/adni_datapaths_absolute.csv"
-#        ValidationDatasetPath: ""
-#        TestDatasetPath: "/projectmetis-rc/experiments/keras/datasets/adni/adni_datapaths_absolute.csv"
-#    - LearnerID: "localhost-3"
-#      ProjectHome: "/projectmetis-rc"
-#      ConnectionConfigs:
-#        Hostname: "localhost"
-#        Username: "root"
-#        Password: "root"
-#        OnLogin: "source /etc/profile;"
-#      GRPCServicer:
-#        Port: 50054
-#      CudaDevices: [2]
-#      DatasetConfigs:
-#        TrainDatasetPath: "/projectmetis-rc/experiments/keras/datasets/adni/adni_datapaths_absolute.csv"
-#        ValidationDatasetPath: ""
-#        TestDatasetPath: "/projectmetis-rc/experiments/keras/datasets/adni/adni_datapaths_absolute.csv"
+        TestDatasetPath: ""

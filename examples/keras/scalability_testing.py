@@ -64,32 +64,23 @@ if __name__ == "__main__":
     x_test, y_test = test_data[:, :-1], test_data[:, -1:]
 
     x_chunks, y_chunks = np.split(x_train, args.learners_num), np.split(y_train, args.learners_num)
-    datasets_path = "datasets/housing/"
-    np.savez(os.path.join(script_cwd, datasets_path, "test.npz"), x=x_test, y=y_test)
+    datasets_path = os.path.join(script_cwd, "datasets/housing/")
+    if not os.path.exists(datasets_path):
+        os.makedirs(datasets_path)
+    np.savez(os.path.join(datasets_path, "test.npz"), x=x_test, y=y_test)
     for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):
-        np.savez(os.path.join(script_cwd, datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
+        np.savez(os.path.join(datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
     for lidx, learner in enumerate(federation_environment.learners.learners):
         learner.dataset_configs.test_dataset_path = \
-            os.path.join(script_cwd, datasets_path, "test.npz")
+            os.path.join(datasets_path, "test.npz")
         learner.dataset_configs.train_dataset_path = \
-            os.path.join(script_cwd, datasets_path, "train_{}.npz".format(lidx))
-
-    nn_engine = "keras"
-    metis_filepath_prefix = "/tmp/metis/model/"
-    if not os.path.exists(metis_filepath_prefix):
-        os.makedirs(metis_filepath_prefix)
-
-    model_filepath = "{}/model_definition".format(metis_filepath_prefix)
-    train_dataset_recipe_fp_pkl = "{}/model_train_dataset_ops.pkl".format(metis_filepath_prefix)
-    validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(metis_filepath_prefix)
-    test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(metis_filepath_prefix)
+            os.path.join(datasets_path, "train_{}.npz".format(lidx))
 
     nn_model = HousingMLP(
         params_per_layer=args.nn_params_per_layer,
         hidden_layers_num=args.nn_hidden_layers_num,
         data_type=args.data_type).get_model()
     nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
-    nn_model.save(model_filepath)
     nn_model.summary()
 
     def dataset_recipe_fn(dataset_fp):
@@ -109,16 +100,12 @@ if __name__ == "__main__":
             mode_val=mode_val, stddev_val=np.std(prices))
         return model_dataset
 
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(train_dataset_recipe_fp_pkl, "wb+"))
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(test_dataset_recipe_fp_pkl, "wb+"))
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
-
-    driver_session = DriverSession(federation_environment, nn_engine,
-                                   model_definition_dir=model_filepath,
-                                   train_dataset_recipe_fp=train_dataset_recipe_fp_pkl,
-                                   validation_dataset_recipe_fp=validation_dataset_recipe_fp_pkl,
-                                   test_dataset_recipe_fp=test_dataset_recipe_fp_pkl)
-    driver_session.initialize_federation(model_weights=nn_model.get_weights())
+    driver_session = DriverSession(federation_environment,
+                                   nn_model,
+                                   train_dataset_recipe_fn=dataset_recipe_fn,
+                                   validation_dataset_recipe_fn=dataset_recipe_fn,
+                                   test_dataset_recipe_fn=dataset_recipe_fn)
+    driver_session.initialize_federation()
     driver_session.monitor_federation()
     driver_session.shutdown_federation()
     statistics = driver_session.get_federation_statistics()

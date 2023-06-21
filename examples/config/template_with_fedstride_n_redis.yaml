@@ -30,7 +30,7 @@ FederationEnvironment:
       LearningRate: 0.05
       L2Reg: 0.0
   Controller:
-    ProjectHome: "/projectmetis-rc"
+    ProjectHome: "/metisfl"
     ConnectionConfigs:
       Hostname: "localhost"
       Username: "root"
@@ -40,7 +40,7 @@ FederationEnvironment:
       Port: 50051
   Learners:
     - LearnerID: "localhost-1"
-      ProjectHome: "/projectmetis-rc"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
         Username: "root"
