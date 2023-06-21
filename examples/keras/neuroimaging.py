@@ -250,7 +250,7 @@ class ModelDatasetHelper(object):
         else:
             mode_val = mode_values[0]
         model_dataset = ModelDatasetRegression(
-            dataset=dataset, size=len(ages),
+            x=dataset, size=len(ages),
             min_val=np.min(ages), max_val=np.max(ages),
             mean_val=np.mean(ages), median_val=np.median(ages),
             mode_val=mode_val, stddev_val=np.std(ages))
@@ -269,7 +269,7 @@ class ModelDatasetHelper(object):
         for cid in classes:
             examples_per_class[cid] += 1
         model_dataset = ModelDatasetClassification(
-            dataset=dataset, size=records_num,
+            x=dataset, size=records_num,
             examples_per_class=examples_per_class)
         return model_dataset
 
@@ -311,7 +311,7 @@ if __name__ == "__main__":
         args.federation_environment_config_fp).local_model_config.batch_size
     if args.neuroimaging_task == "brainage":
         volume_attr, label_attr = "9dof_2mm_vol", "age_at_scan"
-        dataset_recipe_fn = ModelDatasetHelper(volume_attr, label_attr)\
+        dataset_recipe_fn = ModelDatasetHelper(volume_attr, label_attr) \
             .regression_task_dataset_recipe_fn
         if args.neuroimaging_task_model == "3dcnn":
             nn_model = BrainAge3DCNN(batch_size=batch_size).get_model()
@@ -348,12 +348,11 @@ if __name__ == "__main__":
     cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
 
     driver_session = DriverSession(args.federation_environment_config_fp,
-                                   nn_engine=nn_engine,
-                                   model_definition_dir=model_definition_dir,
-                                   train_dataset_recipe_fp=train_dataset_recipe_fp_pkl,
-                                   validation_dataset_recipe_fp=validation_dataset_recipe_fp_pkl,
-                                   test_dataset_recipe_fp=test_dataset_recipe_fp_pkl)
-    driver_session.initialize_federation(model_weights=nn_model.get_weights())
+                                   model=nn_model,
+                                   train_dataset_recipe_fn=dataset_recipe_fn,
+                                   validation_dataset_recipe_fn=dataset_recipe_fn,
+                                   test_dataset_recipe_fn=dataset_recipe_fn)
+    driver_session.initialize_federation()
     driver_session.monitor_federation()
     driver_session.shutdown_federation()
     statistics = driver_session.get_federation_statistics()

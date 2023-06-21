@@ -2,13 +2,13 @@ import grpc
 import queue
 import time
 
-from metisfl.learner.utils.metis_logger import MetisLogger
 
 from concurrent import futures
+from metisfl.proto.metis_pb2 import ServerEntity
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.ssl_configurator import SSLConfigurator
 from grpc._cython import cygrpc
 from pebble import ThreadPool
-from metisfl.learner.utils.ssl_configurator import SSLConfigurator
-from metisfl.proto.metis_pb2 import ServerEntity
 
 
 class GRPCEndpoint(object):

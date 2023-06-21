@@ -13,40 +13,40 @@ from metisfl.utils.metis_logger import MetisLogger
 
 class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
-    def __init__(self, learner: Learner, learner_server_entity: ServerEntity,
-                 servicer_workers=10, *args, **kwargs):
+    def __init__(self, learner: Learner, servicer_workers=10, *args, **kwargs):
         self.learner = learner
-        self.learner_server_entity = learner_server_entity
         self.servicer_workers = servicer_workers
         self.__community_models_received = 0
         self.__model_evaluation_requests = 0
         self.__not_serving_event = threading.Event()  # event to stop serving inbound requests
         self.__shutdown_event = threading.Event()  # event to stop all grpc related tasks
-        self.__server = None
+        self.__grpc_server = None
 
     def init_servicer(self):
-        self.__server = GRPCServerMaxMsgLength(max_workers=self.servicer_workers).server
-        learner_pb2_grpc.add_LearnerServiceServicer_to_server(self, self.__server)
-        self.__server.add_insecure_port(self.learner.host_port_identifier())
-        self.__server.start()
+        self.__grpc_server = GRPCServerMaxMsgLength(
+            max_workers=self.servicer_workers,
+            server_entity=self.learner.learner_server_entity)
+        learner_pb2_grpc.add_LearnerServiceServicer_to_server(
+            self, self.__grpc_server.server)
+        self.__grpc_server.server.start()
         MetisLogger.info("Initialized Learner Servicer {}".format(
-            self.learner.host_port_identifier()))
+            self.__grpc_server.grpc_endpoint.listening_endpoint))
         # Learner asks controller to join the federation.
         self.learner.join_federation()
 
     def wait_servicer(self):
         self.__shutdown_event.wait()
-        self.__server.stop(None)
+        self.__grpc_server.server.stop(None)
 
     def EvaluateModel(self, request, context):
         if self.__not_serving_event.is_set():
             # Returns not available status if the servicer cannot receive new requests.
             context.set_code(grpc.StatusCode.UNAVAILABLE)
-            return proto_factory.LearnerServiceProtoMessages\
+            return proto_factory.LearnerServiceProtoMessages \
                 .construct_evaluate_model_response_pb()
 
         MetisLogger.info("Learner Servicer {} received model evaluation task.".format(
-            self.learner.host_port_identifier()))
+            self.__grpc_server.grpc_endpoint.listening_endpoint))
         self.__model_evaluation_requests += 1
         model_pb = request.model
         batch_size = request.batch_size
@@ -61,33 +61,33 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
             block=True,
             verbose=True)
         evaluate_model_response_pb = \
-            proto_factory.LearnerServiceProtoMessages\
-            .construct_evaluate_model_response_pb(model_evaluations_pb)
+            proto_factory.LearnerServiceProtoMessages \
+                .construct_evaluate_model_response_pb(model_evaluations_pb)
         return evaluate_model_response_pb
 
     def GetServicesHealthStatus(self, request, context):
         if self.__not_serving_event.is_set():
             # Returns not available status if the servicer cannot receive new requests.
             context.set_code(grpc.StatusCode.UNAVAILABLE)
-            return proto_factory.ServiceCommonProtoMessages\
+            return proto_factory.ServiceCommonProtoMessages \
                 .construct_get_services_health_status_request_pb()
 
         MetisLogger.info("Learner Servicer {} received a health status request.".format(
-            self.learner.host_port_identifier()))
-        services_status = {"server": self.__server is not None}
-        return proto_factory\
-            .ServiceCommonProtoMessages\
+            self.__grpc_server.grpc_endpoint.listening_endpoint))
+        services_status = {"server": self.__grpc_server.server is not None}
+        return proto_factory \
+            .ServiceCommonProtoMessages \
             .construct_get_services_health_status_response_pb(services_status=services_status)
 
     def RunTask(self, request, context):
         if self.__not_serving_event.is_set():
             # Returns not available status if the servicer cannot receive new requests.
             context.set_code(grpc.StatusCode.UNAVAILABLE)
-            return proto_factory.LearnerServiceProtoMessages\
+            return proto_factory.LearnerServiceProtoMessages \
                 .construct_run_task_response_pb()
 
         MetisLogger.info("Learner Servicer {} received local training task.".format(
-            self.learner.host_port_identifier()))
+            self.__grpc_server.grpc_endpoint.listening_endpoint))
         self.__community_models_received += 1
         federated_model = request.federated_model
         num_contributors = federated_model.num_contributors
@@ -112,7 +112,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
     def ShutDown(self, request, context):
         MetisLogger.info("Learner Servicer {} received shutdown request.".format(
-            self.learner.host_port_identifier()))
+            self.__grpc_server.grpc_endpoint.listening_endpoint))
         # First, stop accepting new incoming requests.
         self.__not_serving_event.set()
         # Second, trigger a shutdown signal to learner's underlying execution engine
@@ -128,7 +128,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         # Fourth, issue servicer termination signal.
         # Reason we do this as the final step is because we want to the learner
         # to have completely shutdown its resources because if not it means it
-        # is still alive and we cannot guarantee a proper shutdown.
+        # is still alive, and we cannot guarantee a proper shutdown.
         self.__shutdown_event.set()
         ack_pb = proto_factory.ServiceCommonProtoMessages.construct_ack_pb(
             status=True,

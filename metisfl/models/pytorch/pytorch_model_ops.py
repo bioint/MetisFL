@@ -102,17 +102,18 @@ class PyTorchModelOps(ModelOps):
         # Set model to train state.
         self._model.train()
         dataset = self._construct_dataset_pipeline(train_dataset)
-        train_res = {}
 
         fit_fn = getattr(self._model, "fit", None)
         # We need to make sure that the given dataset is not None and that the
         # given fit function implements the abstract fit method of PyTorchDef
         # class, and of course make sure that the function itself is callable.
-        if dataset and isinstance(self._model, PyTorchDef) and callable(fit_fn):
-            MetisLogger.info("Using provided fit function.")
-            train_res = self._model.fit(dataset, epochs=epochs_num)
-        else:
-            MetisLogger.error("Fit function not provided, please implement one.")
+        train_res = {}
+        if dataset:
+            if isinstance(self._model, PyTorchDef) and callable(fit_fn):
+                MetisLogger.info("Using provided fit function.")
+                train_res = self._model.fit(dataset, epochs=epochs_num)
+            else:
+                MetisLogger.error("Fit function not provided, please implement one.")
 
         MetisLogger.info("Model training is complete.")
 
@@ -145,12 +146,13 @@ class PyTorchModelOps(ModelOps):
         # We need to make sure that the given dataset is not None and that the given
         # evaluate function implements the abstract evaluate method of PyTorchDef class,
         # and of course make sure that the function itself is callable.
-        if dataset and isinstance(self._model, PyTorchDef) and callable(evaluate_fn):
-            MetisLogger.info("Using provided fit function.")
-            eval_res = self._model.evaluate(dataset)
-        else:
-            eval_res = {}
-            MetisLogger.error("Evaluate function not provided, please implement one.")
+        eval_res = {}
+        if dataset:
+            if isinstance(self._model, PyTorchDef) and callable(evaluate_fn):
+                MetisLogger.info("Using provided fit function.")
+                eval_res = self._model.evaluate(dataset)
+            else:
+                MetisLogger.error("Evaluate function not provided, please implement one.")
 
         MetisLogger.info("Model evaluation is complete.")
         metric_values = DictionaryFormatter.stringify(eval_res, stringify_nan=True)
