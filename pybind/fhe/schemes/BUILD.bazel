@@ -1,9 +1,0 @@
-package(default_visibility = ["//visibility:public"])
-
-cc_library(
-    name = "fhe_schemes_lib",
-    hdrs = ["scheme.h"],
-    deps = [
-      "@pybind11"
-    ],
-)
