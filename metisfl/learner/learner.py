@@ -6,13 +6,8 @@ import os
 import multiprocessing as mp
 import metisfl.utils.proto_messages_factory as proto_factory
 
-<<<<<<< HEAD
-from pebble import ProcessPool, ProcessExpired
-
-=======
 from inspect import signature
 from pebble import ProcessPool
->>>>>>> bugfix/migration_path_deps_issues
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
 from metisfl.learner.learner_evaluator import LearnerEvaluator

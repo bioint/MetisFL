@@ -96,26 +96,12 @@ if __name__ == "__main__":
             x=x, y=y, size=y.size, examples_per_class=distribution)
         return model_dataset
 
-<<<<<<< HEAD
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(train_dataset_recipe_fp_pkl, "wb+"))
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(test_dataset_recipe_fp_pkl, "wb+"))
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
-
-    # TODO: @stripeli model_definition_dir does not appear in DriverSession
-    driver_session = DriverSession(federation_environment, nn_engine,
-                                   model_definition_dir=model_filepath,
-                                   train_dataset_recipe_fp=train_dataset_recipe_fp_pkl,
-                                   validation_dataset_recipe_fp=validation_dataset_recipe_fp_pkl,
-                                   test_dataset_recipe_fp=test_dataset_recipe_fp_pkl)
-    driver_session.initialize_federation(model_weights=nn_model.get_weights())
-=======
     driver_session = DriverSession(federation_environment,
                                    nn_model,
                                    train_dataset_recipe_fn=dataset_recipe_fn,
                                    validation_dataset_recipe_fn=dataset_recipe_fn,
                                    test_dataset_recipe_fn=dataset_recipe_fn)
     driver_session.initialize_federation()
->>>>>>> bugfix/migration_path_deps_issues
     driver_session.monitor_federation()
     driver_session.shutdown_federation()
     statistics = driver_session.get_federation_statistics()
