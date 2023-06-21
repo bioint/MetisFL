@@ -1,0 +1,30 @@
+package(default_visibility = ["//metisfl/controller:__subpackages__"])
+
+cc_library(
+    name = "selection",
+    srcs = [
+        "selector.h",
+        "scheduled_cardinality.h",
+    ],
+    hdrs = [
+        "model_selection.h",
+    ],
+    deps = [
+        "//metisfl/proto:cc_grpc_lib",
+    ],
+)
+
+cc_test(
+    name = "scheduled_cardinality_test",
+    srcs = [
+        "scheduled_cardinality.h",
+        "scheduled_cardinality_test.cc",
+        "selector.h",
+    ],
+    deps = [
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/strings",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main"
+    ],
+)

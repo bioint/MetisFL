@@ -1,0 +1,30 @@
+package(default_visibility = ["//metisfl/controller:__subpackages__"])
+
+cc_library(
+    name = "scenarios",
+    srcs = [
+        "scenarios_common.cc",
+    ],
+    hdrs = [
+        "scenarios_common.h",
+    ],
+    deps = [
+        "//metisfl/controller:controller",
+        "//metisfl/controller/aggregation/",
+        "//metisfl/controller/scaling",
+        "//metisfl/controller/store/",
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/container:flat_hash_map",
+        "//metisfl/controller/common:proto_tensor_serde",
+    ]
+)
+
+cc_binary(
+    name = "sync_model_aggregation_performance",
+    srcs = [
+        "sync_model_aggregation_performance_main.cc"
+    ],
+    deps = [
+        ":scenarios"
+    ],
+)

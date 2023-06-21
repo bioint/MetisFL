@@ -1,0 +1,49 @@
+package(default_visibility = ["//metisfl/controller:__subpackages__"])
+
+cc_library(
+    name = "scheduling",
+    srcs = [
+        "asynchronous_scheduler.h",
+        "scheduler.h",
+        "synchronous_scheduler.h",
+    ],
+    hdrs = [
+        "scheduling.h",
+    ],
+    deps = [
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/container:flat_hash_set",
+    ],
+)
+
+cc_test(
+    name = "synchronous_scheduler_test",
+    srcs = [
+        "scheduler.h",
+        "synchronous_scheduler.h",
+        "synchronous_scheduler_test.cc"
+    ],
+    deps = [
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/container:flat_hash_set",
+        "@absl//absl/strings",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main"
+    ],
+)
+
+cc_test(
+    name = "asynchronous_scheduler_test",
+    srcs = [
+        "asynchronous_scheduler.h",
+        "asynchronous_scheduler_test.cc",
+        "scheduler.h",
+    ],
+    deps = [
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/container:flat_hash_set",
+        "@absl//absl/strings",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main"
+    ],
+)

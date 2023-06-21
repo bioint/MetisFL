@@ -1,0 +1,92 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+# Libraries.
+cc_library(
+    name = "controller_interface",
+    hdrs = ["controller.h"],
+    deps = [
+        "//metisfl/proto:cc_grpc_lib",
+        "//metisfl/proto:service_common_cc_proto",
+        "@absl//absl/status:statusor",
+        "@absl//absl/container:flat_hash_map",
+    ],
+    visibility = ["//metisfl/controller:__subpackages__"]
+)
+
+cc_library(
+    name = "controller_servicer",
+    srcs = ["controller_servicer.cc"],
+    hdrs = ["controller_servicer.h"],
+    deps = [
+        ":controller",
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/memory",
+    ],
+)
+
+cc_library(
+    name = "controller",
+    srcs = ["controller.cc"],
+    hdrs = ["controller.h"],
+    deps = [
+        ":controller_utils",
+        "//metisfl/proto:cc_grpc_lib",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:thread_pool",
+        "@absl//absl/status:statusor",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/memory",
+        "@com_github_google_glog//:glog",
+    ],
+)
+
+cc_library(
+    name = "controller_mock",
+    hdrs = ["controller_mock.h"],
+    deps = [
+        ":controller_interface",
+        "@gtest//:gtest",
+    ],
+)
+
+cc_library(
+    name = "controller_utils",
+    srcs = ["controller_utils.cc"],
+    hdrs = ["controller_utils.h"],
+    deps = [
+        "//metisfl/controller/aggregation:aggregation",
+        "//metisfl/controller/scaling",
+        "//metisfl/controller/selection",
+        "//metisfl/controller/store:storing",
+        "//metisfl/controller/scheduling:scheduling",
+        "//metisfl/proto:cc_grpc_lib",
+        "@absl//absl/memory",
+        "@absl//absl/strings"
+    ],
+)
+
+# Tests.
+cc_test(
+    name = "controller_test",
+    srcs = ["controller_test.cc"],
+    deps = [
+        ":controller",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main"
+    ],
+)
+
+cc_test(
+    name = "controller_servicer_test",
+    srcs = ["controller_servicer_test.cc"],
+    deps = [
+        ":controller_servicer",
+        ":controller_mock",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:proto_matchers",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ],
+)
