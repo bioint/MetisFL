@@ -2,6 +2,7 @@ from typing import List
 import tensorflow as tf
 import numpy as np
 from metisfl.models.model_wrapper import MetisModel
+from metisfl.models.keras.optimizers.fed_prox import FedProx
 
 from metisfl.learner.weight_decrypt import ModelWeightsDescriptor
 from metisfl.utils.metis_logger import MetisLogger
@@ -14,9 +15,11 @@ class MetisKerasModel(MetisModel):
         # nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
         self.nn_engine = "keras"
 
-    def load(self, model_dir) -> tf.keras.Model:
+    @staticmethod
+    def load(model_dir) -> tf.keras.Model:
         MetisLogger.info("Loading model from: {}".format(model_dir))
-        m = tf.keras.models.load_model(model_dir, custom_objects=self._load_model_custom_objects)
+        model_custom_objects = {"FedProx": FedProx}
+        m = tf.keras.models.load_model(model_dir, custom_objects=model_custom_objects)
         MetisLogger.info("Loaded model from: {}".format(model_dir))
         return m
 

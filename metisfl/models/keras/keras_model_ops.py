@@ -36,20 +36,10 @@ class KerasModelOps(ModelOps):
                 # Memory growth must be set before GPUs have been initialized.
                 MetisLogger.error(e)
 
-        # @stripeli - this check is redundant, just pass the callbacks to keras. 
-        # if they are not valid, keras will throw an error.
-        keras_callbacks = keras_callbacks or []
-        if len(keras_callbacks) > 0:
-            are_callbacks_valid = any([isinstance(kc, tf.keras.callbacks.Callback) for kc in keras_callbacks])
-            if not are_callbacks_valid:
-                MetisLogger.error("{} needs to be an instance of {}. Setting them now to empty".format(
-                    keras_callbacks, [tf.keras.callbacks.Callback]))
-                keras_callbacks = []
-
         self._model_dir = model_dir
         # TODO Register custom objects, e.g., optimizers, required to load the model.
         self._load_model_custom_objects = {"FedProx": FedProx}
-        self._model = MetisKerasModel().load(model_dir)
+        self._model = MetisKerasModel.load(model_dir)
         self._keras_callbacks = keras_callbacks
 
     def get_model(self) -> tf.keras.Model:

@@ -7,7 +7,7 @@ FederationEnvironment:
   EvaluationMetric: "accuracy"
   CommunicationProtocol:
     Name: "Synchronous"
-    EnableSSL: True
+    EnableSSL: False
   ModelStoreConfig:
     Name: "InMemory" # Others are "InMemory", "Redis"
     EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"
@@ -27,32 +27,26 @@ FederationEnvironment:
       LearningRate: 0.05
       L2Reg: 0.0
   Controller:
-    ProjectHome: "/metisfl"
+    ProjectHome: "/home/panoskyriakis/metisfl/"
     ConnectionConfigs:
       Hostname: "localhost"
-      Username: "root"
-      Password: "root"
+      KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
+      Username: "panoskyriakis"
       OnLogin: "source /etc/profile;"
     GRPCServicer:
       Hostname: "localhost"
       Port: 50051
-    SSLConfigs:
-      PrivateKey: "/projectmetis-rc/resources/ssl_config/default/server-key.pem"
-      PublicCertificate: "/projectmetis-rc/resources/ssl_config/default/server-cert.pem"
   Learners:
     - LearnerID: "localhost-1"
-      ProjectHome: "/metisfl"
+      ProjectHome: "/home/panoskyriakis/metisfl/"
       ConnectionConfigs:
         Hostname: "localhost"
-        Username: "root"
-        Password: "root"
+        Username: "panoskyriakis"
+        KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Hostname: "localhost"
         Port: 50052
-      SSLConfigs:
-        PrivateKey: "/projectmetis-rc/resources/ssl_config/default/server-key.pem"
-        PublicCertificate: "/projectmetis-rc/resources/ssl_config/default/server-cert.pem"
       CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""

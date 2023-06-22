@@ -1,4 +1,6 @@
 import argparse
+from metisfl.learner.dataset_handler import LearnerDataset
+from metisfl.learner.learner_evaluator import LearnerEvaluator
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
@@ -64,22 +66,34 @@ def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
             enabled=False, empty_scheme_pb=empty_scheme_pb)
 
     learner_credentials_fp = "/tmp/metis/learner_{}_credentials/".format(learner_server_entity_pb.port)
-    learner = Learner(
-        learner_server_entity=learner_server_entity_pb,
-        controller_server_entity=controller_server_entity_pb,
-        he_scheme=he_scheme_pb,
-        nn_engine=nn_engine,
-        model_dir=model_dir,
+    
+    learner_dataset = LearnerDataset(
         train_dataset_fp=train_dataset_filepath,
         train_dataset_recipe_pkl=train_dataset_recipe_fp_pkl,
         test_dataset_fp=test_dataset_filepath,
         test_dataset_recipe_pkl=test_dataset_recipe_fp_pkl,
         validation_dataset_fp=validation_dataset_filepath,
         validation_dataset_recipe_pkl=validation_dataset_recipe_fp_pkl,
+    )
+    
+    learner_evaluator = LearnerEvaluator(
+        learner_dataset = learner_dataset,
+        he_scheme=he_scheme_pb,
+        nn_engine=nn_engine,
+        model_dir=model_dir,
+    )
+        
+    learner = Learner(
+        learner_server_entity=learner_server_entity_pb,
+        controller_server_entity=controller_server_entity_pb,
+        learner_dataset=learner_dataset,
+        learner_evaluator=learner_evaluator,
         learner_credentials_fp=learner_credentials_fp)
+    
     learner_servicer = LearnerServicer(
         learner=learner,
         servicer_workers=5)
+    
     # First, initialize learner servicer for receiving train/evaluate/inference tasks.
     learner_servicer.init_servicer()
     # Second, block the servicer till a shutdown request is issued and no more requests are received.
