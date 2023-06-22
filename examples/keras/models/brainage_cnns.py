@@ -1,10 +1,10 @@
 import tensorflow as tf
 
 from tensorflow.keras.layers import Input
-from metisfl.models.model_def import ModelDef
+from metisfl.models.keras.wrapper import MetisKerasModel
 
 
-class BrainAge2DCNN(ModelDef):
+class BrainAge2DCNN(MetisKerasModel):
 
     # Def for standard conv block:
     # 1. Conv (3x3) + relu
@@ -85,7 +85,7 @@ class BrainAge2DCNN(ModelDef):
         return model
 
 
-class BrainAge3DCNN(ModelDef):
+class BrainAge3DCNN(MetisKerasModel):
 
     # Def for standard conv block:
     # 1. Conv (3x3) + relu

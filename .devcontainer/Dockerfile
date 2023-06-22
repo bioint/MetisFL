@@ -1,6 +1,7 @@
 # Install Ubuntu image from docker hub.
 FROM ubuntu:focal as ubuntu
 ARG PYV="3.10"
+
 # Assign simple root password.
 RUN echo "root:root" | chpasswd
 
@@ -31,9 +32,9 @@ RUN apt-get -y install build-essential gcc autoconf libomp-dev
 RUN apt -y install software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt-get -y update
-RUN apt-get -y install -f python3.8-dev python3.8-distutils python3-pip
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
+RUN apt-get -y install -f python$PYV-dev python$PYV-distutils python3-pip
+RUN update-alternatives --install /usr/bin/python python /usr/bin/python$PYV 1
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYV 1
 
 # Clean up.
 RUN apt-get clean

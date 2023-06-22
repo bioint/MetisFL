@@ -279,7 +279,7 @@ if __name__ == "__main__":
     default_neuroimaging_task = "brainage"
     default_neuroimaging_task_model = "3dcnn"
     default_federation_environment_config_fp = os.path.join(
-        SCRIPT_CWD, "../federation_environments_config/brainage/brainage_test_localhost_synchronous.yaml")
+        SCRIPT_CWD, "../config/brainage/brainage_test_localhost_synchronous.yaml")
     default_mri_scans_csv_mapping = os.path.join(
         SCRIPT_CWD, "datasets/ukbb/ukbb_datapaths_absolute.csv")
 

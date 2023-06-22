@@ -1,10 +1,10 @@
 import tensorflow as tf
 
 # from tensorflow.keras import layers, models, regularizers
-from metisfl.models.model_def import ModelDef
+from metisfl.models.keras.wrapper import MetisKerasModel
 
 
-class IMDB_LSTM(ModelDef):
+class IMDB_LSTM(MetisKerasModel):
 
     def __init__(self, learning_rate=0.01, max_features=25000):
         super(IMDB_LSTM, self).__init__()

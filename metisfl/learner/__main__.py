@@ -7,6 +7,7 @@ from metisfl.learner.learner_servicer import LearnerServicer
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 
+# @stripeli the default values should not be here
 def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
                  controller_server_entity_protobuff_serialized_hexadecimal,
                  he_scheme_protobuff_serialized_hexadecimal,

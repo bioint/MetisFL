@@ -1,24 +1,29 @@
 import numpy as np
 import tensorflow as tf
+from metisfl.models.keras.helper import construct_dataset_pipeline
+from metisfl.models.model_ops import ModelOps
 
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.models.keras.optimizers.fed_prox import FedProx
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.model_ops import ModelOps
+from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.models.model_proto_factory import ModelProtoFactory
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
-from typing import List
 
 
 class KerasModelOps(ModelOps):
 
-    def __init__(self, model_dir="/tmp/model", he_scheme=None, keras_callbacks=None, *args, **kwargs):
+    def __init__(self, 
+                 model_dir,
+                 keras_callbacks=None):
         # Runtime memory growth configuration for Tensorflow/Keras sessions.
         # Assumption is that the visible GPUs are set through the environmental
         # variable CUDA_VISIBLE_DEVICES, else it will consume all available GPUs.
         # The following code snippet is an official Tensorflow recommendation.
+        
+        # @stripeli - why so many config for tensorflow and non for pytorch?
         gpus = tf.config.list_physical_devices('GPU')
         if gpus:
             try:
@@ -31,9 +36,10 @@ class KerasModelOps(ModelOps):
                 # Memory growth must be set before GPUs have been initialized.
                 MetisLogger.error(e)
 
-        if keras_callbacks is None:
-            keras_callbacks = []
-        elif len(keras_callbacks) > 0:
+        # @stripeli - this check is redundant, just pass the callbacks to keras. 
+        # if they are not valid, keras will throw an error.
+        keras_callbacks = keras_callbacks or []
+        if len(keras_callbacks) > 0:
             are_callbacks_valid = any([isinstance(kc, tf.keras.callbacks.Callback) for kc in keras_callbacks])
             if not are_callbacks_valid:
                 MetisLogger.error("{} needs to be an instance of {}. Setting them now to empty".format(
@@ -43,76 +49,11 @@ class KerasModelOps(ModelOps):
         self._model_dir = model_dir
         # TODO Register custom objects, e.g., optimizers, required to load the model.
         self._load_model_custom_objects = {"FedProx": FedProx}
-        self._model = self.load_model(self._model_dir)
-        self._he_scheme = he_scheme
+        self._model = MetisKerasModel().load(model_dir)
         self._keras_callbacks = keras_callbacks
-        super(KerasModelOps, self).__init__(self._model, self._he_scheme)
 
-    def _construct_dataset_pipeline(self, dataset: ModelDataset, batch_size, is_train=False):
-        """
-        A helper function to distinguish whether we have a tf.dataset or other data input sequence (e.g. numpy).
-        We need to set up appropriately the data pipeline since keras method invocations require different parameters
-        to be explicitly set. See also: https://www.tensorflow.org/api_docs/python/tf/keras/Model#fit
-        :param dataset:
-        :param batch_size:
-        :param is_train:
-        :return:
-        """
-        # We load both (x, y) variables. If variable x is not empty and is of type tf.data.Dataset,
-        # then we shuffle and batch the dataset and return only a value for variable x. Otherwise,
-        # we return both _x and _y assuming the two variables refer to numpy arrays or other
-        # data types that are not tensorflow/keras specific.
-        _x, _y = dataset.get_x(), dataset.get_y()
-        if isinstance(_x, tf.data.Dataset):
-            MetisLogger.info("Model dataset input is a tf.data.Dataset; ignoring fed y values.")
-            if is_train:
-                # Shuffle all records only if dataset is used for training.
-                _x = _x.shuffle(dataset.get_size())
-            # If the input is of tf.Dataset we only need to return the input x,
-            # we do not need to set a value for target y.
-            _x, _y = _x.batch(batch_size), None
-        return _x, _y
-
-    def cleanup(self):
-        del self._model
-        tf.keras.backend.clear_session()
-
-    def load_model(self, model_dir=None, *args, **kwargs):
-        if model_dir is None:
-            model_dir = self._model_dir
-        MetisLogger.info("Loading model from: {}".format(model_dir))
-        m = tf.keras.models.load_model(model_dir, custom_objects=self._load_model_custom_objects)
-        MetisLogger.info("Loaded model from: {}".format(model_dir))
-        return m
-
-    def save_model(self, model_dir=None, *args, **kwargs):
-        if model_dir is None:
-            model_dir = self._model_dir
-        MetisLogger.info("Saving model to: {}".format(model_dir))
-        # Save model in SavedModel format (default): https://www.tensorflow.org/guide/saved_model
-        self._model.save(filepath=model_dir)
-        MetisLogger.info("Saved model at: {}".format(model_dir))
-
-    def set_model_weights(self,
-                          weights_names: List[str],
-                          weights_trainable: List[bool],
-                          weights_values: List[np.ndarray],
-                          *args, **kwargs):
-        MetisLogger.info("Applying new model weights")
-        existing_weights = self._model.weights
-        trainable_vars_names = [v.name for v in self._model.trainable_variables]
-        assigning_weights = []
-        for existing_weight, new_weight in zip(existing_weights, weights_values):
-            # TODO It seems that it is better to assign the incoming model weight altogether.
-            #  In a more fine grained implementation we should know whether to share all weights
-            #  with the federation or a subset. This should be defined during initialization.
-            assigning_weights.append(new_weight)
-            # if existing_weight.name not in trainable_vars_names:
-            #     assigning_weights.append(existing_weight.numpy())  # get the numpy/array values
-            # else:
-            #     assigning_weights.append(new_weight)
-        self._model.set_weights(assigning_weights)
-        MetisLogger.info("Applied new model weights")
+    def get_model(self) -> tf.keras.Model:
+        return self._model
 
     def train_model(self,
                     train_dataset: ModelDataset,
@@ -120,8 +61,7 @@ class KerasModelOps(ModelOps):
                     hyperparameters_pb: metis_pb2.Hyperparameters,
                     validation_dataset: ModelDataset = None,
                     test_dataset: ModelDataset = None,
-                    verbose=False,
-                    *args, **kwargs) -> metis_pb2.CompletedLearningTask:
+                    verbose=False) -> metis_pb2.CompletedLearningTask:
         global_iteration = learning_task_pb.global_iteration
         total_steps = learning_task_pb.num_local_updates
         batch_size = hyperparameters_pb.batch_size
@@ -142,11 +82,11 @@ class KerasModelOps(ModelOps):
         performance_profile_callback = PerformanceProfiler()
         MetisLogger.info("Starting model training.")
 
-        x_train, y_train = self._construct_dataset_pipeline(
+        x_train, y_train = construct_dataset_pipeline(
             dataset=train_dataset, batch_size=batch_size, is_train=True)
-        x_valid, y_valid = self._construct_dataset_pipeline(
+        x_valid, y_valid = construct_dataset_pipeline(
             dataset=validation_dataset, batch_size=batch_size, is_train=False)
-        x_test, y_test = self._construct_dataset_pipeline(
+        x_test, y_test = construct_dataset_pipeline(
             dataset=test_dataset, batch_size=batch_size, is_train=False)
 
         # We assign x_valid, y_valid only if both values
@@ -205,8 +145,7 @@ class KerasModelOps(ModelOps):
                        eval_dataset: ModelDataset,
                        batch_size=100,
                        metrics=None,
-                       verbose=False,
-                       *args, **kwargs) -> metis_pb2.ModelEvaluation:
+                       verbose=False) -> metis_pb2.ModelEvaluation:
         if eval_dataset is None:
             raise RuntimeError("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
@@ -286,3 +225,7 @@ class KerasModelOps(ModelOps):
             self._model.optimizer.weight_decay.assign(weight_decay)
         else:
             raise RuntimeError("TrainingHyperparameters proto message refers to a non-supported optimizer.")
+
+    def cleanup(self):
+        del self._model
+        tf.keras.backend.clear_session()    

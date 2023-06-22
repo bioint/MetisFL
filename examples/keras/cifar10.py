@@ -1,5 +1,4 @@
 import argparse
-import cloudpickle
 import json
 import os
 
@@ -7,8 +6,9 @@ import numpy as np
 import tensorflow as tf
 
 from examples.utils.data_partitioning import DataPartitioning
-from examples.keras.models.cifar_cnn import CifarCNN
+from examples.keras.models.cifar_cnn import get_model
 from metisfl.driver.driver_session import DriverSession
+from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.models.model_dataset import ModelDatasetClassification
 from metisfl.utils.fedenv_parser import FederationEnvironment
 
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../federation_environments_config/cifar10/test_localhost_synchronous_momentumsgd.yaml")
+        script_cwd, "../config/cifar10/test_localhost_synchronous_momentumsgd.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -79,11 +79,13 @@ if __name__ == "__main__":
                 os.path.join(datasets_path, "train_{}.npz".format(lidx))
 
     optimizer_name = federation_environment.local_model_config.optimizer_config.optimizer_name
-    nn_model = CifarCNN(metrics=["accuracy"], optimizer_name=optimizer_name).get_model()
+    nn_model = get_model(metrics=["accuracy"], optimizer_name=optimizer_name)
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
     # properly and any subsequent fit step will never train the model properly. We could apply the .fit() step instead
     # of the .evaluation() step, but since the driver does not hold any data it simply evaluates a random sample.
+    # @stripeli this should be taken taken care of in MetisKerasWrapper and not here.
     nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
+    model_def = MetisKerasModel(nn_model)
 
     def dataset_recipe_fn(dataset_fp):
         loaded_dataset = np.load(dataset_fp)
@@ -97,7 +99,7 @@ if __name__ == "__main__":
         return model_dataset
 
     driver_session = DriverSession(federation_environment,
-                                   nn_model,
+                                   model_def,
                                    train_dataset_recipe_fn=dataset_recipe_fn,
                                    validation_dataset_recipe_fn=dataset_recipe_fn,
                                    test_dataset_recipe_fn=dataset_recipe_fn)

@@ -5,7 +5,6 @@ from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoM
 
 
 class ModelProtoFactory:
-
     class CompletedLearningTaskProtoMessage(object):
 
         def __init__(self,
@@ -20,8 +19,7 @@ class ModelProtoFactory:
                      completes_batches=0,
                      batch_size=0,
                      processing_ms_per_epoch=0.0,
-                     processing_ms_per_batch=0.0,
-                     *args, **kwargs):
+                     processing_ms_per_batch=0.0):
 
             self._weights_names = weights_names
             self._weights_trainable = weights_trainable

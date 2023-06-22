@@ -1,9 +1,9 @@
 import tensorflow as tf
 
-from metisfl.models.model_def import ModelDef
+from metisfl.models.keras.wrapper import MetisKerasModel
 
 
-class MnistModel(ModelDef):
+class MnistModel(MetisKerasModel):
 
     def __init__(self, learning_rate=0.02):
         super(MnistModel, self).__init__()

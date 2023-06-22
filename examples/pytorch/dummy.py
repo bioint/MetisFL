@@ -12,6 +12,7 @@ from torch.utils.data import random_split
 from examples.pytorch.models.mlp import MLP
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.model_dataset import ModelDatasetClassification
+from metisfl.models.pytorch.wrapper import MetisTorchModel
 from metisfl.utils.fedenv_parser import FederationEnvironment
 
 
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../federation_environments_config/template_with_fhe.yaml")
+        script_cwd, "../config/template_with_fhe.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -89,7 +90,7 @@ if __name__ == "__main__":
     model = MLP(n_inputs=34)
 
     driver_session = DriverSession(federation_environment,
-                                   model=model,
+                                   model=MetisTorchModel(model),
                                    train_dataset_recipe_fn=train_dataset_recipe_fn,
                                    validation_dataset_recipe_fn=None,
                                    test_dataset_recipe_fn=None)

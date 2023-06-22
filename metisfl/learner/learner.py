@@ -1,21 +1,21 @@
-import cloudpickle
+from typing import List
 import gc
 import queue
 import os
 
 import multiprocessing as mp
-import metisfl.utils.proto_messages_factory as proto_factory
 
-from inspect import signature
 from pebble import ProcessPool
-from metisfl.utils.metis_logger import MetisLogger
-from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
+
 from metisfl.learner.learner_evaluator import LearnerEvaluator
-from metisfl.learner.learner_trainer import LearnerTrainer
-from metisfl.utils.grpc_controller_client import GRPCControllerClient
-from metisfl.utils.formatting import DictionaryFormatter
+from metisfl.learner.utils import create_model_dataset_helper
+from metisfl.models.model_dataset import ModelDatasetClassification, ModelDatasetRegression
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
-from metisfl.encryption import fhe
+from metisfl.utils.formatting import DictionaryFormatter
+from metisfl.utils.grpc_controller_client import GRPCControllerClient
+from metisfl.utils.metis_logger import MetisLogger
+
+import metisfl.utils.proto_messages_factory as proto_factory
 
 
 class Learner(object):
@@ -37,10 +37,14 @@ class Learner(object):
                  learner_server_entity: metis_pb2.ServerEntity,
                  controller_server_entity: metis_pb2.ServerEntity,
                  he_scheme: metis_pb2.HEScheme,
-                 nn_engine, model_dir,
-                 train_dataset_fp, train_dataset_recipe_pkl,
-                 validation_dataset_fp="", validation_dataset_recipe_pkl="",
-                 test_dataset_fp="", test_dataset_recipe_pkl="",
+                 nn_engine, 
+                 model_dir,
+                 train_dataset_fp, 
+                 train_dataset_recipe_pkl,
+                 validation_dataset_fp="", 
+                 validation_dataset_recipe_pkl="",
+                 test_dataset_fp="", 
+                 test_dataset_recipe_pkl="",
                  recreate_queue_task_worker=False,
                  learner_credentials_fp="/tmp/metis/learner/"):
         self.learner_server_entity = learner_server_entity
@@ -48,6 +52,7 @@ class Learner(object):
         self._he_scheme = he_scheme
         self._nn_engine = nn_engine
         self._model_dir = model_dir
+        self._learner_evaluator_wrapper = lambda model_pb: LearnerEvaluator(nn_engine, model_dir, he_scheme, model_pb)
 
         if not train_dataset_recipe_pkl:
             raise AssertionError("Training dataset recipe is required.")
@@ -132,52 +137,13 @@ class Learner(object):
                 # future inside the queue to complete.
                 future_tasks_q.get().result()
 
-    def _create_model_dataset_helper(self, dataset_recipe_pkl, dataset_fp=None, default_class=None):
-        # TODO Move into utils?
-        """
-        Thus function loads the dataset recipe dynamically. To achieve this, we
-        need to see if the given recipe takes any arguments. The only argument
-        we expect to be given is the path to the dataset (filepath).
-        Therefore, we need to check the function's arguments
-        cardinality if it is greater than 0.
-        :param dataset_recipe_pkl:
-        :param dataset_fp:
-        :param default_class:
-        :return:
-        """
-
-        if not dataset_recipe_pkl and not default_class:
-            raise RuntimeError("Neither the dataset recipe or the default class are specified. Exiting ...")
-
-        if dataset_recipe_pkl:
-            dataset_recipe_fn = cloudpickle.load(open(dataset_recipe_pkl, "rb"))
-            fn_params = signature(dataset_recipe_fn).parameters.keys()
-            if len(fn_params) > 0:
-                if dataset_fp:
-                    # If the function expects an input we pass the dataset path.
-                    dataset = dataset_recipe_fn(dataset_fp)
-                else:
-                    # If the dataset recipe requires an input file but none was given
-                    # then we will return the default class.
-                    dataset = default_class()
-            else:
-                # Else we just load the dataset as is.
-                # This represents the in-memory dataset loading.
-                dataset = dataset_recipe_fn()
-        else:
-            dataset = default_class()
-
-        assert isinstance(dataset, ModelDataset), \
-            "The dataset needs to be an instance of: {}".format(ModelDataset.__name__)
-        return dataset
-
     def _load_model_datasets(self):
-        train_dataset = self._create_model_dataset_helper(
+        train_dataset = create_model_dataset_helper(
             self.train_dataset_recipe_pkl, self.train_dataset_fp)
-        validation_dataset = self._create_model_dataset_helper(
+        validation_dataset = create_model_dataset_helper(
             self.validation_dataset_recipe_pkl, self.validation_dataset_fp,
             default_class=train_dataset.__class__)
-        test_dataset = self._create_model_dataset_helper(
+        test_dataset = create_model_dataset_helper(
             self.test_dataset_recipe_pkl, self.test_dataset_fp,
             default_class=train_dataset.__class__)
         return train_dataset, validation_dataset, test_dataset
@@ -205,38 +171,6 @@ class Learner(object):
                 auth_token=self.__auth_token,
                 completed_task_pb=completed_task_pb,
                 block=False)
-
-    def _model_ops_factory(self, nn_engine):
-        if nn_engine == "keras":
-            return self._model_ops_factory_keras
-        if nn_engine == "pytorch":
-            return self._model_ops_factory_pytorch
-
-    def _model_ops_factory_keras(self, *args, **kwargs):
-        from metisfl.models.keras.keras_model_ops import KerasModelOps
-        he_scheme = None
-        if self._he_scheme.enabled:
-            if self._he_scheme.HasField("fhe_scheme"):
-                he_scheme = fhe.CKKS(
-                    self._he_scheme.fhe_scheme.batch_size,
-                    self._he_scheme.fhe_scheme.scaling_bits,
-                    "resources/fheparams/cryptoparams/")
-                he_scheme.load_crypto_params()
-        model_ops = KerasModelOps(model_dir=self._model_dir, he_scheme=he_scheme, *args, **kwargs)
-        return model_ops
-
-    def _model_ops_factory_pytorch(self, *args, **kwargs):
-        from metisfl.models.pytorch.pytorch_model_ops import PyTorchModelOps
-        he_scheme = None
-        if self._he_scheme.enabled:
-            if self._he_scheme.HasField("fhe_scheme"):
-                he_scheme = fhe.CKKS(
-                    self._he_scheme.fhe_scheme.batch_size,
-                    self._he_scheme.fhe_scheme.scaling_bits,
-                    "resources/fheparams/cryptoparams/")
-                he_scheme.load_crypto_params()
-        model_ops = PyTorchModelOps(model_dir=self._model_dir, he_scheme=he_scheme, *args, **kwargs)
-        return model_ops
 
     def host_port_identifier(self):
         return "{}:{}".format(
@@ -270,16 +204,21 @@ class Learner(object):
         self._learner_controller_client.shutdown()
         return status
 
-    def model_evaluate(self, model_pb: model_pb2.Model, batch_size: int,
-                       evaluation_datasets_pb: [learner_pb2.EvaluateModelRequest.dataset_to_eval],
-                       metrics_pb: metis_pb2.EvaluationMetrics, verbose=False):
+    def model_evaluate(self, 
+                       model_pb: model_pb2.Model, 
+                       batch_size: int,
+                       evaluation_datasets_pb: List[learner_pb2.EvaluateModelRequest.dataset_to_eval],
+                       metrics_pb: metis_pb2.EvaluationMetrics, 
+                       verbose=False):
         MetisLogger.info("Learner {} starts model evaluation on requested datasets."
                          .format(self.host_port_identifier()))
-        model_ops_fn = self._model_ops_factory(self._nn_engine)
 
-        with LearnerEvaluator(model_ops_fn, model_pb) as learner_evaluator:
+        with self._learner_evaluator_wrapper(model_pb) as learner_evaluator:
             # Invoke dataset recipes on a per model operations context,
             # since model evaluation will run as a subprocess.
+            
+            # @stripeli load_dataset is called in all train/inference/evaluation; 
+            # why not move it to the constructor?
             train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
             # Need to unfold the pb into python list.
             metrics = [m for m in metrics_pb.metric]
@@ -301,15 +240,19 @@ class Learner(object):
                              .format(self.host_port_identifier()))
         return model_evaluations_pb
 
-    def model_infer(self, model_pb: model_pb2.Model, batch_size: int,
-                    infer_train=False, infer_test=False, infer_valid=False, verbose=False):
+    def model_infer(self, 
+                    model_pb: model_pb2.Model, 
+                    batch_size: int,
+                    infer_train=False, 
+                    infer_test=False, 
+                    infer_valid=False, 
+                    verbose=False):
         MetisLogger.info("Learner {} starts model inference on requested datasets."
                          .format(self.host_port_identifier()))
         # TODO infer model should behave similarly as the evaluate_model(), by looping over a
         #  similar learner_pb2.InferModelRequest.dataset_to_infer list.
-        model_ops_fn = self._model_ops_factory(self._nn_engine)
 
-        with LearnerEvaluator(model_ops_fn, model_pb) as learner_evaluator:
+        with self._learner_evaluator_wrapper(model_pb) as learner_evaluator:
             # Invoke dataset recipes on a per model operations context,
             # since model inference will run as a subprocess.
             train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
@@ -328,27 +271,33 @@ class Learner(object):
                              .format(self.host_port_identifier()))
         return stringified_res
 
-    def model_train(self, learning_task_pb: metis_pb2.LearningTask,
-                    hyperparameters_pb: metis_pb2.Hyperparameters, model_pb: model_pb2.Model,
+    def model_train(self, 
+                    learning_task_pb: metis_pb2.LearningTask,
+                    hyperparameters_pb: metis_pb2.Hyperparameters, 
+                    model_pb: model_pb2.Model,
                     verbose=False):
         MetisLogger.info("Learner {} starts model training on local training dataset."
                          .format(self.host_port_identifier()))
-        model_ops_fn = self._model_ops_factory(self._nn_engine)
 
         # Invoke dataset recipes on a per model operations context,
         # since model training will run as a subprocess.
-        with LearnerTrainer(model_ops_fn, model_pb) as learner_trainer:
+        with self._learner_evaluator_wrapper(model_pb) as learner_evaluator:
             train_dataset, validation_dataset, test_dataset = self._load_model_datasets()
-            completed_task_pb = learner_trainer.train_model(train_dataset, learning_task_pb,
+            completed_task_pb = learner_evaluator.train_model(train_dataset, learning_task_pb,
                                                             hyperparameters_pb, validation_dataset,
                                                             test_dataset, verbose)
             MetisLogger.info("Learner {} completed model training on local training dataset."
                              .format(self.host_port_identifier()))
         return completed_task_pb
 
-    def run_evaluation_task(self, model_pb: model_pb2.Model, batch_size: int,
-                            evaluation_dataset_pb: [learner_pb2.EvaluateModelRequest.dataset_to_eval],
-                            metrics_pb, cancel_running_tasks=False, block=False, verbose=False):
+    def run_evaluation_task(self, 
+                            model_pb: model_pb2.Model, 
+                            batch_size: int,
+                            evaluation_dataset_pb: List[learner_pb2.EvaluateModelRequest.dataset_to_eval],
+                            metrics_pb: metis_pb2.EvaluationMetrics,
+                            cancel_running_tasks=False, 
+                            block=False, 
+                            verbose=False):
         # If `cancel_running_tasks` is True, we perform a forceful shutdown of running tasks, else graceful.
         self._empty_tasks_q(future_tasks_q=self._evaluation_tasks_futures_q, forceful=cancel_running_tasks)
         # If we submit the datasets and the metrics as is (i.e., as repeated fields) pickle cannot
@@ -366,9 +315,13 @@ class Learner(object):
     def run_inference_task(self):
         raise NotImplementedError("Not yet implemented.")
 
-    def run_learning_task(self, learning_task_pb: metis_pb2.LearningTask,
-                          hyperparameters_pb: metis_pb2.Hyperparameters, model_pb: model_pb2.Model,
-                          cancel_running_tasks=False, block=False, verbose=False):
+    def run_learning_task(self, 
+                          learning_task_pb: metis_pb2.LearningTask,
+                          hyperparameters_pb: metis_pb2.Hyperparameters, 
+                          model_pb: model_pb2.Model,
+                          cancel_running_tasks=False, 
+                          block=False, 
+                          verbose=False):
         # If `cancel_running_tasks` is True, we perform a forceful shutdown of running tasks, else graceful.
         self._empty_tasks_q(future_tasks_q=self._training_tasks_futures_q, forceful=cancel_running_tasks)
         # Submit the learning/training task to the Process Pool and add a callback to send the

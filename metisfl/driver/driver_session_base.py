@@ -5,15 +5,15 @@ import os
 import tarfile
 import time
 import shutil
+from typing import Union
 import cloudpickle
 import inspect
 
 import multiprocessing as mp
+from metisfl.models.model_wrapper import MetisModel
 import metisfl.utils.proto_messages_factory as proto_messages_factory
 import metisfl.utils.fedenv_parser as fedenv_parser
-import tensorflow as tf
-import torch
-
+ 
 from google.protobuf.json_format import MessageToDict
 from pebble import ProcessPool
 from metisfl.utils.grpc_controller_client import GRPCControllerClient
@@ -21,18 +21,17 @@ from metisfl.utils.grpc_learner_client import GRPCLearnerClient
 from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
 from metisfl.utils.init_services_factory import MetisInitServicesCmdFactory
 from metisfl.utils.ssl_configurator import SSLConfigurator
-from metisfl.models.model_ops import ModelOps
 from metisfl.encryption import fhe
 
 
 class DriverSessionBase(object):
 
     def __init__(self,
-                 fed_env,
-                 model,
-                 train_dataset_recipe_fn,
-                 validation_dataset_recipe_fn=None,
-                 test_dataset_recipe_fn=None,
+                 fed_env: Union[fedenv_parser.FederationEnvironment, object],
+                 model: MetisModel,
+                 train_dataset_recipe_fn: callable,
+                 validation_dataset_recipe_fn: callable = None,
+                 test_dataset_recipe_fn: callable = None,
                  working_dir="/tmp/metis/"):
         # Print welcome message.
         MetisASCIIArt.print()
@@ -49,20 +48,10 @@ class DriverSessionBase(object):
         self._save_model_dir_name = "model_definition"
         self._save_model_dir = os.path.join(working_dir, self._save_model_dir_name)
         os.makedirs(self._save_model_dir)
-
-        # Extract weights description fom the given model.
-        self._model_weights_descriptor = ModelOps(model).get_model_weights()
-        if isinstance(model, tf.keras.Model):
-            model.save(self._save_model_dir)
-        elif isinstance(model, torch.nn.Module):
-            model_weights_path = os.path.join(self._save_model_dir, "model_weights.pt")
-            model_def_path = os.path.join(self._save_model_dir, "model_def.pkl")
-            torch.save(model.state_dict(), model_weights_path)
-            cloudpickle.register_pickle_by_value(inspect.getmodule(model))
-            cloudpickle.dump(obj=model, file=open(model_def_path, "wb+"))
-        else:
-            raise RuntimeError("Not a supported model type.")
-
+        
+        self._model_weights_descriptor = model.get_weights_descriptor()
+        model.save(self._save_model_dir)
+     
         self.model_definition_tar_fp = self._make_tarfile(
             output_filename=self._save_model_dir_name,
             source_dir=self._save_model_dir)
@@ -306,6 +295,10 @@ class DriverSessionBase(object):
         return output_filepath
 
     def _ship_model_to_controller(self):
+        # @stripeli why unpacking the model weights here?
+        # This makes the introduction of the model_weights_descriptor redundant.
+        # Pass the model_weights_descriptor to the construct_model_pb_from_np method.
+        # Readability!
         model_pb = proto_messages_factory.ModelProtoMessages.construct_model_pb_from_np(
             weights_values=self._model_weights_descriptor.weights_values,
             weights_names=self._model_weights_descriptor.weights_names,

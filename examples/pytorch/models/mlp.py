@@ -1,7 +1,5 @@
 import torch
 
-from metisfl.models.model_def import PyTorchDef
-
 from torch.nn import Linear
 from torch.nn import ReLU
 from torch.nn import Sigmoid
@@ -15,7 +13,7 @@ from numpy import vstack
 from sklearn.metrics import accuracy_score
 
 
-class MLP(torch.nn.Module, PyTorchDef):
+class MLP(torch.nn.Module):
 
     # define model elements
     def __init__(self, n_inputs):

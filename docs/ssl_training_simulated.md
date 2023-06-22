@@ -60,7 +60,7 @@ Running Simulated MetisFL with SSL
 ------------
 To demonstrate how SSL is enabled between a single learner and a controller we will describe
 the SSL specific values of the following template file:
-[examples/federation_environments_config/template_with_ssl.yaml](../examples/federation_environments_config/template_with_ssl.yaml)
+[examples/config/template_with_ssl.yaml](../examples/config/template_with_ssl.yaml)
 
 By default, the SSL functionality is disabled. For any federated experiment we want to run using SSL,
 first we need to add the key-value pair `EnableSSL: True` within the `CommunicationProtocol` type
