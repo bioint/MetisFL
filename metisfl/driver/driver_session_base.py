@@ -9,6 +9,7 @@ from typing import Union
 import cloudpickle
 
 import multiprocessing as mp
+from metisfl.driver.utils import create_server_entity
 from metisfl.models.model_wrapper import MetisModel
 import metisfl.utils.proto_messages_factory as proto_messages_factory
 import metisfl.utils.fedenv_parser as fedenv_parser
@@ -68,6 +69,25 @@ class DriverSessionBase(object):
             cloudpickle.dump(obj=dataset_recipe_fn, file=open(train_dataset_pkl, "wb+"))
             self.train_dataset_recipe_fp = train_dataset_pkl
             
+    def save_initial_model(self, model, working_dir):
+        self._save_model_dir = os.path.join(working_dir, MODEL_SAVE_DIR)
+        os.makedirs(self._save_model_dir)
+        
+        self._model_weights_descriptor = model.get_weights_descriptor()
+        model.save(self._save_model_dir)
+        
+        self.model_definition_tar_fp = self._make_tarfile(
+            output_filename=self._save_model_dir_name,
+            source_dir=self._save_model_dir
+        )
+        
+    def _make_tarfile(self, output_filename, source_dir):
+        output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))
+        output_filepath = os.path.join(output_dir, "{}.tar.gz".format(output_filename))
+        with tarfile.open(output_filepath, "w:gz") as tar:
+            tar.add(source_dir, arcname=os.path.basename(source_dir))
+        return output_filepath
+
     def init_pool(self):
         # Unix default is "fork", others: "spawn", "forkserver"
         # We use spawn so that the parent process starts a fresh Python interpreter process.
@@ -96,17 +116,6 @@ class DriverSessionBase(object):
             self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
                 enabled=False, empty_scheme_pb=empty_scheme_pb)
 
-    def save_initial_model(self, model, working_dir):
-        self._save_model_dir = os.path.join(working_dir, MODEL_SAVE_DIR)
-        os.makedirs(self._save_model_dir)
-        
-        self._model_weights_descriptor = model.get_weights_descriptor()
-        model.save(self._save_model_dir)
-        
-        self.model_definition_tar_fp = self._make_tarfile(
-        output_filename=self._save_model_dir_name,
-        source_dir=self._save_model_dir)
-
     def __getstate__(self):
         """
         Python needs to pickle the entire object, including its instance variables.
@@ -124,65 +133,10 @@ class DriverSessionBase(object):
         del self_dict['_he_scheme']
         return self_dict
 
-    def _create_server_entity(self,
-                              remote_host_instance: fedenv_parser.RemoteHost,
-                              initialization_entity=False,
-                              connection_entity=False):
-        if initialization_entity is False and connection_entity is False:
-            raise RuntimeError("One field of Initialization or connection entity needs to be provided.")
-
-        # By default ssl is disabled.
-        ssl_config_pb = None
-        if self.federation_environment.communication_protocol.enable_ssl:
-            ssl_configurator = SSLConfigurator()
-            if remote_host_instance.ssl_configs:
-                # If the given instance has the public certificate and the private key defined
-                # then we just wrap the ssl configuration around the files.
-                wrap_as_stream = False
-                public_cert = remote_host_instance.ssl_configs.public_certificate_filepath
-                private_key = remote_host_instance.ssl_configs.private_key_filepath
-            else:
-                # If the given instance has no ssl configuration files defined, then we use
-                # the default non-verified (self-signed) certificates, and we wrap them as streams.
-                wrap_as_stream = True
-                public_cert, private_key = \
-                    ssl_configurator.gen_default_certificates(as_stream=True)
-
-            if connection_entity:
-                # We only need to use the public certificate
-                # to issue requests to the remote entity,
-                # hence the private key is set to None.
-                private_key = None
-
-            if wrap_as_stream:
-                ssl_config_bundle_pb = \
-                    proto_messages_factory.MetisProtoMessages.construct_ssl_config_stream_pb(
-                        public_certificate_stream=public_cert,
-                        private_key_stream=private_key)
-            else:
-                ssl_config_bundle_pb = \
-                    proto_messages_factory.MetisProtoMessages.construct_ssl_config_files_pb(
-                        public_certificate_file=public_cert,
-                        private_key_file=private_key)
-
-            ssl_config_pb = \
-                proto_messages_factory.MetisProtoMessages.construct_ssl_config_pb(
-                    enable_ssl=True,
-                    config_pb=ssl_config_bundle_pb)
-
-        # The server entity encapsulates the GRPC servicer to which remote host will
-        # spaw its grpc server and listen for incoming requests. It does not refer
-        # to the connection configurations used to connect to the remote host.
-        server_entity_pb = \
-            proto_messages_factory.MetisProtoMessages.construct_server_entity_pb(
-                hostname=remote_host_instance.grpc_servicer.hostname,
-                port=remote_host_instance.grpc_servicer.port,
-                ssl_config_pb=ssl_config_pb)
-        return server_entity_pb
 
     def _create_driver_controller_grpc_client(self):
         # Controller is a subtype of RemoteHost instance, hence we pass it as is.
-        controller_server_entity_pb = self._create_server_entity(
+        controller_server_entity_pb = create_server_entity(
             remote_host_instance=self.federation_environment.controller,
             connection_entity=True)
         grpc_controller_client = GRPCControllerClient(
@@ -193,7 +147,7 @@ class DriverSessionBase(object):
     def _create_driver_learner_grpc_clients(self):
         grpc_clients = {}
         for learner_instance in self.federation_environment.learners.learners:
-            learner_server_entity_pb = self._create_server_entity(
+            learner_server_entity_pb = create_server_entity(
                 learner_instance,
                 connection_entity=True)
             grpc_clients[learner_instance.learner_id] = \
@@ -204,7 +158,7 @@ class DriverSessionBase(object):
         # To create the controller grpc server entity, we need the hostname to which the server
         # will bind to and the port of the grpc servicer defined in the initial configuration file.
         # Controller is a subtype of RemoteHost instance, hence we pass it as is.
-        controller_server_entity_pb = self._create_server_entity(
+        controller_server_entity_pb = create_server_entity(
             remote_host_instance=self.federation_environment.controller,
             initialization_entity=True)
 
@@ -267,10 +221,10 @@ class DriverSessionBase(object):
 
         # To create the controller grpc server entity, we need the hostname to which the server
         # will bind to and the port of the grpc servicer defined in the initial configuration file.
-        learner_server_entity_pb = self._create_server_entity(
+        learner_server_entity_pb = create_server_entity(
             remote_host_instance=learner_instance,
             initialization_entity=True)
-        controller_server_entity_pb = self._create_server_entity(
+        controller_server_entity_pb = create_server_entity(
             remote_host_instance=controller_instance,
             connection_entity=True)
         
@@ -287,13 +241,6 @@ class DriverSessionBase(object):
             test_dataset_recipe=test_dataset_recipe_fp,
             neural_engine=self._model_weights_descriptor.nn_engine)
         return init_learner_cmd
-
-    def _make_tarfile(self, output_filename, source_dir):
-        output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))
-        output_filepath = os.path.join(output_dir, "{}.tar.gz".format(output_filename))
-        with tarfile.open(output_filepath, "w:gz") as tar:
-            tar.add(source_dir, arcname=os.path.basename(source_dir))
-        return output_filepath
 
     def _ship_model_to_controller(self):
         # @stripeli why unpacking the model weights here?
