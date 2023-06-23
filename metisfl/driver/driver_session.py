@@ -57,9 +57,11 @@ class DriverSession(DriverSessionBase):
         MetisLogger.info("Copying model definition and dataset recipe files at learner: {}"
                          .format(learner_instance.learner_id))
 
+        # @stripeli why this check? the file is created in the constructor of DriverSessionBase
         if self.model_definition_tar_fp:
             connection.put(self.model_definition_tar_fp, remote_metis_path)
 
+        # @stripeli same as above; we assert non-None in the constructor
         if self.train_dataset_recipe_fp:
             connection.put(self.train_dataset_recipe_fp, remote_metis_path)
 
