@@ -25,9 +25,6 @@ class PyTorchModelOps(ModelOps):
         # DEVICE: str = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         # m.to(DEVICE)
 
-    def get_model(self) -> MetisTorchModel:
-        return self._model
-
     def train_model(self,
                     train_dataset: ModelDataset,
                     learning_task_pb: metis_pb2.LearningTask,

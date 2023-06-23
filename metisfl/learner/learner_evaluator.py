@@ -1,11 +1,12 @@
-from metisfl.learner.dataset_handler import LearnerDataset
-from metisfl.models.model_dataset import ModelDataset
-from metisfl.encryption import fhe
-from metisfl.learner.weight_decrypt import get_model_weights_from_variables_pb
-from metisfl.utils.metis_logger import MetisLogger
-from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 import metisfl.utils.proto_messages_factory as proto_factory
+
+from metisfl.encryption import fhe
+from metisfl.learner.dataset_handler import LearnerDataset
+from metisfl.learner.weight_decrypt import get_model_weights_from_variables_pb
+from metisfl.models.model_dataset import ModelDataset
+from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 from metisfl.utils.formatting import DictionaryFormatter
+from metisfl.utils.metis_logger import MetisLogger
 
 
 class LearnerEvaluator(object):
@@ -80,7 +81,7 @@ class LearnerEvaluator(object):
 
         return model_evaluations_pb
 
-    def model_infer(self, 
+    def infer_model(self, 
                     model_pb: model_pb2.Model, 
                     batch_size: int,
                     infer_train=False, 

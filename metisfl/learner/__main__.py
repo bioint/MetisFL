@@ -1,5 +1,6 @@
 import argparse
 from metisfl.learner.dataset_handler import LearnerDataset
+from metisfl.learner.federation_helper import FederationHelper
 from metisfl.learner.learner_evaluator import LearnerEvaluator
 
 import metisfl.proto.metis_pb2 as metis_pb2
@@ -82,16 +83,22 @@ def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
         nn_engine=nn_engine,
         model_dir=model_dir,
     )
-        
-    learner = Learner(
+    
+    federation_helper = FederationHelper(
         learner_server_entity=learner_server_entity_pb,
         controller_server_entity=controller_server_entity_pb,
+        learner_credentials_fp=learner_credentials_fp,
         learner_dataset=learner_dataset,
-        learner_evaluator=learner_evaluator,
-        learner_credentials_fp=learner_credentials_fp)
+    )
+           
+    learner = Learner(
+        federation_helper=federation_helper,
+        learner_evaluator=learner_evaluator
+    )
     
     learner_servicer = LearnerServicer(
         learner=learner,
+        federation_helper=federation_helper,
         servicer_workers=5)
     
     # First, initialize learner servicer for receiving train/evaluate/inference tasks.

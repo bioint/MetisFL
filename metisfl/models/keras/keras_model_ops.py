@@ -5,7 +5,6 @@ from metisfl.models.model_ops import ModelOps
 
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.models.keras.optimizers.fed_prox import FedProx
 from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.models.model_proto_factory import ModelProtoFactory
@@ -38,12 +37,8 @@ class KerasModelOps(ModelOps):
 
         self._model_dir = model_dir
         # TODO Register custom objects, e.g., optimizers, required to load the model.
-        self._load_model_custom_objects = {"FedProx": FedProx}
         self._model = MetisKerasModel.load(model_dir)
         self._keras_callbacks = keras_callbacks
-
-    def get_model(self) -> tf.keras.Model:
-        return self._model
 
     def train_model(self,
                     train_dataset: ModelDataset,
@@ -117,7 +112,7 @@ class KerasModelOps(ModelOps):
         validation_res = {k.replace("val_", ""): k_v for k, k_v in sorted(history_res.history.items()) if 'val_' in k}
         # TODO Currently we do not evaluate the locally trained model against the test set, since
         #  we need to figure out if the evaluation will happen within this function scope or outside.
-        model_weights_descriptor = self.get_model_weights()
+        model_weights_descriptor = self._model.get_model_weights()
         completed_learning_task = ModelProtoFactory.CompletedLearningTaskProtoMessage(
             weights_values=model_weights_descriptor.weights_values,
             weights_trainable=model_weights_descriptor.weights_trainable,
