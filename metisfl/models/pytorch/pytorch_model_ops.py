@@ -18,7 +18,7 @@ class PyTorchModelOps(ModelOps):
     # @stripeli - we must remove default params like this one
     # bacause we might forget to put it when we instantiate the class
     def __init__(self, model_dir="/tmp/metis/"):
-        self._model = MetisTorchModel().load(model_dir)
+        self._model = MetisTorchModel.load(model_dir)
         # self._model.to(device)
         # # pylint: disable=no-member
         # @stripeli - I think it should be up to the user to decide whether to use GPU or not; 

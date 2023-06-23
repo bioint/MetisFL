@@ -9,8 +9,8 @@ class LearnerDataset:
                  validation_dataset_fp="", 
                  validation_dataset_recipe_pkl="",
                  test_dataset_fp="", 
-                 test_dataset_recipe_pkl=""):
-        
+                 test_dataset_recipe_pkl=""
+        ):
         if not train_dataset_recipe_pkl:
             raise AssertionError("Training dataset recipe is required.")
  

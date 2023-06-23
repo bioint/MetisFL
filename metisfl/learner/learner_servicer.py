@@ -1,13 +1,13 @@
 import grpc
 import threading
-from metisfl.learner.federation_helper import FederationHelper
 
 import metisfl.utils.proto_messages_factory as proto_factory
 
 from google.protobuf.timestamp_pb2 import Timestamp
-from metisfl.utils.grpc_services import GRPCServerMaxMsgLength
-from metisfl.proto import learner_pb2_grpc
+from metisfl.learner.federation_helper import FederationHelper
 from metisfl.learner.learner import Learner
+from metisfl.proto import learner_pb2_grpc
+from metisfl.utils.grpc_services import GRPCServerMaxMsgLength
 from metisfl.utils.metis_logger import MetisLogger
 
 
@@ -20,7 +20,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.learner = learner
         self.federation_helper = federation_helper
         self.servicer_workers = servicer_workers
-        self.__community_models_received = 0
+        self.__community_models_received = 0 
         self.__model_evaluation_requests = 0
         self.__not_serving_event = threading.Event()  # event to stop serving inbound requests
         self.__shutdown_event = threading.Event()  # event to stop all grpc related tasks
@@ -35,7 +35,6 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.__grpc_server.server.start()
         MetisLogger.info("Initialized Learner Servicer {}".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
-        
         # Learner asks controller to join the federation.
         self.federation_helper.join_federation()
 

@@ -12,6 +12,7 @@ class MetisKerasModel(MetisModel):
     def __init__(self, model: tf.keras.Model):
         assert isinstance(model, tf.keras.Model), "Model must be a tf.keras.Model instance."
         self.model = model
+        # TODO: Need to intialize the model but dont know the input shape
         # nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
         self.nn_engine = "keras"
 

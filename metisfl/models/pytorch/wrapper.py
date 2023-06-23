@@ -25,8 +25,15 @@ class MetisTorchModel(MetisModel):
         self.model = model
         self.nn_engine = "pytorch"
 
-    def load(self, model_dir) -> torch.nn.Module:
-        model_def_path, model_weights_path = self.__get_paths(model_dir)
+    @staticmethod
+    def get_paths(model_dir):
+        model_weights_path = os.path.join(model_dir, "model_weights.pt")
+        model_def_path = os.path.join(model_dir, "model_def.pkl")
+        return model_def_path, model_weights_path
+
+    @staticmethod
+    def load(model_dir) -> torch.nn.Module:
+        model_def_path, model_weights_path = MetisTorchModel.get_paths(model_dir)
         MetisLogger.info("Loading model from: {}".format(model_dir))
         model_loaded = cloudpickle.load(open(model_def_path, "rb"))
         model_loaded.load_state_dict(torch.load(model_weights_path))
@@ -48,7 +55,7 @@ class MetisTorchModel(MetisModel):
                                       weights_values=weights_values)
 
     def save(self, model_dir):
-        model_def_path, model_weights_path = self.__get_paths(model_dir)
+        model_def_path, model_weights_path = MetisTorchModel.get_paths(model_dir)
         MetisLogger.info("Saving model to: {}".format(model_dir))
         # @stripeli why are you removing the model dir on torch.save but not on the respective tf save?
         shutil.rmtree(model_dir)
@@ -68,8 +75,3 @@ class MetisTorchModel(MetisModel):
             for k, v in zip(self.model.state_dict().keys(), weights_values)
         })
         self.model.load_state_dict(state_dict, strict=True)
-
-    def __get_paths(self, model_dir):
-        model_weights_path = os.path.join(model_dir, "model_weights.pt")
-        model_def_path = os.path.join(model_dir, "model_def.pkl")
-        return model_def_path, model_weights_path

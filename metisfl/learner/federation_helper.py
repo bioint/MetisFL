@@ -1,6 +1,6 @@
 import os
-from metisfl.learner.dataset_handler import LearnerDataset
 
+from metisfl.learner.dataset_handler import LearnerDataset
 from metisfl.models.model_dataset import (
     ModelDatasetClassification,
     ModelDatasetRegression,
