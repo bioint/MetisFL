@@ -1,5 +1,12 @@
+from typing import List
 import yaml
+import metisfl.utils.proto_messages_factory as proto_messages_factory
+from metisfl.encryption import fhe
+from metisfl.proto import model_pb2
+from metisfl.utils.proto_messages_factory import ModelProtoMessages
 
+# FIXME: this can go in the yaml file.
+CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
 
 class Docker(object):
 
@@ -24,7 +31,55 @@ class HomomorphicEncryption(object):
         if self.scheme.upper() == "CKKS":
             self.batch_size = homomorphic_encryption_map.get("BatchSize")
             self.scaling_bits = homomorphic_encryption_map.get("ScalingBits")
+            self._he_scheme = fhe.CKKS(self.batch_size, self.scaling_bits, CRYPTO_RESOURCES_DIR)
+            self._he_scheme.load_crypto_params()
+            fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb(
+                    batch_size=self.batch_size, scaling_bits=self.scaling_bits)
+            self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
+                    enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
+        else:
+            empty_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_empty_he_scheme_pb()
+            self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
+                enabled=False, empty_scheme_pb=empty_scheme_pb)
 
+    def decrypt_pb_weights(self, variables: List[model_pb2.Model.Variable]):
+        assert all([isinstance(var, model_pb2.Model.Variable) for var in variables])
+        var_names, var_trainables, var_nps = list(), list(), list()
+        for var in variables:
+            # Variable specifications.
+            var_name = var.name
+            var_trainable = var.trainable
+
+            if var.HasField("ciphertext_tensor"):
+                assert self._he_scheme  is not None, "Need encryption scheme to decrypt tensor."
+                # For a ciphertext tensor, first we need to decrypt it, and then load it
+                # into a numpy array with the data type specified in the tensor specifications.
+                tensor_spec = var.ciphertext_tensor.tensor_spec
+                tensor_length = tensor_spec.length
+                decoded_value = self._he_scheme.decrypt(tensor_spec.value, tensor_length, 1)
+                # Since the tensor is decoded we just need to recreate the numpy array
+                # to its original data type and shape.
+                np_array = \
+                    ModelProtoMessages.TensorSpecProto.proto_tensor_spec_with_list_values_to_numpy_array(
+                        tensor_spec, decoded_value)
+            elif var.HasField('plaintext_tensor'):
+                tensor_spec = var.plaintext_tensor.tensor_spec
+                # If the tensor is a plaintext tensor, then we need to read the byte buffer
+                # and load the tensor as a numpy array casting it to the specified data type.
+                np_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(tensor_spec)
+            else:
+                raise RuntimeError("Not a supported tensor type.")
+
+            # Append variable specifications to model's variable list.
+            var_names.append(var_name)
+            var_trainables.append(var_trainable)
+            var_nps.append(np_array)
+
+        # @stripeli what is var_nps? is this the same ase ModelWeightsDescriptor?
+        return var_names, var_trainables, var_nps
+    
+    def to_proto(self):
+        return self._he_scheme_pb
 
 class CommunicationProtocol(object):
 
@@ -42,6 +97,13 @@ class CommunicationProtocol(object):
         if self.specifications and self.is_semi_synchronous:
             self.semi_synchronous_lambda = self.specifications.get("SemiSynchronousLambda", None)
             self.semi_sync_recompute_num_updates = self.specifications.get("SemiSynchronousRecomputeSteps", None)
+            
+    def to_proto(self):
+        return proto_messages_factory.MetisProtoMessages.construct_communication_specs_pb(
+            protocol=self.name,
+            semi_sync_lambda=self.semi_synchronous_lambda,
+            semi_sync_recompute_num_updates=self.semi_sync_recompute_num_updates)
+                
 
 
 class FHEScheme(object):
@@ -54,27 +116,39 @@ class FHEScheme(object):
 
 class AggregationRule(object):
 
-    def __init__(self, aggregation_rule_map):
+    def __init__(self, aggregation_rule_map, homomorphic_encryption):
         self.aggregation_rule_name = aggregation_rule_map.get("Name", None)
         self.aggregation_rule_specifications = aggregation_rule_map.get("RuleSpecifications", {})
         self.aggregation_rule_scaling_factor = \
             self.aggregation_rule_specifications.get("ScalingFactor", None)
         self.aggregation_rule_stride_length = \
             self.aggregation_rule_specifications.get("StrideLength", -1)
+        self.homomorphic_encryption = homomorphic_encryption
 
     def __str__(self):
         return """ RuleName: {}, RuleScalingFactor: {}, RuleStrideLength: {} """.format(
             self.aggregation_rule_name,
             self.aggregation_rule_scaling_factor,
             self.aggregation_rule_stride_length)
-
+    
+    def to_proto(self):
+        return proto_messages_factory.MetisProtoMessages.construct_aggregation_rule_pb(
+            rule_name=self.aggregation_rule_name,
+            scaling_factor=self.aggregation_rule_scaling_factor,
+            stride_length=self.aggregation_rule_stride_length,
+            he_scheme_pb=self.homomorphic_encryption.to_proto())
 
 class GlobalModelConfig(object):
 
-    def __init__(self, global_model_map):
-        self.aggregation_rule = AggregationRule(global_model_map.get("AggregationRule", None))
+    def __init__(self, global_model_map, homomorphic_encryption):
+        self.aggregation_rule = AggregationRule(global_model_map.get("AggregationRule", None), 
+                                                homomorphic_encryption)
         self.participation_ratio = global_model_map.get("ParticipationRatio", 1)
-
+        
+    def to_proto(self):
+        return proto_messages_factory.MetisProtoMessages.construct_global_model_specs(
+            aggregation_rule_pb=self.aggregation_rule.to_proto(),
+            learners_participation_ratio=self.participation_ratio)
 
 class LocalModelConfig(object):
 
@@ -83,7 +157,13 @@ class LocalModelConfig(object):
         self.local_epochs = local_model_map.get("LocalEpochs", 5)
         self.validation_percentage = local_model_map.get("ValidationPercentage", 0)
         self.optimizer_config = OptimizerConfig(local_model_map.get("OptimizerConfig"))
-
+        
+    def to_proto(self):
+        return proto_messages_factory.MetisProtoMessages.construct_local_model_specs(
+            batch_size=self.batch_size,
+            epochs=self.local_epochs,
+            optimizer_pb=self.optimizer_config.to_proto(),
+            percent_validation=self.validation_percentage)
 
 class ModelStoreConfig(object):
 
@@ -98,6 +178,14 @@ class ModelStoreConfig(object):
             self.eviction_policy = model_store_map.get("EvictionPolicy")
             self.eviction_lineage_length = model_store_map.get("LineageLength", 1)
             self.connection_configs = ConnectionConfigsBase(model_store_map.get("ConnectionConfigs", {}))
+            
+    def to_proto(self):
+        return proto_messages_factory.MetisProtoMessages.construct_model_store_config_pb(
+                            name=self.name,
+                            eviction_policy=self.eviction_policy,
+                            lineage_length=self.eviction_lineage_length,
+                            store_hostname=self.connection_configs.hostname,
+                            store_port=self.connection_configs.port)
 
 
 class OptimizerConfig(object):
@@ -141,6 +229,9 @@ class OptimizerConfig(object):
         else:
             raise RuntimeError("Not a supported optimizer.")
         return optimizer_pb_kwargs
+    
+    def to_proto(self):
+        return proto_messages_factory.MetisProtoMessages.construct_optimizer_pb(**self.optimizer_pb_kwargs)
 
 
 class RemoteHost(object):
@@ -291,7 +382,6 @@ class FederationEnvironment(object):
         self.termination_signals = TerminationSignals(federation_environment.get("TerminationSignals"))
         self.evaluation_metric = federation_environment.get("EvaluationMetric")
         self.communication_protocol = CommunicationProtocol(federation_environment.get("CommunicationProtocol"))
-        self.global_model_config = GlobalModelConfig(federation_environment.get("GlobalModelConfig"))
         self.local_model_config = LocalModelConfig(federation_environment.get("LocalModelConfig"))
         # The model store config is not mandatory, hence the None value if the
         # store configuration is not defined in the environment's yaml file.
@@ -308,4 +398,11 @@ class FederationEnvironment(object):
             # TODO Expand when we get support additional encryption schemes and aggregation functions.
             assert self.global_model_config.aggregation_rule.aggregation_rule_name == "PWA", \
                 "Since you have enabled Homomorphic Encryption, you need to use the PWA aggregation function."
+        
+        # @stripeli: added by panos. We need the HomomorphicEncryption object in the AggregationRule
+        # in order to construct the protobuf. This is because the protobuf does not correctly replicate 
+        # the structure of the yaml file. FIXME:
+        self.global_model_config = GlobalModelConfig(
+            federation_environment.get("GlobalModelConfig"), self.homomorphic_encryption)
+
 

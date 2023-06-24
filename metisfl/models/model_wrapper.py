@@ -1,10 +1,8 @@
 import abc
-from typing import List
-
 import numpy as np
 
-from metisfl.learner.weight_decrypt import ModelWeightsDescriptor
-
+from typing import List
+from metisfl.models.model_wrapper import ModelWeightsDescriptor
 
 class MetisModel(object):
     @abc.abstractmethod
@@ -24,4 +22,8 @@ class MetisModel(object):
                           weights_trainable: List[bool],
                           weights_values: List[np.ndarray],
                           *args, **kwargs):
+        pass
+    
+    @abc.abstractmethod
+    def get_neural_engine(self):
         pass

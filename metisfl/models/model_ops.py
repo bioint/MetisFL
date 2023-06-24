@@ -3,7 +3,6 @@ from typing import List
 
 import numpy as np
 
-from metisfl.learner.weight_decrypt import ModelWeightsDescriptor
 from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.model_wrapper import MetisModel
 from metisfl.proto import metis_pb2, model_pb2

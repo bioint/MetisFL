@@ -1,10 +1,11 @@
 from typing import List
-import tensorflow as tf
-import numpy as np
-from metisfl.models.model_wrapper import MetisModel
-from metisfl.models.keras.optimizers.fed_prox import FedProx
 
-from metisfl.learner.weight_decrypt import ModelWeightsDescriptor
+import numpy as np
+import tensorflow as tf
+
+from metisfl.models.keras.optimizers.fed_prox import FedProx
+from metisfl.models.model_wrapper import MetisModel
+from metisfl.models.model_wrapper import ModelWeightsDescriptor
 from metisfl.utils.metis_logger import MetisLogger
 
 class MetisKerasModel(MetisModel):
@@ -13,6 +14,7 @@ class MetisKerasModel(MetisModel):
         assert isinstance(model, tf.keras.Model), "Model must be a tf.keras.Model instance."
         self.model = model
         # TODO: Need to intialize the model but dont know the input shape
+        # FIXME: 
         # nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
         self.nn_engine = "keras"
 
@@ -23,6 +25,9 @@ class MetisKerasModel(MetisModel):
         m = tf.keras.models.load_model(model_dir, custom_objects=model_custom_objects)
         MetisLogger.info("Loaded model from: {}".format(model_dir))
         return m
+
+    def get_neural_engine(self):    
+        return self.nn_engine
 
     def get_weights_descriptor(self) -> ModelWeightsDescriptor:
         weights_names, weights_trainable, weights_values = [], [], []

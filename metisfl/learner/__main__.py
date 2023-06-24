@@ -1,4 +1,5 @@
 import argparse
+from metisfl.models.model_ops import ModelOps
 
 import metisfl.proto.metis_pb2 as metis_pb2
 from metisfl.learner.dataset_handler import LearnerDataset
@@ -36,6 +37,16 @@ def parse_he_scheme_hex(hex_str):
             enabled=False, empty_scheme_pb=empty_scheme_pb)
     return he_scheme_pb
 
+def get_model_backend(nn_engine, model_dir) -> ModelOps:
+    if nn_engine == "keras":
+        from metisfl.models.keras.keras_model_ops import KerasModelOps
+        return KerasModelOps(model_dir)
+    elif nn_engine == "pytorch":
+        from metisfl.models.pytorch.pytorch_model_ops import PyTorchModelOps
+        return PyTorchModelOps(model_dir)
+    else :
+        raise ValueError("Unknown neural engine: {}".format(nn_engine))
+
 def init_learner(args):
     learner_server_entity_pb = parse_server_hex(
         args.learner_server_entity_protobuff_serialized_hexadecimal,
@@ -45,8 +56,8 @@ def init_learner(args):
         args.controller_server_entity_protobuff_serialized_hexadecimal,
         DEFAULT_CONTROLLER_HOSTNAME, DEFAULT_CONTROLLER_PORT)
     
-    he_scheme_pb = parse_he_scheme_hex(
-        args.he_scheme_protobuff_serialized_hexadecimal)
+    he_scheme_pb = parse_he_scheme_hex(args.he_scheme_protobuff_serialized_hexadecimal)
+    model_backend = get_model_backend(args.neural_engine, args.model_dir)
 
     learner_credentials_fp =  LEARNER_CREDENTIALS_FP.format(
         learner_server_entity_pb.port)
@@ -60,13 +71,13 @@ def init_learner(args):
         test_dataset_recipe_pkl=args.test_dataset_recipe,
     )
     
+    ## FIXME: need to pass homomorphic encryption here; derive it from he_scheme_pb? @stripeli
     learner_evaluator = LearnerEvaluator(
-        learner_dataset = learner_dataset,
-        he_scheme=he_scheme_pb,
-        nn_engine=args.neural_engine,
-        model_dir=args.model_dir,
+        learner_dataset=learner_dataset,
+        model_backend=model_backend,
     )
     
+    ## FIXME: dataset should not be passed here
     federation_helper = FederationHelper(
         learner_server_entity=learner_server_entity_pb,
         controller_server_entity=controller_server_entity_pb,

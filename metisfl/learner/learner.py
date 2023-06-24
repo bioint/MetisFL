@@ -2,10 +2,9 @@ import gc
 import queue
  
 import multiprocessing as mp
-
 from pebble import ProcessPool
-from metisfl.learner.federation_helper import FederationHelper
 
+from metisfl.learner.federation_helper import FederationHelper
 from metisfl.learner.learner_evaluator import LearnerEvaluator
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 

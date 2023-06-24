@@ -8,8 +8,7 @@ from typing import List
 import torch
 import numpy as np
 
-from metisfl.models.model_wrapper import MetisModel
-from metisfl.learner.weight_decrypt import ModelWeightsDescriptor
+from metisfl.models.model_wrapper import MetisModel, ModelWeightsDescriptor
 from metisfl.utils.metis_logger import MetisLogger
 
 
@@ -39,6 +38,9 @@ class MetisTorchModel(MetisModel):
         model_loaded.load_state_dict(torch.load(model_weights_path))
         MetisLogger.info("Loaded model from: {}".format(model_dir))
         return model_loaded
+    
+    def get_neural_engine(self):
+        return self.nn_engine
     
     def get_weights_descriptor(self) -> ModelWeightsDescriptor:
         weights_names, weights_trainable, weights_values = [], [], []
