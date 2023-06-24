@@ -40,14 +40,7 @@ class GRPCControllerClient(GRPCServerClient):
                         learner_server_entity,
                         learner_id_fp,
                         auth_token_fp,
-                        train_dataset_size,
-                        train_dataset_specs,
-                        validation_dataset_size,
-                        validation_dataset_specs,
-                        test_dataset_size,
-                        test_dataset_specs,
-                        is_classification,
-                        is_regression,
+                        dataset_metadata,
                         request_retries=1,
                         request_timeout=None,
                         block=True):
@@ -70,14 +63,15 @@ class GRPCControllerClient(GRPCServerClient):
 
             # Construct learner's data specifications.
             dataset_spec_pb = proto_factory.MetisProtoMessages.construct_dataset_spec_pb(
-                num_training_examples=train_dataset_size,
-                num_validation_examples=validation_dataset_size,
-                num_test_examples=test_dataset_size,
-                training_spec=train_dataset_specs,
-                validation_spec=validation_dataset_specs,
-                test_spec=test_dataset_specs,
-                is_classification=is_classification,
-                is_regression=is_regression)
+                num_training_examples=dataset_metadata["train_dataset_size"],
+                num_validation_examples=dataset_metadata["validation_dataset_size"],
+                num_test_examples=dataset_metadata["test_dataset_size"],
+                training_spec=dataset_metadata["train_dataset_spec"],
+                validation_spec=dataset_metadata["validation_dataset_spec"],
+                test_spec=dataset_metadata["test_dataset_spec"],
+                is_classification=dataset_metadata["is_classification"],
+                is_regression=dataset_metadata["is_regression"]
+            )
 
             join_federation_request_pb = proto_factory.ControllerServiceProtoMessages \
                 .construct_join_federation_request_pb(server_entity_pb=learner_server_entity_public,

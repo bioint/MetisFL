@@ -1,5 +1,6 @@
-from typing import List
 import yaml
+from typing import List
+
 import metisfl.utils.proto_messages_factory as proto_messages_factory
 from metisfl.encryption import fhe
 from metisfl.proto import model_pb2
@@ -7,11 +8,6 @@ from metisfl.utils.proto_messages_factory import ModelProtoMessages
 
 # FIXME: this can go in the yaml file.
 CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
-
-class Docker(object):
-
-    def __init__(self, docker_image):
-        self.docker_image = docker_image
 
 
 class TerminationSignals(object):
@@ -41,6 +37,20 @@ class HomomorphicEncryption(object):
             empty_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_empty_he_scheme_pb()
             self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
                 enabled=False, empty_scheme_pb=empty_scheme_pb)
+            
+    @staticmethod
+    def from_proto(he_scheme_pb):
+        assert isinstance(he_scheme_pb, model_pb2.HEScheme)
+        if he_scheme_pb.HasField("fhe_scheme"):
+            he_map = {
+                "Scheme": "CKKS",
+                "BatchSize": he_scheme_pb.fhe_scheme.batch_size,
+                "ScalingBits": he_scheme_pb.fhe_scheme.scaling_bits
+            }
+            return HomomorphicEncryption(he_map)
+        else:
+            return HomomorphicEncryption({})
+        
 
     def decrypt_pb_weights(self, variables: List[model_pb2.Model.Variable]):
         assert all([isinstance(var, model_pb2.Model.Variable) for var in variables])

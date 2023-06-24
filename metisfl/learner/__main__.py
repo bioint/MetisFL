@@ -7,6 +7,7 @@ from metisfl.learner.federation_helper import FederationHelper
 from metisfl.learner.learner import Learner
 from metisfl.learner.learner_evaluator import LearnerEvaluator
 from metisfl.learner.learner_servicer import LearnerServicer
+from metisfl.utils import fedenv_parser
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 
@@ -47,20 +48,22 @@ def get_model_backend(nn_engine, model_dir) -> ModelOps:
     else :
         raise ValueError("Unknown neural engine: {}".format(nn_engine))
 
-def init_learner(args):
+def create_servers(args):
     learner_server_entity_pb = parse_server_hex(
         args.learner_server_entity_protobuff_serialized_hexadecimal,
          DEFAULT_LEARNER_HOST, DEFAULT_LEARNER_PORT)
-    
     controller_server_entity_pb = parse_server_hex(
         args.controller_server_entity_protobuff_serialized_hexadecimal,
         DEFAULT_CONTROLLER_HOSTNAME, DEFAULT_CONTROLLER_PORT)
-    
-    he_scheme_pb = parse_he_scheme_hex(args.he_scheme_protobuff_serialized_hexadecimal)
-    model_backend = get_model_backend(args.neural_engine, args.model_dir)
+        
+    return learner_server_entity_pb,controller_server_entity_pb
 
-    learner_credentials_fp =  LEARNER_CREDENTIALS_FP.format(
-        learner_server_entity_pb.port)
+def init_learner(args):
+    learner_server_entity_pb, controller_server_entity_pb = create_servers(args)
+    he_scheme_pb = parse_he_scheme_hex(args.he_scheme_protobuff_serialized_hexadecimal)
+    homomorphic_encryption = fedenv_parser.HomomorphicEncryption.from_proto(he_scheme_pb) # @stripeli: check this please
+    model_backend = get_model_backend(args.neural_engine, args.model_dir)
+    learner_credentials_fp =  LEARNER_CREDENTIALS_FP.format(learner_server_entity_pb.port)
     
     learner_dataset = LearnerDataset(
         train_dataset_fp=args.train_dataset,
@@ -71,10 +74,10 @@ def init_learner(args):
         test_dataset_recipe_pkl=args.test_dataset_recipe,
     )
     
-    ## FIXME: need to pass homomorphic encryption here; derive it from he_scheme_pb? @stripeli
     learner_evaluator = LearnerEvaluator(
         learner_dataset=learner_dataset,
         model_backend=model_backend,
+        homomorphic_encryption=homomorphic_encryption,
     )
     
     ## FIXME: dataset should not be passed here
@@ -99,7 +102,6 @@ def init_learner(args):
     learner_servicer.init_servicer()
     # Second, block the servicer till a shutdown request is issued and no more requests are received.
     learner_servicer.wait_servicer()
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

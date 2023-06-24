@@ -42,11 +42,11 @@ class LearnerDataset:
 
     # @stripeli why do we need to load the dataset in a subprocess?
     def load_datasets_metadata_subproc(self):
-        _generic_tasks_pool = ProcessPool(max_workers=1, max_tasks=1)
-        datasets_specs_future = _generic_tasks_pool.schedule(function=self.load_model_datasets_size_specs_type_def)
+        generic_tasks_pool = ProcessPool(max_workers=1, max_tasks=1)
+        datasets_specs_future = generic_tasks_pool.schedule(function=self.load_model_datasets_size_specs_type_def)
         res = datasets_specs_future.result()
-        _generic_tasks_pool.close()
-        _generic_tasks_pool.join()
+        generic_tasks_pool.close()
+        generic_tasks_pool.join()
         return res
 
 def create_model_dataset_helper(dataset_recipe_pkl, dataset_fp=None, default_class=None):
