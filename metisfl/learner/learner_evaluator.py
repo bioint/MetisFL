@@ -30,10 +30,7 @@ class LearnerEvaluator(object):
                         batch_size: int,
                         evaluation_datasets_pb: [learner_pb2.EvaluateModelRequest.dataset_to_eval],
                         metrics_pb: metis_pb2.EvaluationMetrics, 
-                        verbose=False):
-        MetisLogger.info("Learner {} starts model evaluation on requested datasets."
-                         .format(self.host_port_identifier()))        
-        
+                        verbose=False):        
         self._set_weights_from_model_pb(model_pb)
         train_dataset, validation_dataset, test_dataset = \
             self.learner_dataset.load_model_datasets()
@@ -56,9 +53,6 @@ class LearnerEvaluator(object):
                 training_evaluation_pb=train_eval_pb,
                 validation_evaluation_pb=validation_eval_pb,
                 test_evaluation_pb=test_eval_pb)
-        MetisLogger.info("Learner {} completed model evaluation on requested datasets."
-                            .format(self.host_port_identifier()))
-
         return model_evaluations_pb
 
     def infer_model(self, 
@@ -68,11 +62,8 @@ class LearnerEvaluator(object):
                     infer_test=False, 
                     infer_valid=False, 
                     verbose=False):
-        MetisLogger.info("Learner {} starts model inference on requested datasets."
-                         .format(self.host_port_identifier()))
         # TODO infer model should behave similarly as the evaluate_model(), by looping over a
         #  similar learner_pb2.InferModelRequest.dataset_to_infer list.
-        
         self._set_weights_from_model_pb(model_pb)
         train_dataset, validation_dataset, test_dataset = \
             self.learner_dataset.load_model_datasets()
@@ -82,9 +73,6 @@ class LearnerEvaluator(object):
             "test": self.model_backend.infer_model(test_dataset, batch_size, verbose) if infer_test else None
         }            
         stringified_res = DictionaryFormatter.stringify(inferred_res, stringify_nan=True)
-        
-        MetisLogger.info("Learner {} completed model inference on requested datasets."
-                            .format(self.host_port_identifier()))
         return stringified_res
         
     def train_model(self, 
@@ -92,9 +80,6 @@ class LearnerEvaluator(object):
                     learning_task_pb, 
                     hyperparameters_pb,
                     verbose=False):
-        MetisLogger.info("Learner {} starts model training on local training dataset."
-                    .format(self.host_port_identifier()))
-
         self._set_weights_from_model_pb(model_pb)
         train_dataset, validation_dataset, test_dataset = \
             self.learner_dataset.load_model_datasets()            

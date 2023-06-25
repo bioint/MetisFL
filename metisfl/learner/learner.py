@@ -7,8 +7,13 @@ from pebble import ProcessPool
 from metisfl.learner.federation_helper import FederationHelper
 from metisfl.learner.learner_evaluator import LearnerEvaluator
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
+from metisfl.utils.metis_logger import MetisLogger
 
-
+LEARNING_TASK = "learning"
+EVALUATION_TASK = "evaluation"
+INFERENCE_TASK = "inference"
+TASKS = [LEARNING_TASK, EVALUATION_TASK, INFERENCE_TASK]
+    
 class Learner(object):
     """
     Any invocation to the public functions of the Learner instance need to be wrapped inside a process,
@@ -50,20 +55,17 @@ class Learner(object):
         
     def _init_tasks_pools(self, recreate_queue_task_worker=False):
         mp_ctx = mp.get_context("spawn")
-        worker_max_tasks = 0
-        if recreate_queue_task_worker:
-            worker_max_tasks = 1
-        self._training_tasks_pool, self._training_tasks_futures_q = \
-            ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=mp_ctx), \
-                queue.Queue(maxsize=1)
-        self._evaluation_tasks_pool, self._evaluation_tasks_futures_q = \
-            ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=mp_ctx), \
-                queue.Queue(maxsize=1)
-        self._inference_tasks_pool, self._inference_tasks_futures_q = \
-            ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=mp_ctx), \
+        worker_max_tasks = 1 if recreate_queue_task_worker else 0
+        self.pool = ()
+        for task in TASKS:
+            self.pool[task] = self._init_single_task_pool(worker_max_tasks, mp_ctx)
+                            
+    def _init_single_task_pool(self, worker_max_tasks, mp_ctx):
+        return ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=mp_ctx), \
                 queue.Queue(maxsize=1)
         
-    def _empty_tasks_q(self, future_tasks_q, forceful=False):
+    def _empty_tasks_q(self, task, forceful=False):
+        future_tasks_q = self.pool[task][1] # Get the tasks queue; the second element of the tuple.
         while not future_tasks_q.empty():
             if forceful:
                 # Forceful Shutdown. Non-blocking retrieval
@@ -73,6 +75,11 @@ class Learner(object):
                 # Graceful Shutdown. Await for the underlying
                 # future inside the queue to complete.
                 future_tasks_q.get().result()
+                
+    def _log(self, state, task):
+        host_port = self.federation_helper.host_port_identifier()
+        MetisLogger.info("Learner {} {} {} task on requested datasets."
+                         .format(host_port, state, task))
 
     def run_evaluation_task(self, 
                             model_pb: model_pb2.Model, 
@@ -86,14 +93,19 @@ class Learner(object):
         self._empty_tasks_q(future_tasks_q=self._evaluation_tasks_futures_q, forceful=cancel_running_tasks)
         # If we submit the datasets and the metrics as is (i.e., as repeated fields) pickle cannot
         # serialize the repeated messages, and it requires converting the repeated messages into a list.
+        self._log(state="starts", task="evaluation")
         evaluation_datasets_pb = [d for d in evaluation_dataset_pb]
-        future = self._evaluation_tasks_pool.schedule(
+        evaluation_tasks_pool, evaluation_tasks_futures_q = self.pool[EVALUATION_TASK]
+        future = evaluation_tasks_pool.schedule(
             function=self.learner_evaluator.evaluate_model,
             args=(model_pb, batch_size, evaluation_datasets_pb, metrics_pb, verbose))
-        self._evaluation_tasks_futures_q.put(future)
+        evaluation_tasks_futures_q.put(future)
+        # @stripeli is this going to instantiate a model eval pb? 
+        # anf if so, why is this empty pb returned in case block==False?
         model_evaluations_pb = metis_pb2.ModelEvaluations()
         if block:
             model_evaluations_pb = future.result()
+        self._log(state="completed", task="evaluation")
         return model_evaluations_pb
 
     def run_inference_task(self):
@@ -108,23 +120,25 @@ class Learner(object):
                           verbose=False):
         # If `cancel_running_tasks` is True, we perform a forceful shutdown of running tasks, else graceful.
         self._empty_tasks_q(future_tasks_q=self._training_tasks_futures_q, forceful=cancel_running_tasks)
-        
+        self._log(state="starts", task="learning")
         # Submit the learning/training task to the Process Pool and add a callback to send the
         # trained local model to the controller when the learning task is complete. Given that
         # local training could span from seconds to hours, we cannot keep the grpc connection
         # open indefinitely and therefore the callback will collect the training result and
         # forward it accordingly to the controller.
-        future = self._training_tasks_pool.schedule(
+        learning_tasks_pool, learning_tasks_futures_q = self.pool[LEARNING_TASK]
+        future = learning_tasks_pool.schedule(
             function=self.learner_evaluator.train_model,
-            args=(model_pb, learning_task_pb, hyperparameters_pb, model_pb, verbose))
+            args=(model_pb, learning_task_pb, hyperparameters_pb, verbose))
         
         # The following callback will trigger the request to the controller to receive the next task.
         future.add_done_callback(self.federation_helper.mark_learning_task_completed)
-        self._training_tasks_futures_q.put(future)
+        learning_tasks_futures_q.put(future)
         if block:
             future.result()
         # If the task is submitted for processing then it is not cancelled.
         is_task_submitted = not future.cancelled()
+        self._log(state="completed", task="learning")
         return is_task_submitted
 
     def shutdown(self,
@@ -135,15 +149,18 @@ class Learner(object):
         # else it will stop immediately all active tasks. At first, we close the
         # tasks pool so that no more tasks can be submitted, and then we wait
         # gracefully or non-gracefully (cancel future) for their completion.
-        self._training_tasks_pool.close()
-        self._evaluation_tasks_pool.close()
-        self._inference_tasks_pool.close()
-        self._empty_tasks_q(self._training_tasks_futures_q, forceful=cancel_train_running_tasks)
-        self._empty_tasks_q(self._evaluation_tasks_futures_q, forceful=cancel_eval_running_tasks)
-        self._empty_tasks_q(self._inference_tasks_futures_q, forceful=cancel_infer_running_tasks)
-        self._training_tasks_pool.join()
-        self._evaluation_tasks_pool.join()
-        self._inference_tasks_pool.join()
+
+        # TODO: pass args in a list or something to avoid code duplication.
+        for _, (pool, _) in self.pool.items():
+            pool.close()
+        
+        self._empty_tasks_q(LEARNING_TASK, forceful=cancel_train_running_tasks)
+        self._empty_tasks_q(EVALUATION_TASK, forceful=cancel_eval_running_tasks)
+        self._empty_tasks_q(INFERENCE_TASK, forceful=cancel_infer_running_tasks)
+       
+        for _, (pool, _) in self.pool.items():
+            pool.join()       
+       
         gc.collect()
         # TODO - we always return True, but we need to capture any failures that may occur while terminating.
         return True

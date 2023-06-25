@@ -1,4 +1,6 @@
 import math
+from metisfl.models.model_ops import CompletedTaskStats
+from metisfl.models.model_wrapper import ModelWeightsDescriptor
 
 from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
@@ -8,33 +10,23 @@ class ModelProtoFactory:
     class CompletedLearningTaskProtoMessage(object):
 
         def __init__(self,
-                     weights_names,
-                     weights_trainable,
-                     weights_values,
-                     train_stats,
-                     completed_epochs,
-                     global_iteration,
-                     validation_stats=None,
-                     test_stats=None,
-                     completes_batches=0,
-                     batch_size=0,
-                     processing_ms_per_epoch=0.0,
-                     processing_ms_per_batch=0.0):
+                     model_weights_descriptor: ModelWeightsDescriptor,
+                     comleted_task_stats: CompletedTaskStats):
 
-            self._weights_names = weights_names
-            self._weights_trainable = weights_trainable
-            self._weights_values = weights_values
-            self._train_stats = train_stats
-            self._completed_epochs = completed_epochs
-            self._global_iteration = global_iteration
-            self._validation_stats = DictionaryFormatter.listify_values(validation_stats) \
-                if validation_stats else dict()
-            self._test_stats = DictionaryFormatter.listify_values(test_stats) \
-                if test_stats else dict()
-            self._completes_batches = completes_batches
-            self._batch_size = batch_size
-            self._processing_ms_per_epoch = processing_ms_per_epoch
-            self._processing_ms_per_batch = processing_ms_per_batch
+            self._weights_names =  model_weights_descriptor.weights_names
+            self._weights_trainable = model_weights_descriptor.weights_trainable
+            self._weights_values = model_weights_descriptor.weights_values
+            self._train_stats = comleted_task_stats.train_stats
+            self._completed_epochs = comleted_task_stats.completed_epochs
+            self._global_iteration = comleted_task_stats.global_iteration
+            self._validation_stats = DictionaryFormatter.listify_values(comleted_task_stats.validation_stats) \
+                if comleted_task_stats.validation_stats else dict()
+            self._test_stats = DictionaryFormatter.listify_values(comleted_task_stats.test_stats) \
+                if comleted_task_stats.test_stats else dict()
+            self._completes_batches = comleted_task_stats.completes_batches
+            self._batch_size = comleted_task_stats.batch_size
+            self._processing_ms_per_epoch = comleted_task_stats.processing_ms_per_epoch
+            self._processing_ms_per_batch = comleted_task_stats.processing_ms_per_batch
 
         def _construct_task_evaluation_pb(self, collection):
             """

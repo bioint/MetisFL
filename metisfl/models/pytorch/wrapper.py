@@ -51,8 +51,7 @@ class MetisTorchModel(MetisModel):
             weights_trainable.append(param.requires_grad)
             weights_values.append(param.data.numpy(force=True))
             
-        return ModelWeightsDescriptor(nn_engine=self.nn_engine,
-                                      weights_names=weights_names,
+        return ModelWeightsDescriptor(weights_names=weights_names,
                                       weights_trainable=weights_trainable,
                                       weights_values=weights_values)
 
@@ -68,10 +67,9 @@ class MetisTorchModel(MetisModel):
         MetisLogger.info("Saved model at: {}".format(model_dir))
 
     def set_model_weights(self,
-                          weights_names: List[str],
-                          weights_trainable: List[bool],
-                          weights_values: List[np.ndarray],
+                          model_weights_descriptor: ModelWeightsDescriptor,
                           *args, **kwargs):
+        weights_values = model_weights_descriptor.weights_values
         state_dict = collections.OrderedDict({
             k: torch.tensor(np.atleast_1d(v))
             for k, v in zip(self.model.state_dict().keys(), weights_values)

@@ -35,8 +35,7 @@ class MetisKerasModel(MetisModel):
         all_trainable_weights_names = [v.name for v in self.model.trainable_variables]
         weights_trainable = [True if w_n in all_trainable_weights_names else False for w_n in weights_names]
         weights_values = [w.numpy() for w in self.model.weights]
-        return ModelWeightsDescriptor(nn_engine=self.nn_engine,
-                                      weights_names=weights_names,
+        return ModelWeightsDescriptor(weights_names=weights_names,
                                       weights_trainable=weights_trainable,
                                       weights_values=weights_values)
         
@@ -46,12 +45,11 @@ class MetisKerasModel(MetisModel):
         self.model.save(filepath=model_dir)
         MetisLogger.info("Saved model at: {}".format(model_dir))
           
-    def set_model_weights(self,
-                          weights_names: List[str],
-                          weights_trainable: List[bool],
-                          weights_values: List[np.ndarray],
+    def set_model_weights(self, 
+                          model_weights_descriptor: ModelWeightsDescriptor,
                           *args, **kwargs):
         MetisLogger.info("Applying new model weights")
+        weights_values = model_weights_descriptor.weights_values
         existing_weights = self.model.weights
         trainable_vars_names = [v.name for v in self.model.trainable_variables]
         assigning_weights = []

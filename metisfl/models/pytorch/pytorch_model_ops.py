@@ -3,7 +3,7 @@ import gc
 import torch
 import numpy as np
 
-from metisfl.models.keras.helper import construct_dataset_pipeline
+from metisfl.models.pytorch.helper import construct_dataset_pipeline
 from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.model_ops import ModelOps
 from metisfl.models.model_proto_factory import ModelProtoFactory
@@ -15,9 +15,7 @@ from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 class PyTorchModelOps(ModelOps):
     
-    # @stripeli - we must remove default params like this one
-    # bacause we might forget to put it when we instantiate the class
-    def __init__(self, model_dir="/tmp/metis/"):
+    def __init__(self, model_dir: str):
         self._model = MetisTorchModel.load(model_dir)
         # self._model.to(device)
         # # pylint: disable=no-member
@@ -57,6 +55,7 @@ class PyTorchModelOps(ModelOps):
                 MetisLogger.info("Using provided fit function.")
                 train_res = self._model.fit(dataset, epochs=epochs_num)
             else:
+                
                 MetisLogger.error("Fit function not provided, please implement one.")
 
         MetisLogger.info("Model training is complete.")
@@ -72,9 +71,9 @@ class PyTorchModelOps(ModelOps):
             train_stats=train_res,
             completed_epochs=epochs_num,
             global_iteration=learning_task_pb.global_iteration)
-        completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
-            he_scheme=self._he_scheme)
-        return completed_learning_task_pb
+        # completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
+        #     he_scheme=self._he_scheme)
+        return model_weights_descriptor
 
     def evaluate_model(self,
                        eval_dataset: ModelDataset,

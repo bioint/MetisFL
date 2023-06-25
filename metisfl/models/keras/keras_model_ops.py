@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from metisfl.models.keras.helper import construct_dataset_pipeline
-from metisfl.models.model_ops import ModelOps
+from metisfl.models.model_ops import CompletedTaskStats, ModelOps
 
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.metis_logger import MetisLogger
@@ -113,23 +113,24 @@ class KerasModelOps(ModelOps):
         # TODO Currently we do not evaluate the locally trained model against the test set, since
         #  we need to figure out if the evaluation will happen within this function scope or outside.
         model_weights_descriptor = self._model.get_model_weights()
-        completed_learning_task = ModelProtoFactory.CompletedLearningTaskProtoMessage(
-            weights_values=model_weights_descriptor.weights_values,
-            weights_trainable=model_weights_descriptor.weights_trainable,
-            weights_names=model_weights_descriptor.weights_names,
-            train_stats=training_res, completed_epochs=epochs_num,
-            global_iteration=global_iteration, validation_stats=validation_res,
-            test_stats=test_res, completes_batches=total_steps,
-            batch_size=batch_size, processing_ms_per_epoch=mean_epoch_wall_clock_time_ms,
+        
+        comleted_task_stats = CompletedTaskStats(
+            train_stats=training_res, 
+            completed_epochs=epochs_num,
+            global_iteration=global_iteration, 
+            validation_stats=validation_res,
+            test_stats=test_res, 
+            completes_batches=total_steps,
+            batch_size=batch_size, 
+            processing_ms_per_epoch=mean_epoch_wall_clock_time_ms,
             processing_ms_per_batch=mean_batch_wall_clock_time_ms)
-        completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
-            he_scheme=self._he_scheme)
-        return completed_learning_task_pb
+        # completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
+        #     he_scheme=self._he_scheme)
+        return model_weights_descriptor, comleted_task_stats
 
     def evaluate_model(self,
                        eval_dataset: ModelDataset,
                        batch_size=100,
-                       metrics=None,
                        verbose=False) -> metis_pb2.ModelEvaluation:
         if eval_dataset is None:
             raise RuntimeError("Provided `dataset` for evaluation is None.")
@@ -141,6 +142,7 @@ class KerasModelOps(ModelOps):
         # method raises error when x, y are None. To replicate the error, simply call
         # evaluate() with no arguments. The receiving error when this occurs is:
         # `Failed to find data adapter that can handle input: <class 'NoneType'>, <class 'NoneType'>`.
+        # @stripeli: you are already making this check at the begining of the function.
         eval_res = dict()
         if x_eval is not None:
             eval_res = self._model.evaluate(x=x_eval,
@@ -149,14 +151,13 @@ class KerasModelOps(ModelOps):
                                             callbacks=self._keras_callbacks,
                                             verbose=verbose, return_dict=True)
         MetisLogger.info("Model evaluation is complete.")
-        model_evaluation_pb = ModelProtoFactory\
-            .ModelEvaluationProtoMessage(eval_res).construct_model_evaluation_pb()
-        return model_evaluation_pb
+        # model_evaluation_pb = ModelProtoFactory\
+        #     .ModelEvaluationProtoMessage(eval_res).construct_model_evaluation_pb()
+        return eval_res
 
     def infer_model(self,
                     infer_dataset: ModelDataset,
-                    batch_size=100,
-                    *args, **kwargs):
+                    batch_size=100):
         if infer_dataset is None:
             raise RuntimeError("Provided `dataset` for inference is None.")
         MetisLogger.info("Starting model inference.")
@@ -171,9 +172,7 @@ class KerasModelOps(ModelOps):
         MetisLogger.info("Model inference is complete.")
         return predictions
 
-    def construct_optimizer(self,
-                            optimizer_config_pb: model_pb2.OptimizerConfig = None,
-                            *args, **kwargs):
+    def construct_optimizer(self, optimizer_config_pb: model_pb2.OptimizerConfig):
         if optimizer_config_pb is None:
             raise RuntimeError("Provided `OptimizerConfig` proto message is None.")
         if optimizer_config_pb.HasField('vanilla_sgd'):
