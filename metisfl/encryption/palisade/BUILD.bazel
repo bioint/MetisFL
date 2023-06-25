@@ -47,9 +47,9 @@ cmake(
 )
 
 cc_library(
-    name = "palisade_fhe_helper",
-    hdrs = ["fhe_helper.h"],
-    srcs = ["fhe_helper.cc"],
+    name = "palisade_wrapper",
+    hdrs = ["he_scheme.h", "ckks_scheme.h"],
+    srcs = ["ckks_scheme.cc"],
     deps = [
       "//metisfl/encryption/palisade:palisade_cmake",
       "@absl//absl/strings",
@@ -74,13 +74,13 @@ cc_library(
 )
 
 cc_binary(
-  name = "palisade_fhe_helper_demo",
+  name = "ckks_demo",
   data = [
     "//metisfl/resources:fheparams",
   ],
-  srcs = ["fhe_helper_demo.cc"],
+  srcs = ["ckks_demo.cc"],
   deps = [
-    ":palisade_fhe_helper",
+    ":palisade_wrapper",
   ],
   linkstatic=True
 )

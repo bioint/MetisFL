@@ -278,7 +278,7 @@ message FedStride {
 
 message FedRec {}
 
-message HEScheme {
+message HESchemeConfig {
   bool enabled = 1;
   string name = 2;
   string cryptocontext_dir = 3;
@@ -286,21 +286,21 @@ message HEScheme {
   string private_key = 5;
 
   oneof scheme {
-    EmptyHEScheme empty_he_scheme = 6;
-    FHEScheme fhe_scheme = 7;
+    EmptyHESchemeConfig empty_he_scheme_config = 6;
+    FHESchemeConfig fhe_scheme_config = 7;
   }
 
 }
 
-message EmptyHEScheme {}
+message EmptyHESchemeConfig {}
 
-message FHEScheme {
+message FHESchemeConfig {
   uint32 batch_size = 1;
   uint32 scaling_bits = 2;
 }
 
 message PWA {
-  HEScheme he_scheme = 1;
+  HESchemeConfig he_scheme = 1;
 }
 
 message GlobalModelSpecs {

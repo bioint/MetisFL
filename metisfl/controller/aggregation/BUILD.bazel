@@ -137,7 +137,7 @@ cc_library(
     ],
     deps = [
         "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/encryption/palisade:palisade_fhe_helper",
+        "//metisfl/encryption/palisade:palisade_wrapper",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],
