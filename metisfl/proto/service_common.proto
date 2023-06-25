@@ -1,5 +1,5 @@
 syntax = "proto3";
-package projectmetis;
+package metisfl;
 
 import "google/protobuf/timestamp.proto";
 
@@ -24,7 +24,7 @@ message GetServicesHealthStatusResponse {
 }
 
 message ShutDownRequest {
-  //TODO: require some sort of auth key here?
+  //TODO(stripeli): require some sort of auth key here?
 }
 
 message ShutDownResponse {

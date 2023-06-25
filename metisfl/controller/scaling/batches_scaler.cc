@@ -1,7 +1,7 @@
 
 #include "metisfl/controller/scaling/batches_scaler.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 absl::flat_hash_map<std::string, double>
 BatchesScaler::ComputeScalingFactors(
@@ -49,4 +49,4 @@ BatchesScaler::ComputeScalingFactors(
 
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

@@ -5,9 +5,9 @@
 #include <gmock/gmock.h>
 
 #include "absl/strings/str_cat.h"
-#include "projectmetis/controller/scheduling/asynchronous_scheduler.h"
+#include "metisfl/controller/scheduling/asynchronous_scheduler.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using ::testing::UnorderedElementsAre;
@@ -69,4 +69,4 @@ TEST(AsynchronousScheduler, MultipleLearners) {
 }
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

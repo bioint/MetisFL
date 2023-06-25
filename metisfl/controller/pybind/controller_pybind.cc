@@ -9,10 +9,10 @@
 
 namespace py = pybind11;
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
-using projectmetis::controller::Controller;
-using projectmetis::controller::ControllerServicer;
+using metisfl::controller::Controller;
+using metisfl::controller::ControllerServicer;
 
 class ServicerWrapper {
 
@@ -20,7 +20,7 @@ public:
     ~ServicerWrapper() = default;
 
     void BuildAndStart(std::string params_serialized) {
-      projectmetis::ControllerParams params;
+      metisfl::ControllerParams params;
       params.ParseFromString(params_serialized);
       controller_ = Controller::New(params);
       servicer_ = ControllerServicer::New(controller_.get());
@@ -42,20 +42,20 @@ private:
 
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
 PYBIND11_MODULE(controller, m) {
   m.doc() = "Federation controller python soft wrapper.";
 
-  py::class_<projectmetis::controller::ServicerWrapper>(m, "ServicerWrapper")
+  py::class_<metisfl::controller::ServicerWrapper>(m, "ServicerWrapper")
     .def(py::init<>())
     .def("BuildAndStart",
-        &projectmetis::controller::ServicerWrapper::BuildAndStart,
+        &metisfl::controller::ServicerWrapper::BuildAndStart,
         "Initializes and starts the controller.")
     .def("Wait",
-        &projectmetis::controller::ServicerWrapper::Wait,
+        &metisfl::controller::ServicerWrapper::Wait,
         "Blocks until the service has shut down.")
     .def("Shutdown",
-        &projectmetis::controller::ServicerWrapper::Shutdown,
+        &metisfl::controller::ServicerWrapper::Shutdown,
         "Shuts down the controller.");
 }

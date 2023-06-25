@@ -3,7 +3,7 @@
 #include "metisfl/proto/metis.pb.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 HashMapModelStore::HashMapModelStore(const InMemoryStore &config) : ModelStore(config.model_store_specs()) {
   PLOG(INFO) << "Using InMemoryStore (HashMapStore) as model store backend.";

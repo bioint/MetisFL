@@ -1,6 +1,6 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORE_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORE_H_
+#ifndef METISFL_METISFL_CONTROLLER_STORE_MODEL_STORE_H_
+#define METISFL_METISFL_CONTROLLER_STORE_MODEL_STORE_H_
 
 #include <glog/logging.h>
 #include <vector>
@@ -9,7 +9,7 @@
 #include "metisfl/proto/metis.pb.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class ModelStore {
 
@@ -69,4 +69,4 @@ class ModelStore {
 
 }
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORE_H_
+#endif //METISFL_METISFL_CONTROLLER_STORE_MODEL_STORE_H_

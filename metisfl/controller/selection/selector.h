@@ -1,10 +1,10 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SELECTION_SELECTOR_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SELECTION_SELECTOR_H_
+#ifndef METISFL_METISFL_CONTROLLER_SELECTION_SELECTOR_H_
+#define METISFL_METISFL_CONTROLLER_SELECTION_SELECTOR_H_
 
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 // A selector picks the models that need to be considered during aggregation.
 class Selector {
@@ -22,7 +22,7 @@ class Selector {
   virtual std::string name() = 0;
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SELECTION_SELECTOR_H_
+#endif //METISFL_METISFL_CONTROLLER_SELECTION_SELECTOR_H_

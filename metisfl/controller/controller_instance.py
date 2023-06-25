@@ -19,17 +19,18 @@ class ControllerInstance(object):
 
     def wait(self):
 
-        def sigint_handler(signum, frame):
-            self.__shutdown_signal_received = True
-            self.shutdown()
-
-        # Registering signal termination/shutdown calls.
-        signal.signal(signal.SIGTERM, sigint_handler)
-        signal.signal(signal.SIGINT, sigint_handler)
-
-        # Infinite loop till shutdown signal is triggered.
-        while not self.__shutdown_signal_received:
-            time.sleep(3)
+        self.__service_wrapper.Wait()
+        # def sigint_handler(signum, frame):
+        #     self.__shutdown_signal_received = True
+        #     self.shutdown()
+        #
+        # # Registering signal termination/shutdown calls.
+        # signal.signal(signal.SIGTERM, sigint_handler)
+        # signal.signal(signal.SIGINT, sigint_handler)
+        #
+        # # Infinite loop till shutdown signal is triggered.
+        # while not self.__shutdown_signal_received:
+        #     time.sleep(3)
 
     def shutdown(self):
         self.__service_wrapper.Shutdown()

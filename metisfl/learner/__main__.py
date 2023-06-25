@@ -2,11 +2,7 @@ import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
-<<<<<<< HEAD
-from metisfl.learner import Learner
-=======
 from metisfl.learner.learner import Learner
->>>>>>> bugfix/migration_path_deps_issues
 from metisfl.learner.learner_servicer import LearnerServicer
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 

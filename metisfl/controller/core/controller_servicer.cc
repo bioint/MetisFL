@@ -15,7 +15,7 @@
 #include "metisfl/proto/controller.grpc.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 using ::grpc::Server;
 using ::grpc::ServerBuilder;
@@ -226,8 +226,10 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
       return {StatusCode::INVALID_ARGUMENT,
               "Request and response cannot be empty."};
     }
-    // TODO (canastas) Controller instance is never run. Here, we need to
-    //  capture the heartbeat of all the underlying controller services.
+    // TODO(stripeli): We need to capture the heartbeat of all the
+    //  underlying controller services. Controller being null is one thing
+    //  but if any of its services is not available (e.g., model store, aggregation)
+    //  then we need to return a corresponding health check.
     if (controller_ != nullptr) {
       (*response->mutable_services_status())["controller"] = true;
     } else {
@@ -379,4 +381,4 @@ ControllerServicer::New(Controller *controller) {
   return absl::make_unique<ControllerServicerImpl>(controller);
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

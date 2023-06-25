@@ -1,13 +1,13 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_AGGREGATION_FUNCTION_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_AGGREGATION_FUNCTION_H_
+#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_AGGREGATION_FUNCTION_H_
+#define METISFL_METISFL_CONTROLLER_AGGREGATION_AGGREGATION_FUNCTION_H_
 
 #include <vector>
 #include <utility>
 
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 // Given that we need to define an interface, we basically need to provide the
 // signature of pure virtual functions Recall that, a pure virtual function is
@@ -37,6 +37,6 @@ class AggregationFunction {
   virtual void Reset() = 0;
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_AGGREGATION_FUNCTION_H_
+#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_AGGREGATION_FUNCTION_H_

@@ -118,8 +118,7 @@ class PyTorchModelOps(ModelOps):
         MetisLogger.info("Model training is complete.")
 
         model_weights_descriptor = self.get_model_weights()
-        # TODO (dstripelis) Need to add the metrics for computing the execution time
-        #   per batch and epoch.
+        # FIXME(stripeli): Need to add the metrics for computing the execution time per batch and epoch.
         completed_learning_task = ModelProtoFactory.CompletedLearningTaskProtoMessage(
             weights_values=model_weights_descriptor.weights_values,
             weights_trainable=model_weights_descriptor.weights_trainable,

@@ -1,11 +1,11 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SCALING_PARTICIPANTS_SCALER_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SCALING_PARTICIPANTS_SCALER_H_
+#ifndef METISFL_METISFL_CONTROLLER_SCALING_PARTICIPANTS_SCALER_H_
+#define METISFL_METISFL_CONTROLLER_SCALING_PARTICIPANTS_SCALER_H_
 
 #include "metisfl/controller/scaling/scaling_function.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class ParticipantsScaler : public ScalingFunction {
  public:
@@ -20,6 +20,6 @@ class ParticipantsScaler : public ScalingFunction {
   }
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SCALING_PARTICIPANTS_SCALER_H_
+#endif //METISFL_METISFL_CONTROLLER_SCALING_PARTICIPANTS_SCALER_H_

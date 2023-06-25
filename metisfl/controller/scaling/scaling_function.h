@@ -1,6 +1,6 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SCALING_SCALING_FUNCTION_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SCALING_SCALING_FUNCTION_H_
+#ifndef METISFL_METISFL_CONTROLLER_SCALING_SCALING_FUNCTION_H_
+#define METISFL_METISFL_CONTROLLER_SCALING_SCALING_FUNCTION_H_
 
 #include <vector>
 #include <utility>
@@ -8,7 +8,7 @@
 #include "absl/container/flat_hash_map.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 // Given that we need to define an interface, we basically need to provide the
 // signature of pure virtual functions Recall that, a pure virtual function is
@@ -30,6 +30,6 @@ class ScalingFunction {
   virtual std::string Name() = 0;
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SCALING_SCALING_FUNCTION_H_
+#endif //METISFL_METISFL_CONTROLLER_SCALING_SCALING_FUNCTION_H_

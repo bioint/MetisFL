@@ -1,7 +1,7 @@
 
 #include "metisfl/controller/aggregation/federated_stride.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 FederatedModel FederatedStride::Aggregate(std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
 

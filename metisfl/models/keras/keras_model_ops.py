@@ -41,7 +41,7 @@ class KerasModelOps(ModelOps):
                 keras_callbacks = []
 
         self._model_dir = model_dir
-        # TODO Register custom objects, e.g., optimizers, required to load the model.
+        # Here, we register custom objects, e.g., optimizers, required to load the model.
         self._load_model_custom_objects = {"FedProx": FedProx}
         self._model = self.load_model(self._model_dir)
         self._he_scheme = he_scheme
@@ -103,7 +103,7 @@ class KerasModelOps(ModelOps):
         trainable_vars_names = [v.name for v in self._model.trainable_variables]
         assigning_weights = []
         for existing_weight, new_weight in zip(existing_weights, weights_values):
-            # TODO It seems that it is better to assign the incoming model weight altogether.
+            # FIXME(stripeli): It seems that it is better to assign the incoming model weight altogether.
             #  In a more fine grained implementation we should know whether to share all weights
             #  with the federation or a subset. This should be defined during initialization.
             assigning_weights.append(new_weight)
@@ -125,9 +125,6 @@ class KerasModelOps(ModelOps):
         global_iteration = learning_task_pb.global_iteration
         total_steps = learning_task_pb.num_local_updates
         batch_size = hyperparameters_pb.batch_size
-        # TODO Compile model with new optimizer if need to.
-        #  It is required by TF when redefining a model.
-        #  Assign new model weights after model compilation.
         self.construct_optimizer(hyperparameters_pb.optimizer)
         if train_dataset is None:
             raise RuntimeError("Provided `dataset` for training is None.")
@@ -172,7 +169,7 @@ class KerasModelOps(ModelOps):
         mean_batch_wall_clock_time_ms = \
             np.mean(performance_profile_callback.batches_wall_clock_time_sec) * 1000
 
-        # TODO(dstripelis) We evaluate the local model over the test dataset at the end of training.
+        # TODO(stripeli): We evaluate the local model over the test dataset at the end of training.
         #  Maybe we need to parameterize evaluation at every epoch or at the end of training.
         test_res = self._model.evaluate(x=x_test, y=y_test, batch_size=batch_size,
                                         callbacks=self._keras_callbacks,
@@ -185,8 +182,6 @@ class KerasModelOps(ModelOps):
         training_res = {k: k_v for k, k_v in sorted(history_res.history.items()) if 'val_' not in k}
         # Replacing "val" so that metric keys are the same for both training and validation datasets.
         validation_res = {k.replace("val_", ""): k_v for k, k_v in sorted(history_res.history.items()) if 'val_' in k}
-        # TODO Currently we do not evaluate the locally trained model against the test set, since
-        #  we need to figure out if the evaluation will happen within this function scope or outside.
         model_weights_descriptor = self.get_model_weights()
         completed_learning_task = ModelProtoFactory.CompletedLearningTaskProtoMessage(
             weights_values=model_weights_descriptor.weights_values,
@@ -254,7 +249,7 @@ class KerasModelOps(ModelOps):
             raise RuntimeError("Provided `OptimizerConfig` proto message is None.")
         if optimizer_config_pb.HasField('vanilla_sgd'):
             learning_rate = optimizer_config_pb.vanilla_sgd.learning_rate
-            # TODO For now we only assign the learning rate, since Keras does not add L2 or L1
+            # TODO(stripeli): For now we only assign the learning rate, since Keras does not add L2 or L1
             #  regularization directly in the optimization function, it does so during model
             #  compilation at the kernel and bias layers level.
             l1_reg = optimizer_config_pb.vanilla_sgd.L1_reg

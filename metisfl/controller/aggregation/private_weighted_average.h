@@ -1,13 +1,13 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
+#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
+#define METISFL_METISFL_CONTROLLER_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
 
 #include "metisfl/encryption/palisade/fhe_helper.h"
 #include "metisfl/controller/aggregation/aggregation_function.h"
 #include "metisfl/proto/model.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class PWA : public AggregationFunction {
  private:
@@ -31,6 +31,6 @@ class PWA : public AggregationFunction {
 
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
+#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_

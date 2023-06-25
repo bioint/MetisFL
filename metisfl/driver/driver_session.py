@@ -160,6 +160,7 @@ class DriverSessionBase(object):
                 # If the given instance has no ssl configuration files defined, then we use
                 # the default non-verified (self-signed) certificates, and we wrap them as streams.
                 wrap_as_stream = True
+                print("SSL enabled but remote host needs custom config files!", flush=True)
                 public_cert, private_key = \
                     ssl_configurator.gen_default_certificates(as_stream=True)
 
@@ -347,7 +348,8 @@ class DriverSessionBase(object):
         lagging time till the federation controller is live so that every learner can
         connect to it.
         """
-        # TODO If we need to test the pipeline we force a future return here, i.e., controller_future.result()
+        # TODO(stripeli): Figure out a way to run in DEBUG mode by calling `controller_future.result()`.
+        #  This command is useful if we need to test the pipeline
         # The following initialization futures are always running (status=running)
         # since we need to keep the connections open in order to retrieve logs
         # regarding the execution progress of the federation.
@@ -358,12 +360,12 @@ class DriverSessionBase(object):
             for learner_instance in self.federation_environment.learners.learners:
                 learner_future = self._executor.schedule(
                     function=self._init_learner,
-                    args=(learner_instance,
-                          self.federation_environment.controller))
-                # TODO If we need to test the pipeline we can force a future return here, i.e., learner_future.result()
+                    args=[learner_instance, self.federation_environment.controller])
+                # TODO(stripeli): Figure out a way to run in DEBUG mode by calling `learner_future.result()`.
+                #  This command is useful if we need to test the pipeline
                 self._executor_learners_tasks_q.put(learner_future)
-                # TODO We perform a sleep because if the learners are co-located, e.g., localhost, then an exception
-                #  is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
+                # We perform a sleep because if the learners are co-located, e.g., localhost, then an exception
+                # is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
                 time.sleep(0.1)
 
     def _collect_local_statistics(self):

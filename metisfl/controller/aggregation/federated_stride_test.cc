@@ -9,7 +9,7 @@
 #include "metisfl/proto/model.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using ::proto::DeserializeTensor;
@@ -380,10 +380,6 @@ TEST_F(FederatedStrideTest, ModelFloat32FourLearnersStride3V1) /* NOLINT */ {
   auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
-  // TODO Fix this! Model variable definition is not preserved!
-//  std::cout << model1.DebugString();
-//  std::cout << averaged.model().DebugString();
-
   // The aggregated model proto definition should be equal to any of the original models.
   EXPECT_THAT(averaged.model(), EqualsProto(model1));
 
@@ -443,4 +439,4 @@ TEST_F(FederatedStrideTest, ModelFloat32FourLearnersStride3V2) /* NOLINT */ {
 }
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

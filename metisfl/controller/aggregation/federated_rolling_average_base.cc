@@ -1,7 +1,7 @@
 
 #include "metisfl/controller/aggregation/federated_rolling_average_base.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using ::proto::DeserializeTensor;
@@ -206,7 +206,7 @@ void FederatedRollingAverageBase::InitializeModel(const Model *init_model, doubl
 
     } // End If
 
-    //TODO: Place CipherText logic here. 
+    //TODO(stripeli): Place CipherText logic here.
 
   } // End For
 
@@ -251,7 +251,7 @@ void FederatedRollingAverageBase::UpdateScaledModel(const Model *existing_model,
     
     } // End If
 
-    //TODO: Place CipherText logic here. 
+    //TODO(stripeli): Place CipherText logic here.
 
 
   } // End For
@@ -287,7 +287,7 @@ void FederatedRollingAverageBase::UpdateCommunityModel() {
 
     } // End If
 
-    //TODO: Place CipherText logic here. 
+    //TODO(stripeli): Place CipherText logic here.
 
   } // End For
 }

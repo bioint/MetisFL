@@ -59,7 +59,7 @@ class Learner(object):
             os.mkdir(self.__learner_credentials_fp)
         self.__learner_id = None
         self.__auth_token = None
-        # TODO if we want to be more secure, we can dump an
+        # TODO(stripeli): if we want to be more secure, we can dump an
         #  encrypted version of auth_token and learner_id
         self.__learner_id_fp = os.path.join(self.__learner_credentials_fp, "learner_id.txt")
         self.__auth_token_fp = os.path.join(self.__learner_credentials_fp, "auth_token.txt")
@@ -77,7 +77,6 @@ class Learner(object):
         return self_dict
 
     def _create_model_dataset_helper(self, dataset_recipe_pkl, dataset_fp, default_class=None):
-        # TODO Move into utils?
         if dataset_recipe_pkl and dataset_fp:
             dataset_recipe_fn = cloudpickle.load(open(dataset_recipe_pkl, "rb"))
             dataset = dataset_recipe_fn(dataset_fp)
@@ -132,8 +131,8 @@ class Learner(object):
         MetisLogger.info(
             "Delaying learner: {} join federation request by 30 seconds".format(self.host_port_identifier()))
         time.sleep(30)
-        # TODO If I create a learner controller instance once (without channel initialization)
-        #  then the program hangs!
+        # FIXME(stripeli): If we create a learner controller instance
+        #  once (without channel initialization) then the program hangs!
         train_dataset_meta, validation_dataset_meta, test_dataset_meta = self._load_datasets_metadata_subproc()
         is_classification = train_dataset_meta[2] == ModelDatasetClassification
         is_regression = train_dataset_meta[2] == ModelDatasetRegression
@@ -196,5 +195,4 @@ class Learner(object):
                  cancel_eval_running_tasks=True,
                  cancel_infer_running_tasks=True):
         gc.collect()
-        # TODO - we always return True, but we need to capture any failures that may occur while terminating.
         return True

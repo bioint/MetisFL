@@ -8,7 +8,7 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using ::proto::ParseTextOrDie;
@@ -206,4 +206,4 @@ TEST_F(FederatedAverageTest, CorrectAverageFLOAT64) /* NOLINT */ {
 }
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

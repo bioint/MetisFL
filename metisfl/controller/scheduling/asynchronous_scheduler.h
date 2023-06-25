@@ -1,10 +1,10 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_
+#ifndef METISFL_METISFL_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_
+#define METISFL_METISFL_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_
 
 #include "metisfl/controller/scheduling/scheduler.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 // Implements the asynchronous task scheduling policy.
 class AsynchronousScheduler : public Scheduler {
@@ -24,6 +24,6 @@ class AsynchronousScheduler : public Scheduler {
 
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_
+#endif //METISFL_METISFL_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_

@@ -4,7 +4,7 @@
 #include "metisfl/controller/aggregation/private_weighted_average.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 PWA::PWA(const HEScheme &he_scheme) {
   he_scheme_ = he_scheme;
@@ -84,4 +84,4 @@ void PWA::Reset() {
   // pass
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

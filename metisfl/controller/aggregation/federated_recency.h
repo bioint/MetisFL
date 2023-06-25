@@ -1,11 +1,11 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_ASYNC_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_ASYNC_H_
+#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_ASYNC_H_
+#define METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_ASYNC_H_
 
 #include "metisfl/controller/aggregation/federated_rolling_average_base.h"
 #include "metisfl/controller/aggregation/aggregation_function.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class FederatedRecency : public AggregationFunction, FederatedRollingAverageBase {
 
@@ -26,4 +26,4 @@ class FederatedRecency : public AggregationFunction, FederatedRollingAverageBase
 
 }
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_ASYNC_H_
+#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_ASYNC_H_

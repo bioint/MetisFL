@@ -1,7 +1,7 @@
 
 #include "metisfl/controller/scaling/participants_scaler.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 absl::flat_hash_map<std::string, double>
 ParticipantsScaler::ComputeScalingFactors(
@@ -42,4 +42,4 @@ ParticipantsScaler::ComputeScalingFactors(
 
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

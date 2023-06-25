@@ -49,14 +49,9 @@ config_setting(
 
 py_library(
     name="metisfl-lib",
-    data = [
-        "//metisfl/resources:res"
-    ],
     deps = [
         "//metisfl/controller:controller_lib",
         "//metisfl/encryption:encryption_lib",
-        "//metisfl/driver:driver_lib",
-        "//metisfl/learner:learner_lib",
         "//metisfl/proto:proto_lib",
     ]
 )
@@ -85,7 +80,7 @@ py_wheel(
         ],
         distribution = "metisfl",
         homepage = "https://www.nevron.ai",
-        license = "Apache 2.0",
+        license = "The Clear BSD License",
         python_requires = ">=3.8",
         python_tag = select({
             ":py38": "cp38",

@@ -1,11 +1,11 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
+#ifndef METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
+#define METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
 
 #include "absl/container/flat_hash_set.h"
 #include "metisfl/controller/scheduling/scheduler.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 // Implements the synchronous task scheduling policy.
 class SynchronousScheduler : public Scheduler {
@@ -42,6 +42,6 @@ class SynchronousScheduler : public Scheduler {
   ::absl::flat_hash_set<std::string> learner_ids_;
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
+#endif //METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_

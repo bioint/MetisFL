@@ -1,11 +1,11 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORING_HASH_MAP_MODEL_STORE_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORING_HASH_MAP_MODEL_STORE_H_
+#ifndef METISFL_METISFL_CONTROLLER_STORE_HASH_MAP_HASH_MAP_MODEL_STORE_H_
+#define METISFL_METISFL_CONTROLLER_STORE_HASH_MAP_HASH_MAP_MODEL_STORE_H_
 
 #include "metisfl/controller/store/model_store.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class HashMapModelStore : public ModelStore {
  public:
@@ -31,4 +31,4 @@ class HashMapModelStore : public ModelStore {
 
 }
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORING_HASH_MAP_MODEL_STORE_H_
+#endif //METISFL_METISFL_CONTROLLER_STORE_HASH_MAP_HASH_MAP_MODEL_STORE_H_
