@@ -1,5 +1,5 @@
 syntax = "proto3";
-package projectmetis;
+package metisfl;
 
 import "metisfl/proto/metis.proto";
 import "metisfl/proto/model.proto";
@@ -113,7 +113,7 @@ message GetRuntimeMetadataLineageRequest {
 
 message GetRuntimeMetadataLineageResponse {
   repeated FederatedTaskRuntimeMetadata metadata = 1;
-  // TODO No structured response yet, but in a future release this should follow a specific format.
+  // TODO(stripeli): No structured response yet, but in a future release this should follow a specific format.
   string json_metadata = 2;
 }
 
@@ -167,7 +167,7 @@ message LeaveFederationResponse {
 }
 
 message ReplaceCommunityModelRequest {
-  // TODO: Require some sort of auth to ensure that whoever is replacing the model, e.g., driver, is authorized to do so.
+  // TODO(stripeli): Require some sort of auth to ensure that whoever is replacing the model, e.g., driver, is authorized to do so.
   FederatedModel model = 1;
 }
 

@@ -1,13 +1,13 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_H_
+#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_H_
+#define METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_H_
 
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
 using ::proto::PrintSerializedTensor;
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class FederatedRollingAverageBase {
  protected:
@@ -26,4 +26,4 @@ class FederatedRollingAverageBase {
 }
 
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_H_
+#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_H_

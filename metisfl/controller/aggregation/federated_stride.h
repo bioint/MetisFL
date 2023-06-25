@@ -1,12 +1,12 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_SYNC_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_SYNC_H_
+#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_SYNC_H_
+#define METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_SYNC_H_
 
 #include "metisfl/controller/aggregation/aggregation_function.h"
 #include "metisfl/controller/aggregation/federated_rolling_average_base.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class FederatedStride : public AggregationFunction, FederatedRollingAverageBase {
 
@@ -27,4 +27,4 @@ class FederatedStride : public AggregationFunction, FederatedRollingAverageBase 
 
 }
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FED_ROLL_SYNC_H_
+#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_FED_ROLL_SYNC_H_

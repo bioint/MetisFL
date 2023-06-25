@@ -1,5 +1,5 @@
 syntax = "proto3";
-package projectmetis;
+package metisfl;
 
 import "metisfl/proto/model.proto";
 
@@ -60,8 +60,7 @@ message DatasetSpec {
   }
 
   message RegressionDatasetSpec {
-    // TODO(canast02): Need to add histogram support; the following statistics
-    //                 should refer to a histogram bucket.
+    // TODO(stripeli): Need to add histogram support; the following statistic should refer to a histogram bucket.
     double min = 1;
     double max = 2;
     double mean = 3;
@@ -110,9 +109,8 @@ message CompletedLearningTask {
   // controller whenever a locally assigned training task is complete.
   TaskExecutionMetadata execution_metadata = 2;
 
-  // TODO These are additional metadata sent by the learner to the controller.
-  //  No structured response yet, but in a future release this should follow
-  //  a specific format.
+  // These are additional metadata sent by the learner to the controller.
+  // TODO(stripeli): No structured response yet, but in a future release this should follow a specific format.
   string aux_metadata = 3;
 }
 
@@ -162,8 +160,7 @@ message EvaluationMetrics {
 }
 
 message ModelEvaluation {
-  // TODO: Not sure if we need a simple json response or scores! For instance,
-  //       we might need additional metrics such as confusion matrices...
+  // TODO(stripeli): Not sure if we need a simple json response or scores! For instance, we might need additional metrics such as confusion matrices...
 
   // FOR NOW, we need to return the key-value formatted value! That is for every
   // string metric passed through the EvaluationMetrics object we reply with a
@@ -207,15 +204,14 @@ message ControllerParams {
 
   message ModelHyperparams {
 
-    // TODO Shall we replace (batch_size, optimizer) with Hyperparameters message?
+    // TODO(stripeli): Shall we replace (batch_size, optimizer) with Hyperparameters message?
     uint32 batch_size = 1;
 
     uint32 epochs = 2;
 
     OptimizerConfig optimizer = 3;
 
-    // TODO Need to figure out, if this quantity will be used as part of the aggregation scheme or
-    //  as part of the actual validation evaluation.
+    // TODO(stripeli): Need to figure out, if this quantity will be used as part of the aggregation scheme or as part of the actual validation evaluation.
     float percent_validation = 4;
   }
 
@@ -285,7 +281,7 @@ message FedRec {}
 message HEScheme {
   bool enabled = 1;
   string name = 2;
-  string cryptocontext = 3;
+  string cryptocontext_dir = 3;
   string public_key = 4;
   string private_key = 5;
 

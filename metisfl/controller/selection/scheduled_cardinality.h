@@ -1,10 +1,10 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SELECTION_SCHEDULEDCARDINALITY_H
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SELECTION_SCHEDULEDCARDINALITY_H
+#ifndef METISFL_METISFL_CONTROLLER_SELECTION_SCHEDULED_CARDINALITY_H
+#define METISFL_METISFL_CONTROLLER_SELECTION_SCHEDULED_CARDINALITY_H
 
 #include "metisfl/controller/selection/selector.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 // A subset cardinality selector that picks the models that need to be
 // considered during aggregation based on the cardinality of the learners
@@ -34,7 +34,7 @@ class ScheduledCardinality : public Selector {
   };
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_SELECTION_SCHEDULEDCARDINALITY_H
+#endif //METISFL_METISFL_CONTROLLER_SELECTION_SCHEDULED_CARDINALITY_H

@@ -34,7 +34,6 @@ pybind_extension(
     linkstatic=True
 )
 
-
 py_library(
     name = "encryption_lib",
     data = [":fhe.so"],

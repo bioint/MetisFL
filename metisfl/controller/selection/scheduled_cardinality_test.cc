@@ -7,7 +7,7 @@
 #include "absl/strings/str_cat.h"
 #include "metisfl/controller/selection/scheduled_cardinality.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using ::testing::UnorderedElementsAre;
@@ -71,4 +71,4 @@ TEST(ScheduledCardinality, AllLearners) {
 }
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

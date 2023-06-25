@@ -19,7 +19,7 @@
 #include "metisfl/proto/learner.grpc.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using google::protobuf::util::TimeUtil;
@@ -66,7 +66,7 @@ class ControllerDefaultImpl : public Controller {
 
   std::vector<LearnerDescriptor> GetLearners() const override {
 
-    // TODO Shall we 'hide' authentication token from exposure?
+    // TODO(stripeli): Shall we 'hide' authentication token from exposure?
     std::vector<LearnerDescriptor> learners;
     for (const auto &[key, learner_state]: learners_) {
       learners.push_back(learner_state.learner());
@@ -81,7 +81,7 @@ class ControllerDefaultImpl : public Controller {
     return community_model_;
   }
 
-  // TODO: add admin auth token support
+  // TODO(stripeli): add admin auth token support for replacing model.
   absl::Status
   ReplaceCommunityModel(const FederatedModel &model) override {
 
@@ -115,7 +115,7 @@ class ControllerDefaultImpl : public Controller {
       return absl::InvalidArgumentError("Learner training examples <= 0.");
     }
 
-    // TODO(dstripelis) Condition to ping the hostname + port.
+    // TODO(stripeli): Condition to ping the connected learner (hostname:port).
 
     // Generates learner id.
     const std::string learner_id = GenerateLearnerId(server_entity);
@@ -126,7 +126,7 @@ class ControllerDefaultImpl : public Controller {
     }
 
     // Generates an auth token for the learner.
-    // TODO(canastas) We need a better authorization token generator.
+    // TODO(stripeli) We need a better authorization token generator.
     const std::string auth_token = std::to_string(learners_.size() + 1);
 
     // Initializes learner state with an empty model.
@@ -432,7 +432,7 @@ class ControllerDefaultImpl : public Controller {
     // data structures. The guard releases the mutex as soon as it goes out of
     // scope so no need to manually release it in the code.
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-    // TODO Maybe for global_iteration_ as well?
+    // TODO(stripeli): Maybe for global_iteration_ as well?
 
     auto to_schedule =
         scheduler_->ScheduleNext(learner_id, task, GetLearners());
@@ -591,7 +591,7 @@ class ControllerDefaultImpl : public Controller {
                                const uint32_t &comm_eval_ref_idx,
                                const uint32_t &metadata_ref_idx) {
 
-    // TODO (dstripelis,canastas) This needs to be reimplemented by using
+    // FIXME(stripeli,canastas): This needs to be reimplemented by using
     //  a single channel or stub. We tried to implement this that way, but when
     //  we run either of the two approaches either through the (reused) channel
     //  or stub, the requests were delayed substantially and not received
@@ -729,7 +729,7 @@ class ControllerDefaultImpl : public Controller {
         task_template.num_local_updates()); // get from task template.
     next_task->set_training_dataset_percentage_for_stratified_validation(
         model_params.percent_validation());
-    // TODO (dstripelis) Add evaluation metrics for the learning task.
+    // TODO(stripeli): Add evaluation metrics for the learning task.
 
     auto *hyperparams = request.mutable_hyperparameters();
     hyperparams->set_batch_size(model_params.batch_size());
@@ -988,7 +988,7 @@ class ControllerDefaultImpl : public Controller {
             = tensor_quantifier;
 
       } else if (variable.has_ciphertext_tensor()) {
-        auto tensor_quantifier = projectmetis::TensorQuantifier();
+        auto tensor_quantifier = metisfl::TensorQuantifier();
         // Since the controller performs the aggregation in an encrypted space,
         // it does not have access to the plaintext model and therefore we cannot
         // find the number of zero and non-zero elements.
@@ -1105,4 +1105,4 @@ std::unique_ptr<Controller> Controller::New(const ControllerParams &params) {
       CreateModelStore(params.model_store_config()));
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

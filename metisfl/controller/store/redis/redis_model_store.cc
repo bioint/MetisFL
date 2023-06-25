@@ -1,7 +1,7 @@
 
 #include "metisfl/controller/store/redis/redis_model_store.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 RedisModelStore::RedisModelStore(const RedisDBStore &config) : ModelStore(config.model_store_specs()) {
   MakeConnection(config.server_entity().hostname(), config.server_entity().port());
@@ -93,7 +93,7 @@ void RedisModelStore::InsertModel(std::vector<std::pair<std::string, Model>> lea
     for (int index = 0; index < (int) to_serialize_mdl.variables_size(); index++) {
 
       std::string tensor_serialized;
-      const ::projectmetis::Model_Variable &to_serialize_mv = to_serialize_mdl.variables(index);
+      const ::metisfl::Model_Variable &to_serialize_mv = to_serialize_mdl.variables(index);
       to_serialize_mv.SerializeToString(&tensor_serialized);
 
       auto *redis_reply = (redisReply *) redisCommand(m_redis_context, "RPUSH %b %b",
@@ -101,7 +101,7 @@ void RedisModelStore::InsertModel(std::vector<std::pair<std::string, Model>> lea
                                                       (size_t) model_key.length(),
                                                       tensor_serialized.c_str(),
                                                       (size_t) tensor_serialized.length());
-      // TODO(asghar) Need to check for error if any and handle it.
+      // TODO(stripeli) Need to check for error (if any) and handle it.
       freeReplyObject(redis_reply);
     }
 
@@ -131,8 +131,8 @@ RedisModelStore::SelectModels(std::vector<std::pair<std::string, int>> learner_p
 
   // The current select implementation performs a multi-transaction at the model level.
   // That is it tries to fetch multiple models per learner through a single transaction.
-  // TODO We could extend this to support multi-transaction per learner ids and models.
-  //  This would be the Batch-Selection query.
+  // TODO(stripeli) We could extend this to support multi-transaction per learner ids
+  //  and models. This would be the Batch-Selection query.
   for (auto &learner_pair: learner_pairs) {
 
     std::string learner_id = learner_pair.first;
@@ -233,8 +233,9 @@ RedisModelStore::SelectModels(std::vector<std::pair<std::string, int>> learner_p
 
 std::string RedisModelStore::GenerateModelKey(const std::string &learner_id) {
 
+  // Model Key = <learner_id> + <Local Model ID>
   std::string model_key =
-      learner_id + "_" + std::to_string(map_model_key_counter[learner_id]++); // TODO: Some confusion with counter.
+      learner_id + "_" + std::to_string(map_model_key_counter[learner_id]++);
 
   return model_key;
 }

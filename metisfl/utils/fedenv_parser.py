@@ -1,7 +1,7 @@
 import yaml
 
 
-class Docker(object):
+class DockerImage(object):
 
     def __init__(self, docker_image):
         self.docker_image = docker_image
@@ -286,8 +286,7 @@ class FederationEnvironment(object):
         self.loaded_stream = yaml.load(fstream, Loader=yaml.SafeLoader)
 
         federation_environment = self.loaded_stream.get("FederationEnvironment")
-        # TODO(dstripelis) Needs correction to DockerImage
-        self.docker = Docker(federation_environment.get("Docker"))
+        self.docker = DockerImage(federation_environment.get("DockerImage"))
         self.termination_signals = TerminationSignals(federation_environment.get("TerminationSignals"))
         self.evaluation_metric = federation_environment.get("EvaluationMetric")
         self.communication_protocol = CommunicationProtocol(federation_environment.get("CommunicationProtocol"))
@@ -305,7 +304,7 @@ class FederationEnvironment(object):
             # To use homomorphic encryption (fully, partial, somewhat) the user needs to define
             # specific aggregation functions. In particular:
             #   - Case 1: Fully Homomorphic Encryption with Private Weighted Aggregation - (FHE, PWA)
-            # TODO Expand when we get support additional encryption schemes and aggregation functions.
+            # TODO(stripeli): Expand when we get support additional encryption schemes and aggregation functions.
             assert self.global_model_config.aggregation_rule.aggregation_rule_name == "PWA", \
                 "Since you have enabled Homomorphic Encryption, you need to use the PWA aggregation function."
 

@@ -6,7 +6,7 @@
 #include "metisfl/controller/core/controller.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 class ControllerTest : public ::testing::Test {
@@ -175,4 +175,4 @@ TEST_F(ControllerTest, GetLearnersNotEmpty) /* NOLINT */ {
 //}
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

@@ -1,5 +1,5 @@
 syntax = "proto3";
-package projectmetis;
+package metisfl;
 
 ///////////////////////////
 // Tensor Representation //

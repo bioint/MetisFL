@@ -54,6 +54,7 @@ def copy_helper(src_file, dst):
         os.remove(dst)
     shutil.copy(src_file, dst)
 
+
 if __name__ == "__main__":
     py_version = ".".join(map(str, sys.version_info[:2]))
     if py_version not in PY_VERSIONS:

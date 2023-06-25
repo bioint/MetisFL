@@ -8,7 +8,7 @@
 #include "metisfl/controller/store/store.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction>
 CreateAggregator(const AggregationRule &aggregation_rule) {
@@ -79,8 +79,8 @@ long GetTotalMemory() {
   // The memory size is ever-increasing. In other words,
   // if we free any resources then the memory does not reduce
   // but rather remains constant.
-  // TODO (aasghar) We might need a more fine-grained memory
-  //  capture tool that also accounts for memory release.
+  // TODO(stripeli): We need a more fine-grained (dynamic) memory capture
+  // tool that also accounts for memory release not just cumulative.
   struct rusage usage{};
   int ret = getrusage(RUSAGE_SELF, &usage);
   if (ret == 0) {
@@ -93,4 +93,4 @@ long GetTotalMemory() {
   }
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

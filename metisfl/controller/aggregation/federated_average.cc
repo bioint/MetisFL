@@ -5,7 +5,7 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using ::proto::DeserializeTensor;
@@ -94,7 +94,7 @@ FederatedAverage::Aggregate(
     }
   }
 
-  // TODO(dstripelis) We need to add support to aggregate only the trainable
+  // TODO(stripeli): We need to add support to aggregate only the trainable
   //  weights. For now, we aggregate all matrices, but if we aggregate only the
   //  trainable, then what should be the value of the non-trainable weights?
   auto total_variables = global_model.model().variables_size();
@@ -154,4 +154,4 @@ void FederatedAverage::Reset() {
   // pass
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

@@ -3,9 +3,9 @@
 #include "metisfl/proto/metis.pb.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
-ModelStore::ModelStore(const projectmetis::ModelStoreSpecs &specs) {
+ModelStore::ModelStore(const metisfl::ModelStoreSpecs &specs) {
   // For every model cache we need to configure the total number of
   // models that we need to save in the model store for every learner
   // For this reason, we always need to inspect

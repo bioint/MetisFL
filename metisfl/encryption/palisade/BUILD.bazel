@@ -75,6 +75,9 @@ cc_library(
 
 cc_binary(
   name = "palisade_fhe_helper_demo",
+  data = [
+    "//metisfl/resources:fheparams",
+  ],
   srcs = ["fhe_helper_demo.cc"],
   deps = [
     ":palisade_fhe_helper",

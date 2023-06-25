@@ -37,8 +37,8 @@ FederationEnvironment:
       Hostname: "localhost"
       Port: 50051
     SSLConfigs:
-      PrivateKey: "/projectmetis-rc/resources/ssl_config/default/server-key.pem"
-      PublicCertificate: "/projectmetis-rc/resources/ssl_config/default/server-cert.pem"
+      PrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+      PublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
   Learners:
     - LearnerID: "localhost-1"
       ProjectHome: "/metisfl"
@@ -51,8 +51,8 @@ FederationEnvironment:
         Hostname: "localhost"
         Port: 50052
       SSLConfigs:
-        PrivateKey: "/projectmetis-rc/resources/ssl_config/default/server-key.pem"
-        PublicCertificate: "/projectmetis-rc/resources/ssl_config/default/server-cert.pem"
+        PrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+        PublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
       CudaDevices: [0]
       DatasetConfigs:
         TrainDatasetPath: ""

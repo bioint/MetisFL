@@ -1,8 +1,10 @@
 
-#include "fhe_helper.h"
+#include <filesystem>
 #include <fstream>
-#include <string>
 #include <iostream>
+#include <string>
+
+#include "fhe_helper.h"
 
 void generateRandomData(vector<double> &learner_Data, int rows, bool ceil_numbers = false) {
 
@@ -27,14 +29,17 @@ void generateRandomData(vector<double> &learner_Data, int rows, bool ceil_number
 
 int main() {
 
-  std::string cryptodir = "resources/fheparams/cryptoparams/";
+  std::filesystem::path cwd = std::filesystem::current_path();
   std::cout << ":: WORKING PATH ::" << std::endl;
-//  std::cout << std::filesystem::current_path() << std::endl;
+  std::cout << cwd << std::endl;
+  std::string cryptodir = "metisfl/resources/fheparams/cryptoparams/";
   std::string scheme = "ckks";
   uint batchsize = 4096;
   uint scalingfactorbits = 52;
 
-  FHE_Helper fhe_helper(scheme, batchsize, scalingfactorbits, cryptodir);
+  FHE_Helper fhe_helper;
+//  FHE_Helper fhe_helper(scheme, batchsize, scalingfactorbits);
+//  FHE_Helper fhe_helper(scheme, batchsize, scalingfactorbits, cryptodir);
   // Generates CryptoParams for the entire session and the driver shares the
   // files with all learners and controller. Whenever we change the `batchsize`
   // and the `scalingfactorbits` params we always need to invoke the

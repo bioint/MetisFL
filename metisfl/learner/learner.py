@@ -6,13 +6,8 @@ import os
 import multiprocessing as mp
 import metisfl.utils.proto_messages_factory as proto_factory
 
-<<<<<<< HEAD
-from pebble import ProcessPool, ProcessExpired
-
-=======
 from inspect import signature
 from pebble import ProcessPool
->>>>>>> bugfix/migration_path_deps_issues
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
 from metisfl.learner.learner_evaluator import LearnerEvaluator
@@ -103,8 +98,7 @@ class Learner(object):
             os.mkdir(self.__learner_credentials_fp)
         self.__learner_id = None
         self.__auth_token = None
-        # TODO if we want to be more secure, we can dump an
-        #  encrypted version of auth_token and learner_id
+        # TODO(stripeli): if we want to be more secure, we can dump an encrypted version of auth_token and learner_id
         self.__learner_id_fp = os.path.join(self.__learner_credentials_fp, "learner_id.txt")
         self.__auth_token_fp = os.path.join(self.__learner_credentials_fp, "auth_token.txt")
 
@@ -138,7 +132,7 @@ class Learner(object):
                 future_tasks_q.get().result()
 
     def _create_model_dataset_helper(self, dataset_recipe_pkl, dataset_fp=None, default_class=None):
-        # TODO Move into utils?
+        # TODO(stripeli): Move into utils?
         """
         Thus function loads the dataset recipe dynamically. To achieve this, we
         need to see if the given recipe takes any arguments. The only argument
@@ -249,8 +243,8 @@ class Learner(object):
             self.learner_server_entity.port)
 
     def join_federation(self):
-        # TODO If I create a learner controller instance once (without channel initialization)
-        #  then the program hangs!
+        # FIXME(stripeli): If we create a learner controller instance
+        #  once (without channel initialization) then the program hangs!
         train_dataset_meta, validation_dataset_meta, test_dataset_meta = self._load_datasets_metadata_subproc()
         is_classification = train_dataset_meta[2] == ModelDatasetClassification
         is_regression = train_dataset_meta[2] == ModelDatasetRegression
@@ -310,7 +304,7 @@ class Learner(object):
                     infer_train=False, infer_test=False, infer_valid=False, verbose=False):
         MetisLogger.info("Learner {} starts model inference on requested datasets."
                          .format(self.host_port_identifier()))
-        # TODO infer model should behave similarly as the evaluate_model(), by looping over a
+        # TODO(stripeli): infer model should behave similarly as the evaluate_model(), by looping over a
         #  similar learner_pb2.InferModelRequest.dataset_to_infer list.
         model_ops_fn = self._model_ops_factory(self._nn_engine)
 
@@ -361,7 +355,7 @@ class Learner(object):
         evaluation_datasets_pb = [d for d in evaluation_dataset_pb]
         future = self._evaluation_tasks_pool.schedule(
             function=self.model_evaluate,
-            args=(model_pb, batch_size, evaluation_datasets_pb, metrics_pb, verbose))
+            args=[model_pb, batch_size, evaluation_datasets_pb, metrics_pb, verbose])
         self._evaluation_tasks_futures_q.put(future)
         model_evaluations_pb = metis_pb2.ModelEvaluations()
         if block:
@@ -383,7 +377,7 @@ class Learner(object):
         # forward it accordingly to the controller.
         future = self._training_tasks_pool.schedule(
             function=self.model_train,
-            args=(learning_task_pb, hyperparameters_pb, model_pb, verbose))
+            args=[learning_task_pb, hyperparameters_pb, model_pb, verbose])
         # The following callback will trigger the request to the controller to receive the next task.
         future.add_done_callback(self._mark_learning_task_completed)
         self._training_tasks_futures_q.put(future)
@@ -411,5 +405,5 @@ class Learner(object):
         self._evaluation_tasks_pool.join()
         self._inference_tasks_pool.join()
         gc.collect()
-        # TODO - we always return True, but we need to capture any failures that may occur while terminating.
+        # TODO(stripeli): we always return True, but we need to capture any failures that may occur while terminating.
         return True

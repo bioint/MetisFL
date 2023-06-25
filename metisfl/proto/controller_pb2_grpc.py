@@ -16,62 +16,62 @@ class ControllerServiceStub(object):
             channel: A grpc.Channel.
         """
         self.GetCommunityModelEvaluationLineage = channel.unary_unary(
-                '/projectmetis.ControllerService/GetCommunityModelEvaluationLineage',
+                '/metisfl.ControllerService/GetCommunityModelEvaluationLineage',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageResponse.FromString,
                 )
         self.GetCommunityModelLineage = channel.unary_unary(
-                '/projectmetis.ControllerService/GetCommunityModelLineage',
+                '/metisfl.ControllerService/GetCommunityModelLineage',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageResponse.FromString,
                 )
         self.GetLearnerLocalModelLineage = channel.unary_unary(
-                '/projectmetis.ControllerService/GetLearnerLocalModelLineage',
+                '/metisfl.ControllerService/GetLearnerLocalModelLineage',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageResponse.FromString,
                 )
         self.GetLocalTaskLineage = channel.unary_unary(
-                '/projectmetis.ControllerService/GetLocalTaskLineage',
+                '/metisfl.ControllerService/GetLocalTaskLineage',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageResponse.FromString,
                 )
         self.GetRuntimeMetadataLineage = channel.unary_unary(
-                '/projectmetis.ControllerService/GetRuntimeMetadataLineage',
+                '/metisfl.ControllerService/GetRuntimeMetadataLineage',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageResponse.FromString,
                 )
         self.GetParticipatingLearners = channel.unary_unary(
-                '/projectmetis.ControllerService/GetParticipatingLearners',
+                '/metisfl.ControllerService/GetParticipatingLearners',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersResponse.FromString,
                 )
         self.GetServicesHealthStatus = channel.unary_unary(
-                '/projectmetis.ControllerService/GetServicesHealthStatus',
+                '/metisfl.ControllerService/GetServicesHealthStatus',
                 request_serializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
                 )
         self.JoinFederation = channel.unary_unary(
-                '/projectmetis.ControllerService/JoinFederation',
+                '/metisfl.ControllerService/JoinFederation',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.JoinFederationRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.JoinFederationResponse.FromString,
                 )
         self.LeaveFederation = channel.unary_unary(
-                '/projectmetis.ControllerService/LeaveFederation',
+                '/metisfl.ControllerService/LeaveFederation',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.FromString,
                 )
         self.MarkTaskCompleted = channel.unary_unary(
-                '/projectmetis.ControllerService/MarkTaskCompleted',
+                '/metisfl.ControllerService/MarkTaskCompleted',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedResponse.FromString,
                 )
         self.ReplaceCommunityModel = channel.unary_unary(
-                '/projectmetis.ControllerService/ReplaceCommunityModel',
+                '/metisfl.ControllerService/ReplaceCommunityModel',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelResponse.FromString,
                 )
         self.ShutDown = channel.unary_unary(
-                '/projectmetis.ControllerService/ShutDown',
+                '/metisfl.ControllerService/ShutDown',
                 request_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
                 )
@@ -217,7 +217,7 @@ def add_ControllerServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'projectmetis.ControllerService', rpc_method_handlers)
+            'metisfl.ControllerService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -236,7 +236,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/GetCommunityModelEvaluationLineage',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetCommunityModelEvaluationLineage',
             metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageResponse.FromString,
             options, channel_credentials,
@@ -253,7 +253,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/GetCommunityModelLineage',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetCommunityModelLineage',
             metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageResponse.FromString,
             options, channel_credentials,
@@ -270,7 +270,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/GetLearnerLocalModelLineage',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetLearnerLocalModelLineage',
             metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageResponse.FromString,
             options, channel_credentials,
@@ -287,7 +287,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/GetLocalTaskLineage',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetLocalTaskLineage',
             metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageResponse.FromString,
             options, channel_credentials,
@@ -304,7 +304,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/GetRuntimeMetadataLineage',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetRuntimeMetadataLineage',
             metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageResponse.FromString,
             options, channel_credentials,
@@ -321,7 +321,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/GetParticipatingLearners',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetParticipatingLearners',
             metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersResponse.FromString,
             options, channel_credentials,
@@ -338,7 +338,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/GetServicesHealthStatus',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetServicesHealthStatus',
             metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
             metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
             options, channel_credentials,
@@ -355,7 +355,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/JoinFederation',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/JoinFederation',
             metisfl_dot_proto_dot_controller__pb2.JoinFederationRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.JoinFederationResponse.FromString,
             options, channel_credentials,
@@ -372,7 +372,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/LeaveFederation',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/LeaveFederation',
             metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.FromString,
             options, channel_credentials,
@@ -389,7 +389,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/MarkTaskCompleted',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/MarkTaskCompleted',
             metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedResponse.FromString,
             options, channel_credentials,
@@ -406,7 +406,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/ReplaceCommunityModel',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/ReplaceCommunityModel',
             metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelRequest.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelResponse.FromString,
             options, channel_credentials,
@@ -423,7 +423,7 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.ControllerService/ShutDown',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/ShutDown',
             metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
             metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
             options, channel_credentials,
