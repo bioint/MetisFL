@@ -3,7 +3,7 @@
 &nbsp;
 <div align="center">
  <img 
-    src="docs/img/logos/logo_png_01.png" width="500px">
+    src="docs/img/logos/logo_icon_03.png" width="200px">
 </div>
 &nbsp;
 
