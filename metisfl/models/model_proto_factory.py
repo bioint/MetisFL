@@ -96,6 +96,7 @@ class ModelProtoFactory:
             return task_execution_pb
 
         def construct_completed_learning_task_pb(self, aux_metadata="", he_scheme=None):
+            # FIXME (@panoskyriakis): 
             model_pb = ModelProtoMessages.construct_model_pb_from_np(
                 self._weights_values, self._weights_names, self._weights_trainable, he_scheme)
             task_execution_meta_pb = self.construct_task_execution_metadata_pb()

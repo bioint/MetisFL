@@ -97,7 +97,7 @@ class LearnerExecutor(object):
         evaluation_datasets_pb = [d for d in evaluation_dataset_pb]
         evaluation_tasks_pool, evaluation_tasks_futures_q = self.pool[EVALUATION_TASK]
         future = evaluation_tasks_pool.schedule(
-            function=self.learner_evaluator.evaluate_model,
+            function=self.task_executor.evaluate_model,
             args=(model_pb, batch_size, evaluation_datasets_pb, metrics_pb, verbose))
         evaluation_tasks_futures_q.put(future)
         # @stripeli is this going to instantiate a model eval pb? 
@@ -128,7 +128,7 @@ class LearnerExecutor(object):
         # forward it accordingly to the controller.
         learning_tasks_pool, learning_tasks_futures_q = self.pool[LEARNING_TASK]
         future = learning_tasks_pool.schedule(
-            function=self.learner_evaluator.train_model,
+            function=self.task_executor.train_model,
             args=(model_pb, learning_task_pb, hyperparameters_pb, verbose))
         
         # The following callback will trigger the request to the controller to receive the next task.

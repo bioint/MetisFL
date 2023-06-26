@@ -5,23 +5,27 @@ import multiprocessing as mp
 from pebble import ProcessPool
 from typing import Union
 
-import metisfl.utils.proto_messages_factory as proto_messages_factory
 import metisfl.utils.fedenv_parser as fedenv_parser
 from metisfl.driver.utils import create_server_entity
 from metisfl.grpc.grpc_controller_client import GRPCControllerClient
 from metisfl.grpc.grpc_learner_client import GRPCLearnerClient
+from metisfl.models.model_wrapper import MetisModel
 from metisfl.utils.metis_logger import MetisASCIIArt
 
 
 class DriverSessionBase(object):
 
     def __init__(self, 
+                 model: MetisModel,
+                 homomorphic_encryption: fedenv_parser.HomomorphicEncryption,
                  fed_env: Union[fedenv_parser.FederationEnvironment, object]):    
         # Print welcome message.
         MetisASCIIArt.print()
         self.federation_environment = fed_env if isinstance(fed_env, fedenv_parser.FederationEnvironment) \
                                 else fedenv_parser.FederationEnvironment(fed_env)
+        self.homomorphic_encryption = homomorphic_encryption
         self.num_learners = len(self.federation_environment.learners.learners)     
+        self.model = model
         
         self._init_pool()
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
@@ -57,15 +61,8 @@ class DriverSessionBase(object):
         return grpc_clients
 
     def _ship_model_to_controller(self):
-        # @stripeli why unpacking the model weights here?
-        # This makes the introduction of the model_weights_descriptor redundant.
-        # Pass the model_weights_descriptor to the construct_model_pb_from_np method.
-        # Readability!
-        model_pb = proto_messages_factory.ModelProtoMessages.construct_model_pb_from_np(
-            weights_values=self._model_weights_descriptor.weights_values,
-            weights_names=self._model_weights_descriptor.weights_names,
-            weights_trainable=self._model_weights_descriptor.weights_trainable,
-            he_scheme=self._he_scheme)
+        weights_descriptor = self.model.get_weights_descriptor()
+        model_pb = self.homomorphic_encryption.construct_model_pb_from_np(weights_descriptor)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self.num_learners,
             model_pb=model_pb)

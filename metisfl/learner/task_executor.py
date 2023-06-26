@@ -13,8 +13,8 @@ class TaskExecutor(object):
     def __init__(self, 
                  he_scheme_pb: metis_pb2.HEScheme,
                  learner_dataset: LearnerDataset,
-                 model_ops_fn: Callable[[str], model_ops.ModelOps],
-                 model_dir: str):
+                 model_dir: str,
+                 model_ops_fn: Callable[[str], model_ops.ModelOps]):
         """A class that executes training/evaluation/inference tasks. It is importart to call the 
         init_model_backend() method before calling any other method. And it has to be called within 
         the same process that created the object so that the model backend is imported correctly.      
@@ -105,10 +105,14 @@ class TaskExecutor(object):
         self._set_weights_from_model_pb(model_pb)
         train_dataset, validation_dataset, test_dataset = \
             self.learner_dataset.load_model_datasets()            
-        model_weights_descriptor, comleted_task_stats = self.model_ops\
-            .train_model(train_dataset, learning_task_pb, hyperparameters_pb,
-                         validation_dataset, test_dataset, verbose)
-        return model_weights_descriptor, comleted_task_stats
+        completed_task_pb = self.model_ops\
+            .train_model(train_dataset, 
+                         learning_task_pb, 
+                         hyperparameters_pb,
+                         validation_dataset, 
+                         test_dataset, 
+                         verbose)
+        return completed_task_pb 
 
     def __enter__(self):
         return self

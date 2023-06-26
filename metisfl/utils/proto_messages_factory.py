@@ -541,30 +541,6 @@ class ModelProtoMessages(object):
         return model_pb2.Model(variables=variables_pb)
 
     @classmethod
-    def construct_model_pb_from_np(
-            cls, weights_values, weights_names=None, weights_trainable=None, he_scheme=None):
-        if not weights_names:
-            # Populating weights names with surrogate keys.
-            weights_names = ["arr_{}".format(widx) for widx in range(len(weights_values))]
-        if weights_trainable:
-            # Since weights have not specified as trainable or not, we default all weights to trainable.
-            weights_trainable = [True for _ in range(len(weights_values))]
-
-        variables_pb = []
-        for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
-            ciphertext = None
-            if he_scheme is not None:
-                ciphertext = he_scheme.encrypt(w_v.flatten(), 1)
-            # If we have a ciphertext we prioritize it over the plaintext.
-            tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
-                                                               ciphertext=ciphertext)
-            model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
-                                                                       trainable=w_t,
-                                                                       tensor_pb=tensor_pb)
-            variables_pb.append(model_var)
-        return model_pb2.Model(variables=variables_pb)
-
-    @classmethod
     def construct_federated_model_pb(cls, num_contributors, model_pb):
         assert isinstance(model_pb, model_pb2.Model)
         return model_pb2.FederatedModel(num_contributors=num_contributors, model=model_pb)

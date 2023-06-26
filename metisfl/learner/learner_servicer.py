@@ -39,7 +39,6 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.__grpc_server.server.start()
         MetisLogger.info("Initialized Learner Servicer {}".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
-        # Learner asks controller to join the federation.
         self.federation_helper.join_federation()
 
     def wait_servicer(self):
@@ -48,7 +47,6 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
     def EvaluateModel(self, request, context):
         if self.__not_serving_event.is_set():
-            # Returns not available status if the servicer cannot receive new requests.
             context.set_code(grpc.StatusCode.UNAVAILABLE)
             return proto_factory.LearnerServiceProtoMessages \
                 .construct_evaluate_model_response_pb()

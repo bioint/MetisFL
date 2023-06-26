@@ -1,10 +1,11 @@
 import yaml
 from typing import List
 
-import metisfl.utils.proto_messages_factory as proto_messages_factory
 from metisfl.encryption import fhe
+from metisfl.models.model_wrapper import ModelWeightsDescriptor
 from metisfl.proto import model_pb2
 from metisfl.utils.proto_messages_factory import ModelProtoMessages
+import metisfl.utils.proto_messages_factory as proto_messages_factory
 
 # FIXME: this can go in the yaml file.
 CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
@@ -87,6 +88,31 @@ class HomomorphicEncryption(object):
 
         # @stripeli what is var_nps? is this the same ase ModelWeightsDescriptor?
         return var_names, var_trainables, var_nps
+
+    def construct_model_pb_from_np(self, weight_descriptor: ModelWeightsDescriptor) -> model_pb2.Model:
+        weights_names = weight_descriptor.weights_names
+        weights_trainable = weight_descriptor.weights_trainable
+        weights_values = weight_descriptor.weights_values
+        if not weights_names:
+            # Populating weights names with surrogate keys.
+            weights_names = ["arr_{}".format(widx) for widx in range(len(weights_values))]
+        if weights_trainable:
+            # Since weights have not specified as trainable or not, we default all weights to trainable.
+            weights_trainable = [True for _ in range(len(weights_values))]
+
+        variables_pb = []
+        for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
+            ciphertext = None
+            if self._he_scheme is not None:
+                ciphertext = self._he_scheme.encrypt(w_v.flatten(), 1)
+            # If we have a ciphertext we prioritize it over the plaintext.
+            tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
+                                                               ciphertext=ciphertext)
+            model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
+                                                                       trainable=w_t,
+                                                                       tensor_pb=tensor_pb)
+            variables_pb.append(model_var)
+        return model_pb2.Model(variables=variables_pb)
     
     def to_proto(self):
         return self._he_scheme_pb
