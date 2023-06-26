@@ -1,13 +1,8 @@
 import os
 
 from metisfl.learner.dataset_handler import LearnerDataset
-from metisfl.models.model_dataset import (
-    ModelDatasetClassification,
-    ModelDatasetRegression,
-)
-from metisfl.utils.grpc_controller_client import GRPCControllerClient
+from metisfl.grpc.grpc_controller_client import GRPCControllerClient
 from metisfl.proto import metis_pb2
-
 
 LEARNER_ID_FILE = "learner_id.txt"
 AUTH_TOKEN_FILE = "auth_token.txt"
@@ -40,31 +35,14 @@ class FederationHelper:
     def join_federation(self):
         # TODO If I create a learner controller instance once (without channel initialization)
         #  then the program hangs!
-        dataset_metadata = self._get_dataset_metadata()    
+        dataset_metadata = self.learner_dataset.get_dataset_metadata()
         self.__learner_id, self.__auth_token, status = self._learner_controller_client.join_federation(
             self.learner_server_entity,
             self.__learner_id_fp,
             self.__auth_token_fp,
             dataset_metadata
         )
-        return status
-    
-    def _get_dataset_metadata(self):
-        train_dataset_meta, validation_dataset_meta, test_dataset_meta \
-            = self.learner_dataset.load_datasets_metadata_subproc()
-        is_classification = train_dataset_meta[2] == ModelDatasetClassification
-        is_regression = train_dataset_meta[2] == ModelDatasetRegression
-        return {
-            "train_dataset_size": train_dataset_meta[0],
-            "train_dataset_specs": train_dataset_meta[1], 
-            "validation_dataset_size": validation_dataset_meta[0],
-            "validation_dataset_specs": validation_dataset_meta[1],
-            "test_dataset_size": test_dataset_meta[0],
-            "test_dataset_specs": test_dataset_meta[1],
-            "is_classification": is_classification,
-            "is_regression": is_regression,
-        }
-        
+        return status        
 
     def mark_learning_task_completed(self, training_future):
         # If the returned future was completed successfully and was not cancelled,

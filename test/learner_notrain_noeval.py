@@ -9,7 +9,7 @@ from pebble import ProcessPool
 
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
-from metisfl.utils.grpc_controller_client import GRPCControllerClient
+from metisfl.grpc.grpc_controller_client import GRPCControllerClient
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 
 

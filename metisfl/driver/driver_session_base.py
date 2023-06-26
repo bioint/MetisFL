@@ -8,8 +8,8 @@ from typing import Union
 import metisfl.utils.proto_messages_factory as proto_messages_factory
 import metisfl.utils.fedenv_parser as fedenv_parser
 from metisfl.driver.utils import create_server_entity
-from metisfl.utils.grpc_controller_client import GRPCControllerClient
-from metisfl.utils.grpc_learner_client import GRPCLearnerClient
+from metisfl.grpc.grpc_controller_client import GRPCControllerClient
+from metisfl.grpc.grpc_learner_client import GRPCLearnerClient
 from metisfl.utils.metis_logger import MetisASCIIArt
 
 

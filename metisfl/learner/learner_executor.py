@@ -5,7 +5,7 @@ import multiprocessing as mp
 from pebble import ProcessPool
 
 from metisfl.learner.federation_helper import FederationHelper
-from metisfl.learner.learner_evaluator import LearnerEvaluator
+from metisfl.learner.task_executor import TaskExecutor
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 from metisfl.utils.metis_logger import MetisLogger
 
@@ -14,7 +14,7 @@ EVALUATION_TASK = "evaluation"
 INFERENCE_TASK = "inference"
 TASKS = [LEARNING_TASK, EVALUATION_TASK, INFERENCE_TASK]
     
-class Learner(object):
+class LearnerExecutor(object):
     """
     Any invocation to the public functions of the Learner instance need to be wrapped inside a process,
     since the body of every function is generating a new Neural Network registry/context.
@@ -46,10 +46,10 @@ class Learner(object):
     """
 
     def __init__(self,
-                 learner_evaluator: LearnerEvaluator,
+                 task_executor: TaskExecutor,
                  federation_helper: FederationHelper,
                  recreate_queue_task_worker=False):
-        self.learner_evaluator = learner_evaluator
+        self.task_executor = task_executor
         self.federation_helper = federation_helper
         self._init_tasks_pools(recreate_queue_task_worker) 
         
@@ -58,9 +58,9 @@ class Learner(object):
         worker_max_tasks = 1 if recreate_queue_task_worker else 0
         self.pool = ()
         for task in TASKS:
-            self.pool[task] = self._init_single_task_pool(worker_max_tasks, mp_ctx)
+            self.pool[task] = self._init_task_pool(worker_max_tasks, mp_ctx)
                             
-    def _init_single_task_pool(self, worker_max_tasks, mp_ctx):
+    def _init_task_pool(self, worker_max_tasks, mp_ctx):
         return ProcessPool(max_workers=1, max_tasks=worker_max_tasks, context=mp_ctx), \
                 queue.Queue(maxsize=1)
         

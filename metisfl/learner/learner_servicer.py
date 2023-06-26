@@ -1,20 +1,24 @@
 import grpc
 import threading
+from google.protobuf.timestamp_pb2 import Timestamp
 
 import metisfl.utils.proto_messages_factory as proto_factory
 
-from google.protobuf.timestamp_pb2 import Timestamp
+from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
 from metisfl.learner.federation_helper import FederationHelper
-from metisfl.learner.learner import Learner
+from metisfl.learner.learner_executor import LearnerExecutor
 from metisfl.proto import learner_pb2_grpc
-from metisfl.utils.grpc_services import GRPCServerMaxMsgLength
 from metisfl.utils.metis_logger import MetisLogger
 
-
+# CANCEL_RUNNING_TASKS = {
+#     "train": True,
+#     "evaluate": False,
+#     "predict": True,
+# }
 class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
     def __init__(self, 
-                 learner: Learner, 
+                 learner: LearnerExecutor, 
                  federation_helper: FederationHelper,
                  servicer_workers=10):
         self.learner = learner

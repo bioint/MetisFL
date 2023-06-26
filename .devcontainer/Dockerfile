@@ -5,9 +5,6 @@ ARG PYV="3.10"
 # Assign simple root password.
 RUN echo "root:root" | chpasswd
 
-# Assign simple root password.
-RUN echo "root:root" | chpasswd
-
 # Set environmental variables.
 ENV PROJECT_HOME=/metisfl
 ENV DEBIAN_FRONTEND=noninteractive

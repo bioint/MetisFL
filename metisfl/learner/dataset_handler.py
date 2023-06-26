@@ -3,7 +3,7 @@ import cloudpickle
 from inspect import signature
 from pebble import ProcessPool
 
-from metisfl.models.model_dataset import ModelDataset
+from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
 
 
 class LearnerDataset:
@@ -41,13 +41,30 @@ class LearnerDataset:
         return [(d.get_size(), d.get_model_dataset_specifications(), type(d)) for d in self.load_model_datasets()]
 
     # @stripeli why do we need to load the dataset in a subprocess?
-    def load_datasets_metadata_subproc(self):
+    def _load_datasets_metadata_subproc(self):
         generic_tasks_pool = ProcessPool(max_workers=1, max_tasks=1)
         datasets_specs_future = generic_tasks_pool.schedule(function=self.load_model_datasets_size_specs_type_def)
         res = datasets_specs_future.result()
         generic_tasks_pool.close()
         generic_tasks_pool.join()
         return res
+    
+    def get_dataset_metadata(self):
+        train_dataset_meta, validation_dataset_meta, test_dataset_meta \
+            = self._load_datasets_metadata_subproc()
+        is_classification = train_dataset_meta[2] == ModelDatasetClassification
+        is_regression = train_dataset_meta[2] == ModelDatasetRegression
+        return {
+            "train_dataset_size": train_dataset_meta[0],
+            "train_dataset_specs": train_dataset_meta[1], 
+            "validation_dataset_size": validation_dataset_meta[0],
+            "validation_dataset_specs": validation_dataset_meta[1],
+            "test_dataset_size": test_dataset_meta[0],
+            "test_dataset_specs": test_dataset_meta[1],
+            "is_classification": is_classification,
+            "is_regression": is_regression,
+        }
+
 
 def create_model_dataset_helper(dataset_recipe_pkl, dataset_fp=None, default_class=None):
     """

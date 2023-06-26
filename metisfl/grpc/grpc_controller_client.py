@@ -3,7 +3,7 @@ import grpc
 import metisfl.utils.proto_messages_factory as proto_factory
 
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.grpc_services import GRPCServerClient
+from metisfl.grpc.grpc_services import GRPCServerClient
 from metisfl.utils.ssl_configurator import SSLConfigurator
 from metisfl.proto import controller_pb2_grpc
 

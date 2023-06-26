@@ -1,15 +1,13 @@
 import argparse
-from metisfl.models.model_ops import ModelOps
 
 import metisfl.proto.metis_pb2 as metis_pb2
 from metisfl.learner.dataset_handler import LearnerDataset
 from metisfl.learner.federation_helper import FederationHelper
-from metisfl.learner.learner import Learner
-from metisfl.learner.learner_evaluator import LearnerEvaluator
+from metisfl.learner.learner_executor import LearnerExecutor
 from metisfl.learner.learner_servicer import LearnerServicer
-from metisfl.utils import fedenv_parser
+from metisfl.learner.task_executor import TaskExecutor
+from metisfl.models import get_model_ops_fn
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
-
 
 DEFAULT_LEARNER_HOST = "[::]"
 DEFAULT_LEARNER_PORT = 50052
@@ -38,16 +36,6 @@ def parse_he_scheme_hex(hex_str):
             enabled=False, empty_scheme_pb=empty_scheme_pb)
     return he_scheme_pb
 
-def get_model_backend(nn_engine, model_dir) -> ModelOps:
-    if nn_engine == "keras":
-        from metisfl.models.keras.keras_model_ops import KerasModelOps
-        return KerasModelOps(model_dir)
-    elif nn_engine == "pytorch":
-        from metisfl.models.pytorch.pytorch_model_ops import PyTorchModelOps
-        return PyTorchModelOps(model_dir)
-    else :
-        raise ValueError("Unknown neural engine: {}".format(nn_engine))
-
 def create_servers(args):
     learner_server_entity_pb = parse_server_hex(
         args.learner_server_entity_protobuff_serialized_hexadecimal,
@@ -61,8 +49,7 @@ def create_servers(args):
 def init_learner(args):
     learner_server_entity_pb, controller_server_entity_pb = create_servers(args)
     he_scheme_pb = parse_he_scheme_hex(args.he_scheme_protobuff_serialized_hexadecimal)
-    homomorphic_encryption = fedenv_parser.HomomorphicEncryption.from_proto(he_scheme_pb) # @stripeli: check this please
-    model_backend = get_model_backend(args.neural_engine, args.model_dir)
+    model_ops_fn = get_model_ops_fn(args.neural_engine)
     learner_credentials_fp =  LEARNER_CREDENTIALS_FP.format(learner_server_entity_pb.port)
     
     learner_dataset = LearnerDataset(
@@ -74,10 +61,11 @@ def init_learner(args):
         test_dataset_recipe_pkl=args.test_dataset_recipe,
     )
     
-    learner_evaluator = LearnerEvaluator(
+    task_executor = TaskExecutor(
         learner_dataset=learner_dataset,
-        model_backend=model_backend,
-        homomorphic_encryption=homomorphic_encryption,
+        model_ops_fn=model_ops_fn,
+        he_scheme_pb=he_scheme_pb,
+        model_dir=args.model_dir,
     )
     
     ## FIXME: dataset should not be passed here
@@ -88,9 +76,9 @@ def init_learner(args):
         learner_dataset=learner_dataset,
     )
            
-    learner = Learner(
+    learner = LearnerExecutor(
         federation_helper=federation_helper,
-        learner_evaluator=learner_evaluator
+        task_executor=task_executor
     )
     
     learner_servicer = LearnerServicer(

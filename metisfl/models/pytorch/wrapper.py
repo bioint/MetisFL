@@ -15,11 +15,9 @@ from metisfl.utils.metis_logger import MetisLogger
 class MetisTorchModel(MetisModel):
     
     def __init__(self, model: torch.nn.Module):
-        assert isinstance(model, torch.nn.Module), "model must be a torch.nn.Module"
-        
-        # @stripeli not sure who strict we should be on this
-        assert hasattr(model, "fit"), "model must have a fit method"
-        assert hasattr(model, "evaluate"), "model must have an eval method"
+        assert isinstance(model, torch.nn.Module), "MetisTorchModel must be a torch.nn.Module"
+        assert hasattr(model, "fit"), "MetisTorchModel requires a .fit method"
+        assert hasattr(model, "evaluate"), "MetisTorchModel requires an .evaluate method"
         
         self.model = model
         self.nn_engine = "pytorch"

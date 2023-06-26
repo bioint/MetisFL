@@ -23,8 +23,8 @@ class TerminationSignals(object):
 class HomomorphicEncryption(object):
 
     def __init__(self, homomorphic_encryption_map):
-        self.scheme = homomorphic_encryption_map.get("Scheme")
-        if self.scheme.upper() == "CKKS":
+        self.scheme = homomorphic_encryption_map.get("Scheme", None)
+        if self.scheme and self.scheme.upper() == "CKKS":
             self.batch_size = homomorphic_encryption_map.get("BatchSize")
             self.scaling_bits = homomorphic_encryption_map.get("ScalingBits")
             self._he_scheme = fhe.CKKS(self.batch_size, self.scaling_bits, CRYPTO_RESOURCES_DIR)
@@ -40,7 +40,7 @@ class HomomorphicEncryption(object):
             
     @staticmethod
     def from_proto(he_scheme_pb):
-        assert isinstance(he_scheme_pb, model_pb2.HEScheme)
+        assert isinstance(he_scheme_pb, model_pb2.HEScheme), "Not a valid HE scheme protobuf."
         if he_scheme_pb.HasField("fhe_scheme"):
             he_map = {
                 "Scheme": "CKKS",
@@ -61,7 +61,7 @@ class HomomorphicEncryption(object):
             var_trainable = var.trainable
 
             if var.HasField("ciphertext_tensor"):
-                assert self._he_scheme  is not None, "Need encryption scheme to decrypt tensor."
+                assert self._he_scheme is not None, "Need encryption scheme to decrypt tensor."
                 # For a ciphertext tensor, first we need to decrypt it, and then load it
                 # into a numpy array with the data type specified in the tensor specifications.
                 tensor_spec = var.ciphertext_tensor.tensor_spec
@@ -388,7 +388,7 @@ class FederationEnvironment(object):
 
         federation_environment = self.loaded_stream.get("FederationEnvironment")
         # TODO(dstripelis) Needs correction to DockerImage
-        self.docker = Docker(federation_environment.get("Docker"))
+
         self.termination_signals = TerminationSignals(federation_environment.get("TerminationSignals"))
         self.evaluation_metric = federation_environment.get("EvaluationMetric")
         self.communication_protocol = CommunicationProtocol(federation_environment.get("CommunicationProtocol"))
@@ -414,5 +414,8 @@ class FederationEnvironment(object):
         # the structure of the yaml file. FIXME:
         self.global_model_config = GlobalModelConfig(
             federation_environment.get("GlobalModelConfig"), self.homomorphic_encryption)
+        
+    def get_controller(self):
+        return self.loaded_stream["Controller"]
 
 

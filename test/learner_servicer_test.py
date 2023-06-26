@@ -8,7 +8,7 @@ from examples.keras.models.cifar_cnn import CifarCNN
 from examples.keras.models.fashion_mnist_fc import FashionMnistModel
 from examples.keras.models.housing_mlp import HousingMLP
 from metisfl.proto import learner_pb2_grpc
-from metisfl.utils.grpc_services import GRPCChannelMaxMsgLength, GRPCServerMaxMsgLength
+from metisfl.grpc.grpc_services import GRPCChannelMaxMsgLength, GRPCServerMaxMsgLength
 from metisfl.utils.proto_messages_factory import \
     MetisProtoMessages, ModelProtoMessages, LearnerServiceProtoMessages, ServiceCommonProtoMessages
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
