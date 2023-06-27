@@ -2,6 +2,7 @@ import grpc
 import threading
 from google.protobuf.timestamp_pb2 import Timestamp
 
+import metisfl.learner.constants as constants
 import metisfl.utils.proto_messages_factory as proto_factory
 
 from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
@@ -10,11 +11,6 @@ from metisfl.learner.learner_executor import LearnerExecutor
 from metisfl.proto import learner_pb2_grpc
 from metisfl.utils.metis_logger import MetisLogger
 
-# CANCEL_RUNNING_TASKS = {
-#     "train": True,
-#     "evaluate": False,
-#     "predict": True,
-# }
 class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
     def __init__(self, 
@@ -46,24 +42,19 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.__grpc_server.server.stop(None)
 
     def EvaluateModel(self, request, context):
-        if self.__not_serving_event.is_set():
-            context.set_code(grpc.StatusCode.UNAVAILABLE)
+        if not self._is_serving(context):
             return proto_factory.LearnerServiceProtoMessages \
                 .construct_evaluate_model_response_pb()
 
         MetisLogger.info("Learner Servicer {} received model evaluation task.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
-        self.__model_evaluation_requests += 1
-        model_pb = request.model
-        batch_size = request.batch_size
-        metrics_pb = request.metrics
-        evaluation_dataset_pb = request.evaluation_dataset
-        # Blocking execution. Learner evaluates received model on its local datasets.
-        # We do not stop any running evaluation tasks. Evaluation is critical! We need
-        # all computed metrics to assess how well our models perform!
+        self.__model_evaluation_requests += 1 # @stripeli where is this used?
         model_evaluations_pb = self.learner.run_evaluation_task(
-            model_pb, batch_size, evaluation_dataset_pb, metrics_pb,
-            cancel_running_tasks=False,
+            model_pb = request.model,
+            batch_size = request.batch_size,
+            evaluation_dataset_pb = request.evaluation_dataset,
+            metrics_pb = request.metrics,
+            cancel_running=False,
             block=True,
             verbose=True)
         evaluate_model_response_pb = \
@@ -72,9 +63,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         return evaluate_model_response_pb
 
     def GetServicesHealthStatus(self, request, context):
-        if self.__not_serving_event.is_set():
-            # Returns not available status if the servicer cannot receive new requests.
-            context.set_code(grpc.StatusCode.UNAVAILABLE)
+        if not self._is_serving(context):
             return proto_factory.ServiceCommonProtoMessages \
                 .construct_get_services_health_status_request_pb()
 
@@ -86,25 +75,17 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
             .construct_get_services_health_status_response_pb(services_status=services_status)
 
     def RunTask(self, request, context):
-        if self.__not_serving_event.is_set():
-            # Returns not available status if the servicer cannot receive new requests.
-            context.set_code(grpc.StatusCode.UNAVAILABLE)
+        if self._is_serving(context) is False:
             return proto_factory.LearnerServiceProtoMessages \
                 .construct_run_task_response_pb()
 
         MetisLogger.info("Learner Servicer {} received local training task.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
         self.__community_models_received += 1
-        federated_model = request.federated_model
-        num_contributors = federated_model.num_contributors
-        model_pb = federated_model.model
-        learning_task_pb = request.task
-        hyperparameters_pb = request.hyperparameters
-        # Non-Blocking execution. Learner trains received task in the background and sends
-        # the newly computed local model to the controller upon task completion. Upon receival
-        # of a new training task the learner needs to cancel all running training tasks.
         is_task_submitted = self.learner.run_learning_task(
-            learning_task_pb, hyperparameters_pb, model_pb,
+            learning_task_pb=request.task,
+            model_pb=request.federated_model.model,
+            hyperparameters_pb=request.hyperparameters,
             cancel_running_tasks=True,
             block=False,
             verbose=True)
@@ -119,26 +100,15 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
     def ShutDown(self, request, context):
         MetisLogger.info("Learner Servicer {} received shutdown request.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
-        
-        # First, stop accepting new incoming requests.
         self.__not_serving_event.set()
-        
-        # Second, trigger a shutdown signal to learner's underlying execution engine
-        # to release all resources and reply any pending tasks to the controller.
-        # When shutdown is triggered we do not wait for any pending tasks.
-        # We perform a forceful shutdown of all training and inference running tasks.
-        # We only wait for the completion of the evaluation tasks.
-        self.learner.shutdown(cancel_train_running_tasks=True,
-                              cancel_eval_running_tasks=False,
-                              cancel_infer_running_tasks=True)
-        
-        # Third, remove the learner from the federation.
+        self.learner.shutdown(
+            CANCEL_RUNNING={
+                constants.LEARNING_TASK: True,
+                constants.EVALUATION_TASK: False,
+                constants.INFERENCE_TASK: False                
+            }
+        )
         self.federation_helper.leave_federation()
-        
-        # Fourth, issue servicer termination signal.
-        # Reason we do this as the final step is because we want to the learner
-        # to have completely shutdown its resources because if not it means it
-        # is still alive, and we cannot guarantee a proper shutdown.
         self.__shutdown_event.set()
         ack_pb = proto_factory.ServiceCommonProtoMessages.construct_ack_pb(
             status=True,
@@ -147,3 +117,9 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         shutdown_response_pb = \
             proto_factory.ServiceCommonProtoMessages.construct_shutdown_response_pb(ack_pb)
         return shutdown_response_pb
+
+    def _is_serving(self, context):
+        if self.__not_serving_event.is_set():
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return False 
+        return True
