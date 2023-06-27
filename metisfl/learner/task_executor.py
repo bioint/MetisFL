@@ -13,7 +13,6 @@ from metisfl.utils.formatting import DictionaryFormatter
 class TaskExecutor(object):
 
     def __init__(self, 
-                 federation_helper: FederationHelper,
                  he_scheme_pb: metis_pb2.HEScheme,
                  learner_dataset: LearnerDataset,
                  model_dir: str,
@@ -35,7 +34,6 @@ class TaskExecutor(object):
         self.model_ops = None 
         self.model_ops_fn = model_ops_fn
         self.model_dir = model_dir
-        self.federatiion_helper = federation_helper
         
     def _init_model_ops(self) -> model_ops.ModelOps:
         if not self.model_ops:
@@ -47,8 +45,9 @@ class TaskExecutor(object):
         if len(self.weights_values) > 0:
             self.model_ops.get_model().set_model_weights(self.weights_names, self.weights_trainable, self.weights_values)
         return weights_names, weights_trainable, weights_values
-
+    
     def _log(self, state, task):
+        # FIXME:
         host_port = self.federation_helper.host_port_identifier()
         MetisLogger.info("Learner {} {} {} task on requested datasets."
                          .format(host_port, state, task))
@@ -59,17 +58,14 @@ class TaskExecutor(object):
                         evaluation_datasets_pb: [learner_pb2.EvaluateModelRequest.dataset_to_eval],
                         metrics_pb: metis_pb2.EvaluationMetrics, 
                         verbose=False):       
-        # Initialize the model backend.
         self._init_model_ops() 
         self._set_weights_from_model_pb(model_pb)
+        
         train_dataset, validation_dataset, test_dataset = \
             self.learner_dataset.load_model_datasets()
-            
-        # Need to unfold the pb into python list.
         metrics = [m for m in metrics_pb.metric]
         evaluation_datasets_pb = [d for d in evaluation_datasets_pb]
 
-        # Initialize to an empty metis_pb2.ModelEvaluation object all three variables.
         train_eval_pb = validation_eval_pb = test_eval_pb = metis_pb2.ModelEvaluation()
         self._log(state="starts", task="evaluation")
         for dataset_to_eval in evaluation_datasets_pb:
@@ -96,7 +92,6 @@ class TaskExecutor(object):
                     verbose=False):
         # TODO infer model should behave similarly as the evaluate_model(), by looping over a
         #  similar learner_pb2.InferModelRequest.dataset_to_infer list.
-        # Initialize the model backend.
         self._init_model_ops()
         self._set_weights_from_model_pb(model_pb)
         train_dataset, validation_dataset, test_dataset = \
@@ -116,9 +111,7 @@ class TaskExecutor(object):
                     verbose=False):
         self._init_model_ops()
         self._set_weights_from_model_pb(model_pb)
-        train_dataset, validation_dataset, test_dataset = \
-            self.learner_dataset.load_model_datasets()            
-
+        train_dataset, validation_dataset, test_dataset = self.learner_dataset.load_model_datasets()            
         self._log(state="starts", task="learning")
         completed_task_pb = self.model_ops\
             .train_model(train_dataset, 
@@ -128,7 +121,6 @@ class TaskExecutor(object):
                          test_dataset, 
                          verbose)
         self._log(state="completed", task="learning")
-
         return completed_task_pb 
 
     def __enter__(self):

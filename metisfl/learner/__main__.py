@@ -1,6 +1,7 @@
 import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
+import metisfl.learner.constants as constants
 from metisfl.learner.dataset_handler import LearnerDataset
 from metisfl.learner.federation_helper import FederationHelper
 from metisfl.learner.learner_executor import LearnerExecutor
@@ -9,11 +10,6 @@ from metisfl.learner.task_executor import TaskExecutor
 from metisfl.models import get_model_ops_fn
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
-DEFAULT_LEARNER_HOST = "[::]"
-DEFAULT_LEARNER_PORT = 50052
-DEFAULT_CONTROLLER_HOSTNAME = "[::]"
-DEFAULT_CONTROLLER_PORT = 50051
-LEARNER_CREDENTIALS_FP =  "/tmp/metis/learner_{}_credentials/"
 
 def parse_server_hex(hex_str, default_host, default_port):
     if hex_str is not None:
@@ -39,10 +35,10 @@ def parse_he_scheme_hex(hex_str):
 def create_servers(args):
     learner_server_entity_pb = parse_server_hex(
         args.learner_server_entity_protobuff_serialized_hexadecimal,
-         DEFAULT_LEARNER_HOST, DEFAULT_LEARNER_PORT)
+         constants.DEFAULT_LEARNER_HOST, constants.DEFAULT_LEARNER_PORT)
     controller_server_entity_pb = parse_server_hex(
         args.controller_server_entity_protobuff_serialized_hexadecimal,
-        DEFAULT_CONTROLLER_HOSTNAME, DEFAULT_CONTROLLER_PORT)
+        constants.DEFAULT_CONTROLLER_HOSTNAME, constants.DEFAULT_CONTROLLER_PORT)
         
     return learner_server_entity_pb,controller_server_entity_pb
 
@@ -50,7 +46,7 @@ def init_learner(args):
     learner_server_entity_pb, controller_server_entity_pb = create_servers(args)
     he_scheme_pb = parse_he_scheme_hex(args.he_scheme_protobuff_serialized_hexadecimal)
     model_ops_fn = get_model_ops_fn(args.neural_engine)
-    learner_credentials_fp =  LEARNER_CREDENTIALS_FP.format(learner_server_entity_pb.port)
+    learner_credentials_fp =  constants.LEARNER_CREDENTIALS_FP.format(learner_server_entity_pb.port)
     
     learner_dataset = LearnerDataset(
         train_dataset_fp=args.train_dataset,

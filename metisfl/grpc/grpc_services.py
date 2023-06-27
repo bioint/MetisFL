@@ -51,7 +51,8 @@ class GRPCServerClient(object):
         self.executor = ThreadPool(max_workers=max_workers)
         self.executor_pool = queue.Queue()
         self._channel = self.get_channel()
-
+        # FIXME: @stripeli 
+        
     def get_channel(self):
         """ Initialize connection only if it is not established. """
         _channel = GRPCChannelMaxMsgLength(self.grpc_endpoint.server_entity)
