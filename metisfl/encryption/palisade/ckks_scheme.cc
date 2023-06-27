@@ -166,6 +166,7 @@ std::string CKKS::ComputeWeightedAverage(vector<std::string> data_array,
 
   std::stringstream ss;
   Serial::Serialize(result_ciphertext, ss, st);
+  result_ciphertext.clear();
   return ss.str();
 
 }
