@@ -9,7 +9,7 @@
 #include "metisfl/proto/model.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 using ::proto::DeserializeTensor;
@@ -308,4 +308,4 @@ TEST_F(FederatedRecencyTest, ModelFloat32AggregationOneTimeCommitters) /* NOLINT
 }
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

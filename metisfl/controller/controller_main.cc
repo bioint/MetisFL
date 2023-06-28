@@ -14,10 +14,10 @@
 
 using ::proto::ParseTextOrDie;
 
-using projectmetis::controller::Controller;
-using projectmetis::controller::ControllerServicer;
-using projectmetis::GlobalModelSpecs;
-using projectmetis::CommunicationSpecs;
+using metisfl::controller::Controller;
+using metisfl::controller::ControllerServicer;
+using metisfl::GlobalModelSpecs;
+using metisfl::CommunicationSpecs;
 
 std::unique_ptr<ControllerServicer> servicer;
 
@@ -39,7 +39,7 @@ int main(int argc, char **argv) {
   google::InitGoogleLogging(argv[0]);
 
   // Initializes controller parameters proto message.
-  auto params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
+  auto params = ParseTextOrDie<metisfl::ControllerParams>(R"pb2(
     server_entity {
       hostname: "0.0.0.0"
       port: 50051

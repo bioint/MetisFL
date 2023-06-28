@@ -1,6 +1,6 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_SERVICER_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_SERVICER_H_
+#ifndef METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_SERVICER_H_
+#define METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_SERVICER_H_
 
 #include <memory>
 #include <sstream>
@@ -10,7 +10,7 @@
 #include "metisfl/controller/core/controller.h"
 #include "metisfl/proto/controller.grpc.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class ControllerServicer : public ControllerService::Service {
 public:
@@ -26,10 +26,12 @@ public:
   // Stops the gRPC service.
   virtual void StopService() = 0;
 
+  virtual bool ShutdownRequestReceived() = 0;
+
 public:
   static std::unique_ptr<ControllerServicer> New(Controller *controller);
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif // PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_SERVICER_H_
+#endif //METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_SERVICER_H_

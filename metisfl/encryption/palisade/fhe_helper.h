@@ -1,15 +1,14 @@
-#include "palisade.h"
+#include <iomanip>
+#include <omp.h>
 #include <random>
 #include <string>
 
-#include "utils/serialize-binary.h"
-#include <iomanip>
 #include "ciphertext-ser.h"
 #include "cryptocontext-ser.h"
-#include "scheme/ckks/ckks-ser.h"
+#include "palisade.h"
 #include "pubkeylp-ser.h"
-
-#include <omp.h>
+#include "utils/serialize-binary.h"
+#include "scheme/ckks/ckks-ser.h"
 
 using namespace lbcrypto;
 using namespace std::chrono;
@@ -21,7 +20,7 @@ class FHE_Helper {
   std::string scheme;
   uint batchSize;
   uint scaleFactorBits;
-  std::string cryptodir = "resources/fheparams/cryptoparams/";
+  std::string cryptodir;
 
   CryptoContext <DCRTPoly> cc;
   LPPublicKey <DCRTPoly> pk;

@@ -4,7 +4,6 @@ from metisfl.grpc.grpc_controller_client import GRPCControllerClient
 import metisfl.proto.metis_pb2 as metis_pb2
 import metisfl.learner.constants as constants
 from metisfl.learner.dataset_handler import LearnerDataset
-from metisfl.learner.federation_helper import FederationHelper
 from metisfl.learner.learner_executor import LearnerExecutor
 from metisfl.learner.learner_servicer import LearnerServicer
 from metisfl.learner.task_executor import TaskExecutor

@@ -3,6 +3,7 @@
 # source: metisfl/proto/service_common.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -14,238 +15,27 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor.FileDescriptor(
-  name='metisfl/proto/service_common.proto',
-  package='projectmetis',
-  syntax='proto3',
-  serialized_options=None,
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\"metisfl/proto/service_common.proto\x12\x0cprojectmetis\x1a\x1fgoogle/protobuf/timestamp.proto\"q\n\x03\x41\x63k\x12\x16\n\x06status\x18\x01 \x01(\x08R\x06status\x12\x38\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x18\n\x07message\x18\x03 \x01(\tR\x07message\" \n\x1eGetServicesHealthStatusRequest\"\xd0\x01\n\x1fGetServicesHealthStatusResponse\x12j\n\x0fservices_status\x18\x01 \x03(\x0b\x32\x41.projectmetis.GetServicesHealthStatusResponse.ServicesStatusEntryR\x0eservicesStatus\x1a\x41\n\x13ServicesStatusEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x08R\x05value:\x02\x38\x01\"\x11\n\x0fShutDownRequest\"7\n\x10ShutDownResponse\x12#\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x11.projectmetis.AckR\x03\x61\x63kb\x06proto3'
-  ,
-  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"metisfl/proto/service_common.proto\x12\x07metisfl\x1a\x1fgoogle/protobuf/timestamp.proto\"q\n\x03\x41\x63k\x12\x16\n\x06status\x18\x01 \x01(\x08R\x06status\x12\x38\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x18\n\x07message\x18\x03 \x01(\tR\x07message\" \n\x1eGetServicesHealthStatusRequest\"\xcb\x01\n\x1fGetServicesHealthStatusResponse\x12\x65\n\x0fservices_status\x18\x01 \x03(\x0b\x32<.metisfl.GetServicesHealthStatusResponse.ServicesStatusEntryR\x0eservicesStatus\x1a\x41\n\x13ServicesStatusEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x08R\x05value:\x02\x38\x01\"\x11\n\x0fShutDownRequest\"2\n\x10ShutDownResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63kb\x06proto3')
 
 
 
-
-_ACK = _descriptor.Descriptor(
-  name='Ack',
-  full_name='projectmetis.Ack',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='status', full_name='projectmetis.Ack.status', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='status', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='timestamp', full_name='projectmetis.Ack.timestamp', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='timestamp', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='message', full_name='projectmetis.Ack.message', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='message', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=85,
-  serialized_end=198,
-)
-
-
-_GETSERVICESHEALTHSTATUSREQUEST = _descriptor.Descriptor(
-  name='GetServicesHealthStatusRequest',
-  full_name='projectmetis.GetServicesHealthStatusRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=200,
-  serialized_end=232,
-)
-
-
-_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY = _descriptor.Descriptor(
-  name='ServicesStatusEntry',
-  full_name='projectmetis.GetServicesHealthStatusResponse.ServicesStatusEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='projectmetis.GetServicesHealthStatusResponse.ServicesStatusEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='key', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='projectmetis.GetServicesHealthStatusResponse.ServicesStatusEntry.value', index=1,
-      number=2, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=b'8\001',
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=378,
-  serialized_end=443,
-)
-
-_GETSERVICESHEALTHSTATUSRESPONSE = _descriptor.Descriptor(
-  name='GetServicesHealthStatusResponse',
-  full_name='projectmetis.GetServicesHealthStatusResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='services_status', full_name='projectmetis.GetServicesHealthStatusResponse.services_status', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='servicesStatus', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY, ],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=235,
-  serialized_end=443,
-)
-
-
-_SHUTDOWNREQUEST = _descriptor.Descriptor(
-  name='ShutDownRequest',
-  full_name='projectmetis.ShutDownRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=445,
-  serialized_end=462,
-)
-
-
-_SHUTDOWNRESPONSE = _descriptor.Descriptor(
-  name='ShutDownResponse',
-  full_name='projectmetis.ShutDownResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='ack', full_name='projectmetis.ShutDownResponse.ack', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='ack', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=464,
-  serialized_end=519,
-)
-
-_ACK.fields_by_name['timestamp'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY.containing_type = _GETSERVICESHEALTHSTATUSRESPONSE
-_GETSERVICESHEALTHSTATUSRESPONSE.fields_by_name['services_status'].message_type = _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY
-_SHUTDOWNRESPONSE.fields_by_name['ack'].message_type = _ACK
-DESCRIPTOR.message_types_by_name['Ack'] = _ACK
-DESCRIPTOR.message_types_by_name['GetServicesHealthStatusRequest'] = _GETSERVICESHEALTHSTATUSREQUEST
-DESCRIPTOR.message_types_by_name['GetServicesHealthStatusResponse'] = _GETSERVICESHEALTHSTATUSRESPONSE
-DESCRIPTOR.message_types_by_name['ShutDownRequest'] = _SHUTDOWNREQUEST
-DESCRIPTOR.message_types_by_name['ShutDownResponse'] = _SHUTDOWNRESPONSE
-_sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
+_ACK = DESCRIPTOR.message_types_by_name['Ack']
+_GETSERVICESHEALTHSTATUSREQUEST = DESCRIPTOR.message_types_by_name['GetServicesHealthStatusRequest']
+_GETSERVICESHEALTHSTATUSRESPONSE = DESCRIPTOR.message_types_by_name['GetServicesHealthStatusResponse']
+_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY = _GETSERVICESHEALTHSTATUSRESPONSE.nested_types_by_name['ServicesStatusEntry']
+_SHUTDOWNREQUEST = DESCRIPTOR.message_types_by_name['ShutDownRequest']
+_SHUTDOWNRESPONSE = DESCRIPTOR.message_types_by_name['ShutDownResponse']
 Ack = _reflection.GeneratedProtocolMessageType('Ack', (_message.Message,), {
   'DESCRIPTOR' : _ACK,
   '__module__' : 'metisfl.proto.service_common_pb2'
-  # @@protoc_insertion_point(class_scope:projectmetis.Ack)
+  # @@protoc_insertion_point(class_scope:metisfl.Ack)
   })
 _sym_db.RegisterMessage(Ack)
 
 GetServicesHealthStatusRequest = _reflection.GeneratedProtocolMessageType('GetServicesHealthStatusRequest', (_message.Message,), {
   'DESCRIPTOR' : _GETSERVICESHEALTHSTATUSREQUEST,
   '__module__' : 'metisfl.proto.service_common_pb2'
-  # @@protoc_insertion_point(class_scope:projectmetis.GetServicesHealthStatusRequest)
+  # @@protoc_insertion_point(class_scope:metisfl.GetServicesHealthStatusRequest)
   })
 _sym_db.RegisterMessage(GetServicesHealthStatusRequest)
 
@@ -254,12 +44,12 @@ GetServicesHealthStatusResponse = _reflection.GeneratedProtocolMessageType('GetS
   'ServicesStatusEntry' : _reflection.GeneratedProtocolMessageType('ServicesStatusEntry', (_message.Message,), {
     'DESCRIPTOR' : _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY,
     '__module__' : 'metisfl.proto.service_common_pb2'
-    # @@protoc_insertion_point(class_scope:projectmetis.GetServicesHealthStatusResponse.ServicesStatusEntry)
+    # @@protoc_insertion_point(class_scope:metisfl.GetServicesHealthStatusResponse.ServicesStatusEntry)
     })
   ,
   'DESCRIPTOR' : _GETSERVICESHEALTHSTATUSRESPONSE,
   '__module__' : 'metisfl.proto.service_common_pb2'
-  # @@protoc_insertion_point(class_scope:projectmetis.GetServicesHealthStatusResponse)
+  # @@protoc_insertion_point(class_scope:metisfl.GetServicesHealthStatusResponse)
   })
 _sym_db.RegisterMessage(GetServicesHealthStatusResponse)
 _sym_db.RegisterMessage(GetServicesHealthStatusResponse.ServicesStatusEntry)
@@ -267,17 +57,32 @@ _sym_db.RegisterMessage(GetServicesHealthStatusResponse.ServicesStatusEntry)
 ShutDownRequest = _reflection.GeneratedProtocolMessageType('ShutDownRequest', (_message.Message,), {
   'DESCRIPTOR' : _SHUTDOWNREQUEST,
   '__module__' : 'metisfl.proto.service_common_pb2'
-  # @@protoc_insertion_point(class_scope:projectmetis.ShutDownRequest)
+  # @@protoc_insertion_point(class_scope:metisfl.ShutDownRequest)
   })
 _sym_db.RegisterMessage(ShutDownRequest)
 
 ShutDownResponse = _reflection.GeneratedProtocolMessageType('ShutDownResponse', (_message.Message,), {
   'DESCRIPTOR' : _SHUTDOWNRESPONSE,
   '__module__' : 'metisfl.proto.service_common_pb2'
-  # @@protoc_insertion_point(class_scope:projectmetis.ShutDownResponse)
+  # @@protoc_insertion_point(class_scope:metisfl.ShutDownResponse)
   })
 _sym_db.RegisterMessage(ShutDownResponse)
 
+if _descriptor._USE_C_DESCRIPTORS == False:
 
-_GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY._options = None
+  DESCRIPTOR._options = None
+  _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY._options = None
+  _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY._serialized_options = b'8\001'
+  _ACK._serialized_start=80
+  _ACK._serialized_end=193
+  _GETSERVICESHEALTHSTATUSREQUEST._serialized_start=195
+  _GETSERVICESHEALTHSTATUSREQUEST._serialized_end=227
+  _GETSERVICESHEALTHSTATUSRESPONSE._serialized_start=230
+  _GETSERVICESHEALTHSTATUSRESPONSE._serialized_end=433
+  _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY._serialized_start=368
+  _GETSERVICESHEALTHSTATUSRESPONSE_SERVICESSTATUSENTRY._serialized_end=433
+  _SHUTDOWNREQUEST._serialized_start=435
+  _SHUTDOWNREQUEST._serialized_end=452
+  _SHUTDOWNRESPONSE._serialized_start=454
+  _SHUTDOWNRESPONSE._serialized_end=504
 # @@protoc_insertion_point(module_scope)

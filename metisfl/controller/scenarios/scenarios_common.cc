@@ -11,7 +11,7 @@
 #include "metisfl/proto/model.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 using google::protobuf::util::TimeUtil;
 
@@ -42,7 +42,6 @@ ControllerParams ScenariosCommon::CreateDefaultControllerParams() {
       CommunicationSpecs::SYNCHRONOUS);
 
   // Set Fully Homomorphic Encryption specifications.
-  // TODO Fix this once aggregation rule message is finalized.
 //  *params.mutable_fhe_scheme() = FHEScheme();
 
   // Set model store specifications.

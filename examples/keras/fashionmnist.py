@@ -66,7 +66,6 @@ if __name__ == "__main__":
             learner.dataset_configs.train_dataset_path = \
                 os.path.join(datasets_path, "train_{}.npz".format(lidx))
 
-    # TODO Save model as tf native and ship the resulted files.
     nn_model = FashionMnistModel().get_model()
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
     # properly and any subsequent fit step will never train the model properly. We could apply the .fit() step instead

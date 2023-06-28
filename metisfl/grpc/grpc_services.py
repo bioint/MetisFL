@@ -2,7 +2,6 @@ import grpc
 import queue
 import time
 
-
 from concurrent import futures
 from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils.metis_logger import MetisLogger
@@ -24,8 +23,8 @@ class GRPCChannelMaxMsgLength(object):
 
     def __init__(self, server_entity: ServerEntity):
         self.grpc_endpoint = GRPCEndpoint(server_entity)
-        # TODO Remove this. Extend Channel class to read messages as chunks
-        # TODO similar to this, C++: https://jbrandhorst.com/post/grpc-binary-blob-stream/
+        # TODO(stripeli): Remove this. Extend Channel class to read messages as chunks
+        #  similar to this, C++: https://jbrandhorst.com/post/grpc-binary-blob-stream/
         self.channel_options = \
             [(cygrpc.ChannelArgKey.max_send_message_length, -1),
              (cygrpc.ChannelArgKey.max_receive_message_length, -1)]
@@ -84,8 +83,8 @@ class GRPCServerMaxMsgLength(object):
     def __init__(self, max_workers=None, server_entity: ServerEntity = None):
         self.grpc_endpoint = GRPCEndpoint(server_entity)
 
-        # TODO Remove this. Extend Server class to read messages as chunks
-        # TODO similar to this in Go: https://jbrandhorst.com/post/grpc-binary-blob-stream/
+        # TODO(stripeli): Remove this. Extend Channel class to read messages as chunks
+        #  similar to this, C++: https://jbrandhorst.com/post/grpc-binary-blob-stream/
         # (cygrpc.ChannelArgKey.max_concurrent_streams, 1000),
         # (grpc.chttp2.lookahead_bytes, 1024),
         # (grpc.chttp2.max_frame_size, 16777215)]

@@ -1,6 +1,6 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_H_
+#ifndef METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_H_
+#define METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_H_
 
 #include <string>
 #include <utility>
@@ -12,9 +12,26 @@
 #include "absl/status/statusor.h"
 #include "metisfl/proto/controller.grpc.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
-// TODO(stripeli): Add a nice description about what the controller is about :)
+/**
+* The controller orchestrates the execution of the entire federated
+* learning environment. It comprises of the following core procedures
+* (with order of execution during federated traininig):
+* - Training Task Scheduling: select the learners that will participate
+*       in the training of the federated model, specify synchronization
+*        points, dispatch the model training task to the selected learners,
+*        and receive local models.
+* - Model Storing: save the local models and the contribution value of
+*        each learner to improve model aggregation efficiency in the
+*        presence of many learners and/or large models.
+* - Model Aggregation: mix/merge the local models of the earners and compute
+*        a new global model. The aggregation can also take place in an
+*        encrypted space (e.g. using homomorphic encryption).
+* - Evaluation Task Scheduling: dispatch the global model evaluation task
+*        to the learners and await to collect the respective metrics.
+*/
+
 class Controller {
  public:
   virtual ~Controller() = default;
@@ -70,6 +87,6 @@ public:
   static std::unique_ptr<Controller> New(const ControllerParams &params);
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif // PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_H_
+#endif //METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_H_

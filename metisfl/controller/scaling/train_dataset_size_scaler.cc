@@ -1,7 +1,7 @@
 
 #include "metisfl/controller/scaling/train_dataset_size_scaler.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 absl::flat_hash_map<std::string, double>
 TrainDatasetSizeScaler::ComputeScalingFactors(
@@ -49,4 +49,4 @@ TrainDatasetSizeScaler::ComputeScalingFactors(
 
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

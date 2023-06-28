@@ -11,7 +11,7 @@
 #include "metisfl/proto/controller.grpc.pb.h"
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 using ::grpc::ServerContext;
 using ::proto::ParseTextOrDie;
@@ -126,7 +126,7 @@ TEST_F(ControllerServicerImplTest, JoinFederationNewLearner) {
 
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, JoinFederationLearnerServiceUnreachable) {
-  // TODO(canastas): Implement this after we have the service alive check functionality.
+  // TODO(stripeli): Implement this after we have the service alive check functionality.
   bool is_learner_reachable = true;
   EXPECT_TRUE(is_learner_reachable);
 }
@@ -234,7 +234,7 @@ TEST_F(ControllerServicerImplTest, GetEvaluationLineageRequestIsNullptr){
   EXPECT_EQ(status.error_code(), grpc::StatusCode::INVALID_ARGUMENT);
 }
 
-// TODO(aasghar) Need to make the tests more robust with respect to ModelEvaluation values.
+// TODO(stripeli): Need to make the tests more robust with respect to ModelEvaluation values.
 TEST_F(ControllerServicerImplTest, GetEvaluationLineageEvaluationLineage) {
 
   LearnerState learnerState = ParseTextOrDie<LearnerState>(kLearnerState);
@@ -253,7 +253,7 @@ TEST_F(ControllerServicerImplTest, GetEvaluationLineageEvaluationLineage) {
   EXPECT_TRUE((*response.mutable_learner_evaluations()).empty());
 }
 
-// TODO(aasghar) Could make the tests more robust with respect to ModelEvaluation values.
+// TODO(stripeli): Could make the tests more robust with respect to ModelEvaluation values.
 TEST_F(ControllerServicerImplTest, GetCommunityEvaluationLineageEvaluationLineage) {
 
   GetCommunityModelEvaluationLineageRequest request;
@@ -271,7 +271,7 @@ TEST_F(ControllerServicerImplTest, GetCommunityEvaluationLineageEvaluationLineag
   ASSERT_TRUE((*response.mutable_evaluations()).IsInitialized());
 }
 
-// TODO(aasghar) Can make the test more useful by initializing the request object.
+// TODO(stripeli): Can make the test more useful by initializing the request object.
 TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnOk){
 
   MarkTaskCompletedRequest request;
@@ -287,7 +287,7 @@ TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnOk){
 
 }
 
-// TODO(aasghar) Can make the test more useful by initializing the request object.
+// TODO(stripeli): Can make the test more useful by initializing the request object.
 TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnError){
 
   MarkTaskCompletedRequest request;
@@ -305,7 +305,7 @@ TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnError){
 
 TEST_F(ControllerServicerImplTest, StartServiceWithSSL){
 
-  projectmetis::ControllerParams params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
+  metisfl::ControllerParams params = ParseTextOrDie<metisfl::ControllerParams>(R"pb2(
     server_entity {
       hostname: "0.0.0.0"
       port: 50051
@@ -346,7 +346,7 @@ TEST_F(ControllerServicerImplTest, StartServiceWithSSL){
 
 TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL){
 
-  projectmetis::ControllerParams params = ParseTextOrDie<projectmetis::ControllerParams>(R"pb2(
+  metisfl::ControllerParams params = ParseTextOrDie<metisfl::ControllerParams>(R"pb2(
     server_entity {
       hostname: "0.0.0.0"
       port: 50051
@@ -382,4 +382,4 @@ TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL){
 }
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

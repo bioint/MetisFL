@@ -322,9 +322,9 @@ PYBIND11_MODULE(fhe, m)
   py::class_<Scheme>(m, "Scheme");
   py::class_<CKKS, Scheme>(m, "CKKS")
       .def(py::init<int, int, std::string &>(),
-           py::arg("batchSize") = 4096,
-           py::arg("scaleFactorBits") = 52,
-           py::arg("cryptodir") = py::str("resources/fheparams/cryptoparams/"))
+           py::arg("batchSize"),
+           py::arg("scaleFactorBits"),
+           py::arg("cryptodir"))
       .def("gen_crypto_context_and_key_gen", &CKKS::genCryptoContextAndKeyGen)
       .def("load_crypto_params", &CKKS::loadCryptoParams)
       .def("encrypt", &CKKS::encrypt)

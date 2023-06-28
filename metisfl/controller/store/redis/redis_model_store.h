@@ -1,6 +1,6 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORING_REDIS_MODEL_STORE_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORING_REDIS_MODEL_STORE_H_
+#ifndef METISFL_METISFL_CONTROLLER_STORE_REDIS_REDIS_MODEL_STORE_H_
+#define METISFL_METISFL_CONTROLLER_STORE_REDIS_REDIS_MODEL_STORE_H_
 
 #include "metisfl/controller/store/model_store.h"
 #include "hiredis/hiredis.h"
@@ -8,7 +8,7 @@
 #include <iostream>
 #include <sstream>
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class RedisModelStore : public ModelStore {
 
@@ -57,4 +57,4 @@ class RedisModelStore : public ModelStore {
 
 }
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_MODEL_STORING_REDIS_MODEL_STORE_H_
+#endif //METISFL_METISFL_CONTROLLER_STORE_REDIS_REDIS_MODEL_STORE_H_

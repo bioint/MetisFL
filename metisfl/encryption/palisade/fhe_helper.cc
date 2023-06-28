@@ -3,7 +3,8 @@
 
 #include "fhe_helper.h"
 
-FHE_Helper::FHE_Helper() : scheme(), batchSize(0), scaleFactorBits(0) {}
+FHE_Helper::FHE_Helper() :
+  scheme(), batchSize(4096), scaleFactorBits(52), cryptodir("metisfl/resources/fheparams/cryptoparams/") {}
 
 FHE_Helper::FHE_Helper(std::string scheme,
                        uint batchSize,
@@ -11,6 +12,7 @@ FHE_Helper::FHE_Helper(std::string scheme,
   this->scheme = scheme;
   this->batchSize = batchSize;
   this->scaleFactorBits = scaleFactorBits;
+  this->cryptodir = "metisfl/resources/fheparams/cryptoparams/";
 }
 
 FHE_Helper::FHE_Helper(std::string scheme,

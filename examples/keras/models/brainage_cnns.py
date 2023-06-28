@@ -56,13 +56,13 @@ class BrainAge2DCNN(MetisKerasModel):
             return tf.squeeze(x)
 
         def infer_ages(images):
-            # TODO (1) Map function computes embeddings for every image,
-            #  however, an TypeError is raised due to KerasTensor.
+            # Map function computes embeddings for every image,
+            # however, an TypeError is raised due to KerasTensor.
             # embeddings = tf.map_fn(lambda x: compute_embedding(x), images)
-            # TODO (2) This is only applicable to a single image.
+            # This is only applicable to a single image.
             images = tf.transpose(images, [1, 2, 3, 0])
             embeddings = compute_embedding(images)
-            # TODO (3) Again, This is only applicable to a single image.
+            # Again, This is only applicable to a single image.
             embeddings = tf.transpose(embeddings, [1, 0])
             # print("Embeddings Shape: ", embeddings.shape.dims, flush=True)
             embedding = tf.reduce_mean(embeddings, axis=1, keepdims=True)

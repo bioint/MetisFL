@@ -7,11 +7,11 @@
 #include <sys/resource.h>
 
 #include "metisfl/controller/core/controller_utils.h"
-#include "projectmetis/controller/model_aggregation/federated_rolling_average_base.h"
-#include "projectmetis/controller/model_aggregation/federated_stride.h"
-#include "projectmetis/controller/model_aggregation/federated_recency.h"
-#include "projectmetis/controller/model_aggregation/federated_average.h"
-#include "projectmetis/controller/model_aggregation/private_weighted_average.h"
+#include "metisfl/controller/model_aggregation/federated_rolling_average_base.h"
+#include "metisfl/controller/model_aggregation/federated_stride.h"
+#include "metisfl/controller/model_aggregation/federated_recency.h"
+#include "metisfl/controller/model_aggregation/federated_average.h"
+#include "metisfl/controller/model_aggregation/private_weighted_average.h"
 #include "metisfl/controller/scaling/model_scaling.h"
 #include "metisfl/controller/store/store.h"
 #include "metisfl/controller/core/proto_tensor_serde.h"
@@ -19,7 +19,7 @@
 #include "metisfl/proto/metis.pb.h"
 #include "metisfl/controller/core/controller.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 extern int errno;
 using namespace std;

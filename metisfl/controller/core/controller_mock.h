@@ -1,12 +1,12 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_MOCK_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_MOCK_H_
+#ifndef METISFL_METISFL_CONTROLLER_CONTROLLER_MOCK_H_
+#define METISFL_METISFL_CONTROLLER_CONTROLLER_MOCK_H_
 
 #include <gmock/gmock.h>
 
 #include "metisfl/controller/core/controller.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class MockController : public Controller {
  public:
@@ -50,6 +50,6 @@ class MockController : public Controller {
               (const, override));
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_MOCK_H_
+#endif //METISFL_METISFL_CONTROLLER_CONTROLLER_MOCK_H_

@@ -1,13 +1,13 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_SCHEDULER_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_SCHEDULER_H_
+#ifndef METISFL_METISFL_CONTROLLER_SCHEDULING_SCHEDULER_H_
+#define METISFL_METISFL_CONTROLLER_SCHEDULING_SCHEDULER_H_
 
 #include <vector>
 #include <string>
 
 #include "metisfl/proto/metis.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 // A scheduler implements the synchronization and coordination policy of learners.
 class Scheduler {
@@ -24,6 +24,6 @@ class Scheduler {
   virtual std::string name() = 0;
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_SCHEDULING_SCHEDULER_H_
+#endif //METISFL_METISFL_CONTROLLER_SCHEDULING_SCHEDULER_H_

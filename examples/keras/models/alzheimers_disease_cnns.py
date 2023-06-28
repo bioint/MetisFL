@@ -9,7 +9,6 @@ class AlzheimersDisease2DCNN(MetisKerasModel):
 
     # Model def
     def __init__(self, learning_rate=5e-5):
-        # TODO Ask learning rate
         self.original_input = tf.keras.layers.Input(shape=(91, 109, 91, 1), name='input')
         self.learning_rate = learning_rate
         super(AlzheimersDisease2DCNN, self).__init__()
@@ -61,7 +60,6 @@ class AlzheimersDisease3DCNN(MetisKerasModel):
 
     # Model def
     def __init__(self, learning_rate=5e-5):
-        # TODO Ask learning rate
         self.original_input = tf.keras.layers.Input(shape=(91, 109, 91, 1), name='input')
         self.learning_rate = learning_rate
         super(AlzheimersDisease3DCNN, self).__init__()

@@ -3,7 +3,7 @@
 
 #include "metisfl/controller/aggregation/federated_recency.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 FederatedModel FederatedRecency::Aggregate(std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   /*

@@ -16,22 +16,22 @@ class LearnerServiceStub(object):
             channel: A grpc.Channel.
         """
         self.EvaluateModel = channel.unary_unary(
-                '/projectmetis.LearnerService/EvaluateModel',
+                '/metisfl.LearnerService/EvaluateModel',
                 request_serializer=metisfl_dot_proto_dot_learner__pb2.EvaluateModelRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_learner__pb2.EvaluateModelResponse.FromString,
                 )
         self.GetServicesHealthStatus = channel.unary_unary(
-                '/projectmetis.LearnerService/GetServicesHealthStatus',
+                '/metisfl.LearnerService/GetServicesHealthStatus',
                 request_serializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
                 )
         self.RunTask = channel.unary_unary(
-                '/projectmetis.LearnerService/RunTask',
+                '/metisfl.LearnerService/RunTask',
                 request_serializer=metisfl_dot_proto_dot_learner__pb2.RunTaskRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_learner__pb2.RunTaskResponse.FromString,
                 )
         self.ShutDown = channel.unary_unary(
-                '/projectmetis.LearnerService/ShutDown',
+                '/metisfl.LearnerService/ShutDown',
                 request_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
                 )
@@ -89,7 +89,7 @@ def add_LearnerServiceServicer_to_server(servicer, server):
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'projectmetis.LearnerService', rpc_method_handlers)
+            'metisfl.LearnerService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
@@ -108,7 +108,7 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.LearnerService/EvaluateModel',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/EvaluateModel',
             metisfl_dot_proto_dot_learner__pb2.EvaluateModelRequest.SerializeToString,
             metisfl_dot_proto_dot_learner__pb2.EvaluateModelResponse.FromString,
             options, channel_credentials,
@@ -125,7 +125,7 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.LearnerService/GetServicesHealthStatus',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/GetServicesHealthStatus',
             metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
             metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
             options, channel_credentials,
@@ -142,7 +142,7 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.LearnerService/RunTask',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/RunTask',
             metisfl_dot_proto_dot_learner__pb2.RunTaskRequest.SerializeToString,
             metisfl_dot_proto_dot_learner__pb2.RunTaskResponse.FromString,
             options, channel_credentials,
@@ -159,7 +159,7 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/projectmetis.LearnerService/ShutDown',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/ShutDown',
             metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
             metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
             options, channel_credentials,

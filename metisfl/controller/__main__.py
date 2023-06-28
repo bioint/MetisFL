@@ -1,4 +1,6 @@
 import argparse
+import signal
+import time
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
@@ -78,13 +80,16 @@ def init_controller(args):
         model_hyperparams_pb)
 
     MetisLogger.info("Controller Parameters: \"\"\"{}\"\"\"".format(controller_params_pb))
+
     controller_instance = ControllerInstance()
-    controller_instance.build_and_start(controller_params_pb)
-    controller_instance.wait()
+    controller_instance.start(controller_params_pb)
+    controller_instance.shutdown()
 
 
 if __name__ == "__main__":
-    # FIXME: the existence of hex-encoded args is not a user-friendly way to start the controller
+    # FIXME(pkyriakis): the existence of hex-encoded args is not a user-friendly way to start the controller.
+    # Since the hex encoding is required for sending the args over the wire, let's keep those
+    # and add an additional wrapper that accepts user-friendly arg input
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--controller_server_entity_protobuff_serialized_hexadecimal", type=str,
                         default=None,

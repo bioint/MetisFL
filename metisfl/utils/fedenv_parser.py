@@ -4,8 +4,6 @@ from typing import List
 from metisfl.encryption import fhe
 from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.models.model_wrapper import ModelWeightsDescriptor
-from metisfl.proto import model_pb2
-from metisfl.utils.proto_messages_factory import ModelProtoMessages
 import metisfl.utils.proto_messages_factory as proto_messages_factory
 
 
@@ -333,7 +331,7 @@ class FederationEnvironment(object):
             # To use homomorphic encryption (fully, partial, somewhat) the user needs to define
             # specific aggregation functions. In particular:
             #   - Case 1: Fully Homomorphic Encryption with Private Weighted Aggregation - (FHE, PWA)
-            # TODO Expand when we get support additional encryption schemes and aggregation functions.
+            # TODO(stripeli): Expand when we get support additional encryption schemes and aggregation functions.
             assert self.global_model_config.aggregation_rule.aggregation_rule_name == "PWA", \
                 "Since you have enabled Homomorphic Encryption, you need to use the PWA aggregation function."
         

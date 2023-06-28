@@ -1,11 +1,11 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FEDERATED_AVERAGE_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FEDERATED_AVERAGE_H_
+#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_FEDERATED_AVERAGE_H_
+#define METISFL_METISFL_CONTROLLER_AGGREGATION_FEDERATED_AVERAGE_H_
 
 #include "metisfl/controller/aggregation/aggregation_function.h"
 #include "metisfl/proto/model.pb.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 class FederatedAverage : public AggregationFunction {
  public:
@@ -23,6 +23,6 @@ class FederatedAverage : public AggregationFunction {
 
 };
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif //PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_AGGREGATIONS_FEDERATED_AVERAGE_H_
+#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_FEDERATED_AVERAGE_H_

@@ -10,7 +10,7 @@ using namespace std;
 
 // Need to create a test suite for Model key generation.
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 namespace {
 
 // This variable needs to set to true once. When running the test suite,
@@ -542,4 +542,4 @@ TEST_F(RedisModelStoreTest, TestCountOfModelsInsertedForOneLearnerRedis) {
 }
 
 } // namespace
-} // namespace projectmetis::controller
+} // namespace metisfl::controller

@@ -1,6 +1,6 @@
 
-#ifndef PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_UTILS_H_
-#define PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_UTILS_H_
+#ifndef METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_UTILS_H_
+#define METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_UTILS_H_
 
 #include <fstream> // std::ifstream
 #include <sstream> // std::stringstream
@@ -15,7 +15,7 @@
 #include "metisfl/controller/store/store.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 
-namespace projectmetis::controller {
+namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction>
 CreateAggregator(const AggregationRule &aggregation_rule);
@@ -55,6 +55,6 @@ inline int ReadParseFile(std::string &file_content, std::string &file_name) {
   return -1;
 }
 
-} // namespace projectmetis::controller
+} // namespace metisfl::controller
 
-#endif // PROJECTMETIS_RC_PROJECTMETIS_CONTROLLER_CONTROLLER_UTILS_H_
+#endif //METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_UTILS_H_
