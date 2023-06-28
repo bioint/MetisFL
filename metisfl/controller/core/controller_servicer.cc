@@ -128,13 +128,12 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
   }
 
   void StopService() override {
-    shutdown_request_received_ = true;
     pool_.push_task([this] { controller_->Shutdown(); });
     pool_.push_task([this] { this->Stop(); });
   }
 
   bool ShutdownRequestReceived() override {
-    return shutdown_request_received_;
+    return shutdown_;
   }
 
   Status GetCommunityModelEvaluationLineage(
@@ -369,6 +368,7 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
       return {StatusCode::INVALID_ARGUMENT,
               "Request and response cannot be empty."};
     }
+    shutdown_ = true;
     response->mutable_ack()->set_status(true);
     this->StopService();
     return Status::OK;
@@ -378,7 +378,7 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
   // Thread pool for async tasks.
   BS::thread_pool pool_;
   Controller *controller_;
-  bool shutdown_request_received_ = false;
+  bool shutdown_ = false;
 };
 } // namespace
 

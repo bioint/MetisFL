@@ -1,5 +1,4 @@
 
-#include <csignal>
 #include <iostream>
 #include <pybind11/pybind11.h>
 #include <string>
@@ -16,28 +15,32 @@ using metisfl::controller::ControllerServicer;
 
 class ControllerWrapper {
 
-public:
-    ~ControllerWrapper() = default;
+ public:
+  ~ControllerWrapper() = default;
 
-    void Start(std::string params_serialized) {
-      metisfl::ControllerParams params;
-      params.ParseFromString(params_serialized);
-      controller_ = Controller::New(params);
-      servicer_ = ControllerServicer::New(controller_.get());
-      servicer_->StartService();
-    }
+  void Start(std::string params_serialized) {
+    metisfl::ControllerParams params;
+    params.ParseFromString(params_serialized);
+    controller_ = Controller::New(params);
+    servicer_ = ControllerServicer::New(controller_.get());
+    servicer_->StartService();
+  }
 
-    bool ShutdownRequestReceived() {
-      return servicer_->ShutdownRequestReceived();
-    }
+  void Shutdown() {
+    PLOG(INFO) << "Wrapping up resources and shutting down..";
+    servicer_->StopService();
+    servicer_->WaitService();
+  }
 
-    void Shutdown() {
-      PLOG(INFO) << "Wrapping up resources and shutting down..";
-      servicer_->StopService();
-      servicer_->WaitService();
-    }
+  bool ShutdownRequestReceived() {
+    return servicer_->ShutdownRequestReceived();
+  }
 
-private:
+  void Wait() {
+    servicer_->WaitService();
+  }
+
+ private:
   std::unique_ptr<Controller> controller_;
   std::unique_ptr<ControllerServicer> servicer_;
 
@@ -58,5 +61,8 @@ PYBIND11_MODULE(controller, m) {
         "Shuts down the controller.")
     .def("shutdown_request_received",
         &metisfl::controller::ControllerWrapper::ShutdownRequestReceived,
-        "Check if controller has already received a shutdown request.");
+        "Check if controller has already received a shutdown request.")
+    .def("wait",
+        &metisfl::controller::ControllerWrapper::Wait,
+        "Wait for controller main thread.");
 }
