@@ -1,5 +1,4 @@
 
-#include <csignal>
 #include <iostream>
 #include <pybind11/pybind11.h>
 #include <string>
@@ -14,29 +13,34 @@ namespace metisfl::controller {
 using metisfl::controller::Controller;
 using metisfl::controller::ControllerServicer;
 
-class ServicerWrapper {
+class ControllerWrapper {
 
-public:
-    ~ServicerWrapper() = default;
+ public:
+  ~ControllerWrapper() = default;
 
-    void BuildAndStart(std::string params_serialized) {
-      metisfl::ControllerParams params;
-      params.ParseFromString(params_serialized);
-      controller_ = Controller::New(params);
-      servicer_ = ControllerServicer::New(controller_.get());
-      servicer_->StartService();
-    };
+  void Start(std::string params_serialized) {
+    metisfl::ControllerParams params;
+    params.ParseFromString(params_serialized);
+    controller_ = Controller::New(params);
+    servicer_ = ControllerServicer::New(controller_.get());
+    servicer_->StartService();
+  }
 
-    void Wait() {
-      servicer_->WaitService();
-    }
+  void Shutdown() {
+    PLOG(INFO) << "Wrapping up resources and shutting down..";
+    servicer_->StopService();
+    servicer_->WaitService();
+  }
 
-    void Shutdown() {
-      PLOG(INFO) << "Shutting down..";
-      servicer_->StopService();
-    };
+  bool ShutdownRequestReceived() {
+    return servicer_->ShutdownRequestReceived();
+  }
 
-private:
+  void Wait() {
+    servicer_->WaitService();
+  }
+
+ private:
   std::unique_ptr<Controller> controller_;
   std::unique_ptr<ControllerServicer> servicer_;
 
@@ -47,15 +51,18 @@ private:
 PYBIND11_MODULE(controller, m) {
   m.doc() = "Federation controller python soft wrapper.";
 
-  py::class_<metisfl::controller::ServicerWrapper>(m, "ServicerWrapper")
+  py::class_<metisfl::controller::ControllerWrapper>(m, "ControllerWrapper")
     .def(py::init<>())
-    .def("BuildAndStart",
-        &metisfl::controller::ServicerWrapper::BuildAndStart,
+    .def("start",
+        &metisfl::controller::ControllerWrapper::Start,
         "Initializes and starts the controller.")
-    .def("Wait",
-        &metisfl::controller::ServicerWrapper::Wait,
-        "Blocks until the service has shut down.")
-    .def("Shutdown",
-        &metisfl::controller::ServicerWrapper::Shutdown,
-        "Shuts down the controller.");
+    .def("shutdown",
+        &metisfl::controller::ControllerWrapper::Shutdown,
+        "Shuts down the controller.")
+    .def("shutdown_request_received",
+        &metisfl::controller::ControllerWrapper::ShutdownRequestReceived,
+        "Check if controller has already received a shutdown request.")
+    .def("wait",
+        &metisfl::controller::ControllerWrapper::Wait,
+        "Wait for controller main thread.");
 }
