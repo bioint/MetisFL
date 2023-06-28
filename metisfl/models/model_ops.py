@@ -4,9 +4,20 @@ from typing import List
 
 
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.model_wrapper import MetisModel
-from metisfl.proto import metis_pb2, model_pb2
+from metisfl.models.model_wrapper import MetisModel, ModelWeightsDescriptor
+from metisfl.proto import metis_pb2
 
+LearningTaskStats = namedtuple('LearningTaskStats', [
+    "train_stats",
+    "completed_epochs",
+    "global_iteration",
+    "validation_stats",
+    "test_stats",
+    "completes_batches",
+    "batch_size",
+    "processing_ms_per_epoch",
+    "processing_ms_per_batch"
+])
 
 class ModelOps(object):
     def get_model(self) -> MetisModel:
@@ -19,7 +30,7 @@ class ModelOps(object):
                     hyperparameters_pb: metis_pb2.Hyperparameters,
                     validation_dataset: ModelDataset = None,
                     test_dataset: ModelDataset = None,
-                    verbose=False) -> metis_pb2.CompletedLearningTask:
+                    verbose=False) -> [ModelWeightsDescriptor, LearningTaskStats]
         pass
     
     @abc.abstractmethod
@@ -27,7 +38,7 @@ class ModelOps(object):
                        eval_dataset: ModelDataset,
                        batch_size=100,
                        metrics=None,
-                       verbose=False) -> metis_pb2.ModelEvaluation:
+                       verbose=False) -> dict:
         pass
     
     @abc.abstractmethod

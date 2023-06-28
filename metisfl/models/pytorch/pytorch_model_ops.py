@@ -1,5 +1,4 @@
 import gc
-from metisfl.models.model_proto_factory import ModelProtoFactory
 from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
@@ -7,7 +6,7 @@ import torch
 
 from metisfl.models.pytorch.helper import construct_dataset_pipeline
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.model_ops import CompletedTaskStats, ModelOps
+from metisfl.models.model_ops import LearningTaskStats, ModelOps
 from metisfl.models.pytorch.wrapper import MetisTorchModel
 from metisfl.proto import metis_pb2
 from metisfl.utils.metis_logger import MetisLogger
@@ -36,19 +35,13 @@ class PyTorchModelOps(ModelOps):
         train_res = self._model.fit(dataset, epochs=epochs_num)
         
         # TODO (dstripelis) Need to add the metrics for computing the execution time
-        #   per batch and epoch.
         model_weights_descriptor = self.get_model_weights()
-        completed_learning_task = ModelProtoFactory.CompletedLearningTaskProtoMessage(
-            weights_values=model_weights_descriptor.weights_values,
-            weights_trainable=model_weights_descriptor.weights_trainable,
-            weights_names=model_weights_descriptor.weights_names,
+        learning_task_stats = LearningTaskStats(
             train_stats=train_res,
             completed_epochs=epochs_num,
             global_iteration=learning_task_pb.global_iteration)
-        completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
-            he_scheme=self._he_scheme)
         MetisLogger.info("Model training is complete.")
-        return completed_learning_task_pb
+        return model_weights_descriptor, learning_task_stats
 
     def evaluate_model(self, eval_dataset: ModelDataset):
         if not eval_dataset:

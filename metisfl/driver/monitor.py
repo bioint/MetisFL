@@ -76,7 +76,7 @@ class FederationMonitor:
             return False
         return True
 
-    def _collect_local_statistics(self) -> None:
+    def collect_local_statistics(self) -> None:
         learners_pb = self._driver_controller_grpc_client.get_participating_learners()
         learners_collection = learners_pb.learner
         learners_id = [learner.id for learner in learners_collection]
@@ -89,7 +89,7 @@ class FederationMonitor:
         self._federation_statistics["learners_descriptor"] = learners_descriptors_dict
         self._federation_statistics["learners_models_results"] = learners_results_dict
 
-    def _collect_global_statistics(self) -> None:
+    def collect_global_statistics(self) -> None:
         runtime_metadata_pb = self._driver_controller_grpc_client \
             .get_runtime_metadata(num_backtracks=0)
         runtime_metadata_dict = MessageToDict(runtime_metadata_pb,
@@ -100,4 +100,6 @@ class FederationMonitor:
                                                preserving_proto_field_name=True)
         self._federation_statistics["federation_runtime_metadata"] = runtime_metadata_dict
         self._federation_statistics["community_model_results"] = community_results_dict
-
+        
+    def get_statistics(self) -> dict:
+        return self._federation_statistics

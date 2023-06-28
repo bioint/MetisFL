@@ -1,12 +1,11 @@
 from typing import Callable
-from metisfl.learner.federation_helper import FederationHelper
+from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.utils.metis_logger import MetisLogger
-import metisfl.utils.proto_messages_factory as proto_factory
 
 from metisfl.learner.dataset_handler import LearnerDataset
 from metisfl.models import model_ops
+from metisfl.models.utils import get_completed_learning_task_pb
 from metisfl.proto import learner_pb2, model_pb2, metis_pb2
-from metisfl.utils import fedenv_parser
 from metisfl.utils.formatting import DictionaryFormatter
 
 
@@ -29,7 +28,7 @@ class TaskExecutor(object):
             model_backend_fn (Callable[[str], model_ops.ModelOps]): A function that returns a model backend.
             model_dir (str): The directory where the model is stored.
         """
-        self.homomorphic_encryption = fedenv_parser.HomomorphicEncryption.from_proto(he_scheme_pb)
+        self.homomorphic_encryption = HomomorphicEncryption.from_proto(he_scheme_pb)
         self.learner_dataset = learner_dataset
         self.model_ops = None 
         self.model_ops_fn = model_ops_fn
@@ -66,22 +65,17 @@ class TaskExecutor(object):
         metrics = [m for m in metrics_pb.metric]
         evaluation_datasets_pb = [d for d in evaluation_datasets_pb]
 
-        train_eval_pb = validation_eval_pb = test_eval_pb = metis_pb2.ModelEvaluation()
+        train_eval = validation_eval = test_eval = dict()
         self._log(state="starts", task="evaluation")
         for dataset_to_eval in evaluation_datasets_pb:
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TRAINING:
-                train_eval_pb = self.model_ops.evaluate_model(train_dataset, batch_size, metrics, verbose)
+                train_eval = self.model_ops.evaluate_model(train_dataset, batch_size, metrics, verbose)
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.VALIDATION:
-                validation_eval_pb = self.model_ops.evaluate_model(validation_dataset, batch_size, metrics, verbose)
+                validation_eval = self.model_ops.evaluate_model(validation_dataset, batch_size, metrics, verbose)
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TEST:
-                test_eval_pb = self.model_ops.evaluate_model(test_dataset, batch_size, metrics, verbose)
-        model_evaluations_pb = \
-            proto_factory.MetisProtoMessages.construct_model_evaluations_pb(
-                training_evaluation_pb=train_eval_pb,
-                validation_evaluation_pb=validation_eval_pb,
-                test_evaluation_pb=test_eval_pb)
+                test_eval = self.model_ops.evaluate_model(test_dataset, batch_size, metrics, verbose)
         self._log(state="completed", task="evaluation")
-        return model_evaluations_pb
+        return self._get_completed_evaluation_task_pb(train_eval, validation_eval, test_eval)
  
     def infer_model(self, 
                     model_pb: model_pb2.Model, 
@@ -101,8 +95,7 @@ class TaskExecutor(object):
             "valid": self.model_ops.infer_model(validation_dataset, batch_size, verbose) if infer_valid else None,
             "test": self.model_ops.infer_model(test_dataset, batch_size, verbose) if infer_test else None
         }            
-        stringified_res = DictionaryFormatter.stringify(inferred_res, stringify_nan=True)
-        return stringified_res
+        return DictionaryFormatter.stringify(inferred_res, stringify_nan=True)
         
     def train_model(self, 
                     model_pb: model_pb2.Model,
@@ -113,15 +106,35 @@ class TaskExecutor(object):
         self._set_weights_from_model_pb(model_pb)
         train_dataset, validation_dataset, test_dataset = self.learner_dataset.load_model_datasets()            
         self._log(state="starts", task="learning")
-        completed_task_pb = self.model_ops\
-            .train_model(train_dataset, 
-                         learning_task_pb, 
-                         hyperparameters_pb,
-                         validation_dataset, 
-                         test_dataset, 
-                         verbose)
+        model_weights_descriptor, learning_task_stats = self.model_ops.train_model(train_dataset, 
+                                                            learning_task_pb, 
+                                                            hyperparameters_pb,
+                                                            validation_dataset, 
+                                                            test_dataset, 
+                                                            verbose)
         self._log(state="completed", task="learning")
-        return completed_task_pb 
+        return  self._get_completed_learning_task_pb(model_weights_descriptor, learning_task_stats)
+
+    def _get_completed_learning_task_pb(self, model_weights_descriptor, learning_task_stats):
+        model_pb = self.homomorphic_encryption.encrypt_np_to_model_pb(model_weights_descriptor)
+        completed_learning_task_pb = get_completed_learning_task_pb(
+            model_pb=model_pb,
+            learning_task_stats=learning_task_stats
+        )
+        return completed_learning_task_pb
+    
+    def _get_completed_evaluation_task_pb(self, train_eval, validation_eval, test_eval):
+        return metis_pb2.ModelEvaluations(
+            training_evaluation_pb=self._get_metric_pb(train_eval),
+            validation_evaluation_pb=self._get_metric_pb(validation_eval),
+            test_evaluation_pb=self._get_metric_pb(test_eval)
+        )
+        
+    def _get_metric_pb(self, metrics):
+        if not metrics:
+            return metis_pb2.ModelEvaluation()
+        metrics = DictionaryFormatter.stringify(metrics, stringify_nan=True)
+        return metis_pb2.ModelEvaluation(metric_values=metrics)
 
     def __enter__(self):
         return self

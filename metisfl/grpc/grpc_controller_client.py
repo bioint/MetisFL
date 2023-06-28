@@ -1,6 +1,7 @@
 import grpc
 
-import metisfl.utils.proto_messages_factory as proto_factory
+from metisfl.utils.proto_messages_factory import ControllerServiceProtoMessages, \
+                                MetisProtoMessages, ServiceCommonProtoMessages, ModelProtoMessages
 
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.grpc.grpc_services import GRPCServerClient
@@ -22,12 +23,14 @@ class GRPCControllerClient(GRPCServerClient):
     # grpc.StatusCode.ALREADY_EXISTS is raised and the existing/already saved
     # learner id and authentication token are read/loaded from the disk.
 
+    # TODO: potential bug: the learner id and auth token filepaths are optional 
+    # so care must be taken to ensure they are provided if the learner needs them
     def __init__(self, 
                  controller_server_entity, 
                  learner_server_entity,
                  dataset_metadata,
-                 learner_id_fp: str,
-                 auth_token_fp: str,
+                 learner_id_fp: str = None,
+                 auth_token_fp: str = None,
                  max_workers=1):
         super(GRPCControllerClient, self).__init__(controller_server_entity, max_workers)
         self._learner_id_fp = learner_id_fp
@@ -35,12 +38,15 @@ class GRPCControllerClient(GRPCServerClient):
         self._learner_server_entity = learner_server_entity
         self._dataset_metadata = dataset_metadata
         self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)
+        
+        # These must be set after joining the federation, provided by the controller
+        self._learner_id = None
+        self._auth_token = None
 
     def check_health_status(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            get_services_health_status_request_pb = \
-                proto_factory.ServiceCommonProtoMessages. \
-                    construct_get_services_health_status_request_pb()
+            get_services_health_status_request_pb = ServiceCommonProtoMessages \
+                                                    .construct_get_services_health_status_request_pb()
             MetisLogger.info("Requesting controller's health status.")
             response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
             MetisLogger.info("Received controller's health status, {} - {}".format(
@@ -48,11 +54,7 @@ class GRPCControllerClient(GRPCServerClient):
             return response
         self._schedule_request(_request, request_retries, request_timeout, block)
 
-    def join_federation(self,
-                        request_retries=1,
-                        request_timeout=None,
-                        block=True):
-
+    def join_federation(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
             join_federation_request_pb = _get_join_request_pb(self._learner_server_entity,
                                                                 self._dataset_metadata)         
@@ -67,8 +69,8 @@ class GRPCControllerClient(GRPCServerClient):
             learner_id, auth_token, status = \
                 response.learner_id, response.auth_token, response.ack.status
             # override file contents or create file if not exists
-            open(self._learner_id_fp, "w+").write(learner_id.strip())
-            open(self._auth_token_fp, "w+").write(auth_token.strip())
+            open(self._learner_id_fp, "w+").write(learner_id.strip()) # FIXME: need to handle file open/write exceptions
+            open(self._auth_token_fp, "w+").write(auth_token.strip()) 
             MetisLogger.info("Joined federation with assigned id: {}".format(learner_id))
         except grpc.RpcError as rpc_error:
             if rpc_error.code() == grpc.StatusCode.ALREADY_EXISTS:
@@ -84,7 +86,7 @@ class GRPCControllerClient(GRPCServerClient):
     
     def leave_federation(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            leave_federation_request_pb = proto_factory.ControllerServiceProtoMessages \
+            leave_federation_request_pb = ControllerServiceProtoMessages \
                 .construct_leave_federation_request_pb(learner_id=self._learner_id, auth_token=self._auth_token)
             MetisLogger.info("Leaving federation, learner {}.".format(self._learner_id))
             response = self._stub.LeaveFederation(leave_federation_request_pb, timeout=_timeout)
@@ -94,7 +96,7 @@ class GRPCControllerClient(GRPCServerClient):
 
     def mark_task_completed(self, completed_task_pb, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            mark_task_completed_request_pb = proto_factory.ControllerServiceProtoMessages \
+            mark_task_completed_request_pb = ControllerServiceProtoMessages \
                 .construct_mark_task_completed_request_pb(completed_learning_task_pb=completed_task_pb)
             MetisLogger.info("Sending local completed task, learner {}.".format(self._learner_id))
             response = self._stub.MarkTaskCompleted(mark_task_completed_request_pb, timeout=_timeout)
@@ -105,7 +107,7 @@ class GRPCControllerClient(GRPCServerClient):
     def get_community_model_evaluation_lineage(self, num_backtracks, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
             get_community_model_evaluation_lineage_request_pb = \
-                proto_factory.ControllerServiceProtoMessages\
+                ControllerServiceProtoMessages\
                     .construct_get_community_model_evaluation_lineage_request_pb(num_backtracks)
             MetisLogger.info("Requesting community model evaluation lineage for {} backtracks.".format(num_backtracks))
             response = self._stub.GetCommunityModelEvaluationLineage(
@@ -118,7 +120,7 @@ class GRPCControllerClient(GRPCServerClient):
                                request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
             get_local_task_lineage_request_pb = \
-                proto_factory.ControllerServiceProtoMessages \
+                ControllerServiceProtoMessages \
                     .construct_get_local_task_lineage_request_pb(num_backtracks=num_backtracks,
                                                                  learner_ids=learner_ids)
             MetisLogger.info("Requesting local model evaluation lineage for {} backtracks.".format(num_backtracks))
@@ -131,7 +133,7 @@ class GRPCControllerClient(GRPCServerClient):
     def get_participating_learners(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
             get_participating_learners_pb = \
-                proto_factory.ControllerServiceProtoMessages.construct_get_participating_learners_request_pb()
+                ControllerServiceProtoMessages.construct_get_participating_learners_request_pb()
             MetisLogger.info("Requesting number of participating learners.")
             response = self._stub.GetParticipatingLearners(get_participating_learners_pb, timeout=_timeout)
             MetisLogger.info("Received number of participating learners.")
@@ -140,9 +142,8 @@ class GRPCControllerClient(GRPCServerClient):
 
     def get_runtime_metadata(self, num_backtracks, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            get_runtime_metadata_pb = \
-                proto_factory.ControllerServiceProtoMessages\
-                  .construct_get_runtime_metadata_lineage_request_pb(num_backtracks=num_backtracks)
+            get_runtime_metadata_pb = ControllerServiceProtoMessages\
+                                    .construct_get_runtime_metadata_lineage_request_pb(num_backtracks=num_backtracks)
             MetisLogger.info("Requesting runtime metadata lineage.")
             response = self._stub.GetRuntimeMetadataLineage(get_runtime_metadata_pb, timeout=_timeout)
             MetisLogger.info("Received runtime metadata lineage.")
@@ -151,11 +152,9 @@ class GRPCControllerClient(GRPCServerClient):
 
     def replace_community_model(self, num_contributors, model_pb, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            federated_model_pb = proto_factory.ModelProtoMessages.construct_federated_model_pb(
-                num_contributors, model_pb)
-            replace_community_model_request_pb = proto_factory \
-                .ControllerServiceProtoMessages.construct_replace_community_model_request_pb(
-                federated_model_pb)
+            federated_model_pb = ModelProtoMessages.construct_federated_model_pb(num_contributors, model_pb)
+            replace_community_model_request_pb = ControllerServiceProtoMessages \
+                                    .construct_replace_community_model_request_pb(federated_model_pb)
             MetisLogger.info("Replacing controller's community model.")
             response = self._stub.ReplaceCommunityModel(replace_community_model_request_pb, timeout=_timeout)
             MetisLogger.info("Replaced controller's community model.")
@@ -164,8 +163,7 @@ class GRPCControllerClient(GRPCServerClient):
 
     def shutdown_controller(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            shutdown_request_pb = proto_factory \
-                .ServiceCommonProtoMessages.construct_shutdown_request_pb()
+            shutdown_request_pb = ServiceCommonProtoMessages.construct_shutdown_request_pb()
             MetisLogger.info("Sending shutdown request to controller {}.".format(
                 self.grpc_endpoint.listening_endpoint))
             response = self._stub.ShutDown(shutdown_request_pb, timeout=_timeout)
@@ -173,7 +171,11 @@ class GRPCControllerClient(GRPCServerClient):
                 self.grpc_endpoint.listening_endpoint))
             return response.ack.status
         self._schedule_request(_request, request_retries, request_timeout, block)
-
+        
+    def _ensure_id_token(self):
+        assert self._learner_id is not None, "Learner ID is not set."
+        assert self._auth_token is not None, "Auth token is not set."
+        
     def _schedule_request(self, request, request_retries=1, request_timeout=None, block=True):
         if request_retries > 1:
             future = self.executor.schedule(function=self.request_with_timeout,
@@ -190,11 +192,11 @@ def _get_join_request_pb(learner_server_entity, dataset_metadata):
     public_ssl_config = \
         SSLConfigurator.gen_public_ssl_config_pb_as_stream(
             ssl_config_pb=learner_server_entity.ssl_config)
-    learner_server_entity_public = proto_factory.MetisProtoMessages.construct_server_entity_pb(
+    learner_server_entity_public = MetisProtoMessages.construct_server_entity_pb(
         hostname=learner_server_entity.hostname,
         port=learner_server_entity.port,
         ssl_config_pb=public_ssl_config)
-    dataset_spec_pb = proto_factory.MetisProtoMessages.construct_dataset_spec_pb(
+    dataset_spec_pb = MetisProtoMessages.construct_dataset_spec_pb(
         num_training_examples=dataset_metadata["train_dataset_size"],
         num_validation_examples=dataset_metadata["validation_dataset_size"],
         num_test_examples=dataset_metadata["test_dataset_size"],

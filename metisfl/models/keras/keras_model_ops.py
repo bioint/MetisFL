@@ -1,5 +1,4 @@
 from typing import Any
-from metisfl.models.model_proto_factory import ModelProtoFactory
 import tensorflow as tf
 
 from metisfl.proto import metis_pb2, model_pb2
@@ -8,7 +7,7 @@ from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
-from metisfl.models.model_ops import CompletedTaskStats, ModelOps
+from metisfl.models.model_ops import LearningTaskStats, ModelOps
 from metisfl.models.utils import calc_mean_wall_clock, get_num_of_epochs
 
 
@@ -19,7 +18,7 @@ class KerasModelOps(ModelOps):
                  keras_callbacks=None):
         self._model_dir = model_dir
         self._set_gpu_memory_growth()
-        self._model = MetisKerasModel.load(model_dir) # TODO Register custom objects, e.g., optimizers, required to load the model.
+        self._model = MetisKerasModel.load(model_dir) 
         self._keras_callbacks = keras_callbacks
         
     def _set_gpu_memory_growth(self):
@@ -34,7 +33,6 @@ class KerasModelOps(ModelOps):
             except RuntimeError as e:
                 # Memory growth must be set before GPUs have been initialized.
                 MetisLogger.error(e)
-
 
     def train_model(self,
                     train_dataset: ModelDataset,
@@ -90,22 +88,20 @@ class KerasModelOps(ModelOps):
         training_res = {k: k_v for k, k_v in sorted(history_res.history.items()) if 'val_' not in k}
         # Replacing "val" so that metric keys are the same for both training and validation datasets.
         validation_res = {k.replace("val_", ""): k_v for k, k_v in sorted(history_res.history.items()) if 'val_' in k}
-
         model_weights_descriptor = self._model.get_model_weights()
-        completed_learning_task = ModelProtoFactory.CompletedLearningTaskProtoMessage(
-            weights_values=model_weights_descriptor.weights_values,
-            weights_trainable=model_weights_descriptor.weights_trainable,
-            weights_names=model_weights_descriptor.weights_names,
-            train_stats=training_res, completed_epochs=epochs_num,
-            global_iteration=global_iteration, validation_stats=validation_res,
-            test_stats=test_res, completes_batches=total_steps,
-            batch_size=batch_size, processing_ms_per_epoch=calc_mean_wall_clock(performance_cb.epochs_wall_clock_time_sec),
+        learning_task_stats = LearningTaskStats(
+            train_stats=training_res, 
+            completed_epochs=epochs_num,
+            global_iteration=global_iteration, 
+            validation_stats=validation_res,
+            test_stats=test_res, 
+            completes_batches=total_steps,
+            batch_size=batch_size,
+            processing_ms_per_epoch=calc_mean_wall_clock(performance_cb.epochs_wall_clock_time_sec),
             processing_ms_per_batch=calc_mean_wall_clock(performance_cb.batches_wall_clock_time_sec)
         )
-        completed_learning_task_pb = completed_learning_task.construct_completed_learning_task_pb(
-            he_scheme=self._he_scheme)
         MetisLogger.info("Model training is complete.")
-        return completed_learning_task_pb
+        return model_weights_descriptor, learning_task_stats
     
     def evaluate_model(self,
                        eval_dataset: ModelDataset,
@@ -115,15 +111,13 @@ class KerasModelOps(ModelOps):
             raise RuntimeError("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
         x_eval, y_eval = eval_dataset.construct_dataset_pipeline(batch_size=batch_size, is_train=False)
-        eval_res = self._model.evaluate(x=x_eval,
+        evaluation_metrics = self._model.evaluate(x=x_eval,
                                         y=y_eval,
                                         batch_size=batch_size,
                                         callbacks=self._keras_callbacks,
                                         verbose=verbose, return_dict=True)
-        model_evaluation_pb = ModelProtoFactory\
-            .ModelEvaluationProtoMessage(eval_res).construct_model_evaluation_pb()
         MetisLogger.info("Model evaluation is complete.")
-        return model_evaluation_pb
+        return evaluation_metrics
 
     def infer_model(self,
                     infer_dataset: ModelDataset,

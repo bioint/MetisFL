@@ -53,11 +53,14 @@ class LearnerExecutor(object):
         model_predictions_pb = future.result() if block else None # FIXME: @stripeli
         return model_predictions_pb
 
-    def run_learning_task(self, cancel_running=False, block=False, **kwargs):
+    def run_learning_task(self, 
+                          callback: Callable = None,
+                          cancel_running=False, 
+                          block=False, **kwargs):
         future = self._run_task(
             task_name=constants.LEARNING_TASK,
             task_fn=self.task_executor.train_model,
-            callback=self.federation_helper.mark_learning_task_completed,
+            callback=callback,
             cancel_running=cancel_running,
             kwargs=kwargs
         )

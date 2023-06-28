@@ -85,8 +85,6 @@ def init_controller(args):
 
 if __name__ == "__main__":
     # FIXME: the existence of hex-encoded args is not a user-friendly way to start the controller
-    # Since the hex encoding is required for sending the args over the wire, let's keep those
-    # and add an additional wrapper that accepts user-friendly arg input
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--controller_server_entity_protobuff_serialized_hexadecimal", type=str,
                         default=None,

@@ -1,4 +1,5 @@
 import argparse
+from metisfl.grpc.grpc_controller_client import GRPCControllerClient
 
 import metisfl.proto.metis_pb2 as metis_pb2
 import metisfl.learner.constants as constants
@@ -46,7 +47,6 @@ def init_learner(args):
     learner_server_entity_pb, controller_server_entity_pb = create_servers(args)
     he_scheme_pb = parse_he_scheme_hex(args.he_scheme_protobuff_serialized_hexadecimal)
     model_ops_fn = get_model_ops_fn(args.neural_engine)
-    learner_credentials_fp =  constants.LEARNER_CREDENTIALS_FP.format(learner_server_entity_pb.port)
     
     learner_dataset = LearnerDataset(
         train_dataset_fp=args.train_dataset,
@@ -56,31 +56,25 @@ def init_learner(args):
         validation_dataset_recipe_pkl=args.validation_dataset_recipe,
         test_dataset_recipe_pkl=args.test_dataset_recipe,
     )
-    
     task_executor = TaskExecutor(
         learner_dataset=learner_dataset,
         model_ops_fn=model_ops_fn,
         he_scheme_pb=he_scheme_pb,
         model_dir=args.model_dir,
-    )
-    
-    ## FIXME: dataset should not be passed here
-    federation_helper = FederationHelper(
-        learner_server_entity=learner_server_entity_pb,
+    )          
+    learner_executor = LearnerExecutor(task_executor=task_executor)
+    learner_controller_client = GRPCControllerClient(
         controller_server_entity=controller_server_entity_pb,
-        learner_credentials_fp=learner_credentials_fp,
-        learner_dataset=learner_dataset,
+        learner_server_entity=learner_server_entity_pb,
+        dataset_metadata=learner_dataset.get_dataset_metadata(),
+        learner_id_fp=constants.LEARNER_ID_FP,
+        auth_token_fp=constants.AUTH_TOKEN_FP
     )
-           
-    learner = LearnerExecutor(
-        federation_helper=federation_helper,
-        task_executor=task_executor
-    )
-    
     learner_servicer = LearnerServicer(
-        learner=learner,
-        federation_helper=federation_helper,
-        servicer_workers=5)
+        learner_executor=learner_executor,
+        learner_controller_client=learner_controller_client,
+        servicer_workers=5
+    )
     
     # First, initialize learner servicer for receiving train/evaluate/inference tasks.
     learner_servicer.init_servicer()

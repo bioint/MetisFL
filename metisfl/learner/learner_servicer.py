@@ -76,6 +76,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self._log_training_task_receive()
         self.__community_models_received += 1
         is_task_submitted = self.learner_executor.run_learning_task(
+            callback=self.learner_controller_client.mark_task_completed,
             learning_task_pb=request.task,
             model_pb=request.federated_model.model,
             hyperparameters_pb=request.hyperparameters,
