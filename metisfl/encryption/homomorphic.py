@@ -103,4 +103,4 @@ class HomomorphicEncryption(object):
         return model_pb2.Model(variables=variables_pb)
     
     def to_proto(self):
-        return self._he_scheme_pb
+        return self._he_scheme_pb 

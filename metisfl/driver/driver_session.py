@@ -3,15 +3,17 @@ import queue
 import time
 from typing import Callable
 
-from driver_initializer import DriverInitializer
-from monitor import FederationMonitor
 from pebble import ProcessPool
-from utils import create_server_entity
 
-import metisfl.utils as fedenv_parser
-from metisfl.grpc import GRPCControllerClient, GRPCLearnerClient
 from metisfl.models import MetisModel
+from metisfl.utils import fedenv_parser
 from metisfl.utils.metis_logger import MetisASCIIArt
+
+from .driver_initializer import DriverInitializer
+from .grpc_controller_client import GRPCControllerClient
+from .grpc_learner_client import GRPCLearnerClient
+from .monitor import FederationMonitor
+from .utils import create_server_entity
 
 TRAIN = "train"
 VALIDATION = "validation"
@@ -19,7 +21,7 @@ TEST = "test"
 TASK_KEYS = [TRAIN, VALIDATION, TEST]
 
 
-class DriverSessionBase(object):
+class DriverSession(object):
 
     def __init__(self, 
                  fed_env_fp: str,
@@ -61,6 +63,7 @@ class DriverSessionBase(object):
 
     def _create_driver_controller_grpc_client(self):
         controller_server_entity_pb = create_server_entity(
+            enable_ssl=self.federation_environment.communication_protocol.enable_ssl,
             remote_host_instance=self.federation_environment.controller,
             connection_entity=True)
         grpc_controller_client = GRPCControllerClient(
@@ -72,7 +75,8 @@ class DriverSessionBase(object):
         grpc_clients = {}
         for learner_instance in self.federation_environment.learners.learners:
             learner_server_entity_pb = create_server_entity(
-                learner_instance,
+                enable_ssl=self.federation_environment.communication_protocol.enable_ssl,
+                remote_host_instance=learner_instance,
                 connection_entity=True)
             grpc_clients[learner_instance.learner_id] = \
                 GRPCLearnerClient(learner_server_entity_pb, max_workers=1)
@@ -99,7 +103,7 @@ class DriverSessionBase(object):
         # regarding the execution progress of the federation.
         controller_future = self._executor.schedule(function=self._driver_initilizer.init_controller)
         self._executor_controller_tasks_q.put(controller_future)
-        # @stripeli what happens in the else case?
+        # FIXME: @stripeli what happens in the else case?
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model_to_controller()
             for learner_instance in self.federation_environment.learners.learners:
@@ -114,7 +118,7 @@ class DriverSessionBase(object):
                 time.sleep(0.1)
                 
     def monitor_federation(self):
-        self._monitor.monitor()
+        self._monitor.monitor_federation()
         
     def get_federation_statistics(self):
         return self._monitor.get_federation_statistics()

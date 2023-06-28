@@ -29,7 +29,7 @@ class ModelOps(object):
                     hyperparameters_pb: metis_pb2.Hyperparameters,
                     validation_dataset: ModelDataset = None,
                     test_dataset: ModelDataset = None,
-                    verbose=False) -> [ModelWeightsDescriptor, LearningTaskStats]
+                    verbose=False) -> [ModelWeightsDescriptor, LearningTaskStats]:
         pass
     
     @abc.abstractmethod

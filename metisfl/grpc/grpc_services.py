@@ -1,13 +1,15 @@
-import grpc
 import queue
 import time
-
 from concurrent import futures
-from metisfl.proto.metis_pb2 import ServerEntity
-from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.ssl_configurator import SSLConfigurator
+
+import grpc
 from grpc._cython import cygrpc
 from pebble import ThreadPool
+
+from metisfl.proto.metis_pb2 import ServerEntity
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.proto_messages_factory import ServiceCommonProtoMessages
+from metisfl.utils.ssl_configurator import SSLConfigurator
 
 
 class GRPCEndpoint(object):
@@ -50,14 +52,41 @@ class GRPCServerClient(object):
         self.executor = ThreadPool(max_workers=max_workers)
         self.executor_pool = queue.Queue()
         self._channel = self.get_channel()
-        # FIXME: @stripeli 
         
+    def check_health_status(self, request_retries=1, request_timeout=None, block=True):
+        def _request(_timeout=None):
+            get_services_health_status_request_pb = ServiceCommonProtoMessages \
+                                                    .construct_get_services_health_status_request_pb()
+            MetisLogger.info("Requesting controller's health status.")
+            response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
+            MetisLogger.info("Received controller's health status, {} - {}".format(
+                self.grpc_endpoint.listening_endpoint, response))
+            return response
+        self.schedule_request(_request, request_retries, request_timeout, block)
+
     def get_channel(self):
         """ Initialize connection only if it is not established. """
         _channel = GRPCChannelMaxMsgLength(self.grpc_endpoint.server_entity)
         return _channel.channel
 
-    def request_with_timeout(self, request_fn, request_timeout, request_retries):
+    def schedule_request(self, request, request_retries=1, request_timeout=None, block=True):
+        if request_retries > 1:
+            future = self.executor.schedule(function=self._request_with_timeout,
+                                            args=(request, request_timeout, request_retries))
+        else:
+            future = self.executor.schedule(request)
+
+        if block:
+            return future.result()
+        else:
+            self.executor_pool.put(future)
+
+    def shutdown(self):
+        self.executor.close()
+        self.executor.join()
+        self._channel.close()
+
+    def _request_with_timeout(self, request_fn, request_timeout, request_retries):
         count_retries = 0
         response = None
         while count_retries < request_retries:
@@ -70,12 +99,7 @@ class GRPCServerClient(object):
             else:
                 break
             count_retries += 1
-        return response
-
-    def shutdown(self):
-        self.executor.close()
-        self.executor.join()
-        self._channel.close()
+        return response       
 
 
 class GRPCServerMaxMsgLength(object):

@@ -1,15 +1,13 @@
 import abc
 from collections import namedtuple
 
-from metisfl.models.model_wrapper import MetisModel
-
 ModelWeightsDescriptor = \
     namedtuple('ModelWeightsDescriptor',
                ['weights_names', 'weights_trainable', 'weights_values'])
 
 class MetisModel(object):
     @abc.abstractmethod
-    def load(self, model_dir) -> MetisModel:
+    def load(self, model_dir):
         pass
     
     @abc.abstractmethod

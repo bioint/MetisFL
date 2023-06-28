@@ -5,12 +5,12 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from examples.utils.data_partitioning import DataPartitioning
 from examples.keras.models.cifar_cnn import get_model
+from examples.utils.data_partitioning import DataPartitioning
 from metisfl.driver.driver_session import DriverSession
+from metisfl.models import ModelDatasetClassification
 from metisfl.models.keras.wrapper import MetisKerasModel
-from metisfl.models.model_dataset import ModelDatasetClassification
-from metisfl.utils.fedenv_parser import FederationEnvironment
+from metisfl.utils import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -98,8 +98,9 @@ if __name__ == "__main__":
             x=x, y=y, size=y.size, examples_per_class=distribution)
         return model_dataset
 
-    driver_session = DriverSession(federation_environment,
-                                   model_def,
+    driver_session = DriverSession(fed_env_fp=args.federation_environment_config_fp,
+                                   model=model_def,
+                                   working_dir="/tmp/metis_test/",
                                    train_dataset_recipe_fn=dataset_recipe_fn,
                                    validation_dataset_recipe_fn=dataset_recipe_fn,
                                    test_dataset_recipe_fn=dataset_recipe_fn)

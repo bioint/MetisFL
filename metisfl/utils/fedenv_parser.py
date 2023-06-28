@@ -1,10 +1,10 @@
-import yaml
 from typing import List
 
-from metisfl.encryption import fhe
+import yaml
+
+import metisfl.utils.proto_messages_factory as proto_messages_factory
 from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.models.model_wrapper import ModelWeightsDescriptor
-import metisfl.utils.proto_messages_factory as proto_messages_factory
 
 
 class TerminationSignals(object):
@@ -52,7 +52,9 @@ class FHEScheme(object):
 
 class AggregationRule(object):
 
-    def __init__(self, aggregation_rule_map, homomorphic_encryption):
+    def __init__(self, 
+                 aggregation_rule_map, 
+                 homomorphic_encryption: HomomorphicEncryption):
         self.aggregation_rule_name = aggregation_rule_map.get("Name", None)
         self.aggregation_rule_specifications = aggregation_rule_map.get("RuleSpecifications", {})
         self.aggregation_rule_scaling_factor = \
@@ -297,7 +299,7 @@ class DatasetConfigs(object):
 class GRPCServicer(object):
 
     def __init__(self, grpc_servicer_map):
-        self.hostname = grpc_servicer_map.get("Hostname")
+        self.hostname = grpc_servicer_map.get("Hostname") # FIXME: @stripeli this does not exist is some yamls 
         self.port = grpc_servicer_map.get("Port")
         if not self.hostname and not self.port:
             raise RuntimeError("Malformed (hostname, port) combination. Both values need to be defined.")
@@ -325,7 +327,7 @@ class FederationEnvironment(object):
         self.controller = Controller(federation_environment.get("Controller"))
         self.learners = Learners(federation_environment.get("Learners"))
 
-        self.homomorphic_encryption = None
+        self.homomorphic_encryption = HomomorphicEncryption({})
         if "HomomorphicEncryption" in federation_environment:
             self.homomorphic_encryption = HomomorphicEncryption(federation_environment.get("HomomorphicEncryption"))
             # To use homomorphic encryption (fully, partial, somewhat) the user needs to define

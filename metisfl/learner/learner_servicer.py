@@ -2,39 +2,52 @@ import threading
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
-from learner_executor import LearnerExecutor
 
 import metisfl.learner.constants as constants
-from metisfl.grpc import GRPCControllerClient, GRPCServerMaxMsgLength
+from metisfl.grpc import GRPCServerMaxMsgLength
 from metisfl.proto import learner_pb2_grpc
+from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils import (LearnerServiceProtoMessages, MetisLogger,
                            ServiceCommonProtoMessages)
+
+from .grpc_controller_client import GRPCControllerClient
+from .learner_executor import LearnerExecutor
 
 
 class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
     def __init__(self, 
-                 learner_executor: LearnerExecutor, 
-                 learner_controller_client: GRPCControllerClient,
-                 servicer_workers=10):
-        self.learner_executor = learner_executor
-        self.learner_controller_client = learner_controller_client
-        self.servicer_workers = servicer_workers
+                learner_executor: LearnerExecutor, 
+                controller_server_entity_pb: ServerEntity,
+                learner_server_entity_pb: ServerEntity,
+                dataset_metadata: dict,
+                learner_id_fp: str,
+                auth_token_fp: str, 
+                servicer_workers=10):
+        self._learner_executor = learner_executor
+        self._servicer_workers = servicer_workers
         self.__community_models_received = 0 
         self.__model_evaluation_requests = 0
         self.__not_serving_event = threading.Event()  # event to stop serving inbound requests
         self.__shutdown_event = threading.Event()  # event to stop all grpc related tasks
-        self.__grpc_server = None
-
-    def init_servicer(self):
-        # @stripeli: any reason why this is not in __init__?
+        
+        # @stripeli: any reason why this was not in __init__?
         self.__grpc_server = GRPCServerMaxMsgLength(
-            max_workers=self.servicer_workers,
-            server_entity=self.federation_helper.learner_server_entity) # FIXME:
+            max_workers=self._servicer_workers,
+            server_entity=self.federation_helper.learner_server_entity
+        ) 
+        
+        self._learner_controller_client = GRPCControllerClient(
+            controller_server_entity=controller_server_entity_pb,
+            learner_server_entity=learner_server_entity_pb,
+            dataset_metadata=dataset_metadata
+        )
+    
+    def init_servicer(self):
         learner_pb2_grpc.add_LearnerServiceServicer_to_server(
             self, self.__grpc_server.server)
         self.__grpc_server.server.start()
-        self.learner_controller_client.join_federation()
+        self._learner_controller_client.join_federation()
         self._log_init_learner()
 
     def wait_servicer(self):
@@ -47,7 +60,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
                 .construct_evaluate_model_response_pb()
         self._log_evaluation_task_receive()
         self.__model_evaluation_requests += 1 # @stripeli where is this used?
-        model_evaluations_pb = self.learner_executor.run_evaluation_task(
+        model_evaluations_pb = self._learner_executor.run_evaluation_task(
             model_pb = request.model,
             batch_size = request.batch_size,
             evaluation_dataset_pb = request.evaluation_dataset,
@@ -74,8 +87,8 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
                 .construct_run_task_response_pb()
         self._log_training_task_receive()
         self.__community_models_received += 1
-        is_task_submitted = self.learner_executor.run_learning_task(
-            callback=self.learner_controller_client.mark_task_completed,
+        is_task_submitted = self._learner_executor.run_learning_task(
+            callback=self._learner_controller_client.mark_task_completed,
             learning_task_pb=request.task,
             model_pb=request.federated_model.model,
             hyperparameters_pb=request.hyperparameters,
@@ -87,8 +100,8 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
     def ShutDown(self, request, context):
         self._log_shutdown()
         self.__not_serving_event.set()
-        self.learner_executor.shutdown(CANCEL_RUNNING=constants.CANCEL_RUNNING_ON_SHUTDOWN)
-        self.learner_controller_client.leave_federation()
+        self._learner_executor.shutdown(CANCEL_RUNNING=constants.CANCEL_RUNNING_ON_SHUTDOWN)
+        self._learner_controller_client.leave_federation()
         self.__shutdown_event.set()
         return self._get_shutdown_response_pb()
         

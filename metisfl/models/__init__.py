@@ -1,6 +1,6 @@
-from model_ops import ModelOps
-from model_wrapper import MetisModel
-from model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
+from .model_ops import ModelOps
+from .model_wrapper import MetisModel
+from .model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
 
 def get_model_ops_fn(nn_engine) -> ModelOps:
     if nn_engine == "keras":

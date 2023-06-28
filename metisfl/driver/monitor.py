@@ -2,13 +2,17 @@ import datetime
 import time
 
 from google.protobuf.json_format import MessageToDict
+from metisfl.utils import FederationEnvironment
 
 from metisfl.utils.metis_logger import MetisLogger
 
+from .grpc_controller_client import GRPCControllerClient
 
 class FederationMonitor:
     
-    def __init__(self, federation_environment, driver_controller_grpc_client):
+    def __init__(self, 
+                 federation_environment: FederationEnvironment, 
+                 driver_controller_grpc_client: GRPCControllerClient):
         self._driver_controller_grpc_client = driver_controller_grpc_client
         self.federation_environment = federation_environment
         self.federation_rounds_cutoff = self.federation_environment.termination_signals.federation_rounds

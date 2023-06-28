@@ -19,8 +19,20 @@ CANCEL_RUNNING_ON_SHUTDOWN = {
     INFERENCE_TASK: False
 }
 
-if not os.path.exists(LEARNER_CREDENTIALS_FP):
-    os.mkdir(LEARNER_CREDENTIALS_FP)
+# TODO: @stripeli are these files maintined between runs?
+_LEARNER_ID_FP = os.path.join(LEARNER_CREDENTIALS_FP, LEARNER_ID_FILE)
+_AUTH_TOKEN_FP = os.path.join(LEARNER_CREDENTIALS_FP, AUTH_TOKEN_FILE)
 
-LEARNER_ID_FP = os.path.join(LEARNER_CREDENTIALS_FP, LEARNER_ID_FILE)
-AUTH_TOKEN_FP = os.path.join(LEARNER_CREDENTIALS_FP, AUTH_TOKEN_FILE)
+def get_learner_id_fp(learner_id):
+    path = _LEARNER_ID_FP.format(learner_id)
+    _ensure_path(path)
+    return os.path.join(path, LEARNER_ID_FILE)
+
+def get_auth_token_fp(learner_id):
+    path = _AUTH_TOKEN_FP.format(learner_id)
+    _ensure_path(path)
+    return os.path.join(path, AUTH_TOKEN_FILE)
+    
+def _ensure_path(path):
+    if not os.path.exists(path):
+        os.makedirs(path)

@@ -1,14 +1,15 @@
 import argparse
-import metisfl.proto.metis_pb2 as metis_pb2
-import metisfl.learner.constants as constants
 
-from metisfl.grpc.grpc_controller_client import GRPCControllerClient
-from metisfl.learner.dataset_handler import LearnerDataset
-from metisfl.learner.learner_executor import LearnerExecutor
-from metisfl.learner.learner_servicer import LearnerServicer
-from metisfl.learner.task_executor import TaskExecutor
+import metisfl.proto.metis_pb2 as metis_pb2
 from metisfl.models import get_model_ops_fn
-from metisfl.utils.proto_messages_factory import MetisProtoMessages
+from metisfl.utils import MetisProtoMessages
+
+from . import constants
+from .dataset_handler import LearnerDataset
+from .learner_executor import LearnerExecutor
+from .learner_servicer import LearnerServicer
+from .task_executor import TaskExecutor
+
 
 def parse_server_hex(hex_str, default_host, default_port):
     if hex_str is not None:
@@ -38,7 +39,6 @@ def create_servers(args):
     controller_server_entity_pb = parse_server_hex(
         args.controller_server_entity_protobuff_serialized_hexadecimal,
         constants.DEFAULT_CONTROLLER_HOSTNAME, constants.DEFAULT_CONTROLLER_PORT)
-        
     return learner_server_entity_pb,controller_server_entity_pb
 
 def init_learner(args):
@@ -60,17 +60,12 @@ def init_learner(args):
         he_scheme_pb=he_scheme_pb,
         model_dir=args.model_dir,
     )          
-    learner_executor = LearnerExecutor(task_executor=task_executor)
-    learner_controller_client = GRPCControllerClient(
+    learner_executor = LearnerExecutor(task_executor=task_executor)    
+    learner_servicer = LearnerServicer(
+        learner_executor=learner_executor,
         controller_server_entity=controller_server_entity_pb,
         learner_server_entity=learner_server_entity_pb,
         dataset_metadata=learner_dataset.get_dataset_metadata(),
-        learner_id_fp=constants.LEARNER_ID_FP,
-        auth_token_fp=constants.AUTH_TOKEN_FP
-    )
-    learner_servicer = LearnerServicer(
-        learner_executor=learner_executor,
-        learner_controller_client=learner_controller_client,
         servicer_workers=5
     )
     
