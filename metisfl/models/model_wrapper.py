@@ -1,9 +1,6 @@
 import abc
-from collections import namedtuple
 
-ModelWeightsDescriptor = \
-    namedtuple('ModelWeightsDescriptor',
-               ['weights_names', 'weights_trainable', 'weights_values'])
+from metisfl.models.types import ModelWeightsDescriptor
 
 class MetisModel(object):
     @abc.abstractmethod

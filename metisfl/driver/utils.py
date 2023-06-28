@@ -1,4 +1,8 @@
-from metisfl.utils import fedenv_parser, proto_messages_factory, SSLConfigurator
+
+from metisfl.utils import fedenv_parser
+from metisfl.utils.proto_messages_factory import MetisProtoMessages
+from metisfl.utils.ssl_configurator import SSLConfigurator
+
 
 def create_server_entity(enable_ssl: bool,
                           remote_host_instance: fedenv_parser.RemoteHost,
@@ -32,17 +36,17 @@ def create_server_entity(enable_ssl: bool,
 
         if wrap_as_stream:
             ssl_config_bundle_pb = \
-                proto_messages_factory.MetisProtoMessages.construct_ssl_config_stream_pb(
+                MetisProtoMessages.construct_ssl_config_stream_pb(
                     public_certificate_stream=public_cert,
                     private_key_stream=private_key)
         else:
             ssl_config_bundle_pb = \
-                proto_messages_factory.MetisProtoMessages.construct_ssl_config_files_pb(
+                MetisProtoMessages.construct_ssl_config_files_pb(
                     public_certificate_file=public_cert,
                     private_key_file=private_key)
 
         ssl_config_pb = \
-            proto_messages_factory.MetisProtoMessages.construct_ssl_config_pb(
+            MetisProtoMessages.construct_ssl_config_pb(
                 enable_ssl=True,
                 config_pb=ssl_config_bundle_pb)
 
@@ -50,7 +54,7 @@ def create_server_entity(enable_ssl: bool,
     # spaw its grpc server and listen for incoming requests. It does not refer
     # to the connection configurations used to connect to the remote host.
     server_entity_pb = \
-        proto_messages_factory.MetisProtoMessages.construct_server_entity_pb(
+        MetisProtoMessages.construct_server_entity_pb(
             hostname=remote_host_instance.grpc_servicer.hostname,
             port=remote_host_instance.grpc_servicer.port,
             ssl_config_pb=ssl_config_pb)

@@ -8,9 +8,9 @@ import tensorflow as tf
 from examples.keras.models.cifar_cnn import get_model
 from examples.utils.data_partitioning import DataPartitioning
 from metisfl.driver.driver_session import DriverSession
-from metisfl.models import ModelDatasetClassification
+from metisfl.models.model_dataset import ModelDatasetClassification
 from metisfl.models.keras.wrapper import MetisKerasModel
-from metisfl.utils import FederationEnvironment
+from metisfl.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 

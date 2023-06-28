@@ -1,8 +1,8 @@
 import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
-from metisfl.models import get_model_ops_fn
-from metisfl.utils import MetisProtoMessages
+from metisfl.models.utils import get_model_ops_fn
+from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 from . import constants
 from .dataset_handler import LearnerDataset

@@ -1,10 +1,9 @@
-import metisfl.utils.proto_messages_factory as proto_messages_factory
 
 from typing import List
 from metisfl.encryption import fhe
-from metisfl.models.model_wrapper import ModelWeightsDescriptor
+from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.proto import model_pb2
-from metisfl.utils.proto_messages_factory import ModelProtoMessages
+from metisfl.utils.proto_messages_factory import ModelProtoMessages, MetisProtoMessages
 
 # FIXME: this can go in the yaml file.
 CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
@@ -18,13 +17,13 @@ class HomomorphicEncryption(object):
             self.scaling_bits = homomorphic_encryption_map.get("ScalingBits")
             self._he_scheme = fhe.CKKS(self.batch_size, self.scaling_bits, CRYPTO_RESOURCES_DIR)
             self._he_scheme.load_crypto_params()
-            fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb(
+            fhe_scheme_pb = MetisProtoMessages.construct_fhe_scheme_pb(
                     batch_size=self.batch_size, scaling_bits=self.scaling_bits)
-            self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
+            self._he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
                     enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
         else:
-            empty_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_empty_he_scheme_pb()
-            self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
+            empty_scheme_pb = MetisProtoMessages.construct_empty_he_scheme_pb()
+            self._he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
                 enabled=False, empty_scheme_pb=empty_scheme_pb)
             
     @staticmethod

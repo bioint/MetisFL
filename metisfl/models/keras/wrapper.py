@@ -3,8 +3,9 @@ import tensorflow as tf
 
 from metisfl.models.keras.optimizers.fed_prox import FedProx
 from metisfl.models.model_wrapper import MetisModel
-from metisfl.models.model_wrapper import ModelWeightsDescriptor
+from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.utils.metis_logger import MetisLogger
+
 
 class MetisKerasModel(MetisModel):
 

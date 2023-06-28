@@ -7,8 +7,9 @@ from typing import Callable, Dict
 import cloudpickle
 from fabric import Connection
 
-from metisfl.models import MetisModel
-from metisfl.utils import MetisLogger, fedenv_parser
+from metisfl.models.model_wrapper import MetisModel
+from metisfl.utils import fedenv_parser
+from metisfl.utils.metis_logger import MetisLogger
 
 from .utils import create_server_entity
 
@@ -76,19 +77,18 @@ class DriverInitializer:
         # see also, https://github.com/pyinvoke/invoke/blob/master/invoke/runners.py#L109
 
         # Delete existing directory if it exists, then recreate it.
+        print("Deleting existing directory if it exists, then recreate it.")
         connection.run("rm -rf {}".format(REMOTE_METIS_CONTROLLER_PATH))
         connection.run("mkdir -p {}".format(REMOTE_METIS_CONTROLLER_PATH))
         remote_on_login = self._federation_environment.controller.connection_configs.on_login
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
             remote_on_login = remote_on_login[:-1]
-
+        
         # @stripeli this assumes that metisfl is installed in the remote host; make it more robust
-        print("remote_on_login: {}".format(remote_on_login))
         init_cmd = "{} && cd {} && {}".format(
             remote_on_login,
             self._federation_environment.controller.project_home,
             self._init_controller_cmd())
-
         MetisLogger.info("Running init cmd to controller host: {}".format(init_cmd))
         connection.run(init_cmd)
         connection.close()
@@ -161,7 +161,6 @@ class DriverInitializer:
             initialization_entity=True)
         config = {}
         config["controller_server_entity"] = self.controller_server_entity_pb.SerializeToString().hex()
-        print(self._federation_environment.global_model_config)
         for attr in config_attrs:
             config[attr] = getattr(self._federation_environment, attr).to_proto().SerializeToString().hex()
         return self._get_cmd("controller", config)

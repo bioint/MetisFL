@@ -1,6 +1,6 @@
-from metisfl.grpc import GRPCServerClient
+from metisfl.grpc.grpc_services import GRPCServerClient
 from metisfl.proto import learner_pb2_grpc
-from metisfl.utils import ServiceCommonProtoMessages
+from metisfl.utils.proto_messages_factory import ServiceCommonProtoMessages
 from metisfl.utils.metis_logger import MetisLogger
 
 

@@ -1,10 +1,10 @@
 from typing import Callable
 
 from metisfl.encryption.homomorphic import HomomorphicEncryption
-from metisfl.models import ModelOps
+from metisfl.models.model_ops import ModelOps
 from metisfl.models.utils import get_completed_learning_task_pb
 from metisfl.proto import learner_pb2, metis_pb2, model_pb2
-from metisfl.utils import DictionaryFormatter
+from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.utils.metis_logger import MetisLogger
 
 from .dataset_handler import LearnerDataset

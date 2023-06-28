@@ -2,11 +2,12 @@ import datetime
 import time
 
 from google.protobuf.json_format import MessageToDict
-from metisfl.utils import FederationEnvironment
 
+from metisfl.utils.fedenv_parser import FederationEnvironment
 from metisfl.utils.metis_logger import MetisLogger
 
 from .grpc_controller_client import GRPCControllerClient
+
 
 class FederationMonitor:
     

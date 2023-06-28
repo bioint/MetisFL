@@ -4,11 +4,12 @@ import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 
 import metisfl.learner.constants as constants
-from metisfl.grpc import GRPCServerMaxMsgLength
+from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
 from metisfl.proto import learner_pb2_grpc
 from metisfl.proto.metis_pb2 import ServerEntity
-from metisfl.utils import (LearnerServiceProtoMessages, MetisLogger,
-                           ServiceCommonProtoMessages)
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.proto_messages_factory import (LearnerServiceProtoMessages,
+                                                  ServiceCommonProtoMessages)
 
 from .grpc_controller_client import GRPCControllerClient
 from .learner_executor import LearnerExecutor

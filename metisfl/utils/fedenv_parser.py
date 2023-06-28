@@ -2,9 +2,8 @@ from typing import List
 
 import yaml
 
-import metisfl.utils.proto_messages_factory as proto_messages_factory
 from metisfl.encryption.homomorphic import HomomorphicEncryption
-from metisfl.models.model_wrapper import ModelWeightsDescriptor
+from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 
 
 class TerminationSignals(object):
@@ -35,7 +34,7 @@ class CommunicationProtocol(object):
             self.semi_sync_recompute_num_updates = self.specifications.get("SemiSynchronousRecomputeSteps", None)
             
     def to_proto(self):
-        return proto_messages_factory.MetisProtoMessages.construct_communication_specs_pb(
+        return MetisProtoMessages.construct_communication_specs_pb(
             protocol=self.name,
             semi_sync_lambda=self.semi_synchronous_lambda,
             semi_sync_recompute_num_updates=self.semi_sync_recompute_num_updates)
@@ -70,7 +69,7 @@ class AggregationRule(object):
             self.aggregation_rule_stride_length)
     
     def to_proto(self):
-        return proto_messages_factory.MetisProtoMessages.construct_aggregation_rule_pb(
+        return MetisProtoMessages.construct_aggregation_rule_pb(
             rule_name=self.aggregation_rule_name,
             scaling_factor=self.aggregation_rule_scaling_factor,
             stride_length=self.aggregation_rule_stride_length,
@@ -84,7 +83,7 @@ class GlobalModelConfig(object):
         self.participation_ratio = global_model_map.get("ParticipationRatio", 1)
         
     def to_proto(self):
-        return proto_messages_factory.MetisProtoMessages.construct_global_model_specs(
+        return MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=self.aggregation_rule.to_proto(),
             learners_participation_ratio=self.participation_ratio)
 
@@ -94,10 +93,11 @@ class LocalModelConfig(object):
         self.batch_size = local_model_map.get("BatchSize", 100)
         self.local_epochs = local_model_map.get("LocalEpochs", 5)
         self.validation_percentage = local_model_map.get("ValidationPercentage", 0)
+        print("LocalModelConfig: ")
         self.optimizer_config = OptimizerConfig(local_model_map.get("OptimizerConfig"))
         
     def to_proto(self):
-        return proto_messages_factory.MetisProtoMessages.construct_local_model_specs(
+        return MetisProtoMessages.construct_local_model_specs(
             batch_size=self.batch_size,
             epochs=self.local_epochs,
             optimizer_pb=self.optimizer_config.to_proto(),
@@ -118,7 +118,7 @@ class ModelStoreConfig(object):
             self.connection_configs = ConnectionConfigsBase(model_store_map.get("ConnectionConfigs", {}))
             
     def to_proto(self):
-        return proto_messages_factory.MetisProtoMessages.construct_model_store_config_pb(
+        return MetisProtoMessages.construct_model_store_config_pb(
                             name=self.name,
                             eviction_policy=self.eviction_policy,
                             lineage_length=self.eviction_lineage_length,
@@ -169,7 +169,7 @@ class OptimizerConfig(object):
         return optimizer_pb_kwargs
     
     def to_proto(self):
-        return proto_messages_factory.MetisProtoMessages.construct_optimizer_pb(**self.optimizer_pb_kwargs)
+        return ModelProtoMessages.construct_optimizer_config_pb_from_kwargs(**self.optimizer_pb_kwargs)
 
 
 class RemoteHost(object):
@@ -313,7 +313,6 @@ class FederationEnvironment(object):
         # Read YAML Configs.
         fstream = open(federation_environment_config_fp).read()
         self.loaded_stream = yaml.load(fstream, Loader=yaml.SafeLoader)
-
         federation_environment = self.loaded_stream.get("FederationEnvironment")
         # TODO(dstripelis) Needs correction to DockerImage
 

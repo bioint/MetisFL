@@ -1,7 +1,9 @@
-from metisfl.grpc import GRPCServerClient
+from metisfl.grpc.grpc_services import GRPCServerClient
 from metisfl.proto import controller_pb2_grpc
-from metisfl.utils import (ControllerServiceProtoMessages, MetisLogger,
-                           ModelProtoMessages, ServiceCommonProtoMessages)
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.proto_messages_factory import (
+    ControllerServiceProtoMessages, ModelProtoMessages,
+    ServiceCommonProtoMessages)
 
 
 class GRPCControllerClient(GRPCServerClient):

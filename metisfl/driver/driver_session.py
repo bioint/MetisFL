@@ -5,7 +5,7 @@ from typing import Callable
 
 from pebble import ProcessPool
 
-from metisfl.models import MetisModel
+from metisfl.models.model_wrapper import MetisModel
 from metisfl.utils import fedenv_parser
 from metisfl.utils.metis_logger import MetisASCIIArt
 
