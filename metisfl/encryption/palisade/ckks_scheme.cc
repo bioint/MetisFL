@@ -11,29 +11,6 @@ CKKS::CKKS(uint32_t batch_size, uint32_t scaling_factor_bits, std::string crypto
   this->crypto_dir = crypto_dir;
 }
 
-void CKKS::LoadCryptoParams() {
-
-  if (!Serial::DeserializeFromFile(crypto_dir + "/cryptocontext.txt",
-                                   cc,
-                                   SerType::BINARY)) {
-    PLOG(ERROR) << crypto_dir + "/cryptocontext.txt";
-    PLOG(ERROR) << "Could not read cryptocontext!";
-  }
-
-  if (!Serial::DeserializeFromFile(crypto_dir + "/key-public.txt",
-                                   pk,
-                                   SerType::BINARY)) {
-    PLOG(ERROR) << "Could not read public key!";
-  }
-
-  if (!Serial::DeserializeFromFile(crypto_dir + "/key-private.txt",
-                                   sk,
-                                   SerType::BINARY)) {
-    PLOG(ERROR) << "Could not read secret key!";
-  }
-
-}
-
 int CKKS::GenCryptoContextAndKeys() {
 
   usint multDepth = 2;
@@ -85,6 +62,29 @@ int CKKS::GenCryptoContextAndKeys() {
   }
 
   return 1;
+
+}
+
+void CKKS::LoadCryptoParams() {
+
+  if (!Serial::DeserializeFromFile(crypto_dir + "/cryptocontext.txt",
+                                   cc,
+                                   SerType::BINARY)) {
+    PLOG(ERROR) << crypto_dir + "/cryptocontext.txt";
+    PLOG(ERROR) << "Could not read cryptocontext!";
+  }
+
+  if (!Serial::DeserializeFromFile(crypto_dir + "/key-public.txt",
+                                   pk,
+                                   SerType::BINARY)) {
+    PLOG(ERROR) << "Could not read public key!";
+  }
+
+  if (!Serial::DeserializeFromFile(crypto_dir + "/key-private.txt",
+                                   sk,
+                                   SerType::BINARY)) {
+    PLOG(ERROR) << "Could not read secret key!";
+  }
 
 }
 
