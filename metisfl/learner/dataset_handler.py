@@ -1,9 +1,10 @@
+from inspect import signature
 
 import cloudpickle
-from inspect import signature
 from pebble import ProcessPool
 
-from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
+from metisfl.models import (ModelDataset, ModelDatasetClassification,
+                            ModelDatasetRegression)
 
 
 class LearnerDataset:

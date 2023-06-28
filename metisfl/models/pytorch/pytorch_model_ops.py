@@ -29,7 +29,7 @@ class PyTorchModelOps(ModelOps):
         batch_size = hyperparameters_pb.batch_size
         dataset_size = train_dataset.get_size()
         epochs_num = get_num_of_epochs(total_steps, dataset_size, batch_size)
-        dataset = construct_dataset_pipeline(train_dataset)
+        dataset = construct_dataset_pipeline(train_dataset) #TODO: this is inconsistent with tf counterpart
         
         self._model.train()
         train_res = self._model.fit(dataset, epochs=epochs_num)

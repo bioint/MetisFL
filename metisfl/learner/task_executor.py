@@ -1,12 +1,13 @@
 from typing import Callable
-from metisfl.encryption.homomorphic import HomomorphicEncryption
-from metisfl.utils.metis_logger import MetisLogger
 
-from metisfl.learner.dataset_handler import LearnerDataset
-from metisfl.models import model_ops
+from dataset_handler import LearnerDataset
+
+from metisfl.encryption.homomorphic import HomomorphicEncryption
+from metisfl.models import ModelOps
 from metisfl.models.utils import get_completed_learning_task_pb
-from metisfl.proto import learner_pb2, model_pb2, metis_pb2
-from metisfl.utils.formatting import DictionaryFormatter
+from metisfl.proto import learner_pb2, metis_pb2, model_pb2
+from metisfl.utils import DictionaryFormatter
+from metisfl.utils.metis_logger import MetisLogger
 
 
 class TaskExecutor(object):
@@ -15,7 +16,7 @@ class TaskExecutor(object):
                  he_scheme_pb: metis_pb2.HEScheme,
                  learner_dataset: LearnerDataset,
                  model_dir: str,
-                 model_ops_fn: Callable[[str], model_ops.ModelOps]):
+                 model_ops_fn: Callable[[str], ModelOps]):
         """A class that executes training/evaluation/inference tasks. The tasks in this class are
             executed in a independent process, different from the process that created the object. 
             It is importart to call the init_model_backend() method before calling any other method. 
@@ -34,7 +35,7 @@ class TaskExecutor(object):
         self.model_ops_fn = model_ops_fn
         self.model_dir = model_dir
         
-    def _init_model_ops(self) -> model_ops.ModelOps:
+    def _init_model_ops(self) -> ModelOps:
         if not self.model_ops:
             self.model_ops = self.model_ops_fn(self.model_dir)
         

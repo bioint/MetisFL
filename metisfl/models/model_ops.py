@@ -2,7 +2,6 @@ import abc
 from collections import namedtuple
 from typing import List
 
-
 from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.model_wrapper import MetisModel, ModelWeightsDescriptor
 from metisfl.proto import metis_pb2

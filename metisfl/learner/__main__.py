@@ -1,15 +1,14 @@
 import argparse
-from metisfl.grpc.grpc_controller_client import GRPCControllerClient
-
 import metisfl.proto.metis_pb2 as metis_pb2
 import metisfl.learner.constants as constants
+
+from metisfl.grpc.grpc_controller_client import GRPCControllerClient
 from metisfl.learner.dataset_handler import LearnerDataset
 from metisfl.learner.learner_executor import LearnerExecutor
 from metisfl.learner.learner_servicer import LearnerServicer
 from metisfl.learner.task_executor import TaskExecutor
 from metisfl.models import get_model_ops_fn
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
-
 
 def parse_server_hex(hex_str, default_host, default_port):
     if hex_str is not None:

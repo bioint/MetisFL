@@ -1,10 +1,10 @@
-from typing import List
+import metisfl.utils.proto_messages_factory as proto_messages_factory
 
+from typing import List
 from metisfl.encryption import fhe
 from metisfl.models.model_wrapper import ModelWeightsDescriptor
 from metisfl.proto import model_pb2
 from metisfl.utils.proto_messages_factory import ModelProtoMessages
-import metisfl.utils.proto_messages_factory as proto_messages_factory
 
 # FIXME: this can go in the yaml file.
 CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"

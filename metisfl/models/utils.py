@@ -1,11 +1,8 @@
 import math
-
 import numpy as np
 
 from metisfl.models.model_ops import LearningTaskStats
-from metisfl.models.model_wrapper import ModelWeightsDescriptor
 from metisfl.proto import model_pb2
-
 from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 

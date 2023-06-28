@@ -1,14 +1,15 @@
 import gc
-import queue
 import multiprocessing as mp
-
+import queue
 from typing import Callable
+
 from pebble import ProcessPool
 
 import metisfl.learner.constants as constants
 from metisfl.learner.task_executor import TaskExecutor
 from metisfl.proto import metis_pb2
-    
+
+
 class LearnerExecutor(object):
 
     def __init__(self, task_executor: TaskExecutor, recreate_queue_task_worker=False):

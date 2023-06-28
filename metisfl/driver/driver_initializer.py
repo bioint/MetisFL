@@ -1,16 +1,15 @@
 
 import os
-import cloudpickle
 import shutil
 import tarfile
-
 from typing import Callable, Dict
-from fabric import Connection
 
-from metisfl.driver.utils import create_server_entity
-from metisfl.models.model_wrapper import MetisModel
-from metisfl.utils import fedenv_parser
-from metisfl.utils.metis_logger import MetisLogger
+import cloudpickle
+from fabric import Connection
+from utils import create_server_entity
+
+from metisfl.models import MetisModel
+from metisfl.utils import MetisLogger, fedenv_parser
 
 MODEL_SAVE_DIR = "model_definition"
 DATASET_RECEIPE_FILENAMES = {

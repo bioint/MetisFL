@@ -1,15 +1,15 @@
-import grpc
 import threading
+
+import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
-from metisfl.grpc.grpc_controller_client import GRPCControllerClient
+from learner_executor import LearnerExecutor
 
 import metisfl.learner.constants as constants
-import metisfl.utils.proto_messages_factory as proto_factory
-
-from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
-from metisfl.learner.learner_executor import LearnerExecutor
+from metisfl.grpc import GRPCControllerClient, GRPCServerMaxMsgLength
 from metisfl.proto import learner_pb2_grpc
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils import (LearnerServiceProtoMessages, MetisLogger,
+                           ServiceCommonProtoMessages)
+
 
 class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
@@ -43,7 +43,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
     def EvaluateModel(self, request, context):
         if not self._is_serving(context):
-            return proto_factory.LearnerServiceProtoMessages \
+            return LearnerServiceProtoMessages \
                 .construct_evaluate_model_response_pb()
         self._log_evaluation_task_receive()
         self.__model_evaluation_requests += 1 # @stripeli where is this used?
@@ -55,23 +55,22 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
             cancel_running=False,
             block=True,
             verbose=True)
-        evaluate_model_response_pb = proto_factory.LearnerServiceProtoMessages \
+        evaluate_model_response_pb = LearnerServiceProtoMessages \
                 .construct_evaluate_model_response_pb(model_evaluations_pb)
         return evaluate_model_response_pb
 
     def GetServicesHealthStatus(self, request, context):
         if not self._is_serving(context):
-            return proto_factory.ServiceCommonProtoMessages \
+            return ServiceCommonProtoMessages \
                 .construct_get_services_health_status_request_pb()
         self._log_health_check_receive()
         services_status = {"server": self.__grpc_server.server is not None}
-        return proto_factory \
-            .ServiceCommonProtoMessages \
+        return ServiceCommonProtoMessages \
             .construct_get_services_health_status_response_pb(services_status=services_status)
 
     def RunTask(self, request, context):
         if self._is_serving(context) is False:
-            return proto_factory.LearnerServiceProtoMessages \
+            return LearnerServiceProtoMessages \
                 .construct_run_task_response_pb()
         self._log_training_task_receive()
         self.__community_models_received += 1
@@ -94,18 +93,18 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         return self._get_shutdown_response_pb()
         
     def _get_task_response_pb(self, is_task_submitted):
-        ack_pb = proto_factory.ServiceCommonProtoMessages.construct_ack_pb(
+        ack_pb = ServiceCommonProtoMessages.construct_ack_pb(
             status=is_task_submitted,
             google_timestamp=Timestamp().GetCurrentTime(),
             message=None)            
-        return proto_factory.LearnerServiceProtoMessages.construct_run_task_response_pb(ack_pb) 
+        return LearnerServiceProtoMessages.construct_run_task_response_pb(ack_pb) 
 
     def _get_shutdown_response_pb(self):
-        ack_pb = proto_factory.ServiceCommonProtoMessages.construct_ack_pb(
+        ack_pb = ServiceCommonProtoMessages.construct_ack_pb(
             status=True,
             google_timestamp=Timestamp().GetCurrentTime(),
             message=None)
-        return proto_factory.ServiceCommonProtoMessages.construct_shutdown_response_pb(ack_pb)
+        return ServiceCommonProtoMessages.construct_shutdown_response_pb(ack_pb)
 
     def _is_serving(self, context):
         if self.__not_serving_event.is_set():

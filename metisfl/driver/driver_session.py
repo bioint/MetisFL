@@ -1,17 +1,16 @@
+import multiprocessing as mp
 import queue
 import time
-import multiprocessing as mp
-from metisfl.driver.monitor import FederationMonitor
-
-from pebble import ProcessPool
 from typing import Callable
 
-import metisfl.utils.fedenv_parser as fedenv_parser
-from metisfl.driver.driver_initializer import DriverInitializer
-from metisfl.driver.utils import create_server_entity
-from metisfl.grpc.grpc_controller_client import GRPCControllerClient
-from metisfl.grpc.grpc_learner_client import GRPCLearnerClient
-from metisfl.models.model_wrapper import MetisModel
+from driver_initializer import DriverInitializer
+from monitor import FederationMonitor
+from pebble import ProcessPool
+from utils import create_server_entity
+
+import metisfl.utils as fedenv_parser
+from metisfl.grpc import GRPCControllerClient, GRPCLearnerClient
+from metisfl.models import MetisModel
 from metisfl.utils.metis_logger import MetisASCIIArt
 
 TRAIN = "train"

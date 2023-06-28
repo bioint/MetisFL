@@ -1,6 +1,4 @@
-from metisfl.utils import fedenv_parser, proto_messages_factory
-from metisfl.utils.ssl_configurator import SSLConfigurator
-
+from metisfl.utils import fedenv_parser, proto_messages_factory, SSLConfigurator
 
 def create_server_entity(enable_ssl: bool,
                           remote_host_instance: fedenv_parser.RemoteHost,
