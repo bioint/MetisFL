@@ -128,8 +128,13 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
   }
 
   void StopService() override {
+    shutdown_request_received_ = true;
     pool_.push_task([this] { controller_->Shutdown(); });
     pool_.push_task([this] { this->Stop(); });
+  }
+
+  bool ShutdownRequestReceived() override {
+    return shutdown_request_received_;
   }
 
   Status GetCommunityModelEvaluationLineage(
@@ -373,6 +378,7 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
   // Thread pool for async tasks.
   BS::thread_pool pool_;
   Controller *controller_;
+  bool shutdown_request_received_ = false;
 };
 } // namespace
 

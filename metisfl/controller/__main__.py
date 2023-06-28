@@ -1,4 +1,6 @@
 import argparse
+import signal
+import time
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
@@ -82,9 +84,10 @@ def init_controller(controller_server_entity_protobuff_serialized_hexadecimal,
         model_hyperparams_pb)
 
     MetisLogger.info("Controller Parameters: \"\"\"{}\"\"\"".format(controller_params_pb))
+
     controller_instance = ControllerInstance()
-    controller_instance.build_and_start(controller_params_pb)
-    controller_instance.wait()
+    controller_instance.start(controller_params_pb)
+    controller_instance.shutdown()
 
 
 if __name__ == "__main__":

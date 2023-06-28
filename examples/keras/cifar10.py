@@ -19,7 +19,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../federation_environments_config/cifar10/test_localhost_synchronous_momentumsgd.yaml")
+        script_cwd, "../config/cifar10/test_localhost_synchronous_momentumsgd.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",

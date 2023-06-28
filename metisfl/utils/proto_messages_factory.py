@@ -123,14 +123,12 @@ class MetisProtoMessages(object):
         if empty_scheme_pb is not None:
             return metis_pb2.HEScheme(enabled=enabled,
                                       name=name,
-                                      cryptocontext=cryptocontext,
                                       public_key=public_key,
                                       private_key=private_key,
                                       empty_he_scheme=empty_scheme_pb)
         if fhe_scheme_pb is not None:
             return metis_pb2.HEScheme(enabled=enabled,
                                       name=name,
-                                      cryptocontext=cryptocontext,
                                       public_key=public_key,
                                       private_key=private_key,
                                       fhe_scheme=fhe_scheme_pb)
