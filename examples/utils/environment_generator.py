@@ -12,7 +12,7 @@ class EnvGen(object):
         if not template_filepath:
             self.template_filepath = os.path.join(
                 os.path.dirname(__file__),
-                "../federation_environments_config/template.yaml")
+                "../config/template.yaml")
 
     def generate_localhost(self,
                            federation_rounds=10,

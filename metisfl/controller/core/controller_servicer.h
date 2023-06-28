@@ -26,6 +26,8 @@ public:
   // Stops the gRPC service.
   virtual void StopService() = 0;
 
+  virtual bool ShutdownRequestReceived() = 0;
+
 public:
   static std::unique_ptr<ControllerServicer> New(Controller *controller);
 };
