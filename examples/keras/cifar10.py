@@ -100,7 +100,6 @@ if __name__ == "__main__":
 
     driver_session = DriverSession(fed_env=federation_environment,
                                    model=model_def,
-                                   working_dir="/tmp/metis/",
                                    train_dataset_recipe_fn=dataset_recipe_fn,
                                    validation_dataset_recipe_fn=dataset_recipe_fn,
                                    test_dataset_recipe_fn=dataset_recipe_fn)

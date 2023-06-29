@@ -55,17 +55,18 @@ def init_learner(args):
         test_dataset_recipe_pkl=args.test_dataset_recipe,
     )
     task_executor = TaskExecutor(
+        he_scheme_pb=he_scheme_pb, 
         learner_dataset=learner_dataset,
-        model_ops_fn=model_ops_fn,
-        he_scheme_pb=he_scheme_pb,
+        learner_server_entity_pb=learner_server_entity_pb,
         model_dir=args.model_dir,
+        model_ops_fn=model_ops_fn,
     )          
     learner_executor = LearnerExecutor(task_executor=task_executor)    
     learner_servicer = LearnerServicer(
-        learner_executor=learner_executor,
-        controller_server_entity=controller_server_entity_pb,
-        learner_server_entity=learner_server_entity_pb,
+        controller_server_entity_pb=controller_server_entity_pb,
         dataset_metadata=learner_dataset.get_dataset_metadata(),
+        learner_executor=learner_executor,
+        learner_server_entity_pb=learner_server_entity_pb,
         servicer_workers=5
     )
     

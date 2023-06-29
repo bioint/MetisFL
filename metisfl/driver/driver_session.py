@@ -5,11 +5,11 @@ from typing import Callable, Union
 
 from pebble import ProcessPool
 
+from metisfl import config
 from metisfl.models.model_wrapper import MetisModel
 from metisfl.utils import fedenv_parser
 from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
 
-from . import constants
 from .driver_initializer import DriverInitializer
 from .grpc_controller_client import GRPCControllerClient
 from .grpc_learner_client import GRPCLearnerClient
@@ -22,7 +22,6 @@ class DriverSession(object):
     def __init__(self,
                  fed_env: Union[str, fedenv_parser.FederationEnvironment],
                  model: MetisModel,
-                 working_dir: str,
                  train_dataset_recipe_fn: Callable,
                  validation_dataset_recipe_fn: Callable = None,
                  test_dataset_recipe_fn: Callable = None):
@@ -35,9 +34,9 @@ class DriverSession(object):
             self._federation_environment.learners.learners)
         self._model = model
         dataset_recipe_fns = {
-            constants.TRAIN: train_dataset_recipe_fn,
-            constants.VALIDATION: validation_dataset_recipe_fn,
-            constants.TEST: test_dataset_recipe_fn
+            config.TRAIN: train_dataset_recipe_fn,
+            config.VALIDATION: validation_dataset_recipe_fn,
+            config.TEST: test_dataset_recipe_fn
         }
         self._init_pool()
         self._controller_server_entity_pb = self._create_controller_server_entity()
@@ -50,8 +49,7 @@ class DriverSession(object):
             fed_env=self._federation_environment,
             controller_server_entity_pb=self._controller_server_entity_pb,
             learner_server_entities_pb=self._learner_server_entities_pb,
-            model=self._model,
-            working_dir=working_dir)
+            model=self._model)
         self._monitor = FederationMonitor(
             federation_environment=self._federation_environment,
             driver_controller_grpc_client=self._driver_controller_grpc_client)
@@ -126,7 +124,6 @@ class DriverSession(object):
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model_to_controller()
             for index in range(self._num_learners):
-                MetisLogger.info("Initializing learner {}...".format(index))
                 learner_future = self._executor.schedule(
                     function=self._driver_initilizer.init_learner,
                     args=(index,))  # NOTE: args must be a tuple

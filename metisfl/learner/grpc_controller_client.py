@@ -82,11 +82,11 @@ class GRPCControllerClient(GRPCServerClient):
             return response
         return self.schedule_request(_request, request_retries, request_timeout, block)
 
-    # FIXME: don't we need some sort of authentication here?
     def mark_task_completed(self, completed_task_pb, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
             mark_task_completed_request_pb = ControllerServiceProtoMessages \
-                .construct_mark_task_completed_request_pb(completed_learning_task_pb=completed_task_pb)
+                .construct_mark_task_completed_request_pb(completed_learning_task_pb=completed_task_pb, 
+                                                           learner_id=self._learner_id, auth_token=self._auth_token)
             MetisLogger.info("Sending local completed task, learner {}.".format(self._learner_id))
             response = self._stub.MarkTaskCompleted(mark_task_completed_request_pb, timeout=_timeout)
             MetisLogger.info("Sent local completed task, learner {}.".format(self._learner_id))
@@ -105,9 +105,9 @@ def _get_join_request_pb(learner_server_entity, dataset_metadata):
         num_training_examples=dataset_metadata["train_dataset_size"],
         num_validation_examples=dataset_metadata["validation_dataset_size"],
         num_test_examples=dataset_metadata["test_dataset_size"],
-        training_spec=dataset_metadata["train_dataset_spec"],
-        validation_spec=dataset_metadata["validation_dataset_spec"],
-        test_spec=dataset_metadata["test_dataset_spec"],
+        training_spec=dataset_metadata["train_dataset_specs"],
+        validation_spec=dataset_metadata["validation_dataset_specs"],
+        test_spec=dataset_metadata["test_dataset_specs"],
         is_classification=dataset_metadata["is_classification"],
         is_regression=dataset_metadata["is_regression"]
     )

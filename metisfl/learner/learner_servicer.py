@@ -22,8 +22,6 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
                 controller_server_entity_pb: ServerEntity,
                 learner_server_entity_pb: ServerEntity,
                 dataset_metadata: dict,
-                learner_id_fp: str,
-                auth_token_fp: str, 
                 servicer_workers=10):
         self._learner_executor = learner_executor
         self._servicer_workers = servicer_workers
@@ -35,7 +33,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         # @stripeli: any reason why this was not in __init__?
         self.__grpc_server = GRPCServerMaxMsgLength(
             max_workers=self._servicer_workers,
-            server_entity=self.federation_helper.learner_server_entity
+            server_entity=learner_server_entity_pb,
         ) 
         
         self._learner_controller_client = GRPCControllerClient(

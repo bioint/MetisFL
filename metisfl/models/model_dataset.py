@@ -8,20 +8,19 @@ class ModelDataset(object):
     Private Class. Users need to wrap their datasets as one of its subclasses.
     """
 
-    def __init__(self, x, y=None):
+    def __init__(self, x, y=None, size=0):
         """
         A ModelDataset is a wrapper over the model's train/test/validation dataset input and expected output.
         :param dataset: dataset input
         :param x: model input
         :param y: output
         """
-        assert x is not None, "ModelDataset: x cannot be None"
         self._x = x
         if isinstance(x, tf.data.Dataset):
             MetisLogger.info("Model dataset input is a tf.data.Dataset; ignoring fed y values.")
         else: 
             self._y = y
-        self._size = len(x)
+        self._size = size
 
     def get_x(self):
         return self._x
@@ -54,7 +53,7 @@ class ModelDatasetClassification(ModelDataset):
         else:
             assert isinstance(self.examples_per_class, dict)
 
-    def get_model_dataset_specifications(self, *args, **kwargs):
+    def get_model_dataset_specifications(self):
         return self.examples_per_class
 
 
@@ -72,7 +71,7 @@ class ModelDatasetRegression(ModelDataset):
         self.mode_val = mode_val
         self.stddev = stddev_val
 
-    def get_model_dataset_specifications(self, *args, **kwargs):
+    def get_model_dataset_specifications(self):
         regression_specs = dict()
         regression_specs["min"] = self.min_val
         regression_specs["max"] = self.max_val

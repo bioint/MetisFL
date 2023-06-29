@@ -57,14 +57,14 @@ class LearnerDataset:
         is_classification = train_dataset_meta[2] == ModelDatasetClassification
         is_regression = train_dataset_meta[2] == ModelDatasetRegression
         return {
+            "is_classification": is_classification,
+            "is_regression": is_regression,
+            "test_dataset_size": test_dataset_meta[0],
+            "test_dataset_specs": test_dataset_meta[1],
             "train_dataset_size": train_dataset_meta[0],
             "train_dataset_specs": train_dataset_meta[1], 
             "validation_dataset_size": validation_dataset_meta[0],
             "validation_dataset_specs": validation_dataset_meta[1],
-            "test_dataset_size": test_dataset_meta[0],
-            "test_dataset_specs": test_dataset_meta[1],
-            "is_classification": is_classification,
-            "is_regression": is_regression,
         }
 
 
