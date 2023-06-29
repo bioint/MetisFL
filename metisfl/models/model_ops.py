@@ -1,13 +1,15 @@
 import abc
 
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.model_ops import MetisModel
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
 from metisfl.proto import metis_pb2
 
 
 class ModelOps(object):
-    def get_model(self) -> MetisModel:
+    
+    _model = None
+    
+    def get_model(self) -> object:
         return self._model
 
     @abc.abstractmethod

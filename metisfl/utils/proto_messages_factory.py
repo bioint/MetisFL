@@ -120,13 +120,13 @@ class MetisProtoMessages(object):
     @classmethod
     def construct_he_scheme_pb(cls, enabled=False, name=None, cryptocontext=None, public_key=None, private_key=None,
                                empty_scheme_pb=None, fhe_scheme_pb=None):
-        if empty_scheme_pb is not None:
+        if empty_scheme_pb:
             return metis_pb2.HEScheme(enabled=enabled,
                                       name=name,
                                       public_key=public_key,
                                       private_key=private_key,
                                       empty_he_scheme=empty_scheme_pb)
-        if fhe_scheme_pb is not None:
+        if fhe_scheme_pb:
             return metis_pb2.HEScheme(enabled=enabled,
                                       name=name,
                                       public_key=public_key,

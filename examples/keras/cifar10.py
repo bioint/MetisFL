@@ -98,9 +98,9 @@ if __name__ == "__main__":
             x=x, y=y, size=y.size, examples_per_class=distribution)
         return model_dataset
 
-    driver_session = DriverSession(fed_env_fp=args.federation_environment_config_fp,
+    driver_session = DriverSession(fed_env=federation_environment,
                                    model=model_def,
-                                   working_dir="/tmp/metis_test/",
+                                   working_dir="/tmp/metis/",
                                    train_dataset_recipe_fn=dataset_recipe_fn,
                                    validation_dataset_recipe_fn=dataset_recipe_fn,
                                    test_dataset_recipe_fn=dataset_recipe_fn)

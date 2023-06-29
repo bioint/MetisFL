@@ -19,4 +19,4 @@ class GRPCLearnerClient(GRPCServerClient):
             MetisLogger.info("Sent shutdown request to learner {}, response: {}.".format(
                 self.grpc_endpoint.listening_endpoint, response))
             return response.ack.status
-        self.schedule_request(_request, request_retries, request_timeout, block)
+        return self.schedule_request(_request, request_retries, request_timeout, block)

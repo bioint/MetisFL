@@ -19,7 +19,7 @@ class LearnerExecutor(object):
     def _init_tasks_pools(self, recreate_queue_task_worker=False):
         mp_ctx = mp.get_context("spawn")
         max_tasks = 1 if recreate_queue_task_worker else 0
-        self.pool = ()
+        self.pool = dict()
         for task in constants.TASKS:
             self.pool[task] = self._init_task_pool(max_tasks, mp_ctx)
                             

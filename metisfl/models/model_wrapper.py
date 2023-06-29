@@ -3,6 +3,8 @@ import abc
 from metisfl.models.types import ModelWeightsDescriptor
 
 class MetisModel(object):
+    nn_engine = None
+        
     @abc.abstractmethod
     def load(self, model_dir):
         pass
@@ -20,4 +22,4 @@ class MetisModel(object):
     
     @abc.abstractmethod
     def get_neural_engine(self):
-        pass
+        return self.nn_engine 

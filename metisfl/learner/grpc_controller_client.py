@@ -47,7 +47,7 @@ class GRPCControllerClient(GRPCServerClient):
             join_federation_request_pb = _get_join_request_pb(self._learner_server_entity,
                                                                 self._dataset_metadata)         
             self._join_federation(join_federation_request_pb, timeout=_timeout)                         
-        self.schedule_request(_request, request_retries, request_timeout, block)   
+        return self.schedule_request(_request, request_retries, request_timeout, block)   
 
     def _join_federation(self, join_federation_request_pb, timeout=None):
         try:
@@ -80,7 +80,7 @@ class GRPCControllerClient(GRPCServerClient):
             response = self._stub.LeaveFederation(leave_federation_request_pb, timeout=_timeout)
             MetisLogger.info("Left federation, learner {}.".format(self._learner_id))
             return response
-        self.schedule_request(_request, request_retries, request_timeout, block)
+        return self.schedule_request(_request, request_retries, request_timeout, block)
 
     # FIXME: don't we need some sort of authentication here?
     def mark_task_completed(self, completed_task_pb, request_retries=1, request_timeout=None, block=True):
@@ -91,7 +91,7 @@ class GRPCControllerClient(GRPCServerClient):
             response = self._stub.MarkTaskCompleted(mark_task_completed_request_pb, timeout=_timeout)
             MetisLogger.info("Sent local completed task, learner {}.".format(self._learner_id))
             return response
-        self.schedule_request(_request, request_retries, request_timeout, block)
+        return self.schedule_request(_request, request_retries, request_timeout, block)
                                 
 def _get_join_request_pb(learner_server_entity, dataset_metadata):
     public_ssl_config = \

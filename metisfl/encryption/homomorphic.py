@@ -3,6 +3,7 @@ from typing import List
 from metisfl.encryption import fhe
 from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.proto import model_pb2
+from metisfl.utils.metis_logger import MetisLogger
 from metisfl.utils.proto_messages_factory import ModelProtoMessages, MetisProtoMessages
 
 # FIXME: this can go in the yaml file.
@@ -23,13 +24,15 @@ class HomomorphicEncryption(object):
                     enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
         else:
             empty_scheme_pb = MetisProtoMessages.construct_empty_he_scheme_pb()
+            self._he_scheme = None
             self._he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
                 enabled=False, empty_scheme_pb=empty_scheme_pb)
             
     @staticmethod
     def from_proto(he_scheme_pb):
-        assert isinstance(he_scheme_pb, model_pb2.HEScheme), "Not a valid HE scheme protobuf."
-        if he_scheme_pb.HasField("fhe_scheme"):
+        # FIXME(@stripeli): do we really need this check?
+        # assert isinstance(he_scheme_pb, model_pb2.HEScheme), "Not a valid HE scheme protobuf."
+        if he_scheme_pb and he_scheme_pb.HasField("fhe_scheme"):
             he_map = {
                 "Scheme": "CKKS",
                 "BatchSize": he_scheme_pb.fhe_scheme.batch_size,
@@ -90,7 +93,7 @@ class HomomorphicEncryption(object):
         variables_pb = []
         for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
             ciphertext = None
-            if self._he_scheme is not None:
+            if self._he_scheme:
                 ciphertext = self._he_scheme.encrypt(w_v.flatten(), 1)
             # If we have a ciphertext we prioritize it over the plaintext.
             tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,

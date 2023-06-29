@@ -93,11 +93,10 @@ class LocalModelConfig(object):
         self.batch_size = local_model_map.get("BatchSize", 100)
         self.local_epochs = local_model_map.get("LocalEpochs", 5)
         self.validation_percentage = local_model_map.get("ValidationPercentage", 0)
-        print("LocalModelConfig: ")
         self.optimizer_config = OptimizerConfig(local_model_map.get("OptimizerConfig"))
         
     def to_proto(self):
-        return MetisProtoMessages.construct_local_model_specs(
+        return MetisProtoMessages.construct_controller_modelhyperparams_pb(
             batch_size=self.batch_size,
             epochs=self.local_epochs,
             optimizer_pb=self.optimizer_config.to_proto(),
@@ -169,7 +168,7 @@ class OptimizerConfig(object):
         return optimizer_pb_kwargs
     
     def to_proto(self):
-        return ModelProtoMessages.construct_optimizer_config_pb_from_kwargs(**self.optimizer_pb_kwargs)
+        return ModelProtoMessages.construct_optimizer_config_pb_from_kwargs(self.optimizer_pb_kwargs)
 
 
 class RemoteHost(object):

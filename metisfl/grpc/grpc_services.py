@@ -62,7 +62,7 @@ class GRPCServerClient(object):
             MetisLogger.info("Received controller's health status, {} - {}".format(
                 self.grpc_endpoint.listening_endpoint, response))
             return response
-        self.schedule_request(_request, request_retries, request_timeout, block)
+        return self.schedule_request(_request, request_retries, request_timeout, block)
 
     def get_channel(self):
         """ Initialize connection only if it is not established. """
