@@ -1,6 +1,9 @@
-## Federated Training
+Components
+=============================
 
-This is a high-level overview of how federated training is performed and when and how the synchronization points between
+![MetisFL Components Overview](../img/MetisFL-Components-Internal.png "Internal Components.")
+
+<!-- This is a high-level overview of how federated training is performed and when and how the synchronization points between
 the learners and the controller are created.
 
 **1. Controller Training Assignment**\
@@ -18,4 +21,4 @@ learner pings the controller and sends a local training completion request (see 
 The controller receives the local models and if a quorum exists (e.g., received local models from all learners), then it
 computes the new community model using the local models and their associated scaling factors
 (e.g., number of training examples) and creates and reassigns the new training task to each learner. At this point a new
-global training iteration begins. 
+global training iteration begins.  -->

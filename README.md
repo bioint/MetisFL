@@ -119,7 +119,7 @@ The project uses a unified codebase for both the Python and C++ code. The C++ mo
 # Architecture Overview
 The architecture of MetisFL is inspired by Apache Spark. It consists of three main entities: the **Federation Controller**, the **Federation Learner** and the **Federation Driver**.
 
-![MetisFL Components](docs/img/architecture/MetisFL-Components-Overview.png "MetisFL Components.")
+![MetisFL Components](docs/img/MetisFL-Components-Overview.png "MetisFL Components.")
 
 ## Federation Controller
 The Federation Controller acts as the federation cluster manager, and it is responsible for selecting and delegating training and evaluating tasks to the federation learners (cluster nodes) and storing and
