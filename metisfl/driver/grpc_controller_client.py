@@ -1,4 +1,4 @@
-from metisfl.grpc.grpc_services import GRPCServerClient
+from metisfl.grpc.grpc_services import GRPCClient
 from metisfl.proto import controller_pb2_grpc
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.utils.proto_messages_factory import (
@@ -8,13 +8,23 @@ from metisfl.utils.proto_messages_factory import (
 
 # FIXME: @stripeli - logic here implies that requests go through without errors
 # what about error handling?
-class GRPCControllerClient(GRPCServerClient):
+class GRPCControllerClient(GRPCClient):
     def __init__(self,
                  controller_server_entity,
                  max_workers=1):
         super(GRPCControllerClient, self).__init__(
             controller_server_entity, max_workers)
-        self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)
+
+    def check_health_status(self, request_retries=1, request_timeout=None, block=True):
+        def _request(_timeout=None):
+            get_services_health_status_request_pb = ServiceCommonProtoMessages \
+                                                    .construct_get_services_health_status_request_pb()
+            MetisLogger.info("Requesting controller's health status.")
+            response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
+            MetisLogger.info("Received controller's health status, {} - {}".format(
+                self.grpc_endpoint.listening_endpoint, response))
+            return response
+        return self.schedule_request(_request, request_retries, request_timeout, block)
 
     def get_community_model_evaluation_lineage(self, num_backtracks, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):

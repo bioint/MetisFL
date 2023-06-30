@@ -1,5 +1,4 @@
 import argparse
-import cloudpickle
 import json
 import os
 
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../config/cifar10/test_localhost_synchronous_vanilasgd.yaml")
+        script_cwd, "../config/cifar10/test_localhost_synchronous_vanillasgd.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -88,7 +87,6 @@ if __name__ == "__main__":
     driver_session = DriverSession(federation_environment,
                                    nn_model,
                                    train_dataset_recipe_fn=dataset_recipe_fn,
-                                   validation_dataset_recipe_fn=None,
                                    test_dataset_recipe_fn=dataset_recipe_fn)
     driver_session.initialize_federation()
     driver_session.monitor_federation()

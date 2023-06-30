@@ -5,6 +5,7 @@ from concurrent import futures
 import grpc
 from grpc._cython import cygrpc
 from pebble import ThreadPool
+from metisfl.proto import controller_pb2_grpc
 
 from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils.metis_logger import MetisLogger
@@ -45,29 +46,14 @@ class GRPCChannelMaxMsgLength(object):
                 options=self.channel_options)
 
 
-class GRPCServerClient(object):
+class GRPCClient(object):
 
     def __init__(self, server_entity: ServerEntity, max_workers=1):
         self.grpc_endpoint = GRPCEndpoint(server_entity)
         self.executor = ThreadPool(max_workers=max_workers)
         self.executor_pool = queue.Queue()
-        self._channel = self.get_channel()
-        
-    def check_health_status(self, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            get_services_health_status_request_pb = ServiceCommonProtoMessages \
-                                                    .construct_get_services_health_status_request_pb()
-            MetisLogger.info("Requesting controller's health status.")
-            response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
-            MetisLogger.info("Received controller's health status, {} - {}".format(
-                self.grpc_endpoint.listening_endpoint, response))
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
-
-    def get_channel(self):
-        """ Initialize connection only if it is not established. """
-        _channel = GRPCChannelMaxMsgLength(self.grpc_endpoint.server_entity)
-        return _channel.channel
+        self._channel = GRPCChannelMaxMsgLength(self.grpc_endpoint.server_entity).channel
+        self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)
 
     def schedule_request(self, request, request_retries=1, request_timeout=None, block=True):
         if request_retries > 1:

@@ -3,7 +3,7 @@ import threading
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
 
-import metisfl.learner.constants as constants
+from metisfl import config
 from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
 from metisfl.proto import learner_pb2_grpc
 from metisfl.proto.metis_pb2 import ServerEntity
@@ -17,31 +17,33 @@ from .learner_executor import LearnerExecutor
 
 class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
-    def __init__(self, 
-                learner_executor: LearnerExecutor, 
-                controller_server_entity_pb: ServerEntity,
-                learner_server_entity_pb: ServerEntity,
-                dataset_metadata: dict,
-                servicer_workers=10):
+    def __init__(self,
+                 learner_executor: LearnerExecutor,
+                 controller_server_entity_pb: ServerEntity,
+                 learner_server_entity_pb: ServerEntity,
+                 dataset_metadata: dict,
+                 servicer_workers=10):
         self._learner_executor = learner_executor
         self._servicer_workers = servicer_workers
-        self.__community_models_received = 0 
+        self.__community_models_received = 0
         self.__model_evaluation_requests = 0
-        self.__not_serving_event = threading.Event()  # event to stop serving inbound requests
-        self.__shutdown_event = threading.Event()  # event to stop all grpc related tasks
-        
+        # event to stop serving inbound requests
+        self.__not_serving_event = threading.Event()
+        # event to stop all grpc related tasks
+        self.__shutdown_event = threading.Event()
+
         # @stripeli: any reason why this was not in __init__?
         self.__grpc_server = GRPCServerMaxMsgLength(
             max_workers=self._servicer_workers,
             server_entity=learner_server_entity_pb,
-        ) 
-        
+        )
+
         self._learner_controller_client = GRPCControllerClient(
             controller_server_entity=controller_server_entity_pb,
             learner_server_entity=learner_server_entity_pb,
             dataset_metadata=dataset_metadata
         )
-    
+
     def init_servicer(self):
         learner_pb2_grpc.add_LearnerServiceServicer_to_server(
             self, self.__grpc_server.server)
@@ -58,17 +60,17 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
             return LearnerServiceProtoMessages \
                 .construct_evaluate_model_response_pb()
         self._log_evaluation_task_receive()
-        self.__model_evaluation_requests += 1 # @stripeli where is this used?
+        self.__model_evaluation_requests += 1  # @stripeli where is this used?
         model_evaluations_pb = self._learner_executor.run_evaluation_task(
-            model_pb = request.model,
-            batch_size = request.batch_size,
-            evaluation_dataset_pb = request.evaluation_dataset,
-            metrics_pb = request.metrics,
+            model_pb=request.model,
+            batch_size=request.batch_size,
+            evaluation_dataset_pb=request.evaluation_dataset,
+            metrics_pb=request.metrics,
             cancel_running=False,
             block=True,
             verbose=True)
         evaluate_model_response_pb = LearnerServiceProtoMessages \
-                .construct_evaluate_model_response_pb(model_evaluations_pb)
+            .construct_evaluate_model_response_pb(model_evaluations_pb)
         return evaluate_model_response_pb
 
     def GetServicesHealthStatus(self, request, context):
@@ -99,17 +101,18 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
     def ShutDown(self, request, context):
         self._log_shutdown()
         self.__not_serving_event.set()
-        self._learner_executor.shutdown(CANCEL_RUNNING=constants.CANCEL_RUNNING_ON_SHUTDOWN)
+        self._learner_executor.shutdown(
+            CANCEL_RUNNING=config.CANCEL_RUNNING_ON_SHUTDOWN)
         self._learner_controller_client.leave_federation()
         self.__shutdown_event.set()
         return self._get_shutdown_response_pb()
-        
+
     def _get_task_response_pb(self, is_task_submitted):
         ack_pb = ServiceCommonProtoMessages.construct_ack_pb(
             status=is_task_submitted,
             google_timestamp=Timestamp().GetCurrentTime(),
-            message=None)            
-        return LearnerServiceProtoMessages.construct_run_task_response_pb(ack_pb) 
+            message=None)
+        return LearnerServiceProtoMessages.construct_run_task_response_pb(ack_pb)
 
     def _get_shutdown_response_pb(self):
         ack_pb = ServiceCommonProtoMessages.construct_ack_pb(
@@ -121,13 +124,13 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
     def _is_serving(self, context):
         if self.__not_serving_event.is_set():
             context.set_code(grpc.StatusCode.UNAVAILABLE)
-            return False 
+            return False
         return True
 
     def _log_init_learner(self):
         MetisLogger.info("Initialized Learner Servicer {}".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
-        
+
     def _log_evaluation_task_receive(self):
         MetisLogger.info("Learner Servicer {} received model evaluation task.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
@@ -135,7 +138,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
     def _log_health_check_receive(self):
         MetisLogger.info("Learner Servicer {} received a health status request.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
-        
+
     def _log_training_task_receive(self):
         MetisLogger.info("Learner Servicer {} received local training task.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))

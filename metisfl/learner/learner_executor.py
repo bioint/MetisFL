@@ -5,10 +5,9 @@ from typing import Callable
 
 from pebble import ProcessPool
 
-import metisfl.learner.constants as constants
+from metisfl import config
 from metisfl.learner.task_executor import TaskExecutor
 from metisfl.proto import metis_pb2
-from metisfl.utils.metis_logger import MetisLogger
 
 
 class LearnerExecutor(object):
@@ -21,7 +20,7 @@ class LearnerExecutor(object):
         mp_ctx = mp.get_context("spawn")
         max_tasks = 1 if recreate_queue_task_worker else 0
         self.pool = dict()
-        for task in constants.TASKS:
+        for task in config.TASKS:
             self.pool[task] = self._init_task_pool(max_tasks, mp_ctx)
 
     def _init_task_pool(self, max_tasks, mp_ctx):
@@ -37,7 +36,7 @@ class LearnerExecutor(object):
 
     def run_evaluation_task(self, block=False, **kwargs):
         future = self._run_task(
-            task_name=constants.EVALUATION_TASK,
+            task_name=config.EVALUATION_TASK,
             task_fn=self.task_executor.evaluate_model,
             callback=None,
             **kwargs
@@ -47,7 +46,7 @@ class LearnerExecutor(object):
 
     def run_inference_task(self, block=False, **kwargs):
         future = self._run_task(
-            task_name=constants.INFERENCE_TASK,
+            task_name=config.INFERENCE_TASK,
             task_fn=self.task_executor.infer_model,
             callback=None,
             **kwargs
@@ -59,7 +58,7 @@ class LearnerExecutor(object):
                           callback: Callable = None,
                           block=False, **kwargs):
         future = self._run_task(
-            task_name=constants.LEARNING_TASK,
+            task_name=config.LEARNING_TASK,
             task_fn=self.task_executor.train_model,
             callback=callback,
             **kwargs
@@ -71,9 +70,9 @@ class LearnerExecutor(object):
         return not future.cancelled()
 
     def shutdown(self, CANCEL_RUNNING: dict = {
-        constants.LEARNING_TASK: True,
-        constants.EVALUATION_TASK: True,
-        constants.INFERENCE_TASK: True
+        config.LEARNING_TASK: True,
+        config.EVALUATION_TASK: True,
+        config.INFERENCE_TASK: True
     }):
         # If graceful is True, it will allow all pending tasks to be completed,
         # else it will stop immediately all active tasks. At first, we close the
@@ -81,7 +80,7 @@ class LearnerExecutor(object):
         # gracefully or non-gracefully (cancel future) for their completion.
         for task, (pool, _) in self.pool.items():
             pool.close()
-            self._empty_tasks_q(constants.LEARNING_TASK,
+            self._empty_tasks_q(config.LEARNING_TASK,
                                 force=CANCEL_RUNNING[task])
             pool.join()
         gc.collect()

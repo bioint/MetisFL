@@ -1,16 +1,15 @@
 import grpc
 
-from metisfl.grpc.grpc_services import GRPCServerClient
+from metisfl import config
+from metisfl.grpc.grpc_services import GRPCClient
 from metisfl.proto import controller_pb2_grpc
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.utils.proto_messages_factory import (
     ControllerServiceProtoMessages, MetisProtoMessages)
 from metisfl.utils.ssl_configurator import SSLConfigurator
 
-from .constants import get_auth_token_fp, get_learner_id_fp
 
-
-class GRPCControllerClient(GRPCServerClient):
+class GRPCControllerClient(GRPCClient):
     # When issuing the join federation request, the learner/client needs also to  share
     # the public certificate of its servicer with the controller, in order  to receive
     # new incoming requests. The certificate needs to be in bytes (stream) format.
@@ -24,16 +23,14 @@ class GRPCControllerClient(GRPCServerClient):
     # grpc.StatusCode.ALREADY_EXISTS is raised and the existing/already saved
     # learner id and authentication token are read/loaded from the disk.
 
-    # TODO: potential bug: the learner id and auth token filepaths are optional 
-    # so care must be taken to ensure they are provided if the learner needs them
     def __init__(self, 
                  controller_server_entity, 
                  learner_server_entity,
                  dataset_metadata,
                  max_workers=1):
         super(GRPCControllerClient, self).__init__(controller_server_entity, max_workers)
-        self._learner_id_fp = get_learner_id_fp(learner_server_entity.port)
-        self._auth_token_fp = get_auth_token_fp(learner_server_entity.port)
+        self._learner_id_fp = config.get_learner_id_fp(learner_server_entity.port)
+        self._auth_token_fp = config.get_auth_token_fp(learner_server_entity.port)
         self._learner_server_entity = learner_server_entity
         self._dataset_metadata = dataset_metadata
         self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)

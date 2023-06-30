@@ -1,10 +1,10 @@
-from metisfl.grpc.grpc_services import GRPCServerClient
+from metisfl.grpc.grpc_services import GRPCClient
 from metisfl.proto import learner_pb2_grpc
 from metisfl.utils.proto_messages_factory import ServiceCommonProtoMessages
 from metisfl.utils.metis_logger import MetisLogger
 
 
-class GRPCLearnerClient(GRPCServerClient):
+class GRPCLearnerClient(GRPCClient):
 
     def __init__(self, learner_server_entity, max_workers=1):
         super(GRPCLearnerClient, self).__init__(learner_server_entity, max_workers)

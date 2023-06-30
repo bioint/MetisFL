@@ -1,10 +1,10 @@
 import argparse
 
 import metisfl.proto.metis_pb2 as metis_pb2
+from metisfl import config
 from metisfl.models.utils import get_model_ops_fn
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
-from . import constants
 from .dataset_handler import LearnerDataset
 from .learner_executor import LearnerExecutor
 from .learner_servicer import LearnerServicer
@@ -35,10 +35,10 @@ def parse_he_scheme_hex(hex_str):
 def create_servers(args):
     learner_server_entity_pb = parse_server_hex(
         args.learner_server_entity_protobuff_serialized_hexadecimal,
-         constants.DEFAULT_LEARNER_HOST, constants.DEFAULT_LEARNER_PORT)
+         config.DEFAULT_LEARNER_HOST, config.DEFAULT_LEARNER_PORT)
     controller_server_entity_pb = parse_server_hex(
         args.controller_server_entity_protobuff_serialized_hexadecimal,
-        constants.DEFAULT_CONTROLLER_HOSTNAME, constants.DEFAULT_CONTROLLER_PORT)
+        config.DEFAULT_CONTROLLER_HOSTNAME, config.DEFAULT_CONTROLLER_PORT)
     return learner_server_entity_pb,controller_server_entity_pb
 
 def init_learner(args):

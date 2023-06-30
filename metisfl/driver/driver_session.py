@@ -8,7 +8,7 @@ from pebble import ProcessPool
 from metisfl import config
 from metisfl.models.model_wrapper import MetisModel
 from metisfl.utils import fedenv_parser
-from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
+from metisfl.utils.metis_logger import MetisASCIIArt
 
 from .driver_initializer import DriverInitializer
 from .grpc_controller_client import GRPCControllerClient
@@ -35,26 +35,35 @@ class DriverSession(object):
         self._num_learners = len(
             self._federation_environment.learners.learners)
         self._model = model
-        dataset_recipe_fns = {
-            config.TRAIN: train_dataset_recipe_fn,
-            config.VALIDATION: validation_dataset_recipe_fn if validation_dataset_recipe_fn else None,
-            config.TEST: test_dataset_recipe_fn if test_dataset_recipe_fn else None
-        }
+        
         self._init_pool()
         self._controller_server_entity_pb = self._create_controller_server_entity()
         self._learner_server_entities_pb = self._create_learning_server_entities()
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
         self._driver_learner_grpc_clients = self._create_driver_learner_grpc_clients()
 
+        dataset_recipe_fns = self._get_dataset_receipes_dict(
+            train_dataset_recipe_fn, validation_dataset_recipe_fn, test_dataset_recipe_fn)
+        
         self._driver_initilizer = DriverInitializer(
             dataset_recipe_fns=dataset_recipe_fns,
             fed_env=self._federation_environment,
             controller_server_entity_pb=self._controller_server_entity_pb,
             learner_server_entities_pb=self._learner_server_entities_pb,
             model=self._model)
+        
         self._monitor = FederationMonitor(
             federation_environment=self._federation_environment,
             driver_controller_grpc_client=self._driver_controller_grpc_client)
+
+    def _get_dataset_receipes_dict(self, train_dataset_recipe_fn, validation_dataset_recipe_fn, test_dataset_recipe_fn):
+        dataset_recipe_fns = {}
+        dataset_recipe_fns[config.TRAIN] = train_dataset_recipe_fn
+        if validation_dataset_recipe_fn:
+            dataset_recipe_fns[config.VALIDATION] = validation_dataset_recipe_fn
+        if test_dataset_recipe_fn:
+            dataset_recipe_fns[config.TEST] = test_dataset_recipe_fn
+        return dataset_recipe_fns
 
     def _init_pool(self):
         # Unix default is "fork", others: "spawn", "forkserver"
@@ -119,7 +128,7 @@ class DriverSession(object):
         controller_future = self._executor.schedule(
             function=self._driver_initilizer.init_controller)
         self._executor_controller_tasks_q.put(controller_future)
-        
+
         # TODO(@stripeli): what happens in the else case?
         # need to wait abit before checking the health status of the controller
         # o/w the first attempt will fail
@@ -134,7 +143,7 @@ class DriverSession(object):
                 # TODO We perform a sleep because if the learners are co-located, e.g., localhost, then an exception
                 #  is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
                 time.sleep(0.1)
-            learner_future.result()
+            # learner_future.result()
 
     def get_federation_statistics(self):
         return self._monitor.get_federation_statistics()
@@ -146,7 +155,7 @@ class DriverSession(object):
     def run(self):
         self.initialize_federation()
         self.monitor_federation()
-        self.shutdown_federation()    
+        self.shutdown_federation()
 
     def shutdown_federation(self):
         # Collect all statistics related to learners before sending the shutdown signal.
