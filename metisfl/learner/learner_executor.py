@@ -38,7 +38,7 @@ class LearnerExecutor(object):
     def run_evaluation_task(self, block=False, **kwargs):
         future = self._run_task(
             task_name=constants.EVALUATION_TASK,
-            task_fun=self.task_executor.evaluate_model,
+            task_fn=self.task_executor.evaluate_model,
             callback=None,
             **kwargs
         )

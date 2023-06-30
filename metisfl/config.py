@@ -12,6 +12,10 @@ VALIDATION = "validation"
 TEST = "test"
 TASK_KEYS = [TRAIN, VALIDATION, TEST]
 
+KERAS_NN_ENGINE = "keras_nn"
+PYTORCH_NN_ENGINE = "pytorch_nn"
+NN_ENGINES = [KERAS_NN_ENGINE, PYTORCH_NN_ENGINE]
+
 
 DATASET_RECEIPE_FILENAMES = {
     "train": "model_train_dataset_ops.pkl",

@@ -15,7 +15,7 @@ from metisfl.models.utils import get_num_of_epochs
 class PyTorchModelOps(ModelOps):
     
     def __init__(self, model_dir: str):
-        self._model = MetisTorchModel.load(model_dir)
+        self._metis_model = MetisTorchModel.load(model_dir)
 
     def train_model(self,
                     train_dataset: ModelDataset,
@@ -31,8 +31,8 @@ class PyTorchModelOps(ModelOps):
         epochs_num = get_num_of_epochs(total_steps, dataset_size, batch_size)
         dataset = construct_dataset_pipeline(train_dataset) #TODO: this is inconsistent with tf counterpart
         
-        self._model.train()
-        train_res = self._model.fit(dataset, epochs=epochs_num)
+        self._metis_model._backend_model.train()
+        train_res = self._metis_model.fit(dataset, epochs=epochs_num)
         
         # TODO (dstripelis) Need to add the metrics for computing the execution time
         model_weights_descriptor = self.get_model_weights()
@@ -48,8 +48,8 @@ class PyTorchModelOps(ModelOps):
             raise RuntimeError("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
         dataset = construct_dataset_pipeline(eval_dataset)
-        self._model.eval()
-        eval_res = self._model.evaluate(dataset)            
+        self._metis_model._backend_model.eval()
+        eval_res = self._metis_model.evaluate(dataset)            
         MetisLogger.info("Model evaluation is complete.")
         metric_values = DictionaryFormatter.stringify(eval_res, stringify_nan=True)
         return MetisProtoMessages.construct_model_evaluation_pb(metric_values)
@@ -57,11 +57,11 @@ class PyTorchModelOps(ModelOps):
     def infer_model(self):
         # Set model to evaluation state.
         # FIXME @panoskyriakis: check this
-        self._model.eval()
+        self._metis_model._backend_model.eval()
         pass
 
     # @stripeli do we really need this?
     def cleanup(self):
-        del self._model
+        del self._metis_model
         torch.cuda.empty_cache()
         gc.collect()

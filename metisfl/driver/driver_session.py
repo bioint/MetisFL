@@ -25,6 +25,8 @@ class DriverSession(object):
                  train_dataset_recipe_fn: Callable,
                  validation_dataset_recipe_fn: Callable = None,
                  test_dataset_recipe_fn: Callable = None):
+        assert train_dataset_recipe_fn, "Train dataset recipe function is required."
+
         # Print welcome message.
         MetisASCIIArt.print()
         self._federation_environment = fedenv_parser.FederationEnvironment(
@@ -35,8 +37,8 @@ class DriverSession(object):
         self._model = model
         dataset_recipe_fns = {
             config.TRAIN: train_dataset_recipe_fn,
-            config.VALIDATION: validation_dataset_recipe_fn,
-            config.TEST: test_dataset_recipe_fn
+            config.VALIDATION: validation_dataset_recipe_fn if validation_dataset_recipe_fn else None,
+            config.TEST: test_dataset_recipe_fn if test_dataset_recipe_fn else None
         }
         self._init_pool()
         self._controller_server_entity_pb = self._create_controller_server_entity()
@@ -132,12 +134,19 @@ class DriverSession(object):
                 # TODO We perform a sleep because if the learners are co-located, e.g., localhost, then an exception
                 #  is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
                 time.sleep(0.1)
-
-    def monitor_federation(self):
-        self._monitor.monitor_federation()
+            learner_future.result()
 
     def get_federation_statistics(self):
         return self._monitor.get_federation_statistics()
+
+    def monitor_federation(self):
+        self._monitor.monitor_federation()
+        self.shutdown_federation()
+
+    def run(self):
+        self.initialize_federation()
+        self.monitor_federation()
+        self.shutdown_federation()    
 
     def shutdown_federation(self):
         # Collect all statistics related to learners before sending the shutdown signal.

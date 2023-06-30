@@ -7,11 +7,10 @@ from metisfl.proto import metis_pb2
 
 
 class ModelOps(object):
-    
-    _model = None
-    
+        
     def get_model(self) -> MetisModel:
-        return self._model
+        assert self._metis_model is not None, "Model is not initialized."
+        return self._metis_model
 
     @abc.abstractmethod
     def train_model(self,

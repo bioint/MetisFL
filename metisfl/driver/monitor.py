@@ -24,12 +24,12 @@ class FederationMonitor:
         self._federation_statistics = dict()
 
     def monitor_federation(self, request_every_secs=10):
-        self.monitor_termination_signals(request_every_secs=request_every_secs)
-
+        self._monitor_termination_signals(request_every_secs=request_every_secs)
+        
     def get_federation_statistics(self):
         return self._federation_statistics
 
-    def monitor_termination_signals(self, request_every_secs=10):
+    def _monitor_termination_signals(self, request_every_secs=10):
         # measuring elapsed wall-clock time
         st = datetime.datetime.now()
         signal_not_reached = True
@@ -37,10 +37,10 @@ class FederationMonitor:
             # ping controller for latest execution stats
             time.sleep(request_every_secs)
 
-            signal_not_reached = self._check_federation_rounds() or \
-                                 self._check_evaluation_score() or \
+            signal_not_reached = self._check_federation_rounds() and \
+                                 self._check_evaluation_score() and \
                                  self._check_execution_time(st)
-            
+
     def _check_federation_rounds(self) -> bool:
         metadata_pb = self._driver_controller_grpc_client \
                 .get_runtime_metadata(num_backtracks=0).metadata

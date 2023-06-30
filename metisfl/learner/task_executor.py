@@ -111,7 +111,7 @@ class TaskExecutor(object):
         return  self._get_completed_learning_task_pb(model_weights_descriptor, learning_task_stats)
 
     def _get_completed_learning_task_pb(self, model_weights_descriptor, learning_task_stats):
-        model_pb = self._homomorphic_encryption.encrypt_np_to_model_pb(model_weights_descriptor)
+        model_pb = self._homomorphic_encryption.construct_model_pb_from_np(model_weights_descriptor)
         completed_learning_task_pb = get_completed_learning_task_pb(
             model_pb=model_pb,
             learning_task_stats=learning_task_stats

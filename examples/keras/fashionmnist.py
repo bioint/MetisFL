@@ -6,9 +6,10 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from examples.keras.models.fashion_mnist_fc import FashionMnistModel
+from examples.keras.models.fashion_mnist_fc import get_model
 from examples.utils.data_partitioning import DataPartitioning
 from metisfl.driver.driver_session import DriverSession
+from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.models.model_dataset import ModelDatasetClassification
 from metisfl.utils.fedenv_parser import FederationEnvironment
 
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../config/fashionmnist/test_localhost_synchronous_vanillasgd.yaml")
+        script_cwd, "../config/cifar10/test_localhost_synchronous_vanilasgd.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -66,11 +67,12 @@ if __name__ == "__main__":
             learner.dataset_configs.train_dataset_path = \
                 os.path.join(datasets_path, "train_{}.npz".format(lidx))
 
-    nn_model = FashionMnistModel().get_model()
+    nn_model = get_model()
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
     # properly and any subsequent fit step will never train the model properly. We could apply the .fit() step instead
     # of the .evaluation() step, but since the driver does not hold any data it simply evaluates a random sample.
     nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
+    nn_model = MetisKerasModel(nn_model)
 
     def dataset_recipe_fn(dataset_fp):
         loaded_dataset = np.load(dataset_fp)

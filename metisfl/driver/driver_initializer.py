@@ -166,8 +166,8 @@ class DriverInitializer:
             "v": learner_instance.dataset_configs.validation_dataset_path,
             "s": learner_instance.dataset_configs.test_dataset_path,
             "u": remote_dataset_recipe_fps[config.TRAIN], 
-            "w": remote_dataset_recipe_fps[config.VALIDATION],
-            "z": remote_dataset_recipe_fps[config.TEST],
+            "w": remote_dataset_recipe_fps[config.VALIDATION] if config.VALIDATION in remote_dataset_recipe_fps else None,
+            "z": remote_dataset_recipe_fps[config.TEST] if config.TEST in remote_dataset_recipe_fps else None,
             "e": self._model.get_neural_engine()
         }
         return self._get_cmd("learner", args)
@@ -175,6 +175,7 @@ class DriverInitializer:
     def _get_cmd(self, entity, config):
         cmd = "python3 -m metisfl.{} ".format(entity)
         for key, value in config.items():
-            cmd += "-{}={} ".format(key, value)
+            if value:
+                cmd += "-{}={} ".format(key, value)
         return cmd
 
