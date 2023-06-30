@@ -66,16 +66,12 @@ class DriverInitializer:
         fabric_connection_config = self._federation_environment.controller \
             .connection_configs.get_fabric_connection_config()
         connection = Connection(**fabric_connection_config)
-        # We do not use asynchronous or disown, since we want the remote subprocess to return standard (error) output.
-        # see also, https://github.com/pyinvoke/invoke/blob/master/invoke/runners.py#L109
-
         connection.run("rm -rf {}".format(config.get_controller_path()))
         connection.run("mkdir -p {}".format(config.get_controller_path()))
+        
         remote_on_login = self._federation_environment.controller.connection_configs.on_login
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
             remote_on_login = remote_on_login[:-1]
-        MetisLogger.info(
-            "Copying model definition and dataset recipe files at controller.")
 
         # @stripeli this assumes that metisfl is installed in the remote host; make it more robust
         init_cmd = "{} && cd {} && {}".format(

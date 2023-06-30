@@ -18,13 +18,54 @@ from .utils import create_server_entity
 
 
 class DriverSession(object):
-
     def __init__(self,
                  fed_env: Union[str, fedenv_parser.FederationEnvironment],
                  model: MetisModel,
+                 train_datset_fps: list[str],
                  train_dataset_recipe_fn: Callable,
+                 validation_dataset_fps: list[str] = None,
+                 test_dataset_fps: list[str] = None,
                  validation_dataset_recipe_fn: Callable = None,
                  test_dataset_recipe_fn: Callable = None):
+        """Entry point for MetisFL Driver Session API.
+        
+            This class is the entry point for MetisFL Driver Session API. It is responsible for initializing the federation environment
+            defined by the :param:`fed_env` and starting the federated training for the :param:`model` using the datasets defined by
+            :param:`train_datset_fps`, :param:`validation_dataset_fps` and :param:`test_dataset_fps`. The dataset recipes given by
+            :param:`train_dataset_recipe_fn`, :param:`validation_dataset_recipe_fn` and :param:`test_dataset_recipe_fn` are functions
+            that will be used to create the datasets from the dataset filepaths. They are required to be pickleable and are transferred
+            over to the remote Learner machines. 
+            
+            To boostrap the training process, we ssh into the remote Controller and Learners host machines using the authorization
+            credentials defined by the federation environment. This boostrapping process involves the following steps:
+            
+                - Copy the intial model weights to the remote Learner machines.
+                - Copy the dataset file and the pickled dataset recipe functions to the remote Learner machines.
+                - Start the Controller and Learner processes on the remote machines. 
+            
+            This boostraping is delegated to the :class:`DriverInitializer` class. Once the boostraping is complete, the DriverSession    
+                
+            The class will create the following clients
+            
+                - one :class:`GRPCControllerClient` for the controller in the federation environment.
+                - one :class:`GRPCLearnerClient` for each learner in the federation environment.
+                
+            and use a [Pebble](https://pypi.org/project/Pebble/) process pool to run them in parallel.
+
+            
+            
+
+
+        Args:
+            fed_env (Union[str, fedenv_parser.FederationEnvironment]): _description_
+            model (MetisModel): A :class:`MetisModel` instance.
+            train_datset_fps (list[str]): A 
+            train_dataset_recipe_fn (Callable): _description_
+            validation_dataset_fps (list[str], optional): _description_. Defaults to None.
+            test_dataset_fps (list[str], optional): _description_. Defaults to None.
+            validation_dataset_recipe_fn (Callable, optional): _description_. Defaults to None.
+            test_dataset_recipe_fn (Callable, optional): _description_. Defaults to None.
+        """        
         assert train_dataset_recipe_fn, "Train dataset recipe function is required."
 
         # Print welcome message.
@@ -131,7 +172,6 @@ class DriverSession(object):
 
         # TODO(@stripeli): what happens in the else case?
         # need to wait abit before checking the health status of the controller
-        # o/w the first attempt will fail
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model_to_controller()
             for index in range(self._num_learners):

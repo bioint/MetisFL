@@ -1,5 +1,3 @@
-from typing import List
-
 import yaml
 
 from metisfl.encryption.homomorphic import HomomorphicEncryption
@@ -9,11 +7,14 @@ from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoM
 class TerminationSignals(object):
 
     def __init__(self, termination_signals_map):
-        self.federation_rounds = termination_signals_map.get("FederationRounds", 100)
-        self.execution_time_cutoff_mins = termination_signals_map.get("ExecutionCutoffTimeMins", 1e6)
+        self.federation_rounds = termination_signals_map.get(
+            "FederationRounds", 100)
+        self.execution_time_cutoff_mins = termination_signals_map.get(
+            "ExecutionCutoffTimeMins", 1e6)
         if not self.execution_time_cutoff_mins:
             self.execution_time_cutoff_mins = 1e6
-        self.metric_cutoff_score = termination_signals_map.get("MetricCutoffScore", 1)
+        self.metric_cutoff_score = termination_signals_map.get(
+            "MetricCutoffScore", 1)
 
 
 class CommunicationProtocol(object):
@@ -27,18 +28,20 @@ class CommunicationProtocol(object):
         self.is_asynchronous = self.name.upper() == "ASYNCHRONOUS"
         self.is_synchronous = self.name.upper() == "SYNCHRONOUS"
         self.is_semi_synchronous = self.name.upper() == "SEMI_SYNCHRONOUS"
-        self.specifications = communication_protocol.get("Specifications", None)
+        self.specifications = communication_protocol.get(
+            "Specifications", None)
         self.semi_synchronous_lambda, self.semi_sync_recompute_num_updates = None, None
         if self.specifications and self.is_semi_synchronous:
-            self.semi_synchronous_lambda = self.specifications.get("SemiSynchronousLambda", None)
-            self.semi_sync_recompute_num_updates = self.specifications.get("SemiSynchronousRecomputeSteps", None)
-            
+            self.semi_synchronous_lambda = self.specifications.get(
+                "SemiSynchronousLambda", None)
+            self.semi_sync_recompute_num_updates = self.specifications.get(
+                "SemiSynchronousRecomputeSteps", None)
+
     def to_proto(self):
         return MetisProtoMessages.construct_communication_specs_pb(
             protocol=self.name,
             semi_sync_lambda=self.semi_synchronous_lambda,
             semi_sync_recompute_num_updates=self.semi_sync_recompute_num_updates)
-                
 
 
 class FHEScheme(object):
@@ -51,11 +54,12 @@ class FHEScheme(object):
 
 class AggregationRule(object):
 
-    def __init__(self, 
-                 aggregation_rule_map, 
+    def __init__(self,
+                 aggregation_rule_map,
                  homomorphic_encryption: HomomorphicEncryption):
         self.aggregation_rule_name = aggregation_rule_map.get("Name", None)
-        self.aggregation_rule_specifications = aggregation_rule_map.get("RuleSpecifications", {})
+        self.aggregation_rule_specifications = aggregation_rule_map.get(
+            "RuleSpecifications", {})
         self.aggregation_rule_scaling_factor = \
             self.aggregation_rule_specifications.get("ScalingFactor", None)
         self.aggregation_rule_stride_length = \
@@ -67,7 +71,7 @@ class AggregationRule(object):
             self.aggregation_rule_name,
             self.aggregation_rule_scaling_factor,
             self.aggregation_rule_stride_length)
-    
+
     def to_proto(self):
         return MetisProtoMessages.construct_aggregation_rule_pb(
             rule_name=self.aggregation_rule_name,
@@ -75,32 +79,38 @@ class AggregationRule(object):
             stride_length=self.aggregation_rule_stride_length,
             he_scheme_pb=self.homomorphic_encryption.to_proto())
 
+
 class GlobalModelConfig(object):
 
     def __init__(self, global_model_map, homomorphic_encryption):
-        self.aggregation_rule = AggregationRule(global_model_map.get("AggregationRule", None), 
+        self.aggregation_rule = AggregationRule(global_model_map.get("AggregationRule", None),
                                                 homomorphic_encryption)
-        self.participation_ratio = global_model_map.get("ParticipationRatio", 1)
-        
+        self.participation_ratio = global_model_map.get(
+            "ParticipationRatio", 1)
+
     def to_proto(self):
         return MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=self.aggregation_rule.to_proto(),
             learners_participation_ratio=self.participation_ratio)
+
 
 class LocalModelConfig(object):
 
     def __init__(self, local_model_map):
         self.batch_size = local_model_map.get("BatchSize", 100)
         self.local_epochs = local_model_map.get("LocalEpochs", 5)
-        self.validation_percentage = local_model_map.get("ValidationPercentage", 0)
-        self.optimizer_config = OptimizerConfig(local_model_map.get("OptimizerConfig"))
-        
+        self.validation_percentage = local_model_map.get(
+            "ValidationPercentage", 0)
+        self.optimizer_config = OptimizerConfig(
+            local_model_map.get("OptimizerConfig"))
+
     def to_proto(self):
         return MetisProtoMessages.construct_controller_modelhyperparams_pb(
             batch_size=self.batch_size,
             epochs=self.local_epochs,
             optimizer_pb=self.optimizer_config.to_proto(),
             percent_validation=self.validation_percentage)
+
 
 class ModelStoreConfig(object):
 
@@ -113,16 +123,18 @@ class ModelStoreConfig(object):
         else:
             self.name = model_store_map.get("Name", None)
             self.eviction_policy = model_store_map.get("EvictionPolicy")
-            self.eviction_lineage_length = model_store_map.get("LineageLength", 1)
-            self.connection_configs = ConnectionConfigsBase(model_store_map.get("ConnectionConfigs", {}))
-            
+            self.eviction_lineage_length = model_store_map.get(
+                "LineageLength", 1)
+            self.connection_configs = ConnectionConfigsBase(
+                model_store_map.get("ConnectionConfigs", {}))
+
     def to_proto(self):
         return MetisProtoMessages.construct_model_store_config_pb(
-                            name=self.name,
-                            eviction_policy=self.eviction_policy,
-                            lineage_length=self.eviction_lineage_length,
-                            store_hostname=self.connection_configs.hostname,
-                            store_port=self.connection_configs.port)
+            name=self.name,
+            eviction_policy=self.eviction_policy,
+            lineage_length=self.eviction_lineage_length,
+            store_hostname=self.connection_configs.hostname,
+            store_port=self.connection_configs.port)
 
 
 class OptimizerConfig(object):
@@ -130,7 +142,8 @@ class OptimizerConfig(object):
     def __init__(self, optimizer_map):
         self.optimizer_name = optimizer_map.get("OptimizerName")
         self.learning_rate = optimizer_map.get("LearningRate")
-        self.optimizer_pb_kwargs = self.create_optimizer_pb_kwargs(optimizer_map)
+        self.optimizer_pb_kwargs = self.create_optimizer_pb_kwargs(
+            optimizer_map)
 
     def create_optimizer_pb_kwargs(self, optimizer_map):
         optimizer_pb_kwargs = dict()
@@ -166,14 +179,15 @@ class OptimizerConfig(object):
         else:
             raise RuntimeError("Not a supported optimizer.")
         return optimizer_pb_kwargs
-    
+
     def to_proto(self):
         return ModelProtoMessages.construct_optimizer_config_pb_from_kwargs(self.optimizer_pb_kwargs)
 
 
 class RemoteHost(object):
     def __init__(self, config_map):
-        self.connection_configs = ConnectionConfigs(config_map.get("ConnectionConfigs"))
+        self.connection_configs = ConnectionConfigs(
+            config_map.get("ConnectionConfigs"))
         self.grpc_servicer = GRPCServicer(config_map.get("GRPCServicer"))
         self.ssl_configs = None
         if "SSLConfigs" in config_map:
@@ -214,9 +228,11 @@ class Learner(RemoteHost):
         super().__init__(learner_def_map)
         self.learner_id = learner_def_map.get("LearnerID")
         self.project_home = learner_def_map.get("ProjectHome", "")
-        assert self.project_home, "Need to define ProjectHome for learner: {}.".format(self.learner_id)
+        assert self.project_home, "Need to define ProjectHome for learner: {}.".format(
+            self.learner_id)
         self.cuda_devices = learner_def_map.get('CudaDevices', [])
-        self.dataset_configs = DatasetConfigs(learner_def_map.get("DatasetConfigs"))
+        self.dataset_configs = DatasetConfigs(
+            learner_def_map.get("DatasetConfigs"))
 
     def __str__(self):
         return """ LearnerID: {}, ProjectHome: {}, ConnectionConfigs: {}, GRPCServicer:{}, CUDA_DEVICES: {}," \
@@ -231,7 +247,8 @@ class Learner(RemoteHost):
 
 class SSLConfigs(object):
     def __init__(self, ssl_config_map):
-        self.public_certificate_filepath = ssl_config_map.get("PublicCertificate", None)
+        self.public_certificate_filepath = ssl_config_map.get(
+            "PublicCertificate", None)
         self.private_key_filepath = ssl_config_map.get("PrivateKey", None)
 
 
@@ -291,18 +308,22 @@ class DatasetConfigs(object):
 
     def __init__(self, dataset_configs_map):
         self.train_dataset_path = dataset_configs_map.get("TrainDatasetPath")
-        self.validation_dataset_path = dataset_configs_map.get("ValidationDatasetPath", "")
+        self.validation_dataset_path = dataset_configs_map.get(
+            "ValidationDatasetPath", "")
         self.test_dataset_path = dataset_configs_map.get("TestDatasetPath", "")
 
 
 class GRPCServicer(object):
 
     def __init__(self, grpc_servicer_map):
-        self.hostname = grpc_servicer_map.get("Hostname") # FIXME: @stripeli this does not exist is some yamls 
+        # FIXME: @stripeli this does not exist is some yamls
+        self.hostname = grpc_servicer_map.get("Hostname")
         self.port = grpc_servicer_map.get("Port")
         if not self.hostname and not self.port:
-            raise RuntimeError("Malformed (hostname, port) combination. Both values need to be defined.")
-        self.public_certificate_path = grpc_servicer_map.get("PublicCertificatePath", None)
+            raise RuntimeError(
+                "Malformed (hostname, port) combination. Both values need to be defined.")
+        self.public_certificate_path = grpc_servicer_map.get(
+            "PublicCertificatePath", None)
         self.private_key_path = grpc_servicer_map.get("PrivateKeyPath", None)
 
 
@@ -312,36 +333,40 @@ class FederationEnvironment(object):
         # Read YAML Configs.
         fstream = open(federation_environment_config_fp).read()
         self.loaded_stream = yaml.load(fstream, Loader=yaml.SafeLoader)
-        federation_environment = self.loaded_stream.get("FederationEnvironment")
+        federation_environment = self.loaded_stream.get(
+            "FederationEnvironment")
         # TODO(dstripelis) Needs correction to DockerImage
 
-        self.termination_signals = TerminationSignals(federation_environment.get("TerminationSignals"))
+        self.termination_signals = TerminationSignals(
+            federation_environment.get("TerminationSignals"))
         self.evaluation_metric = federation_environment.get("EvaluationMetric")
-        self.communication_protocol = CommunicationProtocol(federation_environment.get("CommunicationProtocol"))
-        self.local_model_config = LocalModelConfig(federation_environment.get("LocalModelConfig"))
+        self.communication_protocol = CommunicationProtocol(
+            federation_environment.get("CommunicationProtocol"))
+        self.local_model_config = LocalModelConfig(
+            federation_environment.get("LocalModelConfig"))
         # The model store config is not mandatory, hence the None value if the
         # store configuration is not defined in the environment's yaml file.
-        self.model_store_config = ModelStoreConfig(federation_environment.get("ModelStoreConfig", None))
+        self.model_store_config = ModelStoreConfig(
+            federation_environment.get("ModelStoreConfig", None))
         self.controller = Controller(federation_environment.get("Controller"))
         self.learners = Learners(federation_environment.get("Learners"))
 
         self.homomorphic_encryption = HomomorphicEncryption({})
         if "HomomorphicEncryption" in federation_environment:
-            self.homomorphic_encryption = HomomorphicEncryption(federation_environment.get("HomomorphicEncryption"))
+            self.homomorphic_encryption = HomomorphicEncryption(
+                federation_environment.get("HomomorphicEncryption"))
             # To use homomorphic encryption (fully, partial, somewhat) the user needs to define
             # specific aggregation functions. In particular:
             #   - Case 1: Fully Homomorphic Encryption with Private Weighted Aggregation - (FHE, PWA)
             # TODO(stripeli): Expand when we get support additional encryption schemes and aggregation functions.
             assert self.global_model_config.aggregation_rule.aggregation_rule_name == "PWA", \
                 "Since you have enabled Homomorphic Encryption, you need to use the PWA aggregation function."
-        
+
         # @stripeli: added by panos. We need the HomomorphicEncryption object in the AggregationRule
-        # in order to construct the protobuf. This is because the protobuf does not correctly replicate 
+        # in order to construct the protobuf. This is because the protobuf does not correctly replicate
         # the structure of the yaml file. FIXME:
         self.global_model_config = GlobalModelConfig(
             federation_environment.get("GlobalModelConfig"), self.homomorphic_encryption)
-        
+
     def get_controller(self):
         return self.loaded_stream["Controller"]
-
-

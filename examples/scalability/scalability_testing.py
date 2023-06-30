@@ -10,7 +10,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from examples.keras.models.housing_mlp import HousingMLP
+from examples.scalability.housing_mlp import HousingMLP
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.model_dataset import ModelDatasetRegression
 from metisfl.utils.environment_generator import EnvGen
