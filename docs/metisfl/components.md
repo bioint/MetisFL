@@ -3,7 +3,7 @@ Components
 
 <div align="center">
  <img 
-    src="../img/MetisFL-Components-Internal.png" width="700px", alt="MetisFL Components Overview">
+    src="../img/MetisFL-Components-Internal.png" width="1000px", alt="MetisFL Components Overview">
 </div>
 
 <!-- This is a high-level overview of how federated training is performed and when and how the synchronization points between
