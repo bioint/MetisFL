@@ -7,13 +7,12 @@ from metisfl.utils.fedenv_parser import FederationEnvironment
 
 class EnvGen(object):
 
-    def __init__(self, template_filepath=None):
+    def __init__(self, template_filepath: str):
+        assert os.path.exists(template_filepath), \
+            "Template file {} does not exist.".format(template_filepath)
+            
         self.template_filepath = template_filepath
-        if not template_filepath:
-            self.template_filepath = os.path.join(
-                os.path.dirname(__file__),
-                "../config/template.yaml")
-
+        
     def generate_localhost(self,
                            federation_rounds=10,
                            learners_num=10,
