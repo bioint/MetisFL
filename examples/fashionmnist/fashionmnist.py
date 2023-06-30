@@ -3,16 +3,19 @@ import json
 import os
 
 import numpy as np
-import tensorflow as tf
 
-from examples.keras.models.fashion_mnist_fc import get_model
-from examples.utils.data_partitioning import DataPartitioning
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.models.model_dataset import ModelDatasetClassification
+from metisfl.utils.data_partitioning import DataPartitioning
 from metisfl.utils.fedenv_parser import FederationEnvironment
 
+from .model import get_model
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+# Make TensorFlow log less verbose
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 if __name__ == "__main__":
 
@@ -33,12 +36,6 @@ if __name__ == "__main__":
     """ Load the environment. """
     federation_environment = FederationEnvironment(args.federation_environment_config_fp)
 
-    """ Load the data. """
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
-    print(x_train[0:1].shape, flush=True)
-    print(y_train[0:1].shape, flush=True)
-    x_train = (x_train.astype('float32') / 256).reshape(-1, 28, 28, 1)
-    x_test = (x_test.astype('float32') / 256).reshape(-1, 28, 28, 1)
 
     if not args.generate_iid_partitions and not args.generate_noniid_partitions \
             and not all([l.dataset_configs.train_dataset_path for l in federation_environment.learners]):
