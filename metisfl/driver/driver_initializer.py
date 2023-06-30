@@ -25,8 +25,8 @@ class DriverInitializer:
 
         self._federation_environment = fed_env
         self._model = model
-        self._model_save_dir = config.get_model_save_dir()
-        self._working_dir = config.get_project_home()
+        self._model_save_dir = config.get_driver_model_save_dir()
+        self._driver_dir = config.get_driver_path()
         
         self._controller_server_entity_pb = controller_server_entity_pb
         self._learner_server_entities_pb = learner_server_entities_pb
@@ -38,17 +38,17 @@ class DriverInitializer:
         dataset_receipe_fps = dict()
         for key, dataset_recipe_fn in dataset_recipe_fns.items():
             if dataset_recipe_fn:
-                dataset_pkl = os.path.join(self._working_dir, config.DATASET_RECEIPE_FILENAMES[key])
+                dataset_pkl = os.path.join(self._driver_dir, config.DATASET_RECEIPE_FILENAMES[key])
                 cloudpickle.dump(obj=dataset_recipe_fn, file=open(dataset_pkl, "wb+"))
                 dataset_receipe_fps[key] = dataset_pkl
         return dataset_receipe_fps
             
     def _save_initial_model(self, model):        
         self._model_weights_descriptor = model.get_weights_descriptor()
-        model.save(self._working_dir)        
+        model.save(self._model_save_dir)        
         return self._make_tarfile(
-            output_filename=config.MODEL_SAVE_DIR_NAME,
-            source_dir=self._model_save_dir
+            source_dir=self._model_save_dir,
+            output_filename=os.path.basename(self._model_save_dir)
         )
         
     def _make_tarfile(self, output_filename, source_dir):
@@ -157,7 +157,6 @@ class DriverInitializer:
         for key, filename in self._dataset_receipe_fps.items():
             remote_dataset_recipe_fps[key] = os.path.join(remote_metis_path, filename) if filename else None   
             
-        MetisLogger.info("Remote dataset recipe file paths: {}".format(remote_dataset_recipe_fps))
         args = {
             "l": self._learner_server_entities_pb[index].SerializeToString().hex(),
             "c": self._controller_server_entity_pb.SerializeToString().hex(),
@@ -171,7 +170,6 @@ class DriverInitializer:
             "z": remote_dataset_recipe_fps[config.TEST],
             "e": self._model.get_neural_engine()
         }
-        MetisLogger.info(args)
         return self._get_cmd("learner", args)
     
     def _get_cmd(self, entity, config):

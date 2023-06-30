@@ -6,7 +6,7 @@ class MetisModel(object):
     nn_engine = None
         
     @abc.abstractmethod
-    def load(self, model_dir):
+    def load(self, model_dir) -> "MetisModel":
         pass
     
     @abc.abstractmethod
@@ -22,4 +22,5 @@ class MetisModel(object):
     
     @abc.abstractmethod
     def get_neural_engine(self):
+        assert self.nn_engine is not None, "Neural engine not set"
         return self.nn_engine 

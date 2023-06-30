@@ -17,12 +17,12 @@ class MetisKerasModel(MetisModel):
         self.nn_engine = "keras"
 
     @staticmethod
-    def load(model_dir) -> tf.keras.Model:
+    def load(model_dir) -> "MetisKerasModel":
         MetisLogger.info("Loading model from: {}".format(model_dir))
         model_custom_objects = {"FedProx": FedProx}
         m = tf.keras.models.load_model(model_dir, custom_objects=model_custom_objects)
         MetisLogger.info("Loaded model from: {}".format(model_dir))
-        return m
+        return MetisKerasModel(m)
 
     def get_neural_engine(self):    
         return self.nn_engine

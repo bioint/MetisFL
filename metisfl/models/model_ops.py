@@ -1,6 +1,7 @@
 import abc
 
 from metisfl.models.model_dataset import ModelDataset
+from metisfl.models.model_wrapper import MetisModel
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
 from metisfl.proto import metis_pb2
 
@@ -9,7 +10,7 @@ class ModelOps(object):
     
     _model = None
     
-    def get_model(self) -> object:
+    def get_model(self) -> MetisModel:
         return self._model
 
     @abc.abstractmethod
@@ -19,7 +20,7 @@ class ModelOps(object):
                     hyperparameters_pb: metis_pb2.Hyperparameters,
                     validation_dataset: ModelDataset = None,
                     test_dataset: ModelDataset = None,
-                    verbose=False) -> [ModelWeightsDescriptor, LearningTaskStats]:
+                    verbose=False) -> list[ModelWeightsDescriptor, LearningTaskStats]:
         pass
     
     @abc.abstractmethod

@@ -33,7 +33,7 @@ class ModelDataset(object):
 
     def construct_dataset_pipeline(self, batch_size, is_train=False):
         _x, _y = self._x, self._y
-        if isinstance(self.x, tf.data.Dataset):
+        if isinstance(self._x, tf.data.Dataset):
             if is_train:
                 # Shuffle all records only if dataset is used for training.
                 _x = _x.shuffle(self.get_size())

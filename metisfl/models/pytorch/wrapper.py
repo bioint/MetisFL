@@ -19,7 +19,7 @@ class MetisTorchModel(MetisModel):
         assert hasattr(model, "fit"), "MetisTorchModel requires a .fit method"
         assert hasattr(model, "evaluate"), "MetisTorchModel requires an .evaluate method"
         
-        self.model = model
+        self._model = model
         self.nn_engine = "pytorch"
 
     @staticmethod
@@ -35,14 +35,12 @@ class MetisTorchModel(MetisModel):
         model_loaded = cloudpickle.load(open(model_def_path, "rb"))
         model_loaded.load_state_dict(torch.load(model_weights_path))
         MetisLogger.info("Loaded model from: {}".format(model_dir))
-        return model_loaded
+        return MetisTorchModel(model_loaded)
     
-    def get_neural_engine(self):
-        return self.nn_engine
     
     def get_weights_descriptor(self) -> ModelWeightsDescriptor:
         weights_names, weights_trainable, weights_values = [], [], []
-        for name, param in self.model.named_parameters():
+        for name, param in self._model.named_parameters():
             weights_names.append(name)
             # Trainable variables require gradient computation,
             # for non-trainable the gradient is False.
@@ -59,9 +57,9 @@ class MetisTorchModel(MetisModel):
         # @stripeli why are you removing the model dir on torch.save but not on the respective tf save?
         shutil.rmtree(model_dir)
         os.makedirs(model_dir)
-        cloudpickle.register_pickle_by_value(inspect.getmodule(self.model))
-        cloudpickle.dump(obj=self.model, file=open(model_def_path, "wb+"))
-        torch.save(self.model.state_dict(), model_weights_path)
+        cloudpickle.register_pickle_by_value(inspect.getmodule(self._model))
+        cloudpickle.dump(obj=self._model, file=open(model_def_path, "wb+"))
+        torch.save(self._model.state_dict(), model_weights_path)
         MetisLogger.info("Saved model at: {}".format(model_dir))
 
     def set_model_weights(self,
@@ -70,6 +68,6 @@ class MetisTorchModel(MetisModel):
         weights_values = model_weights_descriptor.weights_values
         state_dict = collections.OrderedDict({
             k: torch.tensor(np.atleast_1d(v))
-            for k, v in zip(self.model.state_dict().keys(), weights_values)
+            for k, v in zip(self._model.state_dict().keys(), weights_values)
         })
-        self.model.load_state_dict(state_dict, strict=True)
+        self._model.load_state_dict(state_dict, strict=True)

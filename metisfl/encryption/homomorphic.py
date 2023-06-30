@@ -1,13 +1,12 @@
 
-from typing import List
 from metisfl.encryption import fhe
 from metisfl.models.types import ModelWeightsDescriptor
-from metisfl.proto import model_pb2
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.proto_messages_factory import ModelProtoMessages, MetisProtoMessages
 
 # FIXME: this can go in the yaml file.
 CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
+
 
 class HomomorphicEncryption(object):
 
@@ -16,20 +15,21 @@ class HomomorphicEncryption(object):
         if self.scheme and self.scheme.upper() == "CKKS":
             self.batch_size = homomorphic_encryption_map.get("BatchSize")
             self.scaling_bits = homomorphic_encryption_map.get("ScalingBits")
-            self._he_scheme = fhe.CKKS(self.batch_size, self.scaling_bits, CRYPTO_RESOURCES_DIR)
+            self._he_scheme = fhe.CKKS(
+                self.batch_size, self.scaling_bits, CRYPTO_RESOURCES_DIR)
             self._he_scheme.load_crypto_params()
             fhe_scheme_pb = MetisProtoMessages.construct_fhe_scheme_pb(
-                    batch_size=self.batch_size, scaling_bits=self.scaling_bits)
+                batch_size=self.batch_size, scaling_bits=self.scaling_bits)
             self._he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
-                    enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
+                enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
         else:
             empty_scheme_pb = MetisProtoMessages.construct_empty_he_scheme_pb()
             self._he_scheme = None
             self._he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
                 enabled=False, empty_scheme_pb=empty_scheme_pb)
-            
+
     @staticmethod
-    def from_proto(he_scheme_pb):
+    def from_proto(he_scheme_pb: metis_pb2.HEScheme):
         # FIXME(@stripeli): do we really need this check?
         # assert isinstance(he_scheme_pb, model_pb2.HEScheme), "Not a valid HE scheme protobuf."
         if he_scheme_pb and he_scheme_pb.HasField("fhe_scheme"):
@@ -41,10 +41,10 @@ class HomomorphicEncryption(object):
             return HomomorphicEncryption(he_map)
         else:
             return HomomorphicEncryption({})
-        
 
-    def decrypt_pb_weights(self, variables: List[model_pb2.Model.Variable]):
-        assert all([isinstance(var, model_pb2.Model.Variable) for var in variables])
+    def decrypt_pb_weights(self, variables: list[model_pb2.Model.Variable]) -> ModelWeightsDescriptor:
+        assert all([isinstance(var, model_pb2.Model.Variable)
+                   for var in variables])
         var_names, var_trainables, var_nps = list(), list(), list()
         for var in variables:
             # Variable specifications.
@@ -57,7 +57,8 @@ class HomomorphicEncryption(object):
                 # into a numpy array with the data type specified in the tensor specifications.
                 tensor_spec = var.ciphertext_tensor.tensor_spec
                 tensor_length = tensor_spec.length
-                decoded_value = self._he_scheme.decrypt(tensor_spec.value, tensor_length, 1)
+                decoded_value = self._he_scheme.decrypt(
+                    tensor_spec.value, tensor_length, 1)
                 # Since the tensor is decoded we just need to recreate the numpy array
                 # to its original data type and shape.
                 np_array = \
@@ -67,7 +68,8 @@ class HomomorphicEncryption(object):
                 tensor_spec = var.plaintext_tensor.tensor_spec
                 # If the tensor is a plaintext tensor, then we need to read the byte buffer
                 # and load the tensor as a numpy array casting it to the specified data type.
-                np_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(tensor_spec)
+                np_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(
+                    tensor_spec)
             else:
                 raise RuntimeError("Not a supported tensor type.")
 
@@ -76,8 +78,9 @@ class HomomorphicEncryption(object):
             var_trainables.append(var_trainable)
             var_nps.append(np_array)
 
-        # @stripeli what is var_nps? is this the same ase ModelWeightsDescriptor?
-        return var_names, var_trainables, var_nps
+        return ModelWeightsDescriptor(weights_names=var_names,
+                                      weights_trainable=var_trainables,
+                                      weights_values=var_nps)
 
     def construct_model_pb_from_np(self, weight_descriptor: ModelWeightsDescriptor) -> model_pb2.Model:
         weights_names = weight_descriptor.weights_names
@@ -85,7 +88,8 @@ class HomomorphicEncryption(object):
         weights_values = weight_descriptor.weights_values
         if not weights_names:
             # Populating weights names with surrogate keys.
-            weights_names = ["arr_{}".format(widx) for widx in range(len(weights_values))]
+            weights_names = ["arr_{}".format(widx)
+                             for widx in range(len(weights_values))]
         if weights_trainable:
             # Since weights have not specified as trainable or not, we default all weights to trainable.
             weights_trainable = [True for _ in range(len(weights_values))]
@@ -103,6 +107,6 @@ class HomomorphicEncryption(object):
                                                                        tensor_pb=tensor_pb)
             variables_pb.append(model_var)
         return model_pb2.Model(variables=variables_pb)
-    
+
     def to_proto(self):
-        return self._he_scheme_pb 
+        return self._he_scheme_pb

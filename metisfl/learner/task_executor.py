@@ -1,4 +1,4 @@
-from typing import Callable
+from typing import Callable, List
 
 from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.models.model_ops import ModelOps
@@ -42,16 +42,14 @@ class TaskExecutor(object):
             self._model_ops = self._model_ops_fn(self._model_dir)
         
     def _set_weights_from_model_pb(self, model_pb: model_pb2.Model):
-        weights_names, weights_trainable, weights_values = \
-            self._homomorphic_encryption.decrypt_pb_weights(model_pb)
-        if len(self.weights_values) > 0:
-            self._model_ops.get_model().set_model_weights(self.weights_names, self.weights_trainable, self.weights_values)
-        return weights_names, weights_trainable, weights_values
+        model_weights_descriptor = self._homomorphic_encryption.decrypt_pb_weights(model_pb.variables)
+        if len(model_weights_descriptor.weights_values) > 0:
+            self._model_ops.get_model().set_model_weights(model_weights_descriptor)
     
     def evaluate_model(self, 
                         model_pb: model_pb2.Model, 
                         batch_size: int,
-                        evaluation_datasets_pb: [learner_pb2.EvaluateModelRequest.dataset_to_eval],
+                        evaluation_datasets_pb: list[learner_pb2.EvaluateModelRequest.dataset_to_eval],
                         metrics_pb: metis_pb2.EvaluationMetrics, 
                         verbose=False):       
         self._init_model_ops() 
@@ -141,9 +139,8 @@ class TaskExecutor(object):
 
     def _host_port_identifier(self):
         return "{}:{}".format(
-            self._learner_server_entity.hostname,
-            self._learner_server_entity.port)
-
+            self._learner_server_entity_pb.hostname,
+            self._learner_server_entity_pb.port)
 
     def __enter__(self):
         return self
