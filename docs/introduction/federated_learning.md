@@ -1,3 +1,10 @@
+<!-- To get rid of tables borders -->
+<style>
+td, th {
+   border: none!important;
+}
+</style>
+
 Federated Learning
 =============================
 
@@ -7,12 +14,13 @@ Throughout the federated training process the raw data always remain at the orig
 
 Federated Learning relaxes the need for raw data aggregation and pushes the training of the machine learning model down to each data source. During federated training, only the locally trained model parameters are shared with a centralized entity that is responsible for aggregating these parameters and compute the federated model. Figure~\ref{fig:RepresentativeLearningEnvironments} shows a representative centralized and federated learning environment and how both environments differ in regard to data (centralized) and model (federated) sharing.
 
-<center>
+<div align="center">
 
 | Centralized Machine Learning   |      Federated Machine Learning      |
-|----------|:-------------:|
+|:----------:|:-------------:|
 | ![Exchanging Data](../img/CentralizedMachineLearning.png) |  ![Exchanging Models](../img/FederatedMachineLearning.png) |
-</center>
+
+</div>
 
 ## Centralized vs. Federated Model Performance
 Many recent studies have shown that Federated Machine Learning can achieve comparable performance as Centralized Machine Learning across many challenging learning tasks 
