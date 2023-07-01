@@ -1,10 +1,3 @@
-<!-- To get rid of tables borders -->
-<style>
-td, th {
-   border: none!important;
-}
-</style>
-
 Federated Learning
 =============================
 

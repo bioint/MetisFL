@@ -1,10 +1,3 @@
-<!-- To get rid of tables borders -->
-<style>
-td, th {
-   border: none!important;
-}
-</style>
-
 Awards & Mentions
 =============================
 [FLINT Architecture:](https://viterbischool.usc.edu/news/2023/02/how-old-is-your-brain-ask-all-the-hospitals/) A novel federated learning and integration architecture to address challenges arising in biomedical research (see also [here](https://healthitanalytics.com/news/researchers-to-propose-framework-to-address-federated-learning-challenges)).
