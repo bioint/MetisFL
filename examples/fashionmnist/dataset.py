@@ -1,4 +1,5 @@
 import os
+from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
@@ -6,7 +7,7 @@ import tensorflow as tf
 from metisfl.utils.data_partitioning import DataPartitioning
 
 
-def load_data(rescale_reshape=True) -> tuple(np.ndarray, np.ndarray, np.ndarray, np.ndarray):
+def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """A helper function to load the Fashion MNIST dataset.
 
     Args:
@@ -35,7 +36,7 @@ def partition_data_noniid(x_train, y_train, num_learners):
     x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners).non_iid_partition()
     return x_chunks, y_chunks
 
-def save_data(x_chunks, y_chunks, x_test, y_test) -> tuple(list(str), str):
+def save_data(x_chunks, y_chunks, x_test, y_test) -> Tuple[list[str], str]:
     """Saves the data to disk using the `np.savez` function.
 
     Args:

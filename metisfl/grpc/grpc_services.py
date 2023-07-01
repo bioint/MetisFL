@@ -55,6 +55,19 @@ class GRPCClient(object):
         self._channel = GRPCChannelMaxMsgLength(self.grpc_endpoint.server_entity).channel
         self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)
 
+
+    def check_health_status(self, request_retries=1, request_timeout=None, block=True):
+        def _request(_timeout=None):
+            get_services_health_status_request_pb = ServiceCommonProtoMessages \
+                                                    .construct_get_services_health_status_request_pb()
+            MetisLogger.info("Requesting controller's health status.")
+            response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
+            MetisLogger.info("Received controller's health status, {} - {}".format(
+                self.grpc_endpoint.listening_endpoint, response))
+            return response
+        return self.schedule_request(_request, request_retries, request_timeout, block)
+
+
     def schedule_request(self, request, request_retries=1, request_timeout=None, block=True):
         if request_retries > 1:
             future = self.executor.schedule(function=self._request_with_timeout,

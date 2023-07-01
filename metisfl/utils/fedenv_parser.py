@@ -205,7 +205,7 @@ class Controller(RemoteHost):
 class Learners(object):
 
     def __init__(self, learners_map):
-        self.learners = []
+        self.learners: list[Learner] = []
         for learner_def in learners_map:
             self.learners.append(Learner(learner_def))
 
@@ -220,6 +220,9 @@ class Learners(object):
         current = self.learners[self.itr_index]
         self.itr_index += 1
         return current
+    
+    def __len__(self):
+        return len(self.learners)
 
 
 class Learner(RemoteHost):
@@ -319,7 +322,7 @@ class GRPCServicer(object):
         # FIXME: @stripeli this does not exist is some yamls
         self.hostname = grpc_servicer_map.get("Hostname")
         self.port = grpc_servicer_map.get("Port")
-        if not self.hostname and not self.port:
+        if not self.hostname or not self.port:
             raise RuntimeError(
                 "Malformed (hostname, port) combination. Both values need to be defined.")
         self.public_certificate_path = grpc_servicer_map.get(

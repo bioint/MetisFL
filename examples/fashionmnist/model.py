@@ -38,7 +38,7 @@ def get_model(
 
     # Compile the model
     model.compile(
-        optimizer=tf.keras.optimizers.SGD(learning_rate=0.0001, momentum=0.0),
+        optimizer=tf.keras.optimizers.SGD(learning_rate=0.05, momentum=0.0),
         loss="sparse_categorical_crossentropy", metrics=["accuracy"])
 
     return model

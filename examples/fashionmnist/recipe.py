@@ -5,7 +5,7 @@ from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassificatio
 
 
 def dataset_recipe_fn(dataset_fp: str) -> ModelDataset:
-    """A dataset receipe function that loads a dataset from a file path.
+    """A dataset recipe function that loads a dataset from a file path.
 
     Args:
         dataset_fp (str): The file path to the dataset.

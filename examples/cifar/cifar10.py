@@ -5,11 +5,11 @@ import os
 import numpy as np
 import tensorflow as tf
 
-from examples.keras.models.cifar_cnn import get_model
-from examples.utils.data_partitioning import DataPartitioning
+from model import get_model
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.model_dataset import ModelDatasetClassification
 from metisfl.models.keras.wrapper import MetisKerasModel
+from metisfl.utils.data_partitioning import DataPartitioning
 from metisfl.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     default_federation_environment_config_fp = os.path.join(
-        script_cwd, "../config/cifar10/test_localhost_synchronous_vanillasgd.yaml")
+        script_cwd, "envs/test_localhost_synchronous_vanillasgd.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--federation_environment_config_fp",
@@ -66,6 +66,8 @@ if __name__ == "__main__":
             x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners) \
                 .non_iid_partition(classes_per_partition=2)
 
+        train_dataset_fps = []
+        test_dataset_fps = []
         datasets_path = os.path.join(script_cwd, "datasets/cifar/")
         if not os.path.exists(datasets_path):
             os.makedirs(datasets_path)
@@ -73,10 +75,12 @@ if __name__ == "__main__":
         for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):
             np.savez(os.path.join(datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
         for lidx, learner in enumerate(federation_environment.learners.learners):
+            train_dataset_fps.append(os.path.join(datasets_path, "train_{}.npz".format(lidx)))
             learner.dataset_configs.test_dataset_path = \
                 os.path.join(datasets_path, "test.npz")
             learner.dataset_configs.train_dataset_path = \
                 os.path.join(datasets_path, "train_{}.npz".format(lidx))
+            train_dataset_fps.append(os.path.join(datasets_path, "test.npz"))
 
     optimizer_name = federation_environment.local_model_config.optimizer_config.optimizer_name
     nn_model = get_model(metrics=["accuracy"], optimizer_name=optimizer_name)
@@ -100,8 +104,11 @@ if __name__ == "__main__":
 
     driver_session = DriverSession(fed_env=federation_environment,
                                    model=model_def,
-                                   train_dataset_recipe_fn=dataset_recipe_fn,
+                                   train_dataset_fps=train_dataset_fps,
+                                   test_dataset_fps=test_dataset_fps,
+                                   validation_dataset_fps=test_dataset_fps,
                                    validation_dataset_recipe_fn=dataset_recipe_fn,
+                                   train_dataset_recipe_fn=dataset_recipe_fn,
                                    test_dataset_recipe_fn=dataset_recipe_fn)
     driver_session.run()
     statistics = driver_session.get_federation_statistics()

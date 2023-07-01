@@ -19,9 +19,9 @@ from .utils import create_server_entity
 
 class DriverSession(object):
     def __init__(self,
-                 fed_env: Union[str, fedenv_parser.FederationEnvironment],
+                 fed_env: str,
                  model: MetisModel,
-                 train_datset_fps: list[str],
+                 train_dataset_fps: list[str],
                  train_dataset_recipe_fn: Callable,
                  validation_dataset_fps: list[str] = None,
                  validation_dataset_recipe_fn: Callable = None,
@@ -59,7 +59,7 @@ class DriverSession(object):
 
 
         Args:
-            fed_env (Union[str, fedenv_parser.FederationEnvironment]): _description_
+            fed_env (str): The path to the federation environment yaml file.
             model (MetisModel): A :class:`MetisModel` instance.
             train_datset_fps (list[str]): A list of file paths to the training datasets (one for each learner)
             train_dataset_recipe_fn (Callable): A function that will be used to create the training datasets on the remote Learner machines.
@@ -87,14 +87,16 @@ class DriverSession(object):
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
         self._driver_learner_grpc_clients = self._create_driver_learner_grpc_clients()
 
+        dataset_fps = self._get_dataset_dict(
+            train_dataset_fps, validation_dataset_fps, test_dataset_fps)
 
-
-        dataset_recipe_fns = self._get_dataset_receipes_dict(
+        dataset_recipe_fns = self._get_dataset_dict(
             train_dataset_recipe_fn, validation_dataset_recipe_fn, test_dataset_recipe_fn)
 
         self._driver_initilizer = DriverInitializer(
             controller_server_entity_pb=self._controller_server_entity_pb,
             dataset_recipe_fns=dataset_recipe_fns,
+            dataset_fps=dataset_fps,
             fed_env=self._federation_environment,
             learner_server_entities_pb=self._learner_server_entities_pb,
             model=self._model
@@ -104,9 +106,9 @@ class DriverSession(object):
             federation_environment=self._federation_environment,
             driver_controller_grpc_client=self._driver_controller_grpc_client)
 
-    def _get_dataset_dict(self, train_dataset, validation_dataset, test_dataset):
+    def _get_dataset_dict(self, train_dataset, validation_dataset=None, test_dataset=None):
         dataset_dict = {}
-        dataset_dict[config.TRAIN] = train_dataset
+        dataset_dict[config.TRAIN] = train_dataset # always required
         if validation_dataset:
             dataset_dict[config.VALIDATION] = validation_dataset
         if test_dataset:
@@ -185,6 +187,7 @@ class DriverSession(object):
                 learner_future = self._executor.schedule(
                     function=self._driver_initilizer.init_learner,
                     args=(index,))  # NOTE: args must be a tuple
+                learner_future.result()
                 # TODO If we need to test the pipeline we can force a future return here, i.e., learner_future.result()
                 self._executor_learners_tasks_q.put(learner_future)
                 # TODO We perform a sleep because if the learners are co-located, e.g., localhost, then an exception

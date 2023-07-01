@@ -4,6 +4,7 @@ import tarfile
 from typing import Callable
 
 import cloudpickle
+import inspect
 from fabric import Connection
 
 from metisfl import config
@@ -18,33 +19,37 @@ class DriverInitializer:
     def __init__(self,
                  controller_server_entity_pb: ServerEntity,
                  dataset_recipe_fns: dict[str, Callable],
+                 dataset_fps: dict[str, list[str]],
                  fed_env: fedenv_parser.FederationEnvironment,
                  learner_server_entities_pb: list[ServerEntity],
                  model: MetisModel):
         assert config.TRAIN in dataset_recipe_fns, "Train dataset recipe function is required."
         
+        self._controller_server_entity_pb = controller_server_entity_pb
+        self._dataset_fps = dataset_fps
         self._federation_environment = fed_env
+        self._learner_server_entities_pb = learner_server_entities_pb
         self._model = model
+        
         self._model_save_dir = config.get_driver_model_save_dir()
         self._driver_dir = config.get_driver_path()
 
-        self._controller_server_entity_pb = controller_server_entity_pb
-        self._learner_server_entities_pb = learner_server_entities_pb
-
-        self._dataset_receipe_fps = self._save_dataset_receipes(
+        self._dataset_recipe_fps = self._save_dataset_recipes(
             dataset_recipe_fns)
         self._model_definition_tar_fp = self._save_initial_model(model)
 
-    def _save_dataset_receipes(self, dataset_recipe_fns) -> str:
-        dataset_receipe_fps = dict()
+    def _save_dataset_recipes(self, dataset_recipe_fns) -> str:
+        dataset_recipe_fps = dict()
         for key, dataset_recipe_fn in dataset_recipe_fns.items():
             if dataset_recipe_fn:
                 dataset_pkl = os.path.join(
-                    self._driver_dir, config.DATASET_RECEIPE_FILENAMES[key])
+                    self._driver_dir, config.DATASET_recipe_FILENAMES[key])
+                cloudpickle.register_pickle_by_value(
+                    inspect.getmodule(dataset_recipe_fn))
                 cloudpickle.dump(obj=dataset_recipe_fn,
                                  file=open(dataset_pkl, "wb+"))
-                dataset_receipe_fps[key] = dataset_pkl
-        return dataset_receipe_fps
+                dataset_recipe_fps[key] = dataset_pkl
+        return dataset_recipe_fps
 
     def _save_initial_model(self, model):
         self._model_weights_descriptor = model.get_weights_descriptor()
@@ -85,33 +90,19 @@ class DriverInitializer:
         return
 
     def init_learner(self, index: int):
-        assert self.controller_server_entity_pb is not None, "Controller server entity is not initialized. Must call init_controller() first."
-        
-        learner_instance = self._federation_environment.learners.learners[index]
-        fabric_connection_config = \
-            learner_instance.connection_configs.get_fabric_connection_config()
-        connection = Connection(**fabric_connection_config)
+        learner_instance, connection = self._get_learner_connection(index)
 
         # We do not use asynchronous or disown, since we want the remote subprocess to return standard (error) output.
-        remote_metis_path = config.get_learner_path(
+        learner_path = config.get_learner_path(
             learner_instance.grpc_servicer.port)
-
-        # Delete existing directory if it exists, then recreate it.
-        connection.run("rm -rf {}".format(remote_metis_path))
-        connection.run("mkdir -p {}".format(remote_metis_path))
-
-        MetisLogger.info("Copying model definition and dataset recipe files at learner: {}"
+        MetisLogger.info("Copying model definition, datasets and and dataset recipe files to learner: {}"
                          .format(learner_instance.learner_id))
-        for _, filepath in self._dataset_receipe_fps.items():
-            connection.put(filepath, remote_metis_path) if filepath else None
-        if self._model_definition_tar_fp:
-            connection.put(self._model_definition_tar_fp, remote_metis_path)
+        self._copy_assets_to_learner(index, connection, learner_path)
 
         # Fabric runs every command on a non-interactive mode and therefore the $PATH that might be set for a
         # running user might not be visible while running the command. A workaround is to always
         # source the respective bash_environment files.
         cuda_devices_str = ""
-        # Exporting this environmental variable works for both Tensorflow/Keras and PyTorch.
         if learner_instance.cuda_devices and len(learner_instance.cuda_devices) > 0:
             cuda_devices_str = "export CUDA_VISIBLE_DEVICES=\"{}\" " \
                 .format(",".join([str(c) for c in learner_instance.cuda_devices]))
@@ -123,7 +114,7 @@ class DriverInitializer:
         MetisLogger.info("Un-taring model definition files at learner: {}"
                          .format(learner_instance.learner_id))
         connection.run("cd {}; tar -xvzf {}".format(
-            remote_metis_path,
+            learner_path,
             self._model_definition_tar_fp))
 
         init_cmd = "{} && {} && cd {} && {}".format(
@@ -135,7 +126,27 @@ class DriverInitializer:
             "Running init cmd to learner host: {}".format(init_cmd))
         connection.run(init_cmd)
         connection.close()
-        return
+
+    def _copy_assets_to_learner(self, index, connection, learner_path):
+        connection.run("rm -rf {}".format(learner_path))
+        connection.run("mkdir -p {}".format(learner_path))
+        
+        for _, filepath in self._dataset_recipe_fps.items():
+            connection.put(filepath, learner_path) if filepath else None
+        for _, dataset_fps in self._dataset_fps.items():
+            dataset_fp = dataset_fps[index]
+            MetisLogger.info("Copying dataset file {} to learner: {}".format(
+                dataset_fp, learner_path))
+            connection.put(dataset_fp, learner_path) if dataset_fp else None
+        if self._model_definition_tar_fp:
+            connection.put(self._model_definition_tar_fp, learner_path)
+
+    def _get_learner_connection(self, index):
+        learner_instance = self._federation_environment.learners.learners[index]
+        fabric_connection_config = \
+            learner_instance.connection_configs.get_fabric_connection_config()
+        connection = Connection(**fabric_connection_config)
+        return learner_instance, connection
 
     def _init_controller_cmd(self):
         # To create the controller grpc server entity, we need the hostname to which the server
@@ -162,7 +173,7 @@ class DriverInitializer:
         remote_metis_model_path = os.path.join(
             remote_metis_path, config.MODEL_SAVE_DIR_NAME)
         remote_dataset_recipe_fps = dict()
-        for key, filename in self._dataset_receipe_fps.items():
+        for key, filename in self._dataset_recipe_fps.items():
             remote_dataset_recipe_fps[key] = os.path.join(
                 remote_metis_path, filename) if filename else None
 
@@ -171,9 +182,9 @@ class DriverInitializer:
             "c": self._controller_server_entity_pb.SerializeToString().hex(),
             "f": self._federation_environment.homomorphic_encryption.to_proto().SerializeToString().hex(),
             "m": remote_metis_model_path,
-            "t": learner_instance.dataset_configs.train_dataset_path,
-            "v": learner_instance.dataset_configs.validation_dataset_path,
-            "s": learner_instance.dataset_configs.test_dataset_path,
+            "t": self._dataset_fps[config.TRAIN][index],
+            "v": self._dataset_fps[config.VALIDATION][index] if config.VALIDATION in self._dataset_fps else None,
+            "s": self._dataset_fps[config.TEST][index] if config.TEST in self._dataset_fps else None,
             "u": remote_dataset_recipe_fps[config.TRAIN],
             "w": remote_dataset_recipe_fps[config.VALIDATION] if config.VALIDATION in remote_dataset_recipe_fps else None,
             "z": remote_dataset_recipe_fps[config.TEST] if config.TEST in remote_dataset_recipe_fps else None,

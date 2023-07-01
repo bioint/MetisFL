@@ -24,7 +24,7 @@ PYTORCH_NN_ENGINE = "pytorch_nn"
 NN_ENGINES = [KERAS_NN_ENGINE, PYTORCH_NN_ENGINE]
 
 
-DATASET_RECEIPE_FILENAMES = {
+DATASET_recipe_FILENAMES = {
     "train": "model_train_dataset_ops.pkl",
     "validation": "model_validation_dataset_ops.pkl",
     "test": "model_test_dataset_ops.pkl"
