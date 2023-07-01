@@ -21,8 +21,8 @@ class DriverInitializer:
                  fed_env: fedenv_parser.FederationEnvironment,
                  learner_server_entities_pb: list[ServerEntity],
                  model: MetisModel):
-        assert "train" in dataset_recipe_fns, "Train dataset recipe function is required."
-
+        assert config.TRAIN in dataset_recipe_fns, "Train dataset recipe function is required."
+        
         self._federation_environment = fed_env
         self._model = model
         self._model_save_dir = config.get_driver_model_save_dir()
@@ -85,7 +85,8 @@ class DriverInitializer:
         return
 
     def init_learner(self, index: int):
-        # assert self.controller_server_entity_pb is not None, "Controller server entity is not initialized. Must call init_controller() first."
+        assert self.controller_server_entity_pb is not None, "Controller server entity is not initialized. Must call init_controller() first."
+        
         learner_instance = self._federation_environment.learners.learners[index]
         fabric_connection_config = \
             learner_instance.connection_configs.get_fabric_connection_config()

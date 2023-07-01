@@ -24,50 +24,54 @@ class DriverSession(object):
                  train_datset_fps: list[str],
                  train_dataset_recipe_fn: Callable,
                  validation_dataset_fps: list[str] = None,
-                 test_dataset_fps: list[str] = None,
                  validation_dataset_recipe_fn: Callable = None,
+                 test_dataset_fps: list[str] = None,
                  test_dataset_recipe_fn: Callable = None):
         """Entry point for MetisFL Driver Session API.
-        
+
             This class is the entry point for MetisFL Driver Session API. It is responsible for initializing the federation environment
             defined by the :param:`fed_env` and starting the federated training for the :param:`model` using the datasets defined by
             :param:`train_datset_fps`, :param:`validation_dataset_fps` and :param:`test_dataset_fps`. The dataset recipes given by
             :param:`train_dataset_recipe_fn`, :param:`validation_dataset_recipe_fn` and :param:`test_dataset_recipe_fn` are functions
-            that will be used to create the datasets from the dataset filepaths. They are required to be pickleable and are transferred
-            over to the remote Learner machines. 
-            
+            that will be used to create the datasets on the remote Learner machine. They must take a single argument, the dataset file path,
+            and return a :class: `metisfl.models.model_dataset.ModelDataset` instance. 
+
             To boostrap the training process, we ssh into the remote Controller and Learners host machines using the authorization
-            credentials defined by the federation environment. This boostrapping process involves the following steps:
-            
+            credentials defined by the federation environment yaml file. This boostrapping process involves the following steps:
+
                 - Copy the intial model weights to the remote Learner machines.
                 - Copy the dataset file and the pickled dataset recipe functions to the remote Learner machines.
                 - Start the Controller and Learner processes on the remote machines. 
-            
-            This boostraping is delegated to the :class:`DriverInitializer` class. Once the boostraping is complete, the DriverSession    
-                
-            The class will create the following clients
-            
+
+            This boostraping is delegated to the :class:`DriverInitializer` class, which exposes a :meth:`DriverInitializer.init_controller`
+            and a :meth:`DriverInitializer.init_learner` method. These methods are invoked in parallel using 
+            a [Pebble](https://pypi.org/project/Pebble/) process pool. 
+
+            The present class creates the following GRPC clients
+
                 - one :class:`GRPCControllerClient` for the controller in the federation environment.
                 - one :class:`GRPCLearnerClient` for each learner in the federation environment.
-                
-            and use a [Pebble](https://pypi.org/project/Pebble/) process pool to run them in parallel.
 
-            
-            
+            The Controller client ships the initial model to the Controller and is used from the :class:`FederationMonitor` 
+            to monitor the training process and collect statistics upon completion. The method :meth:`DriverSession.run` is used to
+            start the federated training process and invokes, among others, the :meth:`FederationMonitor.monitor` method, which is a 
+            blocking call that waits for the termination signals. 
 
 
         Args:
             fed_env (Union[str, fedenv_parser.FederationEnvironment]): _description_
             model (MetisModel): A :class:`MetisModel` instance.
-            train_datset_fps (list[str]): A 
-            train_dataset_recipe_fn (Callable): _description_
-            validation_dataset_fps (list[str], optional): _description_. Defaults to None.
-            test_dataset_fps (list[str], optional): _description_. Defaults to None.
-            validation_dataset_recipe_fn (Callable, optional): _description_. Defaults to None.
-            test_dataset_recipe_fn (Callable, optional): _description_. Defaults to None.
-        """        
+            train_datset_fps (list[str]): A list of file paths to the training datasets (one for each learner)
+            train_dataset_recipe_fn (Callable): A function that will be used to create the training datasets on the remote Learner machines.
+            validation_dataset_fps (list[str], optional): A list of file paths to the validation datasets (one for each learner). Defaults to None.
+            validation_dataset_recipe_fn (Callable, optional): A function that will be used to create the validation datasets on the remote Learner machines. Defaults to None.
+            test_dataset_fps (list[str], optional): A list of file paths to the test datasets (one for each learner). Defaults to None.
+            test_dataset_recipe_fn (Callable, optional): A function that will be used to create the test datasets on the remote Learner machines. Defaults to None.
+        """
+        assert fed_env, "Federation environment is required."
+        assert model, "Model is required."
         assert train_dataset_recipe_fn, "Train dataset recipe function is required."
-
+        
         # Print welcome message.
         MetisASCIIArt.print()
         self._federation_environment = fedenv_parser.FederationEnvironment(
@@ -76,35 +80,38 @@ class DriverSession(object):
         self._num_learners = len(
             self._federation_environment.learners.learners)
         self._model = model
-        
+
         self._init_pool()
         self._controller_server_entity_pb = self._create_controller_server_entity()
         self._learner_server_entities_pb = self._create_learning_server_entities()
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
         self._driver_learner_grpc_clients = self._create_driver_learner_grpc_clients()
 
+
+
         dataset_recipe_fns = self._get_dataset_receipes_dict(
             train_dataset_recipe_fn, validation_dataset_recipe_fn, test_dataset_recipe_fn)
-        
+
         self._driver_initilizer = DriverInitializer(
+            controller_server_entity_pb=self._controller_server_entity_pb,
             dataset_recipe_fns=dataset_recipe_fns,
             fed_env=self._federation_environment,
-            controller_server_entity_pb=self._controller_server_entity_pb,
             learner_server_entities_pb=self._learner_server_entities_pb,
-            model=self._model)
-        
+            model=self._model
+        )
+
         self._monitor = FederationMonitor(
             federation_environment=self._federation_environment,
             driver_controller_grpc_client=self._driver_controller_grpc_client)
 
-    def _get_dataset_receipes_dict(self, train_dataset_recipe_fn, validation_dataset_recipe_fn, test_dataset_recipe_fn):
-        dataset_recipe_fns = {}
-        dataset_recipe_fns[config.TRAIN] = train_dataset_recipe_fn
-        if validation_dataset_recipe_fn:
-            dataset_recipe_fns[config.VALIDATION] = validation_dataset_recipe_fn
-        if test_dataset_recipe_fn:
-            dataset_recipe_fns[config.TEST] = test_dataset_recipe_fn
-        return dataset_recipe_fns
+    def _get_dataset_dict(self, train_dataset, validation_dataset, test_dataset):
+        dataset_dict = {}
+        dataset_dict[config.TRAIN] = train_dataset
+        if validation_dataset:
+            dataset_dict[config.VALIDATION] = validation_dataset
+        if test_dataset:
+            dataset_dict[config.TEST] = test_dataset
+        return dataset_dict
 
     def _init_pool(self):
         # Unix default is "fork", others: "spawn", "forkserver"
@@ -190,11 +197,10 @@ class DriverSession(object):
 
     def monitor_federation(self):
         self._monitor.monitor_federation()
-        self.shutdown_federation()
 
     def run(self):
         self.initialize_federation()
-        self.monitor_federation()
+        self.monitor_federation()  # blocking call; waits for termination signals
         self.shutdown_federation()
 
     def shutdown_federation(self):
