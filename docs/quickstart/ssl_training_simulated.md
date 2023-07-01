@@ -53,17 +53,17 @@ to establish secure connections wherever is needed.
 Default & Self-Signed Certificates
 ------------
 By default, MetisFL is shipped with pre-generated self-signed certificates. 
-These certificates can be found in the following directory: [`resources/ssl_config/default`](../resources/ssl_config/default)
+These certificates can be found in the following directory: [`metisfl/resources/ssl_config/default`](../resources/ssl_config/default)
 
 If a user wants to generate a new pair of self-signed certificates for development purposes
-the [`resources/ssl_config/gen_certificates.sh`](../resources/ssl_config/gen_certificates.sh) script is provided for convenience.
+the [`metisfl/resources/ssl_config/gen_certificates.sh`](../resources/ssl_config/gen_certificates.sh) script is provided for convenience.
 
 
 Running Simulated MetisFL with SSL
 ------------
 To demonstrate how SSL is enabled between a single learner and a controller we will describe
 the SSL specific values of the following template file:
-[examples/federation_environments_config/template_with_ssl.yaml](../examples/federation_environments_config/template_with_ssl.yaml)
+[examples/config/template_with_ssl.yaml](../examples/federation_environments_config/template_with_ssl.yaml)
 
 By default, the SSL functionality is disabled. For any federated experiment we want to run using SSL,
 first we need to add the key-value pair `EnableSSL: True` within the `CommunicationProtocol` type
@@ -72,7 +72,7 @@ in the templated yaml file of the experiment.
 Thereafter, there are two scenarios:
 
 - Scenario-1: No public certificate and private key is defined. The experiment will use the default pair
-under `resources/ssl_config/default`. The public certificate and the private keys will be shared
+under `metisfl/resources/ssl_config/default`. The public certificate and the private keys will be shared
 as bytes (stream) from the driver to the controller and from the driver to the learners.
 
 - Scenario-2: If we do not want to use the default pair of (private key, certificate) we have to define

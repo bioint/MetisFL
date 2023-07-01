@@ -1,6 +1,8 @@
 Procedures
 =============================
 
+## Initialization
+
 ## Training Round
 
 <div align="center">
