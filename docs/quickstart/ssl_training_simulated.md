@@ -41,7 +41,7 @@ The figure below shows the SSL connectivity execution flow:
 
 <div align="center">
  <img 
-    src="../img/SSL_overview.png" width="500px">
+    src="../img/MetisFL-SSL.png" width="500px">
 </div>
 
 > **Note:** In a production environment, it is not required for the SSL certificates 

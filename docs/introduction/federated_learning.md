@@ -20,14 +20,14 @@ A couple of studies (see also [[mcmahan2017](#mcmahan2017), [kairouz2019](#kairo
 
 Here, we discuss a prototypical use case where the learning task is to predict the chronological brain age from brain structural MRI scans. The difference between the predicted and true chronological brain age values is a phenotype related to aging and brain disease. This learning task is commonly referred to as BrainAGE. 
 
-To demonstrate the significance and promise of Federated Learning, in the figure below, we compare the performance of a federated CNN model trained (using MetisFL) across 8 data sources/silos to its centralized and siloed counterparts. By centralized, we refer to the model trained over all pooled data and by siloed to the model trained at each source indepedently. For more details and more thorough evaluation please refer to [[stripelis2022](#stripelis2022)].
+To demonstrate the significance and promise of Federated Learning, in the figure below, we compare the performance of a federated CNN model trained (using MetisFL) across 8 data sources/silos to its centralized and siloed counterparts. By centralized, we refer to the model trained over all pooled data and by siloed to the model trained at each source indepedently. For more details and more thorough evaluation across more challenging federated environments please refer to [[stripelis2022](#stripelis2022)].
 
 <div align="center">
  <img 
-    src="../img/CentralizedvsSiloedvsFederated-BrainAGE.png" width="1000px", alt="MetisFL Components Overview">
+    src="../img/CentralizedvsSiloedvsFederated-BrainAGE.png" width="300px", alt="MetisFL Components Overview">
 </div>
 
-> **Note:** For this illustrative case the data distribution for the federated environment is IID, the federated training was conducted over 40 federation rounds and the local optimizer used is Vanilla SGD.
+> **Note:** For this illustrative case the data distribution for the federated environment is IID, the federated training was conducted over 40 federation rounds and the local optimizer used is Vanilla SGD. [[stripelis2022](#stripelis2022)] has a similar evaluation for Non-IID settings.
 
 ## Federated Learning Topologies
 The physical location, the computational capabilities and the data disribution of learners (nodes, clients) participating in the training of a federated model can greatly affect the communication architecture and workflow of a federated learning environment. Depending on the requirements that the federated training workflow needs to satisfy different topologies can be constructed:
