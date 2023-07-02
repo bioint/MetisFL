@@ -3,7 +3,7 @@
 &nbsp;
 <div align="center">
  <img 
-    src="docs/img/logos/logo_png_01.png" width="500px">
+    src="docs/img/logos/logo_icon_03.png" width="200px">
 </div>
 &nbsp;
 
@@ -13,7 +13,7 @@ MetisFL is a federated learning framework that allows developers to federate the
 Homepage: https://nevron.ai/ \
 Github: https://github.com/NevronAI \
 Docs: https://docs.nevron.ai/ \
-Slack: https://nevronai.slack.com
+Slack: [https://nevronai.slack.com](https://join.slack.com/t/nevronai/shared_invite/zt-1xyc308jq-FeNBbuF1UBBwhp4H~zHCww)
 
 
 MetisFL sprung up from the Information and Science Institute (ISI) in the University of Southern California (USC). It is backed by several years of Ph.D. and Post-Doctoral research and several publications in top-tier machine learning and system conferences. It is being developed with the following guiding principles in mind:
@@ -107,8 +107,8 @@ The project uses a unified codebase for both the Python and C++ code. The C++ mo
         ├── encryption        # C++ Palisade library
         ├── learner           # Python Learner library 
         ├── models            # Tensorflow & Pytorch backend support
-        ├── resources         # FHE/SSL related resource files and keys
         ├── proto             # Protobuf definitions for communication
+        ├── resources         # FHE/SSL related resource files and keys
         ├── utils             # Utilities classes and functions      
     ├── test                  # Testing folder (under construction)
     ├── LICENSE               # License file
@@ -129,6 +129,4 @@ aggregating the learners’ local models (w/ or w/out encryption).
 The Federation Learner(s) are the cluster node responsible for training and evaluating the federation model assigned to the by the Controller on the local, private dataset.
 
 ## Federation Driver
-The Federation Driver parses the federated learning workflow defined by
-the system user and creates the Metis Context. The Metis Context is responsible for initializing and monitoring the federation cluster, initializing the original federation model state, defining the data loading recipe for each learner, and generating the security keys where needed (e.g., SSL certificates,
-and FHE key pair).
+The Federation Driver parses the federated learning workflow defined by the system user and creates the Metis Context. The Metis Context is responsible for initializing and monitoring the federation cluster, initializing the original federation model state, defining the data loading recipe for each learner, and generating the security keys where needed (e.g., SSL certificates, and FHE key pair).
