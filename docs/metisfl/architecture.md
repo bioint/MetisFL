@@ -1,4 +1,4 @@
-Programming Model
+System Architecture
 =============================
 
 MetisFL follows the successful programming model of Apache Spark, with the Federation Controller operating as the cluster manager of the federation, Federation Learners as the computing nodes, and the Federation Driver as the entry point of the federation launching various operations in parallel. The communication across internal and external services is established through appropriate RPC calls, using gRPC and protocol buffers.

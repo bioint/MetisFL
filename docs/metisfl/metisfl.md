@@ -14,7 +14,7 @@ MetisFL is an easy-to-use scalable federated learning framework that follows the
 </div>
 
 ## Origins
-MetisFL sprung up from the Information and Science Institute (ISI) in the University of Southern California (USC). It is backed by several years of Ph.D. and Post-Doctoral research and several publications in top-tier machine learning and system conferences.
+MetisFL sprung up from the Information and Science Institute (ISI) at the University of Southern California (USC). It is backed by several years of cutting-edge research and several publications in top-tier machine learning and system conferences.
 
 ## Application Domains
 MetisFL is a general purpose, domain-agnostic federated learning system. It can be easily extended to support any type of federated training topology (centralized, peer-to-peer), protocol (synchronous, asynchronous) and federated algorithmic optimization. The framework has been extensively tested in challenging real-world and simulated federated (distributed) environments to train and learn federated models across various domains, such as in in Computer Vision, Natural Language Processing[[mathew2022](#mathew2022)], Neuroimaging[[stripelis2021](#stripelis2021)] and many other domains.
