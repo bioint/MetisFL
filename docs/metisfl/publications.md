@@ -9,7 +9,7 @@ Awards & Mentions
 
 Publications
 =============================
-MetisFL is backed by many years of research and development at the University of Southern California, and has appeared in many research works related to federated optimization, federated training acceleration and federated neuroimaging. Below is a comprehensive list of associated publications:
+MetisFL is backed by many years of research and development at the University of Southern California, and has appeared in many research works related to federated optimization, federated training acceleration and federated neuroimaging. Below is a comprehensive list of related publications:
 
 | Title | Venue & Year | Targeting Problem |
 |---|---|---|
@@ -26,5 +26,3 @@ MetisFL is backed by many years of research and development at the University of
 | [Performance weighting for robust federated learning against corrupted sources](https://arxiv.org/pdf/2205.01184.pdf) | Learning under Data Corruption |
 | [Federated Named Entity Recognition](https://arxiv.org/pdf/2203.15101.pdf) | Applying Federated Learning for NER Tasks |
 |[Accelerating Federated Learning in Heterogeneous Data and Computational Environments](https://arxiv.org/pdf/2008.11281.pdf) | Aggregating Local Models based on Performance Score |
-
-
