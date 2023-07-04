@@ -24,7 +24,7 @@ MetisFL sprung up from the Information and Science Institute (ISI) in the Univer
 
 * **Efficiency and Flexibility**: MetisFL supports synchronous, semi-synchronous and asynchronous protocols. The different choices make our framework flexible enough to adapt to the needs of each use-case. Additionally, the support of fully asynchronous protocol makes MetisFL a highly efficient solution for use-cases with high heterogeneity on the compute/communication capabilities of the learners.
 
-* **Strong Security**: MetisFL supports secure aggregations with fully homomorphic encryption using the [Palisade](https://gitlab.com/palisade/palisade-release) C++ cryptographic library.  This ensure that the weights of the produced models remain private and secure in transit.
+* **Strong Security**: MetisFL supports secure aggregations with fully homomorphic encryption using the [Palisade](https://gitlab.com/palisade/palisade-release) C++ cryptographic library.  This ensures that the weights of the produced models remain private and secure in transit.
 
 # Quickstart (coming soon)
 As an introductory example to quickly demonstrate the MetisFL framework in practice, we will run the `Hello World` example of deep learning. To get started, first install ensure that you system meets the requirements:
@@ -43,15 +43,14 @@ and then clone the repository on you local machine:
 ```Bash
 git clone https://github.com/NevronAI/metisfl.git
 ```
-<!-- @stripeli Can we get rid of the iid_partitions arg, and any other arg needed so that the examples run using this simple cmd?  -->
 Navigate on the root project folder and run:
 ```Bash
 python examples/keras/fashionmnist.py
 ```
-Conglaturations! You are now running your first federated learning experiment using MetisFL!
+Congratulations! You are now running your first federated learning experiment using MetisFL!
 
 # Development Environment
-Developers interested in making core contributions should setup up their environment accordingly.
+Developers interested in making core contributions should set up their environment accordingly.
 There are currently 3 options for setting up your development environment:
 
 ## Codespaces Container
@@ -60,7 +59,7 @@ This is the fastest way for a developer to explore the codebase and make contrib
 Simply navigate to the main page of the repository, chose the branch which you want to work on,
 click on the **Code** button and then on the **Codespaces** tab. Then pick the pre-configured container
 and spin up the Codespace. We have pre-configured a container with the Python 3.10 as well as all the
-dependancies installed. For the Codespaces container we include pre-compiled binaries for the C++ code.
+dependencies installed. For the Codespaces container we include pre-compiled binaries for the C++ code.
 This option is ideal for someone who wants to quickly experiment with the Python side of the framework.
 
 ## Local Container
@@ -75,9 +74,9 @@ If you want to develop on your host machine, you need to ensure that it satisfie
 * Python header and distutils
 * build-essential, autoconf and libomp-dev
 
-The recommended way to install Bazel is to use the [Bazelisk](https://github.com/bazelbuild/bazelisk) launcher and place the executable somewhere in your PATH, i.e., `/usr/bin/bazel` or `/usr/bin/bazelisk`. Please make make sure that the name of the Bazelisk executable matches the BAZEL_CMD variable in `setup.py`. By default, the setup script will search for `bazelisk`. Bazelisk will automatically pick up the version from the `.bezelversion`file and then download and execute the corresponding Bazel executable.
+The recommended way to install Bazel is to use the [Bazelisk](https://github.com/bazelbuild/bazelisk) launcher and place the executable somewhere in your PATH, i.e., `/usr/bin/bazel` or `/usr/bin/bazelisk`. Please make sure that the name of the Bazelisk executable matches the BAZEL_CMD variable in `setup.py`. By default, the setup script will search for `bazelisk`. Bazelisk will automatically pick up the version from the `.bezelversion`file and then download and execute the corresponding Bazel executable.
 
-The Python headers and distutils are needed so that the C++ controller and encryption code can be compiled as Python modules. On Ubuntu, they can be install with the following command:
+The Python headers and distutils are needed so that the C++ controller and encryption code can be compiled as Python modules. On Ubuntu, they can be installed with the following command:
 
 ```Bash
 apt-get -y install python3.10-dev python3.10-distutils
@@ -118,14 +117,16 @@ The project uses a unified codebase for both the Python and C++ code. The C++ mo
     ├── WORKSPACE             # Bazel workspace; contains external dependencies
 
 # Architecture Overview
-The architecture of MetisFL is inspired by Apache Spark. It consist of there main entities: the **Federation Controller**, the **Federation Learner** and the **Federation Driver**.
+The architecture of MetisFL is inspired by Apache Spark. It consists of three main entities: the **Federation Controller**, the **Federation Learner** and the **Federation Driver**.
+
+![MetisFL Components](docs/img/MetisFL-Components-Overview.png "MetisFL Components.")
 
 ## Federation Controller
-The Federation Controller acts as the federation cluster manager and it is responsible for selecting and delegating training and evaluating tasks to the federation learners (cluster nodes) and storing and
+The Federation Controller acts as the federation cluster manager, and it is responsible for selecting and delegating training and evaluating tasks to the federation learners (cluster nodes) and storing and
 aggregating the learners’ local models (w/ or w/out encryption).
 
 ## Federation Learner
-The Federation Learner(s) are the cluster nodes responsible for training and evaluating the federation model assigned to the by the Controller on the local, private dataset.
+The Federation Learner(s) are the cluster node responsible for training and evaluating the federation model assigned to the by the Controller on the local, private dataset.
 
 ## Federation Driver
 The Federation Driver parses the federated learning workflow defined by the system user and creates the Metis Context. The Metis Context is responsible for initializing and monitoring the federation cluster, initializing the original federation model state, defining the data loading recipe for each learner, and generating the security keys where needed (e.g., SSL certificates, and FHE key pair).
