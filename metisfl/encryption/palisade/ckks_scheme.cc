@@ -65,21 +65,19 @@ int CKKS::GenCryptoContextAndKeys() {
 
 }
 
-void CKKS::LoadCryptoParams() {
-
+void CKKS::LoadCryptoContext() {
+  // Load crypto context inside cc variable, else print error.
   if (!Serial::DeserializeFromFile(crypto_dir + "/cryptocontext.txt",
                                    cc,
                                    SerType::BINARY)) {
-    PLOG(ERROR) << crypto_dir + "/cryptocontext.txt";
     PLOG(ERROR) << "Could not read cryptocontext!";
   }
 
-  if (!Serial::DeserializeFromFile(crypto_dir + "/key-public.txt",
-                                   pk,
-                                   SerType::BINARY)) {
-    PLOG(ERROR) << "Could not read public key!";
-  }
+}
 
+void CKKS::LoadPrivateKey() {
+
+  // Load private key inside sk variable, else print error.
   if (!Serial::DeserializeFromFile(crypto_dir + "/key-private.txt",
                                    sk,
                                    SerType::BINARY)) {
@@ -88,7 +86,38 @@ void CKKS::LoadCryptoParams() {
 
 }
 
+void CKKS::LoadPublicKey() {
+
+  if (!Serial::DeserializeFromFile(crypto_dir + "/key-public.txt",
+                                   pk,
+                                   SerType::BINARY)) {
+    PLOG(ERROR) << "Could not read public key!";
+  }
+
+}
+
+void CKKS::LoadContextAndKeys() {
+  LoadCryptoContext();
+  LoadPublicKey();
+  LoadPrivateKey();
+}
+
+void CKKS::Print() {
+  PLOG(INFO) <<
+  "CKKS scheme specifications. Batch Size: " << batch_size <<
+  " Scaling Factor Bits: " << scaling_factor_bits <<
+  " Crypto directory: " << crypto_dir;
+}
+
 std::string CKKS::Encrypt(vector<double> data_array) {
+
+  if (cc == nullptr) {
+    PLOG(FATAL) << "Crypto context is not loaded.";
+  }
+
+  if (pk == nullptr) {
+    PLOG(FATAL) << "Public key is not loaded.";
+  }
 
   unsigned long int size = data_array.size();
   vector<Ciphertext<DCRTPoly>>
@@ -134,6 +163,10 @@ std::string CKKS::Encrypt(vector<double> data_array) {
 std::string CKKS::ComputeWeightedAverage(vector<std::string> data_array,
                                          vector<float> scaling_factors) {
 
+  if (cc == nullptr) {
+    PLOG(FATAL) << "Crypto context is not loaded.";
+  }
+
   if (data_array.size() != scaling_factors.size()) {
     PLOG(ERROR) << "Error: data_array and scaling_factors size mismatch";
     return "";
@@ -173,6 +206,14 @@ std::string CKKS::ComputeWeightedAverage(vector<std::string> data_array,
 
 vector<double> CKKS::Decrypt(std::string data,
                              unsigned long int data_dimensions) {
+
+  if (cc == nullptr) {
+    PLOG(FATAL) << "Crypto context is not loaded.";
+  }
+
+  if (sk == nullptr) {
+    PLOG(FATAL) << "Private key is not loaded.";
+  }
 
   const SerType::SERBINARY st;
   std::stringstream ss(data);

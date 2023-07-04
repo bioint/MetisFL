@@ -27,18 +27,24 @@ class CKKS : public HEScheme {
   CKKS(uint32_t batch_size, uint32_t scaling_factor_bits, std::string crypto_dir);
 
   int GenCryptoContextAndKeys() override;
-  void LoadCryptoParams() override;
+  void LoadCryptoContext() override;
+  void LoadPrivateKey() override;
+  void LoadPublicKey() override;
+  void LoadContextAndKeys();
   std::string Encrypt(vector<double> data_array) override;
   std::string ComputeWeightedAverage(vector<std::string> data_array,
                                      vector<float> scaling_factors) override;
   vector<double> Decrypt(std::string data,
                          unsigned long int data_dimensions) override;
+  void Print();
 
  private:
   uint32_t batch_size;
   uint32_t scaling_factor_bits;
   std::string crypto_dir;
 
+  // The double-CRT (DCRT) ciphertext representation is
+  // an extension of the Chinese Remainder Transform.
   CryptoContext<DCRTPoly> cc;
   LPPublicKey<DCRTPoly> pk;
   LPPrivateKey<DCRTPoly> sk;

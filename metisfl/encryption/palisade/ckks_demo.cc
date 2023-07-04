@@ -41,11 +41,13 @@ int main() {
   uint32_t scalingfactorbits = 52;
 
   CKKS ckks(batchsize, scalingfactorbits, cryptodir);
-  ckks.print();
+  ckks.Print();
   // Whenever we change the `batchsize` and the `scalingfactorbits`
   // params we always need to invoke the GenCryptoContextAndKeys() function.
   // ckks.GenCryptoContextAndKeys();
-  ckks.LoadCryptoParams();
+  ckks.LoadCryptoContext();
+  ckks.LoadPublicKey();
+  ckks.LoadPrivateKey();
 
   //generating random data for testing.
   vector<double> learner_Data;

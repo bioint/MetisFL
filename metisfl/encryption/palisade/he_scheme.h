@@ -27,7 +27,9 @@ class HEScheme {
     return name;
   }
 
-  virtual void LoadCryptoParams() = 0;
+  virtual void LoadCryptoContext() = 0;
+  virtual void LoadPrivateKey() = 0;
+  virtual void LoadPublicKey() = 0;
   virtual int GenCryptoContextAndKeys() = 0;
   virtual std::string Encrypt(vector<double> data_array) = 0;
   virtual std::string ComputeWeightedAverage(vector<std::string> learners_Data,

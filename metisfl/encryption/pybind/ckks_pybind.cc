@@ -21,8 +21,20 @@ class CKKSWrapper : CKKS {
     return CKKS::GenCryptoContextAndKeys();
   }
 
-  void LoadCryptoParams() {
-    return CKKS::LoadCryptoParams();
+  void LoadCryptoContext() {
+    return CKKS::LoadCryptoContext();
+  }
+
+  void LoadPublicKey() {
+    return CKKS::LoadPublicKey();
+  }
+
+  void LoadPrivateKey() {
+    return CKKS::LoadPrivateKey();
+  }
+
+  void LoadContextAndKeys() {
+    return CKKS::LoadContextAndKeys();
   }
 
   py::bytes PyEncrypt(py::array_t<double> data_array) {
@@ -72,7 +84,10 @@ PYBIND11_MODULE(fhe, m) {
       py::arg("scaling_factor_bits"),
       py::arg("crypto_dir"))
   .def("gen_crypto_context_and_keys", &CKKSWrapper::GenCryptoContextAndKeys)
-  .def("load_crypto_params", &CKKSWrapper::LoadCryptoParams)
+  .def("load_crypto_context", &CKKSWrapper::LoadCryptoContext)
+  .def("load_private_key", &CKKSWrapper::LoadPrivateKey)
+  .def("load_public_key", &CKKSWrapper::LoadPublicKey)
+  .def("load_context_and_keys", &CKKSWrapper::LoadContextAndKeys)
   .def("encrypt", &CKKSWrapper::PyEncrypt)
   .def("compute_weighted_average", &CKKSWrapper::PyComputeWeightedAverage)
   .def("decrypt", &CKKSWrapper::PyDecrypt);
