@@ -14,9 +14,8 @@ PWA::PWA(const HESchemeConfig &he_scheme_config) {
         he_scheme_config_.name() == "CKKS") {
       he_scheme_ = CKKS(
           he_scheme_config_.fhe_scheme_config().batch_size(),
-          he_scheme_config_.fhe_scheme_config().scaling_bits(),
-          "/metisfl/metisfl/resources/fheparams/cryptoparams");
-      he_scheme_.LoadContextAndKeys();
+          he_scheme_config_.fhe_scheme_config().scaling_bits());
+      he_scheme_.LoadCryptoContextFromFile("");
     } else {
       throw std::runtime_error("Unsupported homomorphic encryption scheme.");
     }

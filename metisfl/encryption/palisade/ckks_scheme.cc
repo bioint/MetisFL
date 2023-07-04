@@ -3,15 +3,14 @@
 
 #include "ckks_scheme.h"
 
-CKKS::CKKS() : HEScheme("CKKS"), batch_size(0), scaling_factor_bits(0), crypto_dir("") {}
+CKKS::CKKS() : HEScheme("CKKS"), batch_size(0), scaling_factor_bits(0) {}
 
-CKKS::CKKS(uint32_t batch_size, uint32_t scaling_factor_bits, std::string crypto_dir) : HEScheme("CKKS") {
+CKKS::CKKS(uint32_t batch_size, uint32_t scaling_factor_bits) : HEScheme("CKKS") {
   this->batch_size = batch_size;
   this->scaling_factor_bits = scaling_factor_bits;
-  this->crypto_dir = crypto_dir;
 }
 
-int CKKS::GenCryptoContextAndKeys() {
+void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
 
   usint multDepth = 2;
   CryptoContext <DCRTPoly> cryptoContext;
@@ -21,92 +20,91 @@ int CKKS::GenCryptoContextAndKeys() {
   cryptoContext->Enable(SHE);
   // cryptoContext->Enable(LEVELEDSHE);
 
-  if (!Serial::SerializeToFile(crypto_dir + "/cryptocontext.txt",
-                               cryptoContext, SerType::BINARY)) {
-    PLOG(ERROR) << "Error writing serialization of the crypto context";
-    return 0;
+  CryptoParamsPaths crypto_params_paths;
+  crypto_params_paths.crypto_context_filepath = crypto_dir + "/cryptocontext.txt";
+  crypto_params_paths.public_key_filepath = crypto_dir + "/key-public.txt";
+  crypto_params_paths.private_key_filepath = crypto_dir + "/key-private.txt";
+  crypto_params_paths.eval_mult_key_filepath = crypto_dir + "/key-eval-mult.txt";
+
+  if (!Serial::SerializeToFile(crypto_params_paths.crypto_context_filepath,
+                               cryptoContext,
+                               SerType::BINARY)) {
+    PLOG(FATAL) << "Error writing serialization of the crypto context";
   }
 
   LPKeyPair<DCRTPoly> keyPair;
   keyPair = cryptoContext->KeyGen();
 
-  if (!Serial::SerializeToFile(crypto_dir + "/key-public.txt",
-                               keyPair.publicKey, SerType::BINARY)) {
-    PLOG(ERROR) << "Error writing serialization of public key";
-    return 0;
+  if (!Serial::SerializeToFile(crypto_params_paths.public_key_filepath,
+                               keyPair.publicKey,
+                               SerType::BINARY)) {
+    PLOG(FATAL) << "Error writing serialization of public key";
   }
 
-  if (!Serial::SerializeToFile(crypto_dir + "/key-private.txt",
-                               keyPair.secretKey, SerType::BINARY)) {
-    PLOG(ERROR) << "Error writing serialization of private key";
-    return 0;
+  if (!Serial::SerializeToFile(crypto_params_paths.private_key_filepath,
+                               keyPair.secretKey,
+                               SerType::BINARY)) {
+    PLOG(FATAL) << "Error writing serialization of private key";
   }
 
   // Generate the relinearization key
   cryptoContext->EvalMultKeyGen(keyPair.secretKey);
 
-  std::ofstream emkeyfile(crypto_dir + "/" + "key-eval-mult.txt",
+  std::ofstream emkeyfile(crypto_params_paths.eval_mult_key_filepath,
                           std::ios::out | std::ios::binary);
   if (emkeyfile.is_open()) {
     if (cryptoContext->SerializeEvalMultKey(emkeyfile, SerType::BINARY)
         == false) {
-      PLOG(ERROR) << "Error writing serialization of the eval mult keys";
-      return 0;
+      PLOG(FATAL) << "Error writing serialization of the eval mult keys";
     }
 
     emkeyfile.close();
 
   } else {
-    PLOG(ERROR) << "Error serializing eval mult keys";
-    return 0;
+    PLOG(FATAL) << "Error serializing eval mult keys";
   }
 
-  return 1;
+  crypto_params_paths_ = crypto_params_paths;
 
 }
 
-void CKKS::LoadCryptoContext() {
-  // Load crypto context inside cc variable, else print error.
-  if (!Serial::DeserializeFromFile(crypto_dir + "/cryptocontext.txt",
-                                   cc,
+CryptoParamsPaths CKKS::GetCryptoParamsPaths() {
+  return crypto_params_paths_;
+}
+
+template <typename T>
+void CKKS::DeserializeFromFile(std::string filepath, T &obj) {
+  if (!Serial::DeserializeFromFile(filepath,
+                                   obj,
                                    SerType::BINARY)) {
-    PLOG(ERROR) << "Could not read cryptocontext!";
+    PLOG(ERROR) << "Could not deserialize from file: " << filepath;
   }
-
 }
 
-void CKKS::LoadPrivateKey() {
-
-  // Load private key inside sk variable, else print error.
-  if (!Serial::DeserializeFromFile(crypto_dir + "/key-private.txt",
-                                   sk,
-                                   SerType::BINARY)) {
-    PLOG(ERROR) << "Could not read secret key!";
-  }
-
+void CKKS::LoadCryptoContextFromFile(std::string filepath) {
+  CKKS::DeserializeFromFile<CryptoContext<DCRTPoly>>(filepath, cc);
 }
 
-void CKKS::LoadPublicKey() {
-
-  if (!Serial::DeserializeFromFile(crypto_dir + "/key-public.txt",
-                                   pk,
-                                   SerType::BINARY)) {
-    PLOG(ERROR) << "Could not read public key!";
-  }
-
+void CKKS::LoadPublicKeyFromFile(std::string filepath) {
+  DeserializeFromFile<LPPublicKey<DCRTPoly>>(filepath, pk);
 }
 
-void CKKS::LoadContextAndKeys() {
-  LoadCryptoContext();
-  LoadPublicKey();
-  LoadPrivateKey();
+void CKKS::LoadPrivateKeyFromFile(std::string filepath) {
+  CKKS::DeserializeFromFile<LPPrivateKey<DCRTPoly>>(filepath, sk);
+}
+
+void CKKS::LoadContextAndKeysFromFiles(std::string crypto_context_filepath,
+                                       std::string public_key_filepath,
+                                       std::string private_key_filepath) {
+  CKKS::LoadCryptoContextFromFile(crypto_context_filepath);
+  CKKS::LoadPublicKeyFromFile(public_key_filepath);
+  CKKS::LoadPrivateKeyFromFile(private_key_filepath);
 }
 
 void CKKS::Print() {
-  PLOG(INFO) <<
-  "CKKS scheme specifications. Batch Size: " << batch_size <<
-  " Scaling Factor Bits: " << scaling_factor_bits <<
-  " Crypto directory: " << crypto_dir;
+  PLOG(INFO) << "CKKS scheme specifications." <<
+  "Batch Size: " << batch_size <<
+  " Scaling Factor Bits: " << scaling_factor_bits;
 }
 
 std::string CKKS::Encrypt(vector<double> data_array) {

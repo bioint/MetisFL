@@ -19,18 +19,28 @@
 using namespace lbcrypto;
 using namespace std::chrono;
 
+struct CryptoParamsPaths {
+  std::string crypto_context_filepath;
+  std::string public_key_filepath;
+  std::string private_key_filepath;
+  std::string eval_mult_key_filepath;
+};
+
 class CKKS : public HEScheme {
 
  public:
   ~CKKS() = default;
   CKKS();
-  CKKS(uint32_t batch_size, uint32_t scaling_factor_bits, std::string crypto_dir);
+  CKKS(uint32_t batch_size, uint32_t scaling_factor_bits);
 
-  int GenCryptoContextAndKeys() override;
-  void LoadCryptoContext() override;
-  void LoadPrivateKey() override;
-  void LoadPublicKey() override;
-  void LoadContextAndKeys();
+  void GenCryptoContextAndKeys(std::string crypto_dir) override;
+  CryptoParamsPaths GetCryptoParamsPaths();
+  void LoadCryptoContextFromFile(std::string filepath) override;
+  void LoadPrivateKeyFromFile(std::string filepath) override;
+  void LoadPublicKeyFromFile(std::string filepath) override;
+  void LoadContextAndKeysFromFiles(std::string crypto_context_filepath,
+                                         std::string public_key_filepath,
+                                         std::string private_key_filepath);
   std::string Encrypt(vector<double> data_array) override;
   std::string ComputeWeightedAverage(vector<std::string> data_array,
                                      vector<float> scaling_factors) override;
@@ -41,13 +51,16 @@ class CKKS : public HEScheme {
  private:
   uint32_t batch_size;
   uint32_t scaling_factor_bits;
-  std::string crypto_dir;
+  CryptoParamsPaths crypto_params_paths_;
 
   // The double-CRT (DCRT) ciphertext representation is
   // an extension of the Chinese Remainder Transform.
   CryptoContext<DCRTPoly> cc;
   LPPublicKey<DCRTPoly> pk;
   LPPrivateKey<DCRTPoly> sk;
+
+  template<typename T>
+  void DeserializeFromFile(std::string filepath, T &obj);
 
 };
 

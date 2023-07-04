@@ -10,31 +10,23 @@
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 namespace py = pybind11;
 
-class CKKSWrapper : CKKS {
+// We need to define CKKS as public in order
+// to access its methods through PyBind.
+class CKKSWrapper : public CKKS {
 
  public:
   ~CKKSWrapper() = default;
-  CKKSWrapper(uint32_t batch_size, uint32_t scaling_factor_bits, std::string crypto_dir)
-      : CKKS(batch_size, scaling_factor_bits, crypto_dir) {}
+  CKKSWrapper(uint32_t batch_size, uint32_t scaling_factor_bits)
+      : CKKS(batch_size, scaling_factor_bits) {}
 
-  int GenCryptoContextAndKeys() {
-    return CKKS::GenCryptoContextAndKeys();
-  }
-
-  void LoadCryptoContext() {
-    return CKKS::LoadCryptoContext();
-  }
-
-  void LoadPublicKey() {
-    return CKKS::LoadPublicKey();
-  }
-
-  void LoadPrivateKey() {
-    return CKKS::LoadPrivateKey();
-  }
-
-  void LoadContextAndKeys() {
-    return CKKS::LoadContextAndKeys();
+  py::dict PyGetCryptoParamsPaths() {
+    py::dict py_dict_crypto_params_paths;
+    auto crypto_params_paths = CKKS::GetCryptoParamsPaths();
+    py_dict_crypto_params_paths["crypto_context_filepath"] = crypto_params_paths.crypto_context_filepath;
+    py_dict_crypto_params_paths["public_key_filepath"] = crypto_params_paths.public_key_filepath;
+    py_dict_crypto_params_paths["private_key_filepath"] = crypto_params_paths.private_key_filepath;
+    py_dict_crypto_params_paths["eval_mult_key_filepath"] = crypto_params_paths.eval_mult_key_filepath;
+    return py_dict_crypto_params_paths;
   }
 
   py::bytes PyEncrypt(py::array_t<double> data_array) {
@@ -79,15 +71,15 @@ class CKKSWrapper : CKKS {
 PYBIND11_MODULE(fhe, m) {
   m.doc() = "CKKS soft python wrapper.";
   py::class_<CKKSWrapper>(m, "CKKS")
-  .def(py::init<int, int, std::string &>(),
+  .def(py::init<int, int>(),
       py::arg("batch_size"),
-      py::arg("scaling_factor_bits"),
-      py::arg("crypto_dir"))
-  .def("gen_crypto_context_and_keys", &CKKSWrapper::GenCryptoContextAndKeys)
-  .def("load_crypto_context", &CKKSWrapper::LoadCryptoContext)
-  .def("load_private_key", &CKKSWrapper::LoadPrivateKey)
-  .def("load_public_key", &CKKSWrapper::LoadPublicKey)
-  .def("load_context_and_keys", &CKKSWrapper::LoadContextAndKeys)
+      py::arg("scaling_factor_bits"))
+  .def("gen_crypto_context_and_keys", &CKKS::GenCryptoContextAndKeys)
+  .def("get_crypto_params_paths", &CKKSWrapper::PyGetCryptoParamsPaths)
+  .def("load_crypto_context_from_file", &CKKS::LoadCryptoContextFromFile)
+  .def("load_private_key_from_file", &CKKS::LoadPrivateKeyFromFile)
+  .def("load_public_key_from_file", &CKKS::LoadPublicKeyFromFile)
+  .def("load_context_and_keys_from_files", &CKKS::LoadContextAndKeysFromFiles)
   .def("encrypt", &CKKSWrapper::PyEncrypt)
   .def("compute_weighted_average", &CKKSWrapper::PyComputeWeightedAverage)
   .def("decrypt", &CKKSWrapper::PyDecrypt);

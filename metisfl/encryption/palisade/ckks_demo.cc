@@ -40,14 +40,17 @@ int main() {
   uint32_t batchsize = 4096;
   uint32_t scalingfactorbits = 52;
 
-  CKKS ckks(batchsize, scalingfactorbits, cryptodir);
+  CKKS ckks(batchsize, scalingfactorbits);
   ckks.Print();
+
   // Whenever we change the `batchsize` and the `scalingfactorbits`
   // params we always need to invoke the GenCryptoContextAndKeys() function.
-  // ckks.GenCryptoContextAndKeys();
-  ckks.LoadCryptoContext();
-  ckks.LoadPublicKey();
-  ckks.LoadPrivateKey();
+  ckks.GenCryptoContextAndKeys(cryptodir);
+  auto crypto_params_paths = ckks.GetCryptoParamsPaths();
+  PLOG(INFO) << crypto_params_paths.crypto_context_filepath;
+  ckks.LoadCryptoContextFromFile(crypto_params_paths.crypto_context_filepath);
+  ckks.LoadPublicKeyFromFile(crypto_params_paths.public_key_filepath);
+  ckks.LoadPrivateKeyFromFile(crypto_params_paths.private_key_filepath);
 
   //generating random data for testing.
   vector<double> learner_Data;

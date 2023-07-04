@@ -4,10 +4,12 @@ from fhe import CKKS
 from metisfl.utils.metis_logger import MetisLogger
 
 
-def encrypt(ckks_scheme, data):
+def encrypt(crypto_params_paths, ckks_scheme, data):
     MetisLogger.info("Encrypting...")
-    ckks_scheme.load_crypto_context()
-    ckks_scheme.load_public_key()
+    ckks_scheme.load_crypto_context_from_file(
+        crypto_params_paths["crypto_context_filepath"])
+    ckks_scheme.load_public_key_from_file(
+        crypto_params_paths["public_key_filepath"])
 
     learners_data_encrypted = []
     for x in data:
@@ -18,13 +20,15 @@ def encrypt(ckks_scheme, data):
     return learners_data_encrypted
 
 
-def decrypt(ckks_scheme, data_enc, number_of_elems):
+def decrypt(crypto_params_paths, ckks_scheme, data_enc, number_of_elems):
     # Make sure the input data is a list.
     if not isinstance(data_enc, list):
         data_enc = [data_enc]
     MetisLogger.info("Decrypting...")
-    ckks_scheme.load_crypto_context()
-    ckks_scheme.load_private_key()
+    ckks_scheme.load_crypto_context_from_file(
+        crypto_params_paths["crypto_context_filepath"])
+    ckks_scheme.load_private_key_from_file(
+        crypto_params_paths["private_key_filepath"])
 
     data_dec = []
     for x_enc in data_enc:
@@ -35,9 +39,10 @@ def decrypt(ckks_scheme, data_enc, number_of_elems):
     return data_dec
 
 
-def pwa(ckks_scheme, data_enc, scaling_factors):
+def pwa(crypto_params_paths, ckks_scheme, data_enc, scaling_factors):
     MetisLogger.info("Computing Private Weighted Average...")
-    ckks_scheme.load_crypto_context()
+    ckks_scheme.load_crypto_context_from_file(
+        crypto_params_paths["crypto_context_filepath"])
     pwa_res = ckks_scheme.compute_weighted_average(
         data_enc, scaling_factors)
     MetisLogger.info("Private Weighted Average computation is complete.")
@@ -69,28 +74,31 @@ if __name__ == "__main__":
     MetisLogger.info("Original learners data: {}".format(learners_data))
     MetisLogger.info("Original scaling factors: {}".format(scaling_factors))
 
-    crypto_params_dir = "/tmp/cryptoparams"
-    if not os.path.exists(crypto_params_dir):
-        os.makedirs(crypto_params_dir)
-
     # Define batch size and scaling factor bits of CKKS scheme.
     batch_size = 4096
     scaling_factor_bits = 52
 
     MetisLogger.info("Generating crypto context and keys...")
-    ckks_scheme = CKKS(batch_size, scaling_factor_bits, crypto_params_dir)
-    ckks_scheme.gen_crypto_context_and_keys()
+    ckks_scheme = CKKS(batch_size, scaling_factor_bits)
+    crypto_params_dir = "/tmp/cryptoparams"
+    if not os.path.exists(crypto_params_dir):
+        os.makedirs(crypto_params_dir)
+    ckks_scheme.gen_crypto_context_and_keys(crypto_params_dir)
+    crypto_params_paths = ckks_scheme.get_crypto_params_paths()
+    MetisLogger.info("Crypto parameters paths:")
+    for param, path in crypto_params_paths.items():
+        MetisLogger.info("\t {}:{}".format(param, path))
 
-    ckks_scheme = CKKS(batch_size, scaling_factor_bits, crypto_params_dir)
-    learners_data_enc = encrypt(ckks_scheme, learners_data)
+    ckks_scheme = CKKS(batch_size, scaling_factor_bits)
+    learners_data_enc = encrypt(crypto_params_paths, ckks_scheme, learners_data)
 
-    ckks_scheme = CKKS(batch_size, scaling_factor_bits, crypto_params_dir)
-    learners_data_dec = decrypt(ckks_scheme, learners_data_enc, number_of_elems)
+    ckks_scheme = CKKS(batch_size, scaling_factor_bits)
+    learners_data_dec = decrypt(crypto_params_paths, ckks_scheme, learners_data_enc, number_of_elems)
     MetisLogger.info("Learners Data Decrypted: {}".format(learners_data_dec))
 
-    ckks_scheme = CKKS(batch_size, scaling_factor_bits, crypto_params_dir)
-    pwa_enc = pwa(ckks_scheme, learners_data_enc, scaling_factors)
+    ckks_scheme = CKKS(batch_size, scaling_factor_bits)
+    pwa_enc = pwa(crypto_params_paths, ckks_scheme, learners_data_enc, scaling_factors)
 
-    ckks_scheme = CKKS(batch_size, scaling_factor_bits, crypto_params_dir)
-    pwa_dec = decrypt(ckks_scheme, pwa_enc, number_of_elems)
+    ckks_scheme = CKKS(batch_size, scaling_factor_bits)
+    pwa_dec = decrypt(crypto_params_paths, ckks_scheme, pwa_enc, number_of_elems)
     MetisLogger.info("Aggregated (Decrypted) Result: {}".format(pwa_dec))

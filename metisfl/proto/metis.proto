@@ -286,15 +286,15 @@ message HESchemeConfig {
   string private_key = 5;
 
   oneof scheme {
-    EmptyHESchemeConfig empty_he_scheme_config = 6;
-    FHESchemeConfig fhe_scheme_config = 7;
+    EmptySchemeConfig empty_scheme_config = 6;
+    CKKSConfig fhe_scheme_config = 7;
   }
 
 }
 
-message EmptyHESchemeConfig {}
+message EmptySchemeConfig {}
 
-message FHESchemeConfig {
+message CKKSConfig {
   uint32 batch_size = 1;
   uint32 scaling_bits = 2;
 }
