@@ -24,6 +24,7 @@ class LearnerExecutor(object):
             self.pool[task] = self._init_task_pool(max_tasks, mp_ctx)
 
     def _init_task_pool(self, max_tasks, mp_ctx):
+        # @stripeli: why maxsize=1?
         return ProcessPool(max_workers=1, max_tasks=max_tasks, context=mp_ctx), \
             queue.Queue(maxsize=1)
 
@@ -96,12 +97,12 @@ class LearnerExecutor(object):
         tasks_pool, tasks_futures_q = self.pool[task_name]
         future = tasks_pool.schedule(function=task_fn, kwargs={**kwargs})
         future.add_done_callback(
-            self._callback_wraper(callback)
+            self._callback_wrapper(callback)
         ) if callback else None
         tasks_futures_q.put(future)
         return future
 
-    def _callback_wraper(self, callback: Callable):
+    def _callback_wrapper(self, callback: Callable):
         def callback_wrapper(future):
             if future.done() and not future.cancelled():
                 completed_task_pb = future.result()

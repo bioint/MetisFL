@@ -33,7 +33,7 @@ def get_model(metrics=["accuracy"], optimizer_name="MomentumSGD"):
     elif optimizer_name.lower() == "fedprox":
         optimizer = FedProx()
     else:
-        raise RuntimeError("Not supported optimizer.")
+        raise RuntimeError("Not a supported optimizer.")
     model.compile(optimizer=optimizer,
                     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                     metrics=metrics)

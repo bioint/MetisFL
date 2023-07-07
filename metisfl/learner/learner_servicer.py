@@ -50,8 +50,6 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         self.__grpc_server.server.start()
         self._learner_controller_client.join_federation()
         self._log_init_learner()
-
-    def wait_servicer(self):
         self.__shutdown_event.wait()
         self.__grpc_server.server.stop(None)
 
