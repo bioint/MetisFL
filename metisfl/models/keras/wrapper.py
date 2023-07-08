@@ -71,8 +71,11 @@ class MetisKerasModel(MetisModel):
         MetisLogger.info("Applied new model weights")
 
     def _run_initial_evaluation(self) -> None:
-        input_shape = self._backend_model.layers[0].input_shape[1:]
-        output_shape = self._backend_model.layers[-1].output_shape[1:]
+        # FIXME: This is a hack; will only work for 1-dim output
+        input_shape = self._backend_model.layers[0].input_shape
+        output_shape = self._backend_model.layers[-1].output_shape
+        input_shape = (1, *input_shape[1:])
+        output_shape = (1,)
         x = np.random.random(input_shape)
         y = np.random.random(output_shape)
         self._backend_model.evaluate(x, y, verbose=0)

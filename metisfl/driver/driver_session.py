@@ -12,8 +12,8 @@ from metisfl.utils import fedenv_parser
 from metisfl.utils.metis_logger import MetisASCIIArt
 
 from .driver_initializer import DriverInitializer
-from .grpc_controller_client import GRPCControllerClient
-from .grpc_learner_client import GRPCLearnerClient
+from .controller_client import GRPCControllerClient
+from .learner_client import GRPCLearnerClient
 from .monitor import FederationMonitor
 from .utils import create_server_entity
 

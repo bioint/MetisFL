@@ -59,14 +59,21 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
                 .construct_evaluate_model_response_pb()
         self._log_evaluation_task_receive()
         self.__model_evaluation_requests += 1  # @stripeli where is this used?
+        
+        # Unpack these from the request as they are repeated proto fields
+        # and can't be pickled
+        evaluation_dataset_pb = [d for d in request.evaluation_dataset]
+        metric_pb = [m for m in request.metrics.metric]
+        
         model_evaluations_pb = self._learner_executor.run_evaluation_task(
             model_pb=request.model,
             batch_size=request.batch_size,
-            evaluation_dataset_pb=[d for d in request.evaluation_dataset],
-            metrics_pb=[m for m in request.metrics.metric], 
+            evaluation_dataset_pb=evaluation_dataset_pb,
+            metrics_pb=metric_pb, 
             cancel_running=False,
             block=True,
             verbose=True)
+        
         evaluate_model_response_pb = LearnerServiceProtoMessages \
             .construct_evaluate_model_response_pb(model_evaluations_pb)
         return evaluate_model_response_pb

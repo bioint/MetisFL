@@ -49,8 +49,8 @@ class TaskExecutor(object):
     def evaluate_model(self, 
                         model_pb: model_pb2.Model, 
                         batch_size: int,
-                        evaluation_datasets_pb: list,
-                        metrics_pb: list,
+                        evaluation_datasets_pb: list[learner_pb2.EvaluateModelRequest.dataset_to_eval],
+                        metrics_pb: metis_pb2.EvaluationMetrics, 
                         verbose=False):       
         self._init_model_ops() 
         self._set_weights_from_model_pb(model_pb)
@@ -60,6 +60,7 @@ class TaskExecutor(object):
 
         train_eval = validation_eval = test_eval = dict()
         self._log(state="starts", task="evaluation")
+
         for dataset_to_eval in evaluation_datasets_pb:
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TRAINING:
                 train_eval = self._model_ops.evaluate_model(train_dataset, batch_size, metrics_pb, verbose)
@@ -67,6 +68,7 @@ class TaskExecutor(object):
                 validation_eval = self._model_ops.evaluate_model(validation_dataset, batch_size, metrics_pb, verbose)
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TEST:
                 test_eval = self._model_ops.evaluate_model(test_dataset, batch_size, metrics_pb, verbose)
+                
         self._log(state="completed", task="evaluation")
         return self._get_completed_evaluation_task_pb(train_eval, validation_eval, test_eval)
  

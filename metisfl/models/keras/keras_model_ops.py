@@ -1,4 +1,5 @@
 from typing import Any
+
 import tensorflow as tf
 
 from metisfl.proto import metis_pb2, model_pb2
@@ -49,6 +50,9 @@ class KerasModelOps(ModelOps):
         dataset_size = train_dataset.get_size()
         step_counter_callback = StepCounter(total_steps=total_steps)
         performance_cb = PerformanceProfiler()
+        
+        # @stripeli why is the epoch number calculated? Isn't it given in the yaml?
+        # @stripeli why there are two batch sizes?
         epochs_num = get_num_of_epochs(
             dataset_size=dataset_size, batch_size=batch_size, total_steps=total_steps)
         x_train, y_train = train_dataset.construct_dataset_pipeline(
@@ -57,7 +61,7 @@ class KerasModelOps(ModelOps):
             batch_size=batch_size, is_train=False)
         x_test, y_test = test_dataset.construct_dataset_pipeline(
             batch_size=batch_size, is_train=False)
-
+                
         # We assign x_valid, y_valid only if both values
         # are not None, else we assign x_valid (None or not None).
         validation_data = (x_valid, y_valid) \
@@ -79,8 +83,11 @@ class KerasModelOps(ModelOps):
 
         # TODO(dstripelis) We evaluate the local model over the test dataset at the end of training.
         #  Maybe we need to parameterize evaluation at every epoch or at the end of training.
-        test_res = self._metis_model._backend_model.evaluate(x=x_test, y=y_test, batch_size=batch_size,
-                                                             verbose=verbose, return_dict=True)
+        test_res = self._metis_model._backend_model.evaluate(x=x_test, 
+                                                             y=y_test, 
+                                                             batch_size=batch_size,
+                                                             verbose=verbose, 
+                                                             return_dict=True)
 
         # Since model has been changed, save the new model state.
         self._metis_model.save(self._model_dir)

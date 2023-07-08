@@ -1,7 +1,6 @@
 FederationEnvironment:
-  DockerImage: null # null indicates to run Metis without docker, if it is provided then run using the specified image
   TerminationSignals:
-    FederationRounds: 10 # only in synchronous execution
+    FederationRounds: 3 # only in synchronous execution
     ExecutionCutoffTimeMins: null
     MetricCutoffScore: 1.0
   EvaluationMetric: "accuracy"
@@ -13,36 +12,35 @@ FederationEnvironment:
     LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "LineageLengthEviction"
   GlobalModelConfig:
     AggregationRule:
-      Name: "FedStride" # Others are FedAvg, FedStride, FedRec, PWA
+      Name: "FedAvg" # Others are FedAvg, FedStride, FedRec, PWA
       RuleSpecifications:
         ScalingFactor: "NumTrainingExamples" # Others are NUM_COMPLETED_BATCHES, NUM_PARTICIPANTS, NUM_TRAINING_EXAMPLES
-        StrideLength: 2
     ParticipationRatio: 1
   LocalModelConfig:
     BatchSize: 32
-    LocalEpochs: 10
+    LocalEpochs: 4
     ValidationPercentage: 0.0
     OptimizerConfig:
       OptimizerName: "VanillaSGD"
       LearningRate: 0.05
       L2Reg: 0.0
   Controller:
-    ProjectHome: "/home/panoskyriakis/metisfl"
+    ProjectHome: "/metisfl"
     ConnectionConfigs:
       Hostname: "localhost"
-      Username: "panoskyriakis"
-      KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
+      Username: "root"
+      Password: "root"
       OnLogin: "source /etc/profile;"
     GRPCServicer:
       Hostname: "localhost"
       Port: 50051
   Learners:
     - LearnerID: "localhost-1"
-      ProjectHome: "/home/panoskyriakis/metisfl"
+      ProjectHome: "/metisfl"
       ConnectionConfigs:
         Hostname: "localhost"
-        Username: "panoskyriakis"
-        KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
+        Username: "root"
+        Password: "root"
         OnLogin: "source /etc/profile;"
       GRPCServicer:
         Hostname: "localhost"

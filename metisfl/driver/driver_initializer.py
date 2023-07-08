@@ -51,9 +51,9 @@ class DriverInitializer:
                 dataset_recipe_fps[key] = dataset_pkl
         return dataset_recipe_fps
 
-    def _save_initial_model(self, model):
+    def _save_initial_model(self, model: MetisModel) -> str:
         self._model_weights_descriptor = model.get_weights_descriptor()
-        model.save(self._model_save_dir)
+        model.save(self._model_save_dir, is_initial=True)
         return self._make_tarfile(
             source_dir=self._model_save_dir,
             output_filename=os.path.basename(self._model_save_dir)

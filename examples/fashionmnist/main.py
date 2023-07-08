@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 
+
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.utils.fedenv_parser import FederationEnvironment
@@ -28,7 +29,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # Load the environment configuration
-    federation_environment = FederationEnvironment(args.federation_environment_config_fp)
+    federation_environment = FederationEnvironment(args.env)
 
     # Load the data
     x_train, y_train, x_test, y_test = load_data()
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     test_dataset_fps = [test_dataset_fp for _ in range(num_learners)]
 
     # Get the tf.keras model
-    model = get_model()
+    model = get_model()  
     
     # Wrap the model in a MetisKerasModel
     metis_model = MetisKerasModel(model)
@@ -59,9 +60,10 @@ if __name__ == "__main__":
                                     test_dataset_recipe_fn=dataset_recipe_fn,
                                     test_dataset_fps=test_dataset_fps)
     
-    driver_session.initialize_federation()
-    driver_session.monitor_federation()
-    driver_session.shutdown_federation()
+    # Run the DriverSession
+    driver_session.run()
+    
+    # Get the statistics
     statistics = driver_session.get_federation_statistics()
 
     with open(os.path.join(script_cwd, "experiment.json"), "w+") as fout:

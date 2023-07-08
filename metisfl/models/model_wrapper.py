@@ -12,7 +12,7 @@ class MetisModel(object):
         pass
 
     @abc.abstractmethod
-    def save(self, model_dir) -> None:
+    def save(self, model_dir, is_initial=False) -> None:
         pass
 
     def get_weights_descriptor(self) -> ModelWeightsDescriptor:

@@ -10,7 +10,6 @@ class EnvGen(object):
     def __init__(self, template_filepath: str):
         assert os.path.exists(template_filepath), \
             "Template file {} does not exist.".format(template_filepath)
-            
         self.template_filepath = template_filepath
         
     def generate_localhost(self,
