@@ -552,10 +552,8 @@ class ModelProtoMessages(object):
         for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
             ciphertext = None
             if he_scheme is not None:
-                print(w_v.flatten(), len(w_v.flatten()), flush=True)
                 ciphertext = he_scheme.encrypt(w_v.flatten())
                 non_encrypted = he_scheme.decrypt(ciphertext, len(w_v.flatten()))
-                print(np.array(non_encrypted), flush=True)
             # If we have a ciphertext we prioritize it over the plaintext.
             tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
                                                                ciphertext=ciphertext)
