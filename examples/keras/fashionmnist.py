@@ -40,31 +40,30 @@ if __name__ == "__main__":
     x_train = (x_train.astype('float32') / 256).reshape(-1, 28, 28, 1)
     x_test = (x_test.astype('float32') / 256).reshape(-1, 28, 28, 1)
 
-    if not args.generate_iid_partitions and not args.generate_noniid_partitions \
-            and not all([l.dataset_configs.train_dataset_path for l in federation_environment.learners]):
-        raise RuntimeError("Need to specify datasets training paths or pass generate iid/noniid partitions argument.")
+    if not args.generate_iid_partitions and not args.generate_noniid_partitions:
+        print("The iid/noniid partitions argument was not provided. Using generate_iid_partitions as the default.")
+        args.generate_iid_partitions = True
 
-    if args.generate_iid_partitions or args.generate_noniid_partitions:
-        # Parse environment to assign datasets to learners.
+    # Parse environment to assign datasets to learners.
+    num_learners = len(federation_environment.learners.learners)
+    if args.generate_iid_partitions:
+        x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners).iid_partition()
+    elif args.generate_noniid_partitions:
         num_learners = len(federation_environment.learners.learners)
-        if args.generate_iid_partitions:
-            x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners).iid_partition()
-        if args.generate_noniid_partitions:
-            num_learners = len(federation_environment.learners.learners)
-            x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners) \
-                .non_iid_partition(classes_per_partition=2)
+        x_chunks, y_chunks = DataPartitioning(x_train, y_train, num_learners) \
+            .non_iid_partition(classes_per_partition=2)
 
-        datasets_path = os.path.join(script_cwd, "datasets/fashionmnist/")
-        if not os.path.exists(datasets_path):
-            os.makedirs(datasets_path)
-        np.savez(os.path.join(datasets_path, "test.npz"), x=x_test, y=y_test)
-        for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):
-            np.savez(os.path.join(datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
-        for lidx, learner in enumerate(federation_environment.learners.learners):
-            learner.dataset_configs.test_dataset_path = \
-                os.path.join(datasets_path, "test.npz")
-            learner.dataset_configs.train_dataset_path = \
-                os.path.join(datasets_path, "train_{}.npz".format(lidx))
+    datasets_path = os.path.join(script_cwd, "datasets/fashionmnist/")
+    if not os.path.exists(datasets_path):
+        os.makedirs(datasets_path)
+    np.savez(os.path.join(datasets_path, "test.npz"), x=x_test, y=y_test)
+    for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):
+        np.savez(os.path.join(datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
+    for lidx, learner in enumerate(federation_environment.learners.learners):
+        learner.dataset_configs.test_dataset_path = \
+            os.path.join(datasets_path, "test.npz")
+        learner.dataset_configs.train_dataset_path = \
+            os.path.join(datasets_path, "train_{}.npz".format(lidx))
 
     nn_model = FashionMnistModel().get_model()
     # Perform an .evaluation() step to initialize all Keras 'hidden' states, else model.save() will not save the model
