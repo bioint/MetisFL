@@ -7,6 +7,7 @@ from pebble import ProcessPool
 
 from metisfl import config
 from metisfl.models.model_wrapper import MetisModel
+from metisfl.proto import model_pb2
 from metisfl.utils import fedenv_parser
 from metisfl.utils.metis_logger import MetisASCIIArt
 
@@ -71,7 +72,7 @@ class DriverSession(object):
         assert fed_env, "Federation environment is required."
         assert model, "Model is required."
         assert train_dataset_recipe_fn, "Train dataset recipe function is required."
-        
+
         # Print welcome message.
         MetisASCIIArt.print()
         self._federation_environment = fedenv_parser.FederationEnvironment(
@@ -108,7 +109,7 @@ class DriverSession(object):
 
     def _get_dataset_dict(self, train_dataset, validation_dataset=None, test_dataset=None):
         dataset_dict = {}
-        dataset_dict[config.TRAIN] = train_dataset # always required
+        dataset_dict[config.TRAIN] = train_dataset  # always required
         if validation_dataset:
             dataset_dict[config.VALIDATION] = validation_dataset
         if test_dataset:
@@ -157,8 +158,11 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = self._homomorphic_encryption.construct_model_pb_from_np(
+        variables = self._homomorphic_encryption.encrypt_np_weights(
             weights_descriptor)
+        model_pb = model_pb2.Model(
+            variables=variables,
+        )
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

@@ -187,6 +187,11 @@ message CommunityModelEvaluation {
   map<string, ModelEvaluations> evaluations = 2;
 }
 
+message Hyperparameters {
+  uint32 batch_size = 1;
+  OptimizerConfig optimizer = 2;
+}
+
 ////////////////
 // Controller //
 ////////////////

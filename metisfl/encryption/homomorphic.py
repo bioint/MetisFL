@@ -82,7 +82,7 @@ class HomomorphicEncryption(object):
                                       weights_trainable=var_trainables,
                                       weights_values=var_nps)
 
-    def construct_model_pb_from_np(self, weight_descriptor: ModelWeightsDescriptor) -> model_pb2.Model:
+    def encrypt_np_weights(self, weight_descriptor: ModelWeightsDescriptor) -> list[model_pb2.Model.Variable]:
         weights_names = weight_descriptor.weights_names
         weights_trainable = weight_descriptor.weights_trainable
         weights_values = weight_descriptor.weights_values
@@ -106,7 +106,7 @@ class HomomorphicEncryption(object):
                                                                        trainable=w_t,
                                                                        tensor_pb=tensor_pb)
             variables_pb.append(model_var)
-        return model_pb2.Model(variables=variables_pb)
+        return variables_pb
 
     def to_proto(self):
         return self._he_scheme_pb

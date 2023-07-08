@@ -62,8 +62,8 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         model_evaluations_pb = self._learner_executor.run_evaluation_task(
             model_pb=request.model,
             batch_size=request.batch_size,
-            evaluation_dataset_pb=request.evaluation_dataset,
-            metrics_pb=request.metrics,
+            evaluation_dataset_pb=[d for d in request.evaluation_dataset],
+            metrics_pb=[m for m in request.metrics.metric], 
             cancel_running=False,
             block=True,
             verbose=True)

@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable
 
 from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.models.model_ops import ModelOps
@@ -49,26 +49,24 @@ class TaskExecutor(object):
     def evaluate_model(self, 
                         model_pb: model_pb2.Model, 
                         batch_size: int,
-                        evaluation_datasets_pb: list[learner_pb2.EvaluateModelRequest.dataset_to_eval],
-                        metrics_pb: metis_pb2.EvaluationMetrics, 
+                        evaluation_datasets_pb: list,
+                        metrics_pb: list,
                         verbose=False):       
         self._init_model_ops() 
         self._set_weights_from_model_pb(model_pb)
         
         train_dataset, validation_dataset, test_dataset = \
             self._learner_dataset.load_model_datasets()
-        metrics = [m for m in metrics_pb.metric]
-        evaluation_datasets_pb = [d for d in evaluation_datasets_pb]
 
         train_eval = validation_eval = test_eval = dict()
         self._log(state="starts", task="evaluation")
         for dataset_to_eval in evaluation_datasets_pb:
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TRAINING:
-                train_eval = self._model_ops.evaluate_model(train_dataset, batch_size, metrics, verbose)
+                train_eval = self._model_ops.evaluate_model(train_dataset, batch_size, metrics_pb, verbose)
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.VALIDATION:
-                validation_eval = self._model_ops.evaluate_model(validation_dataset, batch_size, metrics, verbose)
+                validation_eval = self._model_ops.evaluate_model(validation_dataset, batch_size, metrics_pb, verbose)
             if dataset_to_eval == learner_pb2.EvaluateModelRequest.dataset_to_eval.TEST:
-                test_eval = self._model_ops.evaluate_model(test_dataset, batch_size, metrics, verbose)
+                test_eval = self._model_ops.evaluate_model(test_dataset, batch_size, metrics_pb, verbose)
         self._log(state="completed", task="evaluation")
         return self._get_completed_evaluation_task_pb(train_eval, validation_eval, test_eval)
  
@@ -111,7 +109,8 @@ class TaskExecutor(object):
         return  self._get_completed_learning_task_pb(model_weights_descriptor, learning_task_stats)
 
     def _get_completed_learning_task_pb(self, model_weights_descriptor, learning_task_stats):
-        model_pb = self._homomorphic_encryption.construct_model_pb_from_np(model_weights_descriptor)
+        variables = self._homomorphic_encryption.encrypt_np_weights(model_weights_descriptor)
+        model_pb = model_pb2.Model(variables=variables)
         completed_learning_task_pb = get_completed_learning_task_pb(
             model_pb=model_pb,
             learning_task_stats=learning_task_stats
