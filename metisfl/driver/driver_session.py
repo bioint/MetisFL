@@ -103,24 +103,49 @@ class DriverSessionBase(object):
         # This field is populated at different stages of the entire federated training lifecycle.
         self._federation_statistics = dict()
 
-        self._he_scheme, self._he_scheme_pb = None, None
+        self._he_scheme, self._controller_he_scheme_config_pb, self._learners_he_scheme_config_pb = None, None, None
+        self._crypto_params_dir = os.path.join(working_dir, "cryptoparams")
+        if not os.path.exists(self._crypto_params_dir):
+            os.makedirs(self._crypto_params_dir)
         if self.federation_environment.homomorphic_encryption:
             if self.federation_environment.homomorphic_encryption.scheme.upper() == "CKKS":
                 # Initialize encryption scheme to encode initial model.
                 batch_size = self.federation_environment.homomorphic_encryption.batch_size
-                scaling_bits = self.federation_environment.homomorphic_encryption.scaling_bits
-                self._he_scheme = fhe.CKKS(batch_size, scaling_bits, "resources/fheparams/cryptoparams/")
-                self._he_scheme.load_crypto_params()
+                scaling_factor_bits = self.federation_environment.homomorphic_encryption.scaling_factor_bits
+                self._he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
+                self._he_scheme.gen_crypto_context_and_keys(self._crypto_params_dir)
+                self._crypto_params_files = self._he_scheme.get_crypto_params_files()
+                # We need the (crypto context, public key) to encrypt the model.
+                self._he_scheme.load_crypto_context_from_file(
+                    self._crypto_params_files["crypto_context_file"])
+                self._he_scheme.load_public_key_from_file(
+                    self._crypto_params_files["public_key_file"])
+                self._he_scheme.load_private_key_from_file(
+                    self._crypto_params_files["private_key_file"])
 
                 # Construct serialized proto message.
-                fhe_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_fhe_scheme_pb(
-                    batch_size=batch_size, scaling_bits=scaling_bits)
-                self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
-                    enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
+                ckks_scheme_config_pb = proto_messages_factory.MetisProtoMessages.construct_ckks_scheme_config_pb(
+                    batch_size=batch_size, scaling_factor_bits=scaling_factor_bits)
+                self._controller_he_scheme_config_pb = \
+                    proto_messages_factory.MetisProtoMessages.construct_he_scheme_config_pb(
+                        enabled=True,
+                        crypto_context_file=self._crypto_params_files["crypto_context_file"],
+                        ckks_scheme_config_pb=ckks_scheme_config_pb)
+                self._learners_he_scheme_config_pb = \
+                    proto_messages_factory.MetisProtoMessages.construct_he_scheme_config_pb(
+                        enabled=True,
+                        crypto_context_file=self._crypto_params_files["crypto_context_file"],
+                        private_key_file=self._crypto_params_files["private_key_file"],
+                        public_key_file=self._crypto_params_files["public_key_file"],
+                        ckks_scheme_config_pb=ckks_scheme_config_pb)
         else:
-            empty_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_empty_he_scheme_pb()
-            self._he_scheme_pb = proto_messages_factory.MetisProtoMessages.construct_he_scheme_pb(
-                enabled=False, empty_scheme_pb=empty_scheme_pb)
+            empty_scheme_config_pb = proto_messages_factory.MetisProtoMessages.construct_empty_scheme_config_pb()
+            self._controller_he_scheme_config_pb = \
+                proto_messages_factory.MetisProtoMessages.construct_he_scheme_config_pb(
+                    enabled=False, empty_scheme_config_pb=empty_scheme_config_pb)
+            self._learners_he_scheme_config_pb = \
+                proto_messages_factory.MetisProtoMessages.construct_he_scheme_config_pb(
+                    enabled=False, empty_scheme_config_pb=empty_scheme_config_pb)
 
     def __getstate__(self):
         """
@@ -154,8 +179,8 @@ class DriverSessionBase(object):
                 # If the given instance has the public certificate and the private key defined
                 # then we just wrap the ssl configuration around the files.
                 wrap_as_stream = False
-                public_cert = remote_host_instance.ssl_configs.public_certificate_filepath
-                private_key = remote_host_instance.ssl_configs.private_key_filepath
+                public_cert = remote_host_instance.ssl_configs.public_certificate_file
+                private_key = remote_host_instance.ssl_configs.private_key_file
             else:
                 # If the given instance has no ssl configuration files defined, then we use
                 # the default non-verified (self-signed) certificates, and we wrap them as streams.
@@ -231,17 +256,16 @@ class DriverSessionBase(object):
         optimizer_pb_kwargs = self.federation_environment.local_model_config.optimizer_config.optimizer_pb_kwargs
         optimizer_pb = \
             proto_messages_factory.ModelProtoMessages.construct_optimizer_config_pb_from_kwargs(optimizer_pb_kwargs)
-        model_hyperparameters_pb = proto_messages_factory.MetisProtoMessages \
-            .construct_controller_modelhyperparams_pb(
-                batch_size=self.federation_environment.local_model_config.batch_size,
-                epochs=self.federation_environment.local_model_config.local_epochs,
-                optimizer_pb=optimizer_pb,
-                percent_validation=self.federation_environment.local_model_config.validation_percentage)
+        model_hyperparameters_pb = proto_messages_factory.MetisProtoMessages .construct_controller_modelhyperparams_pb(
+            batch_size=self.federation_environment.local_model_config.batch_size,
+            epochs=self.federation_environment.local_model_config.local_epochs,
+            optimizer_pb=optimizer_pb,
+            percent_validation=self.federation_environment.local_model_config.validation_percentage)
         aggregation_rule_pb = proto_messages_factory.MetisProtoMessages.construct_aggregation_rule_pb(
             rule_name=self.federation_environment.global_model_config.aggregation_rule.aggregation_rule_name,
             scaling_factor=self.federation_environment.global_model_config.aggregation_rule.aggregation_rule_scaling_factor,
             stride_length=self.federation_environment.global_model_config.aggregation_rule.aggregation_rule_stride_length,
-            he_scheme_pb=self._he_scheme_pb)
+            he_scheme_config_pb=self._controller_he_scheme_config_pb)
         global_model_specs_pb = proto_messages_factory.MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.federation_environment.global_model_config.participation_ratio)
@@ -289,7 +313,7 @@ class DriverSessionBase(object):
         init_learner_cmd = MetisInitServicesCmdFactory().init_learner_target(
             learner_server_entity_pb_ser=learner_server_entity_pb.SerializeToString(),
             controller_server_entity_pb_ser=controller_server_entity_pb.SerializeToString(),
-            he_scheme_pb_ser=self._he_scheme_pb.SerializeToString(),
+            he_scheme_pb_ser=self._learners_he_scheme_config_pb.SerializeToString(),
             model_dir=remote_metis_model_path,
             train_dataset=learner_instance.dataset_configs.train_dataset_path,
             validation_dataset=learner_instance.dataset_configs.validation_dataset_path,

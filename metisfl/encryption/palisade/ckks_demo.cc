@@ -4,9 +4,9 @@
 #include <iostream>
 #include <string>
 
-#include "fhe_helper.h"
+#include "ckks_scheme.h"
 
-void generateRandomData(vector<double> &learner_Data, int rows, bool ceil_numbers = false) {
+void generateRandomData(std::vector<double> &learner_Data, int rows, bool ceil_numbers = false) {
 
   double lower_bound = 0;
   double upper_bound = 100;
@@ -32,20 +32,25 @@ int main() {
   std::filesystem::path cwd = std::filesystem::current_path();
   std::cout << ":: WORKING PATH ::" << std::endl;
   std::cout << cwd << std::endl;
-  std::string cryptodir = "metisfl/resources/fheparams/cryptoparams/";
-  std::string scheme = "ckks";
-  uint batchsize = 4096;
-  uint scalingfactorbits = 52;
+  // We use the current working directory, when running demo with bazel,
+  // since the cryptoparams are part of the demo target as data dependency,
+  // and therefore they will be copied during runtime to the path.
+  std::string cryptodir = cwd / "metisfl/resources/fheparams/cryptoparams";
+  std::cout << cryptodir << std::endl;
+  uint32_t batchsize = 4096;
+  uint32_t scalingfactorbits = 52;
 
-  FHE_Helper fhe_helper;
-//  FHE_Helper fhe_helper(scheme, batchsize, scalingfactorbits);
-//  FHE_Helper fhe_helper(scheme, batchsize, scalingfactorbits, cryptodir);
-  // Generates CryptoParams for the entire session and the driver shares the
-  // files with all learners and controller. Whenever we change the `batchsize`
-  // and the `scalingfactorbits` params we always need to invoke the
-  // genCryptoContextAndKeys() function.
-//  fhe_helper.genCryptoContextAndKeys();
-  fhe_helper.load_crypto_params();
+  CKKS ckks(batchsize, scalingfactorbits);
+  ckks.Print();
+
+  // Whenever we change the `batchsize` and the `scalingfactorbits`
+  // params we always need to invoke the GenCryptoContextAndKeys() function.
+  ckks.GenCryptoContextAndKeys(cryptodir);
+  auto crypto_params_files = ckks.GetCryptoParamsFiles();
+  PLOG(INFO) << crypto_params_files.crypto_context_file;
+  ckks.LoadCryptoContextFromFile(crypto_params_files.crypto_context_file);
+  ckks.LoadPublicKeyFromFile(crypto_params_files.public_key_file);
+  ckks.LoadPrivateKeyFromFile(crypto_params_files.private_key_file);
 
   //generating random data for testing.
   vector<double> learner_Data;
@@ -56,7 +61,7 @@ int main() {
 
   std::cout << "Encrypting" << std::endl;
 
-  std::string enc_result = fhe_helper.encrypt(learner_Data);
+  std::string enc_result = ckks.Encrypt(learner_Data);
 //  std::ofstream enc_result_fout("/tmp/metis/encrypted_random_numbers.out");
 //  enc_result_fout << enc_result;
 //  enc_result_fout.close();
@@ -76,13 +81,13 @@ int main() {
   std::cout << "Computing 0.5*L + 0.3*L + 0.5*L" << std::endl;
 
   std::string pwa_result =
-      fhe_helper.computeWeightedAverage(learners_Data, scalingFactors);
+      ckks.ComputeWeightedAverage(learners_Data, scalingFactors);
 
   unsigned long int data_dimensions = learner_Data.size();
 
   std::cout << "Decrypting" << std::endl;
 
-  vector<double> pwa_res_pt = fhe_helper.decrypt(pwa_result, data_dimensions);
+  vector<double> pwa_res_pt = ckks.Decrypt(pwa_result, data_dimensions);
 
   std::cout << "Result:" << std::endl;
 

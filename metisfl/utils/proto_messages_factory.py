@@ -118,28 +118,29 @@ class MetisProtoMessages(object):
             private_key_stream=private_key_stream)
 
     @classmethod
-    def construct_he_scheme_pb(cls, enabled=False, name=None, cryptocontext=None, public_key=None, private_key=None,
-                               empty_scheme_pb=None, fhe_scheme_pb=None):
-        if empty_scheme_pb is not None:
-            return metis_pb2.HEScheme(enabled=enabled,
-                                      name=name,
-                                      public_key=public_key,
-                                      private_key=private_key,
-                                      empty_he_scheme=empty_scheme_pb)
-        if fhe_scheme_pb is not None:
-            return metis_pb2.HEScheme(enabled=enabled,
-                                      name=name,
-                                      public_key=public_key,
-                                      private_key=private_key,
-                                      fhe_scheme=fhe_scheme_pb)
+    def construct_he_scheme_config_pb(cls, enabled=False, crypto_context_file=None,
+                                      public_key_file=None, private_key_file=None,
+                                      empty_scheme_config_pb=None, ckks_scheme_config_pb=None):
+        if empty_scheme_config_pb is not None:
+            return metis_pb2.HESchemeConfig(enabled=enabled,
+                                            crypto_context_file=crypto_context_file,
+                                            public_key_file=public_key_file,
+                                            private_key_file=private_key_file,
+                                            empty_scheme_config=empty_scheme_config_pb)
+        if ckks_scheme_config_pb is not None:
+            return metis_pb2.HESchemeConfig(enabled=enabled,
+                                            crypto_context_file=crypto_context_file,
+                                            public_key_file=public_key_file,
+                                            private_key_file=private_key_file,
+                                            ckks_scheme_config=ckks_scheme_config_pb)
 
     @classmethod
-    def construct_empty_he_scheme_pb(cls):
-        return metis_pb2.EmptyHEScheme()
+    def construct_empty_scheme_config_pb(cls):
+        return metis_pb2.EmptySchemeConfig()
 
     @classmethod
-    def construct_fhe_scheme_pb(cls, batch_size, scaling_bits):
-        return metis_pb2.FHEScheme(batch_size=batch_size, scaling_bits=scaling_bits)
+    def construct_ckks_scheme_config_pb(cls, batch_size, scaling_factor_bits):
+        return metis_pb2.CKKSSchemeConfig(batch_size=batch_size, scaling_factor_bits=scaling_factor_bits)
 
     @classmethod
     def construct_dataset_spec_pb(cls, num_training_examples, num_validation_examples, num_test_examples,
@@ -335,8 +336,8 @@ class MetisProtoMessages(object):
         return metis_pb2.FedRec()
 
     @classmethod
-    def construct_pwa_pb(cls, he_scheme_pb):
-        return metis_pb2.PWA(he_scheme=he_scheme_pb)
+    def construct_pwa_pb(cls, he_scheme_config_pb):
+        return metis_pb2.PWA(he_scheme_config=he_scheme_config_pb)
 
     @classmethod
     def construct_aggregation_rule_specs_pb(cls, scaling_factor):
@@ -353,7 +354,7 @@ class MetisProtoMessages(object):
         return metis_pb2.AggregationRuleSpecs(scaling_factor=scaling_factor_pb)
 
     @classmethod
-    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, he_scheme_pb):
+    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, he_scheme_config_pb):
         aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(scaling_factor)
         if rule_name.upper() == "FEDAVG":
             return metis_pb2.AggregationRule(fed_avg=MetisProtoMessages.construct_fed_avg_pb(),
@@ -366,7 +367,7 @@ class MetisProtoMessages(object):
                                              aggregation_rule_specs=aggregation_rule_specs_pb)
         elif rule_name.upper() == "PWA":
             return metis_pb2.AggregationRule(
-                pwa=MetisProtoMessages.construct_pwa_pb(he_scheme_pb=he_scheme_pb),
+                pwa=MetisProtoMessages.construct_pwa_pb(he_scheme_config_pb=he_scheme_config_pb),
                 aggregation_rule_specs=aggregation_rule_specs_pb)
         else:
             raise RuntimeError("Unsupported rule name.")
@@ -540,19 +541,19 @@ class ModelProtoMessages(object):
 
     @classmethod
     def construct_model_pb_from_np(
-            cls, weights_values, weights_names=None, weights_trainable=None, he_scheme=None):
-        if not weights_names:
-            # Populating weights names with surrogate keys.
-            weights_names = ["arr_{}".format(widx) for widx in range(len(weights_values))]
-        if weights_trainable:
-            # Since weights have not specified as trainable or not, we default all weights to trainable.
-            weights_trainable = [True for _ in range(len(weights_values))]
+            cls, weights_values, weights_names, weights_trainable, he_scheme=None):
+
+        # np.savez('/tmp/test.npz', **weights_values)
+        with open('/tmp/test.npy', 'wb') as f:
+            for v in weights_values:
+                np.savez(f, v)
 
         variables_pb = []
         for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
             ciphertext = None
             if he_scheme is not None:
-                ciphertext = he_scheme.encrypt(w_v.flatten(), 1)
+                ciphertext = he_scheme.encrypt(w_v.flatten())
+                non_encrypted = he_scheme.decrypt(ciphertext, len(w_v.flatten()))
             # If we have a ciphertext we prioritize it over the plaintext.
             tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
                                                                ciphertext=ciphertext)

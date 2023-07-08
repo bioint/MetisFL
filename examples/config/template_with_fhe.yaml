@@ -14,7 +14,7 @@ FederationEnvironment:
   HomomorphicEncryption: # homomorphic encryption scheme - if provided run with it, else disabled.
     Scheme: "CKKS" # Others are "CKKS" (a fully-homomorphic encryption scheme).
     BatchSize: 4096
-    ScalingBits: 52
+    ScalingFactorBits: 52
   GlobalModelConfig:
     AggregationRule:
       Name: "PWA" # Others are FedAvg, FedStride, FedRec, PWA

@@ -8,8 +8,8 @@
 #include <vector>
 
 namespace proto {
-
 namespace {
+
 template<typename T>
 inline std::vector<T> DeserializeTensor(const metisfl::TensorSpec &tensor_spec) {
   const auto tensor_bytes = tensor_spec.value().c_str();

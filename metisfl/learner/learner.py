@@ -36,7 +36,7 @@ class Learner(object):
     def __init__(self,
                  learner_server_entity: metis_pb2.ServerEntity,
                  controller_server_entity: metis_pb2.ServerEntity,
-                 he_scheme: metis_pb2.HEScheme,
+                 he_scheme_config_pb: metis_pb2.HESchemeConfig,
                  nn_engine, model_dir,
                  train_dataset_fp, train_dataset_recipe_pkl,
                  validation_dataset_fp="", validation_dataset_recipe_pkl="",
@@ -45,7 +45,7 @@ class Learner(object):
                  learner_credentials_fp="/tmp/metis/learner/"):
         self.learner_server_entity = learner_server_entity
         self._controller_server_entity = controller_server_entity
-        self._he_scheme = he_scheme
+        self._he_scheme_config_pb = he_scheme_config_pb
         self._nn_engine = nn_engine
         self._model_dir = model_dir
 
@@ -214,26 +214,34 @@ class Learner(object):
     def _model_ops_factory_keras(self, *args, **kwargs):
         from metisfl.models.keras.keras_model_ops import KerasModelOps
         he_scheme = None
-        if self._he_scheme.enabled:
-            if self._he_scheme.HasField("fhe_scheme"):
+        if self._he_scheme_config_pb.enabled:
+            if self._he_scheme_config_pb.HasField("ckks_scheme_config"):
                 he_scheme = fhe.CKKS(
-                    self._he_scheme.fhe_scheme.batch_size,
-                    self._he_scheme.fhe_scheme.scaling_bits,
-                    "resources/fheparams/cryptoparams/")
-                he_scheme.load_crypto_params()
+                    self._he_scheme_config_pb.ckks_scheme_config.batch_size,
+                    self._he_scheme_config_pb.ckks_scheme_config.scaling_factor_bits)
+                he_scheme.load_crypto_context_from_file(
+                    self._he_scheme_config_pb.crypto_context_file)
+                he_scheme.load_public_key_from_file(
+                    self._he_scheme_config_pb.public_key_file)
+                he_scheme.load_private_key_from_file(
+                    self._he_scheme_config_pb.private_key_file)
         model_ops = KerasModelOps(model_dir=self._model_dir, he_scheme=he_scheme, *args, **kwargs)
         return model_ops
 
     def _model_ops_factory_pytorch(self, *args, **kwargs):
         from metisfl.models.pytorch.pytorch_model_ops import PyTorchModelOps
         he_scheme = None
-        if self._he_scheme.enabled:
-            if self._he_scheme.HasField("fhe_scheme"):
+        if self._he_scheme_config_pb.enabled:
+            if self._he_scheme_config_pb.HasField("ckks_scheme_config"):
                 he_scheme = fhe.CKKS(
-                    self._he_scheme.fhe_scheme.batch_size,
-                    self._he_scheme.fhe_scheme.scaling_bits,
-                    "resources/fheparams/cryptoparams/")
-                he_scheme.load_crypto_params()
+                    self._he_scheme_config_pb.ckks_scheme_config.batch_size,
+                    self._he_scheme_config_pb.ckks_scheme_config.scaling_factor_bits)
+                he_scheme.load_crypto_context_from_file(
+                    self._he_scheme_config_pb.crypto_context_file)
+                he_scheme.load_public_key_from_file(
+                    self._he_scheme_config_pb.public_key_file)
+                he_scheme.load_private_key_from_file(
+                    self._he_scheme_config_pb.private_key_file)
         model_ops = PyTorchModelOps(model_dir=self._model_dir, he_scheme=he_scheme, *args, **kwargs)
         return model_ops
 
