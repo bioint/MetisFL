@@ -69,7 +69,7 @@ http_archive(
     name = "gtest",
     sha256 = "9dc9157a9a1551ec7a7e43daea9a694a0bb5fb8bec81235d8a1e6ef64c716dcb",
     strip_prefix = "googletest-release-" + _GTEST_VERSION_,
-    urls = ["https://github.com/google/googletest/archive/release-" + _GTEST_VERSION_ + "tar.gz"],
+    urls = ["https://github.com/google/googletest/archive/release-" + _GTEST_VERSION_ + ".tar.gz"],
 )
 
 ###### GRPC

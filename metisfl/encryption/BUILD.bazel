@@ -9,9 +9,9 @@ pybind_extension(
     # also a data dependency for the py_library() rule below; therefore it needs
     # to remain UNCHANGED!
     name = "fhe",
-    srcs = ["pybind/fhe_pybind.cc"],
+    srcs = ["pybind/ckks_pybind.cc"],
     deps = [
-      "//metisfl/encryption/palisade:palisade_cmake",
+      "//metisfl/encryption/palisade:palisade_wrapper",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],

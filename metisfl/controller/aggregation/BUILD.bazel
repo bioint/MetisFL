@@ -137,7 +137,7 @@ cc_library(
     ],
     deps = [
         "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/encryption/palisade:palisade_fhe_helper",
+        "//metisfl/encryption/palisade:palisade_wrapper",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],
@@ -147,4 +147,19 @@ cc_library(
         "-O3",
         "-fopenmp",
     ]
+)
+
+cc_test(
+    name = "private_weighted_average_test",
+    srcs = [
+        "private_weighted_average_test.cc",
+    ],
+    deps = [
+        ":private_weighted_average",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:proto_matchers",
+        "//metisfl/encryption/palisade:palisade_wrapper",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ],
 )

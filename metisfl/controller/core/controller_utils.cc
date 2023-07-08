@@ -20,7 +20,7 @@ CreateAggregator(const AggregationRule &aggregation_rule) {
   } else if (aggregation_rule.has_fed_stride()) {
     return absl::make_unique<FederatedStride>();
   } else if (aggregation_rule.has_pwa()) {
-    return absl::make_unique<PWA>(aggregation_rule.pwa().he_scheme());
+    return absl::make_unique<PWA>(aggregation_rule.pwa().he_scheme_config());
   } else {
     throw std::runtime_error("Unsupported aggregation rule.");
   }

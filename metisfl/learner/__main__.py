@@ -55,18 +55,18 @@ def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
         # To do so, we need to convert the incoming hexadecimal representation
         # to bytes and pass it as initialization to the proto message object.
         he_scheme_protobuff_ser = bytes.fromhex(he_scheme_protobuff_serialized_hexadecimal)
-        he_scheme_pb = metis_pb2.HEScheme()
-        he_scheme_pb.ParseFromString(he_scheme_protobuff_ser)
+        he_scheme_config_pb = metis_pb2.HESchemeConfig()
+        he_scheme_config_pb.ParseFromString(he_scheme_protobuff_ser)
     else:
-        empty_scheme_pb = MetisProtoMessages.construct_empty_he_scheme_pb()
-        he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
-            enabled=False, empty_scheme_pb=empty_scheme_pb)
+        empty_scheme_config_pb = MetisProtoMessages.construct_empty_scheme_config_pb()
+        he_scheme_config_pb = MetisProtoMessages.construct_he_scheme_config_pb(
+            enabled=False, empty_scheme_config_pb=empty_scheme_config_pb)
 
     learner_credentials_fp = "/tmp/metis/learner_{}_credentials/".format(learner_server_entity_pb.port)
     learner = Learner(
         learner_server_entity=learner_server_entity_pb,
         controller_server_entity=controller_server_entity_pb,
-        he_scheme=he_scheme_pb,
+        he_scheme_config_pb=he_scheme_config_pb,
         nn_engine=nn_engine,
         model_dir=model_dir,
         train_dataset_fp=train_dataset_filepath,
