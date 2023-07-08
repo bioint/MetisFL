@@ -10,7 +10,7 @@ FederationEnvironment:
   FHEScheme: # fully homomorphic encryption scheme - if provided run with it, else disabled.
     Name: "ckks"
     BatchSize: 4096
-    ScalingBits: 52
+    ScalingFactorBits: 52
   GlobalModelConfig:
     AggregationFunction: "FED_AVG"
     ParticipationRatio: 1

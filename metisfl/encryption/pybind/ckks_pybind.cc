@@ -19,14 +19,14 @@ class CKKSWrapper : public CKKS {
   CKKSWrapper(uint32_t batch_size, uint32_t scaling_factor_bits)
       : CKKS(batch_size, scaling_factor_bits) {}
 
-  py::dict PyGetCryptoParamsPaths() {
-    py::dict py_dict_crypto_params_paths;
-    auto crypto_params_paths = CKKS::GetCryptoParamsPaths();
-    py_dict_crypto_params_paths["crypto_context_filepath"] = crypto_params_paths.crypto_context_filepath;
-    py_dict_crypto_params_paths["public_key_filepath"] = crypto_params_paths.public_key_filepath;
-    py_dict_crypto_params_paths["private_key_filepath"] = crypto_params_paths.private_key_filepath;
-    py_dict_crypto_params_paths["eval_mult_key_filepath"] = crypto_params_paths.eval_mult_key_filepath;
-    return py_dict_crypto_params_paths;
+  py::dict PyGetCryptoParamsFiles() {
+    py::dict py_dict_crypto_params_files;
+    auto crypto_params_files = CKKS::GetCryptoParamsFiles();
+    py_dict_crypto_params_files["crypto_context_file"] = crypto_params_files.crypto_context_file;
+    py_dict_crypto_params_files["public_key_file"] = crypto_params_files.public_key_file;
+    py_dict_crypto_params_files["private_key_file"] = crypto_params_files.private_key_file;
+    py_dict_crypto_params_files["eval_mult_key_file"] = crypto_params_files.eval_mult_key_file;
+    return py_dict_crypto_params_files;
   }
 
   py::bytes PyEncrypt(py::array_t<double> data_array) {
@@ -41,7 +41,7 @@ class CKKSWrapper : public CKKS {
                                      py::list scaling_factors) {
 
     if (learners_data.size() != scaling_factors.size()) {
-      PLOG(ERROR) << "Error: learner_data and scaling_factors size mismatch";
+      PLOG(FATAL) << "Error: learner_data and scaling_factors size need to match";
     }
 
     // Simply cast the given list of data and scaling factors to
@@ -75,7 +75,7 @@ PYBIND11_MODULE(fhe, m) {
       py::arg("batch_size"),
       py::arg("scaling_factor_bits"))
   .def("gen_crypto_context_and_keys", &CKKS::GenCryptoContextAndKeys)
-  .def("get_crypto_params_paths", &CKKSWrapper::PyGetCryptoParamsPaths)
+  .def("get_crypto_params_files", &CKKSWrapper::PyGetCryptoParamsFiles)
   .def("load_crypto_context_from_file", &CKKS::LoadCryptoContextFromFile)
   .def("load_private_key_from_file", &CKKS::LoadPrivateKeyFromFile)
   .def("load_public_key_from_file", &CKKS::LoadPublicKeyFromFile)

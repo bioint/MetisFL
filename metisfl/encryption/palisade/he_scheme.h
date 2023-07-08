@@ -28,14 +28,14 @@ class HEScheme {
   }
 
   virtual void GenCryptoContextAndKeys(std::string crypto_dir) = 0;
-  virtual void LoadCryptoContextFromFile(std::string filepath) = 0;
-  virtual void LoadPrivateKeyFromFile(std::string filepath) = 0;
-  virtual void LoadPublicKeyFromFile(std::string filepath) = 0;
-  virtual std::string Encrypt(vector<double> data_array) = 0;
-  virtual std::string ComputeWeightedAverage(vector<std::string> learners_Data,
-                                             vector<float> scalingFactors) = 0;
-  virtual vector<double> Decrypt(std::string learner_Data,
-                                 unsigned long int data_dimensions) = 0;
+  virtual void LoadCryptoContextFromFile(std::string crypto_context_key_file) = 0;
+  virtual void LoadPrivateKeyFromFile(std::string private_key_file) = 0;
+  virtual void LoadPublicKeyFromFile(std::string public_key_file) = 0;
+  virtual std::string Encrypt(std::vector<double> data_array) = 0;
+  virtual std::string ComputeWeightedAverage(std::vector<std::string> learners_Data,
+                                             std::vector<float> scalingFactors) = 0;
+  virtual std::vector<double> Decrypt(std::string learner_Data,
+                                      unsigned long int data_dimensions) = 0;
 
  private:
   std::string name;

@@ -20,13 +20,13 @@ void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
   cryptoContext->Enable(SHE);
   // cryptoContext->Enable(LEVELEDSHE);
 
-  CryptoParamsPaths crypto_params_paths;
-  crypto_params_paths.crypto_context_filepath = crypto_dir + "/cryptocontext.txt";
-  crypto_params_paths.public_key_filepath = crypto_dir + "/key-public.txt";
-  crypto_params_paths.private_key_filepath = crypto_dir + "/key-private.txt";
-  crypto_params_paths.eval_mult_key_filepath = crypto_dir + "/key-eval-mult.txt";
+  CryptoParamsFiles crypto_params_files;
+  crypto_params_files.crypto_context_file = crypto_dir + "/cryptocontext.txt";
+  crypto_params_files.public_key_file = crypto_dir + "/key-public.txt";
+  crypto_params_files.private_key_file = crypto_dir + "/key-private.txt";
+  crypto_params_files.eval_mult_key_file = crypto_dir + "/key-eval-mult.txt";
 
-  if (!Serial::SerializeToFile(crypto_params_paths.crypto_context_filepath,
+  if (!Serial::SerializeToFile(crypto_params_files.crypto_context_file,
                                cryptoContext,
                                SerType::BINARY)) {
     PLOG(FATAL) << "Error writing serialization of the crypto context";
@@ -35,13 +35,13 @@ void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
   LPKeyPair<DCRTPoly> keyPair;
   keyPair = cryptoContext->KeyGen();
 
-  if (!Serial::SerializeToFile(crypto_params_paths.public_key_filepath,
+  if (!Serial::SerializeToFile(crypto_params_files.public_key_file,
                                keyPair.publicKey,
                                SerType::BINARY)) {
     PLOG(FATAL) << "Error writing serialization of public key";
   }
 
-  if (!Serial::SerializeToFile(crypto_params_paths.private_key_filepath,
+  if (!Serial::SerializeToFile(crypto_params_files.private_key_file,
                                keyPair.secretKey,
                                SerType::BINARY)) {
     PLOG(FATAL) << "Error writing serialization of private key";
@@ -50,7 +50,7 @@ void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
   // Generate the relinearization key
   cryptoContext->EvalMultKeyGen(keyPair.secretKey);
 
-  std::ofstream emkeyfile(crypto_params_paths.eval_mult_key_filepath,
+  std::ofstream emkeyfile(crypto_params_files.eval_mult_key_file,
                           std::ios::out | std::ios::binary);
   if (emkeyfile.is_open()) {
     if (cryptoContext->SerializeEvalMultKey(emkeyfile, SerType::BINARY)
@@ -64,12 +64,12 @@ void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
     PLOG(FATAL) << "Error serializing eval mult keys";
   }
 
-  crypto_params_paths_ = crypto_params_paths;
+  crypto_params_files_ = crypto_params_files;
 
 }
 
-CryptoParamsPaths CKKS::GetCryptoParamsPaths() {
-  return crypto_params_paths_;
+CryptoParamsFiles CKKS::GetCryptoParamsFiles() {
+  return crypto_params_files_;
 }
 
 template <typename T>
@@ -81,24 +81,24 @@ void CKKS::DeserializeFromFile(std::string filepath, T &obj) {
   }
 }
 
-void CKKS::LoadCryptoContextFromFile(std::string filepath) {
-  CKKS::DeserializeFromFile<CryptoContext<DCRTPoly>>(filepath, cc);
+void CKKS::LoadCryptoContextFromFile(std::string crypto_context_file) {
+  CKKS::DeserializeFromFile<CryptoContext<DCRTPoly>>(crypto_context_file, cc);
 }
 
-void CKKS::LoadPublicKeyFromFile(std::string filepath) {
-  DeserializeFromFile<LPPublicKey<DCRTPoly>>(filepath, pk);
+void CKKS::LoadPublicKeyFromFile(std::string public_key_file) {
+  DeserializeFromFile<LPPublicKey<DCRTPoly>>(public_key_file, pk);
 }
 
-void CKKS::LoadPrivateKeyFromFile(std::string filepath) {
-  CKKS::DeserializeFromFile<LPPrivateKey<DCRTPoly>>(filepath, sk);
+void CKKS::LoadPrivateKeyFromFile(std::string private_key_file) {
+  CKKS::DeserializeFromFile<LPPrivateKey<DCRTPoly>>(private_key_file, sk);
 }
 
-void CKKS::LoadContextAndKeysFromFiles(std::string crypto_context_filepath,
-                                       std::string public_key_filepath,
-                                       std::string private_key_filepath) {
-  CKKS::LoadCryptoContextFromFile(crypto_context_filepath);
-  CKKS::LoadPublicKeyFromFile(public_key_filepath);
-  CKKS::LoadPrivateKeyFromFile(private_key_filepath);
+void CKKS::LoadContextAndKeysFromFiles(std::string crypto_context_file,
+                                       std::string public_key_file,
+                                       std::string private_key_file) {
+  CKKS::LoadCryptoContextFromFile(crypto_context_file);
+  CKKS::LoadPublicKeyFromFile(public_key_file);
+  CKKS::LoadPrivateKeyFromFile(private_key_file);
 }
 
 void CKKS::Print() {
@@ -107,7 +107,7 @@ void CKKS::Print() {
   " Scaling Factor Bits: " << scaling_factor_bits;
 }
 
-std::string CKKS::Encrypt(vector<double> data_array) {
+std::string CKKS::Encrypt(std::vector<double> data_array) {
 
   if (cc == nullptr) {
     PLOG(FATAL) << "Crypto context is not loaded.";
@@ -117,16 +117,20 @@ std::string CKKS::Encrypt(vector<double> data_array) {
     PLOG(FATAL) << "Public key is not loaded.";
   }
 
-  unsigned long int size = data_array.size();
+  unsigned long int data_size = data_array.size();
+  auto ciphertext_data_size = (data_size + batch_size) / batch_size;
+  if (data_size % batch_size == 0) {
+    ciphertext_data_size = data_size / batch_size;
+  }
   vector<Ciphertext<DCRTPoly>>
-      ciphertext_data((int) ((size + batch_size) / batch_size));
+      ciphertext_data((int) ciphertext_data_size);
 
-  if (size > (unsigned long int) batch_size) {
+  if (data_size > (unsigned long int) batch_size) {
 
 #pragma omp parallel for
-    for (unsigned long int i = 0; i < size; i += batch_size) {
+    for (unsigned long int i = 0; i < data_size; i += batch_size) {
 
-      unsigned long int last = std::min((long) size, (long) i + batch_size);
+      unsigned long int last = std::min((long) data_size, (long) i + batch_size);
       vector<double> batch;
       batch.reserve(last - i + 1);
 
@@ -141,25 +145,25 @@ std::string CKKS::Encrypt(vector<double> data_array) {
   } else {
 
     vector<double> batch;
-    batch.reserve(size);
+    batch.reserve(data_size);
 
-    for (unsigned long int i = 0; i < size; i++) {
+    for (unsigned long int i = 0; i < data_size; i++) {
       batch.push_back(data_array[i]);
     }
     Plaintext plaintext_data = cc->MakeCKKSPackedPlaintext(batch);
     ciphertext_data[0] = cc->Encrypt(pk, plaintext_data);
   }
 
-  std::stringstream s;
+  std::stringstream ss;
   const SerType::SERBINARY st;
-  Serial::Serialize(ciphertext_data, s, st);
+  Serial::Serialize(ciphertext_data, ss, st);
 
-  return s.str();
+  return ss.str();
 
 }
 
-std::string CKKS::ComputeWeightedAverage(vector<std::string> data_array,
-                                         vector<float> scaling_factors) {
+std::string CKKS::ComputeWeightedAverage(std::vector<std::string> data_array,
+                                         std::vector<float> scaling_factors) {
 
   if (cc == nullptr) {
     PLOG(FATAL) << "Crypto context is not loaded.";
@@ -229,7 +233,6 @@ vector<double> CKKS::Decrypt(std::string data,
     int length;
 
     if (i == data_ciphertext.size() - 1) {
-
       length = data_dimensions - (i) * batch_size;
     } else {
       length = batch_size;

@@ -9,16 +9,12 @@ namespace metisfl::controller {
 
 PWA::PWA(const HESchemeConfig &he_scheme_config) {
   he_scheme_config_ = he_scheme_config;
-  if (he_scheme_config_.has_fhe_scheme_config()) {
-    if (he_scheme_config_.name() == "ckks" ||
-        he_scheme_config_.name() == "CKKS") {
-      he_scheme_ = CKKS(
-          he_scheme_config_.fhe_scheme_config().batch_size(),
-          he_scheme_config_.fhe_scheme_config().scaling_bits());
-      he_scheme_.LoadCryptoContextFromFile("");
-    } else {
-      throw std::runtime_error("Unsupported homomorphic encryption scheme.");
-    }
+  if (he_scheme_config_.has_ckks_scheme_config()) {
+      he_scheme_.reset(new CKKS(
+          he_scheme_config_.ckks_scheme_config().batch_size(),
+          he_scheme_config_.ckks_scheme_config().scaling_factor_bits()));
+      auto crypto_context_file = he_scheme_config.crypto_context_file();
+      he_scheme_->LoadCryptoContextFromFile(crypto_context_file);
   } else {
       throw std::runtime_error("Unsupported homomorphic encryption scheme.");
   }
@@ -73,7 +69,7 @@ PWA::Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs)
     // ComputeWeightedAverage assumes that each learner's contribution value,
     // scaling factor is already normalized / scaled.
     std::string pwa_result =
-        he_scheme_.ComputeWeightedAverage(local_variable_ciphertexts, local_models_contrib_value);
+        he_scheme_->ComputeWeightedAverage(local_variable_ciphertexts, local_models_contrib_value);
     *global_model.mutable_model()->mutable_variables(var_idx)->
         mutable_ciphertext_tensor()->mutable_tensor_spec()->mutable_value() =
         pwa_result;

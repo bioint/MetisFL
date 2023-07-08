@@ -35,7 +35,7 @@ class ModelOps(object):
                 # into a numpy array with the data type specified in the tensor specifications.
                 tensor_spec = var.ciphertext_tensor.tensor_spec
                 tensor_length = tensor_spec.length
-                decoded_value = self._he_scheme.decrypt(tensor_spec.value, tensor_length, 1)
+                decoded_value = self._he_scheme.decrypt(tensor_spec.value, tensor_length)
                 # Since the tensor is decoded we just need to recreate the numpy array
                 # to its original data type and shape.
                 np_array = \

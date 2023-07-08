@@ -23,7 +23,7 @@ class HomomorphicEncryption(object):
         self.scheme = homomorphic_encryption_map.get("Scheme")
         if self.scheme.upper() == "CKKS":
             self.batch_size = homomorphic_encryption_map.get("BatchSize")
-            self.scaling_bits = homomorphic_encryption_map.get("ScalingBits")
+            self.scaling_factor_bits = homomorphic_encryption_map.get("ScalingFactorBits")
 
 
 class CommunicationProtocol(object):
@@ -203,8 +203,8 @@ class Learner(RemoteHost):
 
 class SSLConfigs(object):
     def __init__(self, ssl_config_map):
-        self.public_certificate_filepath = ssl_config_map.get("PublicCertificate", None)
-        self.private_key_filepath = ssl_config_map.get("PrivateKey", None)
+        self.public_certificate_file = ssl_config_map.get("PublicCertificate", None)
+        self.private_key_file = ssl_config_map.get("PrivateKey", None)
 
 
 class ConnectionConfigsBase(object):

@@ -6,7 +6,7 @@
 
 #include "ckks_scheme.h"
 
-void generateRandomData(vector<double> &learner_Data, int rows, bool ceil_numbers = false) {
+void generateRandomData(std::vector<double> &learner_Data, int rows, bool ceil_numbers = false) {
 
   double lower_bound = 0;
   double upper_bound = 100;
@@ -46,11 +46,11 @@ int main() {
   // Whenever we change the `batchsize` and the `scalingfactorbits`
   // params we always need to invoke the GenCryptoContextAndKeys() function.
   ckks.GenCryptoContextAndKeys(cryptodir);
-  auto crypto_params_paths = ckks.GetCryptoParamsPaths();
-  PLOG(INFO) << crypto_params_paths.crypto_context_filepath;
-  ckks.LoadCryptoContextFromFile(crypto_params_paths.crypto_context_filepath);
-  ckks.LoadPublicKeyFromFile(crypto_params_paths.public_key_filepath);
-  ckks.LoadPrivateKeyFromFile(crypto_params_paths.private_key_filepath);
+  auto crypto_params_files = ckks.GetCryptoParamsFiles();
+  PLOG(INFO) << crypto_params_files.crypto_context_file;
+  ckks.LoadCryptoContextFromFile(crypto_params_files.crypto_context_file);
+  ckks.LoadPublicKeyFromFile(crypto_params_files.public_key_file);
+  ckks.LoadPrivateKeyFromFile(crypto_params_files.private_key_file);
 
   //generating random data for testing.
   vector<double> learner_Data;

@@ -148,3 +148,18 @@ cc_library(
         "-fopenmp",
     ]
 )
+
+cc_test(
+    name = "private_weighted_average_test",
+    srcs = [
+        "private_weighted_average_test.cc",
+    ],
+    deps = [
+        ":private_weighted_average",
+        "//metisfl/controller/common:macros",
+        "//metisfl/controller/common:proto_matchers",
+        "//metisfl/encryption/palisade:palisade_wrapper",
+        "@gtest//:gtest",
+        "@gtest//:gtest_main",
+    ],
+)

@@ -38,7 +38,7 @@ def init_controller(controller_server_entity_protobuff_serialized_hexadecimal,
             rule_name="FEDAVG",
             scaling_factor="NUMTRAININGEXAMPLES",
             stride_length=None,
-            he_scheme_pb=None)
+            he_scheme_config_pb=None)
         global_model_specs_pb = MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=1)
