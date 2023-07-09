@@ -18,7 +18,8 @@ def parse_server_hex(hex_str, default_host, default_port):
     else:
         server_entity_pb = MetisProtoMessages.construct_server_entity_pb(
             hostname=default_host, port=default_port)
-    return server_entity_pb       
+    return server_entity_pb
+
 
 def parse_he_scheme_hex(hex_str):
     if hex_str is not None:
@@ -26,25 +27,32 @@ def parse_he_scheme_hex(hex_str):
         he_scheme_pb_ser = bytes.fromhex(hex_str)
         he_scheme_pb.ParseFromString(he_scheme_pb_ser)
     else:
-        empty_scheme_pb = MetisProtoMessages.construct_empty_he_scheme_pb()
-        he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
-            enabled=False, empty_scheme_pb=empty_scheme_pb)
+        empty_scheme_pb = metis_pb2.EmptyHEScheme()
+        he_scheme_pb = metis_pb2.HEScheme(enabled=False,
+                                          name=None,
+                                          public_key=None,
+                                          private_key=None,
+                                          empty_he_scheme=empty_scheme_pb)
     return he_scheme_pb
+
 
 def create_servers(args):
     learner_server_entity_pb = parse_server_hex(
         args.learner_server_entity_protobuff_serialized_hexadecimal,
-         config.DEFAULT_LEARNER_HOST, config.DEFAULT_LEARNER_PORT)
+        config.DEFAULT_LEARNER_HOST, config.DEFAULT_LEARNER_PORT)
     controller_server_entity_pb = parse_server_hex(
         args.controller_server_entity_protobuff_serialized_hexadecimal,
         config.DEFAULT_CONTROLLER_HOSTNAME, config.DEFAULT_CONTROLLER_PORT)
-    return learner_server_entity_pb,controller_server_entity_pb
+    return learner_server_entity_pb, controller_server_entity_pb
+
 
 def init_learner(args):
-    learner_server_entity_pb, controller_server_entity_pb = create_servers(args)
-    he_scheme_pb = parse_he_scheme_hex(args.he_scheme_protobuff_serialized_hexadecimal)
+    learner_server_entity_pb, controller_server_entity_pb = create_servers(
+        args)
+    he_scheme_pb = parse_he_scheme_hex(
+        args.he_scheme_protobuff_serialized_hexadecimal)
     model_ops_fn = get_model_ops_fn(args.neural_engine)
-    
+
     learner_dataset = LearnerDataset(
         train_dataset_fp=args.train_dataset,
         validation_dataset_fp=args.validation_dataset,
@@ -54,13 +62,13 @@ def init_learner(args):
         test_dataset_recipe_pkl=args.test_dataset_recipe,
     )
     task_executor = TaskExecutor(
-        he_scheme_pb=he_scheme_pb, 
+        he_scheme_pb=he_scheme_pb,
         learner_dataset=learner_dataset,
         learner_server_entity_pb=learner_server_entity_pb,
         model_dir=args.model_dir,
         model_ops_fn=model_ops_fn,
-    )          
-    learner_executor = LearnerExecutor(task_executor=task_executor)    
+    )
+    learner_executor = LearnerExecutor(task_executor=task_executor)
     learner_servicer = LearnerServicer(
         controller_server_entity_pb=controller_server_entity_pb,
         dataset_metadata=learner_dataset.get_dataset_metadata(),
@@ -68,11 +76,10 @@ def init_learner(args):
         learner_server_entity_pb=learner_server_entity_pb,
         servicer_workers=5
     )
-    
+
     # First, initialize learner servicer for receiving train/evaluate/inference tasks.
     learner_servicer.init_servicer()
-    
+
     # Second, block the servicer till a shutdown request is issued and no more requests are received.
     # @stripeli: moved this to init_servicer() method
     # learner_servicer.wait_servicer()
-

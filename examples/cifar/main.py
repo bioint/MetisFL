@@ -11,6 +11,7 @@ from metisfl.models.keras.wrapper import MetisKerasModel
 from metisfl.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 if __name__ == "__main__":
 
@@ -39,13 +40,14 @@ if __name__ == "__main__":
     # Replicate the test dataset for each learner; all learners use the same test dataset
     test_dataset_fps = [test_dataset_fp for _ in range(num_learners)]
 
-    # Get the tf.keras model
-    model = get_model()
+    # Get params from the environment yaml file
+    optimizer_config = federation_environment.local_model_config.optimizer_config
+    metric = federation_environment.evaluation_metric
+    
+    # Get the model
+    nn_model = get_model(metrics=[metric], optimizer_config=optimizer_config)
 
-    optimizer_name = federation_environment.local_model_config.optimizer_config.optimizer_name
-    nn_model = get_model(metrics=["accuracy"], optimizer_name=optimizer_name)
-
-    # Wrap the tf.keras model
+    # Wrap it with MetisKerasModel
     model = MetisKerasModel(nn_model)
 
     # Create the driver session
@@ -57,9 +59,14 @@ if __name__ == "__main__":
                                    validation_dataset_recipe_fn=dataset_recipe_fn,
                                    train_dataset_recipe_fn=dataset_recipe_fn,
                                    test_dataset_recipe_fn=dataset_recipe_fn)
+    
+    # Run the driver session
     driver_session.run()
+    
+    # Get the statistics
     statistics = driver_session.get_federation_statistics()
 
+    # Save the statistics
     with open(os.path.join(script_cwd, "experiment.json"), "w+") as fout:
         print("Execution File Output Path:", fout.name, flush=True)
         json.dump(statistics, fout, indent=4)

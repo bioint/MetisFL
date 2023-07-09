@@ -2,47 +2,25 @@
 from metisfl.encryption import fhe
 from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.proto import metis_pb2, model_pb2
-from metisfl.utils.proto_messages_factory import ModelProtoMessages, MetisProtoMessages
+from metisfl.utils.proto_messages_factory import ModelProtoMessages
 
-# FIXME: this can go in the yaml file.
-CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
-
+CRYPTO_RESOURCES_DIR = "/home/panoskyriakis/metisfl/metisfl/resources/fheparams/cryptoparams/"
 
 class HomomorphicEncryption(object):
 
-    def __init__(self, homomorphic_encryption_map):
-        self.scheme = homomorphic_encryption_map.get("Scheme", None)
-        if self.scheme and self.scheme.upper() == "CKKS":
-            self.batch_size = homomorphic_encryption_map.get("BatchSize")
-            self.scaling_bits = homomorphic_encryption_map.get("ScalingBits")
-            self._he_scheme = fhe.CKKS(
-                self.batch_size, self.scaling_bits, CRYPTO_RESOURCES_DIR)
-            self._he_scheme.load_crypto_params()
-            fhe_scheme_pb = MetisProtoMessages.construct_fhe_scheme_pb(
-                batch_size=self.batch_size, scaling_bits=self.scaling_bits)
-            self._he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
-                enabled=True, name="CKKS", fhe_scheme_pb=fhe_scheme_pb)
-        else:
-            empty_scheme_pb = MetisProtoMessages.construct_empty_he_scheme_pb()
-            self._he_scheme = None
-            self._he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
-                enabled=False, empty_scheme_pb=empty_scheme_pb)
-
-    @staticmethod
-    def from_proto(he_scheme_pb: metis_pb2.HEScheme):
-        # FIXME(@stripeli): do we really need this check?
-        # assert isinstance(he_scheme_pb, model_pb2.HEScheme), "Not a valid HE scheme protobuf."
+    def __init__(self, he_scheme_pb: metis_pb2.HEScheme):
+        assert isinstance(
+            he_scheme_pb, metis_pb2.HEScheme), "Not a valid HE scheme protobuf."
+        
         if he_scheme_pb and he_scheme_pb.HasField("fhe_scheme"):
-            he_map = {
-                "Scheme": "CKKS",
-                "BatchSize": he_scheme_pb.fhe_scheme.batch_size,
-                "ScalingBits": he_scheme_pb.fhe_scheme.scaling_bits
-            }
-            return HomomorphicEncryption(he_map)
-        else:
-            return HomomorphicEncryption({})
+            self._he_scheme = fhe.CKKS(
+                he_scheme_pb.fhe_scheme.batch_size,
+                he_scheme_pb.fhe_scheme.scaling_bits,
+                CRYPTO_RESOURCES_DIR)
+            self._he_scheme.load_crypto_params()
 
-    def decrypt_pb_weights(self, variables: list[model_pb2.Model.Variable]) -> ModelWeightsDescriptor:
+    def decrypt_pb_weights(self,
+                           variables: list[model_pb2.Model.Variable]) -> ModelWeightsDescriptor:
         assert all([isinstance(var, model_pb2.Model.Variable)
                    for var in variables])
         var_names, var_trainables, var_nps = list(), list(), list()
@@ -107,6 +85,3 @@ class HomomorphicEncryption(object):
                                                                        tensor_pb=tensor_pb)
             variables_pb.append(model_var)
         return variables_pb
-
-    def to_proto(self):
-        return self._he_scheme_pb

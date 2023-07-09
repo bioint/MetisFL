@@ -1,9 +1,7 @@
 from metisfl.grpc.grpc_services import GRPCClient
-from metisfl.proto import controller_pb2_grpc
+from metisfl.proto import controller_pb2, service_common_pb2
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.proto_messages_factory import (
-    ControllerServiceProtoMessages, ModelProtoMessages,
-    ServiceCommonProtoMessages)
+from metisfl.utils.proto_messages_factory import ModelProtoMessages
 
 
 # FIXME: @stripeli - logic here implies that requests go through without errors
@@ -17,10 +15,10 @@ class GRPCControllerClient(GRPCClient):
 
     def check_health_status(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            get_services_health_status_request_pb = ServiceCommonProtoMessages \
-                                                    .construct_get_services_health_status_request_pb()
+            get_services_health_status_request_pb = service_common_pb2.GetServicesHealthStatusRequest()
             MetisLogger.info("Requesting controller's health status.")
-            response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
+            response = self._stub.GetServicesHealthStatus(
+                get_services_health_status_request_pb, timeout=_timeout)
             MetisLogger.info("Received controller's health status, {} - {}".format(
                 self.grpc_endpoint.listening_endpoint, response))
             return response
@@ -28,9 +26,8 @@ class GRPCControllerClient(GRPCClient):
 
     def get_community_model_evaluation_lineage(self, num_backtracks, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            request_pb = \
-                ControllerServiceProtoMessages\
-                .construct_get_community_model_evaluation_lineage_request_pb(num_backtracks)
+            request_pb = controller_pb2.GetCommunityModelEvaluationLineageRequest(
+                num_backtracks=num_backtracks)
             MetisLogger.info(
                 "Requesting community model evaluation lineage for {} backtracks.".format(num_backtracks))
             response = self._stub.GetCommunityModelEvaluationLineage(
@@ -41,10 +38,8 @@ class GRPCControllerClient(GRPCClient):
 
     def get_local_task_lineage(self, num_backtracks, learner_ids, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            request_pb = \
-                ControllerServiceProtoMessages \
-                .construct_get_local_task_lineage_request_pb(num_backtracks=num_backtracks,
-                                                             learner_ids=learner_ids)
+            request_pb = controller_pb2.GetLocalTaskLineageRequest(num_backtracks=num_backtracks,
+                                                                   learner_ids=learner_ids)
             MetisLogger.info(
                 "Requesting local model evaluation lineage for {} backtracks.".format(num_backtracks))
             response = self._stub.GetLocalTaskLineage(
@@ -55,7 +50,7 @@ class GRPCControllerClient(GRPCClient):
 
     def get_participating_learners(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            request_pb = ControllerServiceProtoMessages.construct_get_participating_learners_request_pb()
+            request_pb = controller_pb2.GetParticipatingLearnersRequest()
             MetisLogger.info("Requesting number of participating learners.")
             response = self._stub.GetParticipatingLearners(
                 request_pb, timeout=_timeout)
@@ -65,8 +60,7 @@ class GRPCControllerClient(GRPCClient):
 
     def get_runtime_metadata(self, num_backtracks, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            request_pb = ControllerServiceProtoMessages\
-                .construct_get_runtime_metadata_lineage_request_pb(num_backtracks=num_backtracks)
+            request_pb = controller_pb2.GetRuntimeMetadataLineageRequest(num_backtracks=num_backtracks)
             MetisLogger.info("Requesting runtime metadata lineage.")
             response = self._stub.GetRuntimeMetadataLineage(
                 request_pb, timeout=_timeout)
@@ -78,8 +72,7 @@ class GRPCControllerClient(GRPCClient):
         def _request(_timeout=None):
             federated_model_pb = ModelProtoMessages.construct_federated_model_pb(
                 num_contributors, model_pb)
-            request_pb = ControllerServiceProtoMessages \
-                .construct_replace_community_model_request_pb(federated_model_pb)
+            request_pb = controller_pb2.ReplaceCommunityModelRequest(model=federated_model_pb)
             MetisLogger.info("Replacing controller's community model.")
             response = self._stub.ReplaceCommunityModel(
                 request_pb, timeout=_timeout)
@@ -89,7 +82,7 @@ class GRPCControllerClient(GRPCClient):
 
     def shutdown_controller(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            request_pb = ServiceCommonProtoMessages.construct_shutdown_request_pb()
+            request_pb = service_common_pb2.ShutDownRequest()
             MetisLogger.info("Sending shutdown request to controller {}.".format(
                 self.grpc_endpoint.listening_endpoint))
             response = self._stub.ShutDown(request_pb, timeout=_timeout)

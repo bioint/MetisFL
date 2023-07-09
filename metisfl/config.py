@@ -44,6 +44,8 @@ CANCEL_RUNNING_ON_SHUTDOWN = {
     INFERENCE_TASK: False
 }
 
+CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
+
 def get_project_home() -> str:
     path = os.path.join(Path.home(), METIS_HOME_FOLDER)
     return _get_path_safe(path)
@@ -72,6 +74,10 @@ def get_learner_id_fp(learner_id):
     learner_id_fp = get_learner_path(learner_id)
     _get_path_safe(learner_id_fp)
     return os.path.join(learner_id_fp, LEARNER_ID_FILE)
+
+def get_crypto_resources_dir():
+    path = get_project_home()
+    # FIXME: finish this; must generate the crypto resources on first call
 
 def get_auth_token_fp(learner_id):
     learnet_token_path = get_learner_path(learner_id)

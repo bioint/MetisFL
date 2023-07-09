@@ -1,6 +1,7 @@
 import argparse
 import signal
 import time
+from metisfl.proto import model_pb2
 
 import metisfl.proto.metis_pb2 as metis_pb2
 
@@ -17,8 +18,10 @@ def init_controller(args):
 
     if args.controller_server_entity_protobuff_serialized_hexadecimal is not None:
         controller_server_entity_pb = metis_pb2.ServerEntity()
-        controller_server_entity_pb_ser = bytes.fromhex(args.controller_server_entity_protobuff_serialized_hexadecimal)
-        controller_server_entity_pb.ParseFromString(controller_server_entity_pb_ser)
+        controller_server_entity_pb_ser = bytes.fromhex(
+            args.controller_server_entity_protobuff_serialized_hexadecimal)
+        controller_server_entity_pb.ParseFromString(
+            controller_server_entity_pb_ser)
     else:
         controller_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(
             hostname="[::]", port=50051)
@@ -26,7 +29,8 @@ def init_controller(args):
     # Parse serialized model hyperparameters object, 'recover' bytes object.
     # Use parsed protobuff to initialize Metis.CommunicationSpecs() object.
     if args.global_model_specs_protobuff_serialized_hexadecimal is not None:
-        global_model_specs_protobuff_ser = bytes.fromhex(args.global_model_specs_protobuff_serialized_hexadecimal)
+        global_model_specs_protobuff_ser = bytes.fromhex(
+            args.global_model_specs_protobuff_serialized_hexadecimal)
         global_model_specs_pb = metis_pb2.GlobalModelSpecs()
         global_model_specs_pb.ParseFromString(global_model_specs_protobuff_ser)
     else:
@@ -41,9 +45,11 @@ def init_controller(args):
 
     # Use parsed protobuff to initialize Metis.CommunicationSpecs() object.
     if args.communication_specs_protobuff_serialized_hexadecimal is not None:
-        communication_specs_protobuff_ser = bytes.fromhex(args.communication_specs_protobuff_serialized_hexadecimal)
+        communication_specs_protobuff_ser = bytes.fromhex(
+            args.communication_specs_protobuff_serialized_hexadecimal)
         communication_specs_pb = metis_pb2.CommunicationSpecs()
-        communication_specs_pb.ParseFromString(communication_specs_protobuff_ser)
+        communication_specs_pb.ParseFromString(
+            communication_specs_protobuff_ser)
     else:
         communication_specs_pb = MetisProtoMessages.construct_communication_specs_pb(
             protocol="SYNCHRONOUS",
@@ -52,18 +58,20 @@ def init_controller(args):
 
     # Use parsed protobuff to initialize ControllerParams.ModelHyperparams() object.
     if args.model_hyperparameters_protobuff_serialized_hexadecimal is not None:
-        model_hyperparameters_protobuff_ser = bytes.fromhex(args.model_hyperparameters_protobuff_serialized_hexadecimal)
+        model_hyperparameters_protobuff_ser = bytes.fromhex(
+            args.model_hyperparameters_protobuff_serialized_hexadecimal)
         model_hyperparams_pb = metis_pb2.ControllerParams.ModelHyperparams()
-        model_hyperparams_pb.ParseFromString(model_hyperparameters_protobuff_ser)
+        model_hyperparams_pb.ParseFromString(
+            model_hyperparameters_protobuff_ser)
     else:
-        model_hyperparams_pb = MetisProtoMessages.construct_controller_modelhyperparams_pb(
+        model_hyperparams_pb = metis_pb2.ControllerParams.ModelHyperparams(
             batch_size=100, epochs=5, percent_validation=0.0,
-            optimizer_pb=ModelProtoMessages.construct_optimizer_config_pb(
-                ModelProtoMessages.construct_vanilla_sgd_optimizer_pb(learning_rate=0.01)))
+            optimizer_pb=model_pb2.VanillaSGD(learning_rate=0.01, L1_reg=0.0, L2_reg=0.0))
 
     # Use parsed protobuff to initialize Metis.ModelStoreConfig() object.
     if args.model_store_config_protobuff_serialized_hexadecimal is not None:
-        model_store_config_protobuff_ser = bytes.fromhex(args.model_store_config_protobuff_serialized_hexadecimal)
+        model_store_config_protobuff_ser = bytes.fromhex(
+            args.model_store_config_protobuff_serialized_hexadecimal)
         model_store_config_pb = metis_pb2.ModelStoreConfig()
         model_store_config_pb.ParseFromString(model_store_config_protobuff_ser)
     else:
@@ -72,14 +80,14 @@ def init_controller(args):
             name="InMemory",
             eviction_policy="NoEviction")
 
-    controller_params_pb = MetisProtoMessages.construct_controller_params_pb(
-        controller_server_entity_pb,
-        global_model_specs_pb,
-        communication_specs_pb,
-        model_store_config_pb,
-        model_hyperparams_pb)
+    controller_params_pb = metis_pb2.ControllerParams(server_entity=controller_server_entity_pb,
+                                                      global_model_specs=global_model_specs_pb,
+                                                      communication_specs=communication_specs_pb,
+                                                      model_store_config=model_store_config_pb,
+                                                      model_hyperparams=model_hyperparams_pb)
 
-    MetisLogger.info("Controller Parameters: \"\"\"{}\"\"\"".format(controller_params_pb))
+    MetisLogger.info(
+        "Controller Parameters: \"\"\"{}\"\"\"".format(controller_params_pb))
 
     controller_instance = ControllerInstance()
     controller_instance.start(controller_params_pb)

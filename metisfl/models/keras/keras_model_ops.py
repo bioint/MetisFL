@@ -19,20 +19,6 @@ class KerasModelOps(ModelOps):
         self._set_gpu_memory_growth()
         self._metis_model = MetisKerasModel.load(model_dir)
 
-    def _set_gpu_memory_growth(self):
-        gpus = tf.config.list_physical_devices('GPU')
-        if gpus:
-            try:
-                # Currently, memory growth needs to be the same across GPUs
-                for gpu in gpus:
-                    tf.config.experimental.set_memory_growth(gpu, True)
-                logical_gpus = tf.config.list_logical_devices('GPU')
-                MetisLogger.info("Physical GPUs: {}, Logical GPUs: {}".format(
-                    len(gpus), len(logical_gpus)))
-            except RuntimeError as e:
-                # Memory growth must be set before GPUs have been initialized.
-                MetisLogger.error(e)
-
     def train_model(self,
                     train_dataset: ModelDataset,
                     learning_task_pb: metis_pb2.LearningTask,
@@ -67,11 +53,7 @@ class KerasModelOps(ModelOps):
         validation_data = (x_valid, y_valid) \
             if x_valid is not None and y_valid is not None else x_valid
 
-        # TODO Compile model with new optimizer if need to.
-        self._construct_optimizer(hyperparameters_pb.optimizer)
-
-        # Keras does not accept halfway/floating epochs number,
-        # hence the ceiling & integer conversion.
+        # Keras does not accept halfway/floating epochs number
         history_res = self._metis_model._backend_model.fit(x=x_train,
                                                            y=y_train,
                                                            batch_size=batch_size,
@@ -97,6 +79,7 @@ class KerasModelOps(ModelOps):
         # Replacing "val" so that metric keys are the same for both training and validation datasets.
         validation_res = {k.replace("val_", ""): k_v for k, k_v in sorted(
             history_res.history.items()) if 'val_' in k}
+        
         model_weights_descriptor = self._metis_model.get_weights_descriptor()
         learning_task_stats = LearningTaskStats(
             train_stats=training_res,
@@ -121,12 +104,12 @@ class KerasModelOps(ModelOps):
         if eval_dataset is None:
             raise RuntimeError("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
-        x_eval, y_eval = eval_dataset.construct_dataset_pipeline(
-            batch_size=batch_size, is_train=False)
+        x_eval, y_eval = eval_dataset.construct_dataset_pipeline(batch_size=batch_size, is_train=False)
         evaluation_metrics = self._metis_model._backend_model.evaluate(x=x_eval,
                                                                        y=y_eval,
                                                                        batch_size=batch_size,
-                                                                       verbose=verbose, return_dict=True)
+                                                                       verbose=verbose, 
+                                                                       return_dict=True)
         MetisLogger.info("Model evaluation is complete.")
         return evaluation_metrics
 
@@ -143,6 +126,19 @@ class KerasModelOps(ModelOps):
         MetisLogger.info("Model inference is complete.")
         return predictions
 
+    def _set_gpu_memory_growth(self):
+        gpus = tf.config.list_physical_devices('GPU')
+        if gpus:
+            try:
+                # Currently, memory growth needs to be the same across GPUs
+                for gpu in gpus:
+                    tf.config.experimental.set_memory_growth(gpu, True)
+                logical_gpus = tf.config.list_logical_devices('GPU')
+                MetisLogger.info("Physical GPUs: {}, Logical GPUs: {}".format(
+                    len(gpus), len(logical_gpus)))
+            except RuntimeError as e:
+                MetisLogger.error(e)
+
     def _construct_optimizer(self, optimizer_config_pb: model_pb2.OptimizerConfig):
         if optimizer_config_pb is None:
             raise RuntimeError(
@@ -156,15 +152,14 @@ class KerasModelOps(ModelOps):
         }
         for optim, fun in optim_fun.items():
             if optimizer_config_pb.HasField(optim):
-                fun(optimizer_config_pb)
-                return
+                return fun(optimizer_config_pb)
+
         raise RuntimeError(
             "TrainingHyperparameters proto message refers to a non-supported optimizer.")
 
     def _construst_vanila_sgd(self, optimizer_config_pb: model_pb2.OptimizerConfig):
         learning_rate = optimizer_config_pb.vanilla_sgd.learning_rate
-        self._metis_model._backend_model.optimizer.learning_rate.assign(
-            learning_rate)
+        return tf.keras.optimizers.SGD(learning_rate=learning_rate)
 
     def _construct_momentum_sgd(self, optimizer_config_pb: model_pb2.OptimizerConfig):
         learning_rate = optimizer_config_pb.momentum_sgd.learning_rate

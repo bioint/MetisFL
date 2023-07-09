@@ -1,15 +1,17 @@
 
-from metisfl.utils import fedenv_parser
+from metisfl.proto import metis_pb2
+from metisfl.utils.fedenv import RemoteHost
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 from metisfl.utils.ssl_configurator import SSLConfigurator
 
 
 def create_server_entity(enable_ssl: bool,
-                          remote_host_instance: fedenv_parser.RemoteHost,
-                          initialization_entity=False,
-                          connection_entity=False):
+                         remote_host_instance: RemoteHost,
+                         initialization_entity=False,
+                         connection_entity=False):
     if initialization_entity is False and connection_entity is False:
-        raise RuntimeError("One field of Initialization or connection entity needs to be provided.")
+        raise RuntimeError(
+            "One field of Initialization or connection entity needs to be provided.")
 
     # By default ssl is disabled.
     ssl_config_pb = None
@@ -35,27 +37,22 @@ def create_server_entity(enable_ssl: bool,
             private_key = None
 
         if wrap_as_stream:
-            ssl_config_bundle_pb = \
-                MetisProtoMessages.construct_ssl_config_stream_pb(
-                    public_certificate_stream=public_cert,
-                    private_key_stream=private_key)
+            ssl_config_bundle_pb = metis_pb2.SSLConfigStream(
+                public_certificate_stream=public_cert,
+                private_key_stream=private_key)
         else:
-            ssl_config_bundle_pb = \
-                MetisProtoMessages.construct_ssl_config_files_pb(
+            ssl_config_bundle_pb = metis_pb2.SSLConfigFiles(
                     public_certificate_file=public_cert,
                     private_key_file=private_key)
 
-        ssl_config_pb = \
-            MetisProtoMessages.construct_ssl_config_pb(
-                enable_ssl=True,
-                config_pb=ssl_config_bundle_pb)
+        ssl_config_pb = metis_pb2.SSLConfig(enable_ssl=True, ssl_config_stream=ssl_config_bundle_pb)
 
     # The server entity encapsulates the GRPC servicer to which remote host will
     # spaw its grpc server and listen for incoming requests. It does not refer
     # to the connection configurations used to connect to the remote host.
     server_entity_pb = \
         MetisProtoMessages.construct_server_entity_pb(
-            hostname=remote_host_instance.grpc_servicer.hostname,
-            port=remote_host_instance.grpc_servicer.port,
+            hostname=remote_host_instance.grpc_hostname,
+            port=remote_host_instance.grpc_port,
             ssl_config_pb=ssl_config_pb)
     return server_entity_pb

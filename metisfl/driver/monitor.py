@@ -3,7 +3,7 @@ import time
 
 from google.protobuf.json_format import MessageToDict
 
-from metisfl.utils.fedenv_parser import FederationEnvironment
+from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.metis_logger import MetisLogger
 
 from .controller_client import GRPCControllerClient
@@ -16,10 +16,10 @@ class FederationMonitor:
                  driver_controller_grpc_client: GRPCControllerClient):
         self._driver_controller_grpc_client = driver_controller_grpc_client
         self._federation_environment = federation_environment
-        self._federation_rounds_cutoff = self._federation_environment.termination_signals.federation_rounds
+        self._federation_rounds_cutoff = self._federation_environment.federation_rounds
         self._communication_protocol = self._federation_environment.communication_protocol
-        self._execution_time_cutoff_mins = self._federation_environment.termination_signals.execution_time_cutoff_mins
-        self._check_evaluation_scoremetric_cutoff_score = self._federation_environment.termination_signals.metric_cutoff_score
+        self._execution_time_cutoff_mins = self._federation_environment.execution_time_cutoff_mins
+        self._metric_cutoff_score = self._federation_environment.metric_cutoff_score
         self._evaluation_metric = self._federation_environment.evaluation_metric
         self._federation_statistics = dict()
 
@@ -32,27 +32,31 @@ class FederationMonitor:
     def _monitor_termination_signals(self, request_every_secs=10):
         # measuring elapsed wall-clock time
         st = datetime.datetime.now()
-        signal_not_reached = True
-        while signal_not_reached:
+        terminate = False
+        while not terminate:
             # ping controller for latest execution stats
             time.sleep(request_every_secs)
 
-            signal_not_reached = self._check_federation_rounds() and \
-                                 self._check_evaluation_score() and \
-                                 self._check_execution_time(st)
+            terminate = self._reached_federation_rounds() or \
+                        self._reached_evaluation_score() or \
+                        self._reached_execution_time(st)
+            
 
-    def _check_federation_rounds(self) -> bool:
+    def _reached_federation_rounds(self) -> bool:
         metadata_pb = self._driver_controller_grpc_client \
                 .get_runtime_metadata(num_backtracks=0).metadata
-        if self._communication_protocol.is_synchronous or self._communication_protocol.is_semi_synchronous:
+        if not self._is_async():
             if self._federation_rounds_cutoff and len(metadata_pb) > 0:
                 current_global_iteration = max([m.global_iteration for m in metadata_pb])
                 if current_global_iteration > self._federation_rounds_cutoff:
                     MetisLogger.info("Exceeded federation rounds cutoff point. Exiting ...")
-                    return False
-        return True
+                    return True
+        return False
 
-    def _check_evaluation_score(self) -> bool:
+    def _is_async(self) -> bool:
+        return "async" in self._communication_protocol.lower()
+
+    def _reached_evaluation_score(self) -> bool:
         community_results = self._driver_controller_grpc_client \
                 .get_community_model_evaluation_lineage(-1)
         
@@ -71,15 +75,15 @@ class FederationMonitor:
                 mean_test_score = sum(test_set_scores) / len(test_set_scores)
                 if mean_test_score >= self.metric_cutoff_score:
                     MetisLogger.info("Exceeded evaluation metric cutoff score. Exiting ...")
-                    return False
-        return True
+                    return True
+        return False
                     
-    def _check_execution_time(self, st) -> bool:
+    def _reached_execution_time(self, st) -> bool:
         et = datetime.datetime.now()
         diff_mins = (et - st).seconds / 60
         if diff_mins > self._execution_time_cutoff_mins:
             MetisLogger.info("Exceeded execution time cutoff minutes. Exiting ...")
-            return False
+            return True
         return True
 
     def collect_local_statistics(self) -> None:

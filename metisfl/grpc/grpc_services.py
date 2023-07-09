@@ -5,11 +5,10 @@ from concurrent import futures
 import grpc
 from grpc._cython import cygrpc
 from pebble import ThreadPool
-from metisfl.proto import controller_pb2_grpc
+from metisfl.proto import controller_pb2_grpc, service_common_pb2
 
 from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.proto_messages_factory import ServiceCommonProtoMessages
 from metisfl.utils.ssl_configurator import SSLConfigurator
 
 
@@ -58,8 +57,7 @@ class GRPCClient(object):
 
     def check_health_status(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
-            get_services_health_status_request_pb = ServiceCommonProtoMessages \
-                                                    .construct_get_services_health_status_request_pb()
+            get_services_health_status_request_pb = service_common_pb2.GetServicesHealthStatusRequest()
             MetisLogger.info("Requesting controller's health status.")
             response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
             MetisLogger.info("Received controller's health status, {} - {}".format(

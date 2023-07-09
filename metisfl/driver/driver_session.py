@@ -1,18 +1,19 @@
 import multiprocessing as mp
 import queue
 import time
-from typing import Callable, Union
+from typing import Callable
 
 from pebble import ProcessPool
 
 from metisfl import config
+from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.models.model_wrapper import MetisModel
 from metisfl.proto import model_pb2
-from metisfl.utils import fedenv_parser
+from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.metis_logger import MetisASCIIArt
 
-from .driver_initializer import DriverInitializer
 from .controller_client import GRPCControllerClient
+from .driver_initializer import DriverInitializer
 from .learner_client import GRPCLearnerClient
 from .monitor import FederationMonitor
 from .utils import create_server_entity
@@ -69,17 +70,13 @@ class DriverSession(object):
             test_dataset_fps (list[str], optional): A list of file paths to the test datasets (one for each learner). Defaults to None.
             test_dataset_recipe_fn (Callable, optional): A function that will be used to create the test datasets on the remote Learner machines. Defaults to None.
         """
-        assert fed_env, "Federation environment is required."
-        assert model, "Model is required."
-        assert train_dataset_recipe_fn, "Train dataset recipe function is required."
-
         # Print welcome message.
         MetisASCIIArt.print()
-        self._federation_environment = fedenv_parser.FederationEnvironment(
-            fed_env) if isinstance(fed_env, str) else fed_env
-        self._homomorphic_encryption = self._federation_environment.homomorphic_encryption
+        self._federation_environment = FederationEnvironment(fed_env)
+        self._homomorphic_encryption = HomomorphicEncryption(
+            he_scheme_pb=self._federation_environment.get_he_scheme_pb())
         self._num_learners = len(
-            self._federation_environment.learners.learners)
+            self._federation_environment.learners)
         self._model = model
 
         self._init_pool()
@@ -127,16 +124,16 @@ class DriverSession(object):
 
     def _create_controller_server_entity(self):
         return create_server_entity(
-            enable_ssl=self._federation_environment.communication_protocol.enable_ssl,
+            enable_ssl=self._federation_environment.enable_ssl,
             remote_host_instance=self._federation_environment.controller,
             initialization_entity=True)
 
     def _create_learning_server_entities(self):
         learning_server_entities_pb = []
-        for learner_instance in self._federation_environment.learners.learners:
+        for learner in self._federation_environment.learners:
             learning_server_entities_pb.append(create_server_entity(
-                enable_ssl=self._federation_environment.communication_protocol.enable_ssl,
-                remote_host_instance=learner_instance,
+                enable_ssl=self._federation_environment.enable_ssl,
+                remote_host_instance=learner,
                 initialization_entity=True))
         return learning_server_entities_pb
 
@@ -149,9 +146,9 @@ class DriverSession(object):
     def _create_driver_learner_grpc_clients(self):
         grpc_clients = {}
         for index in range(self._num_learners):
-            learner_instance = self._federation_environment.learners.learners[index]
+            learner = self._federation_environment.learners[index]
             learner_server_entity_pb = self._learner_server_entities_pb[index]
-            grpc_clients[learner_instance.learner_id] = \
+            grpc_clients[learner.id] = \
                 GRPCLearnerClient(
                     learner_server_entity=learner_server_entity_pb, max_workers=1)
         return grpc_clients
@@ -191,14 +188,14 @@ class DriverSession(object):
                 learner_future = self._executor.schedule(
                     function=self._driver_initilizer.init_learner,
                     args=(index,))  # NOTE: args must be a tuple
-                learner_future.result()
+                # learner_future.result()
                 # TODO If we need to test the pipeline we can force a future return here, i.e., learner_future.result()
                 self._executor_learners_tasks_q.put(learner_future)
+
                 # TODO We perform a sleep because if the learners are co-located, e.g., localhost, then an exception
                 #  is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
                 time.sleep(0.1)
-            # learner_future.result()
-
+            learner_future.result()
     def get_federation_statistics(self):
         return self._monitor.get_federation_statistics()
 

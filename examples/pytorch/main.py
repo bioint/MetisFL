@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     # load the dataset
     dataset = CSVDataset(path)
-    
+
     # calculate split
     train, test = dataset.train_test_split(n_test=0.1)
 
@@ -42,14 +42,14 @@ if __name__ == "__main__":
 
     # Define the network.
     model = MLP(n_inputs=34)
-    
+
     # Wrap the model.
     model = MetisTorchModel(model)
 
     driver_session = DriverSession(args.env,
                                    model=model,
                                    train_dataset_recipe_fn=train_dataset_recipe_fn)
-    
+
     driver_session.run()
     statistics = driver_session.get_federation_statistics()
 

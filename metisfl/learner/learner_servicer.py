@@ -5,11 +5,9 @@ from google.protobuf.timestamp_pb2 import Timestamp
 
 from metisfl import config
 from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
-from metisfl.proto import learner_pb2_grpc
+from metisfl.proto import learner_pb2, learner_pb2_grpc, service_common_pb2
 from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.proto_messages_factory import (LearnerServiceProtoMessages,
-                                                  ServiceCommonProtoMessages)
 
 from .grpc_controller_client import GRPCControllerClient
 from .learner_executor import LearnerExecutor
@@ -55,42 +53,37 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
 
     def EvaluateModel(self, request, context):
         if not self._is_serving(context):
-            return LearnerServiceProtoMessages \
-                .construct_evaluate_model_response_pb()
+            return learner_pb2.EvaluateModelResponse(evaluations=None)
+
         self._log_evaluation_task_receive()
         self.__model_evaluation_requests += 1  # @stripeli where is this used?
-        
+
         # Unpack these from the request as they are repeated proto fields
         # and can't be pickled
         evaluation_dataset_pb = [d for d in request.evaluation_dataset]
-        metric_pb = [m for m in request.metrics.metric]
-        
+        # metric_pb = [m for m in request.metrics.metric]
+
         model_evaluations_pb = self._learner_executor.run_evaluation_task(
             model_pb=request.model,
             batch_size=request.batch_size,
             evaluation_dataset_pb=evaluation_dataset_pb,
-            metrics_pb=metric_pb, 
-            cancel_running=False,
+            # metrics_pb=metric_pb,
+            cancel_running_tasks=False,
             block=True,
             verbose=True)
-        
-        evaluate_model_response_pb = LearnerServiceProtoMessages \
-            .construct_evaluate_model_response_pb(model_evaluations_pb)
-        return evaluate_model_response_pb
+        return learner_pb2.EvaluateModelResponse(evaluations=model_evaluations_pb)
 
     def GetServicesHealthStatus(self, request, context):
         if not self._is_serving(context):
-            return ServiceCommonProtoMessages \
-                .construct_get_services_health_status_request_pb()
+            return service_common_pb2.GetServicesHealthStatusRequest()
         self._log_health_check_receive()
         services_status = {"server": self.__grpc_server.server is not None}
-        return ServiceCommonProtoMessages \
-            .construct_get_services_health_status_response_pb(services_status=services_status)
+        return service_common_pb2.GetServicesHealthStatusResponse(services_status=services_status)
 
     def RunTask(self, request, context):
         if self._is_serving(context) is False:
-            return LearnerServiceProtoMessages \
-                .construct_run_task_response_pb()
+            return learner_pb2.RunTaskResponse(ack=None)
+
         self._log_training_task_receive()
         self.__community_models_received += 1
         is_task_submitted = self._learner_executor.run_learning_task(
@@ -113,18 +106,16 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
         return self._get_shutdown_response_pb()
 
     def _get_task_response_pb(self, is_task_submitted):
-        ack_pb = ServiceCommonProtoMessages.construct_ack_pb(
-            status=is_task_submitted,
-            google_timestamp=Timestamp().GetCurrentTime(),
-            message=None)
-        return LearnerServiceProtoMessages.construct_run_task_response_pb(ack_pb)
+        ack_pb = service_common_pb2.Ack(
+            status=is_task_submitted, timestamp=Timestamp().GetCurrentTime(), message=None)
+        return learner_pb2.RunTaskResponse(ack=ack_pb)
 
     def _get_shutdown_response_pb(self):
-        ack_pb = ServiceCommonProtoMessages.construct_ack_pb(
+        ack_pb = service_common_pb2.Ack(
             status=True,
-            google_timestamp=Timestamp().GetCurrentTime(),
+            timestamp=Timestamp().GetCurrentTime(),
             message=None)
-        return ServiceCommonProtoMessages.construct_shutdown_response_pb(ack_pb)
+        return service_common_pb2.ShutDownResponse(ack=ack_pb)
 
     def _is_serving(self, context):
         if self.__not_serving_event.is_set():

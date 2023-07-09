@@ -1,4 +1,3 @@
-
 import numpy as np
 
 from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification

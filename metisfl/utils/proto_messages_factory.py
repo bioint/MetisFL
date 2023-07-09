@@ -3,47 +3,7 @@ import sys
 
 import numpy as np
 
-from metisfl.proto import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
-
-
-class ControllerServiceProtoMessages(object):
-
-    @classmethod
-    def construct_get_community_model_evaluation_lineage_request_pb(cls, num_backtracks):
-        return controller_pb2.GetCommunityModelEvaluationLineageRequest(num_backtracks=num_backtracks)
-
-    @classmethod
-    def construct_get_local_task_lineage_request_pb(cls, num_backtracks, learner_ids):
-        return controller_pb2.GetLocalTaskLineageRequest(num_backtracks=num_backtracks,
-                                                         learner_ids=learner_ids)
-
-    @classmethod
-    def construct_get_runtime_metadata_lineage_request_pb(cls, num_backtracks):
-        return controller_pb2.GetRuntimeMetadataLineageRequest(num_backtracks=num_backtracks)
-
-    @classmethod
-    def construct_get_participating_learners_request_pb(cls):
-        return controller_pb2.GetParticipatingLearnersRequest()
-
-    @classmethod
-    def construct_join_federation_request_pb(cls, server_entity_pb, local_dataset_spec_pb):
-        return controller_pb2.JoinFederationRequest(server_entity=server_entity_pb,
-                                                    local_dataset_spec=local_dataset_spec_pb)
-
-    @classmethod
-    def construct_leave_federation_request_pb(cls, learner_id, auth_token):
-        return controller_pb2.LeaveFederationRequest(learner_id=learner_id, auth_token=auth_token)
-
-    @classmethod
-    def construct_mark_task_completed_request_pb(cls, learner_id, auth_token, completed_learning_task_pb):
-        return controller_pb2.MarkTaskCompletedRequest(learner_id=learner_id,
-                                                       auth_token=auth_token,
-                                                       task=completed_learning_task_pb)
-
-    @classmethod
-    def construct_replace_community_model_request_pb(cls, federated_model_pb):
-        assert isinstance(federated_model_pb, model_pb2.FederatedModel)
-        return controller_pb2.ReplaceCommunityModelRequest(model=federated_model_pb)
+from metisfl.proto import learner_pb2, model_pb2, metis_pb2, service_common_pb2
 
 
 class LearnerServiceProtoMessages(object):
@@ -606,28 +566,3 @@ class ModelProtoMessages(object):
             return model_pb2.OptimizerConfig(adam_weight_decay=optimizer_pb)
         else:
             raise RuntimeError("Optimizer proto message refers to a non-supported optimizer.")
-
-
-class ServiceCommonProtoMessages(object):
-
-    @classmethod
-    def construct_ack_pb(cls, status, google_timestamp, message=None):
-        return service_common_pb2.Ack(status=status, timestamp=google_timestamp, message=message)
-
-    @classmethod
-    def construct_get_services_health_status_request_pb(cls):
-        return service_common_pb2.GetServicesHealthStatusRequest()
-
-    @classmethod
-    def construct_get_services_health_status_response_pb(cls, services_status):
-        assert isinstance(services_status, dict)
-        return service_common_pb2.GetServicesHealthStatusResponse(services_status=services_status)
-
-    @classmethod
-    def construct_shutdown_request_pb(cls):
-        return service_common_pb2.ShutDownRequest()
-
-    @classmethod
-    def construct_shutdown_response_pb(cls, ack_pb):
-        assert isinstance(ack_pb, service_common_pb2.Ack)
-        return service_common_pb2.ShutDownResponse(ack=ack_pb)

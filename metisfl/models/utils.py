@@ -4,7 +4,7 @@ import numpy as np
 
 from metisfl import config
 from metisfl.models.model_ops import LearningTaskStats
-from metisfl.proto import model_pb2
+from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
@@ -20,7 +20,8 @@ def get_model_ops_fn(nn_engine) -> ModelOps:
         return PyTorchModelOps
     else:
         raise ValueError("Unknown neural engine: {}".format(nn_engine))
-    
+
+
 def get_num_of_epochs(dataset_size: int, batch_size: int, total_steps: int) -> int:
     steps_per_epoch = np.ceil(np.divide(dataset_size, batch_size))
     epochs_num = 1
@@ -28,8 +29,10 @@ def get_num_of_epochs(dataset_size: int, batch_size: int, total_steps: int) -> i
         epochs_num = int(np.ceil(np.divide(total_steps, steps_per_epoch)))
     return epochs_num
 
+
 def calc_mean_wall_clock(wall_clock):
     return np.mean(wall_clock) * 1000
+
 
 def _construct_task_evaluation_pb(collection, completed_epochs):
     """
@@ -51,7 +54,8 @@ def _construct_task_evaluation_pb(collection, completed_epochs):
     """
     _completed_epochs = int(math.ceil(completed_epochs))
     values_len = [len(v) for v in collection.values()]
-    is_model_evaluated_at_every_epoch = all([_completed_epochs == length for length in values_len])
+    is_model_evaluated_at_every_epoch = all(
+        [_completed_epochs == length for length in values_len])
     epoch_evaluations_pb = []
     if is_model_evaluated_at_every_epoch:
         # Loop over the evaluation for each epoch.
@@ -80,39 +84,44 @@ def _construct_task_evaluation_pb(collection, completed_epochs):
                 epoch_id=_completed_epochs, model_evaluation_pb=model_evaluation_pb))
     return epoch_evaluations_pb
 
+
 def _formater(stats):
     return DictionaryFormatter.listify_values(stats) \
-            if stats else dict()
+        if stats else dict()
+
 
 def _construct_task_execution_metadata_pb(learning_task_stats: LearningTaskStats):
     completed_epochs = learning_task_stats.completed_epochs
     epoch_training_evaluations_pbs = \
-        _construct_task_evaluation_pb(collection=learning_task_stats.train_stats, completed_epochs=completed_epochs)
+        _construct_task_evaluation_pb(
+            collection=learning_task_stats.train_stats, completed_epochs=completed_epochs)
     epoch_validation_evaluations_pbs = \
-        _construct_task_evaluation_pb(collection=_formater(learning_task_stats.validation_stats), 
-                                        completed_epochs=completed_epochs)
-    epoch_test_evaluations_pbs = \
-        _construct_task_evaluation_pb(collection=_formater(learning_task_stats.test_stats), 
+        _construct_task_evaluation_pb(collection=_formater(learning_task_stats.validation_stats),
                                       completed_epochs=completed_epochs)
-    task_evaluation_pb = \
-        MetisProtoMessages.construct_task_evaluation_pb(
-            epoch_training_evaluations_pbs=epoch_training_evaluations_pbs,
-            epoch_validation_evaluations_pbs=epoch_validation_evaluations_pbs,
-            epoch_test_evaluations_pbs=epoch_test_evaluations_pbs)
-    task_execution_pb = MetisProtoMessages.construct_task_execution_metadata_pb(
-        learning_task_stats.global_iteration,
-        task_evaluation_pb,
-        learning_task_stats.completed_epochs,
-        learning_task_stats.completes_batches,
-        learning_task_stats.batch_size,
-        learning_task_stats.processing_ms_per_epoch,
-        learning_task_stats.processing_ms_per_batch)
+    epoch_test_evaluations_pbs = \
+        _construct_task_evaluation_pb(collection=_formater(learning_task_stats.test_stats),
+                                      completed_epochs=completed_epochs)
+
+    task_evaluation_pb= metis_pb2.TaskEvaluation(training_evaluation=epoch_training_evaluations_pbs,
+                                        validation_evaluation=epoch_validation_evaluations_pbs,
+                                        test_evaluation=epoch_test_evaluations_pbs)
+    
+    task_execution_pb = metis_pb2.TaskExecutionMetadata(global_iteration=learning_task_stats.global_iteration,
+                                               task_evaluation=task_evaluation_pb,
+                                               completed_epochs=learning_task_stats.completed_epochs,
+                                               completed_batches=learning_task_stats.completes_batches,
+                                               batch_size=learning_task_stats.batch_size,
+                                               processing_ms_per_epoch=learning_task_stats.processing_ms_per_epoch,
+                                               processing_ms_per_batch=learning_task_stats.processing_ms_per_batch)
     return task_execution_pb
 
-def get_completed_learning_task_pb(model_pb: model_pb2.Model, 
-                                         learning_task_stats: LearningTaskStats, 
-                                         aux_metadata=None):
-    task_execution_meta_pb = _construct_task_execution_metadata_pb(learning_task_stats)
-    completed_learning_task_pb = MetisProtoMessages.construct_completed_learning_task_pb(
-        model_pb=model_pb, task_execution_metadata_pb=task_execution_meta_pb, aux_metadata=aux_metadata)
+
+def get_completed_learning_task_pb(model_pb: model_pb2.Model,
+                                   learning_task_stats: LearningTaskStats,
+                                   aux_metadata=None):
+    task_execution_meta_pb = _construct_task_execution_metadata_pb(
+        learning_task_stats)
+    completed_learning_task_pb = metis_pb2.CompletedLearningTask(model=model_pb,
+                                                                 execution_metadata=task_execution_meta_pb,
+                                                                 aux_metadata=aux_metadata)
     return completed_learning_task_pb

@@ -1,7 +1,7 @@
 
 import os
 import tarfile
-from typing import Callable
+from typing import Callable, Tuple
 
 import cloudpickle
 import inspect
@@ -10,7 +10,7 @@ from fabric import Connection
 from metisfl import config
 from metisfl.models.model_wrapper import MetisModel
 from metisfl.proto.metis_pb2 import ServerEntity
-from metisfl.utils import fedenv_parser
+from metisfl.utils.fedenv import FederationEnvironment, RemoteHost
 from metisfl.utils.metis_logger import MetisLogger
 
 
@@ -20,7 +20,7 @@ class DriverInitializer:
                  controller_server_entity_pb: ServerEntity,
                  dataset_recipe_fns: dict[str, Callable],
                  dataset_fps: dict[str, list[str]],
-                 fed_env: fedenv_parser.FederationEnvironment,
+                 fed_env: FederationEnvironment,
                  learner_server_entities_pb: list[ServerEntity],
                  model: MetisModel):
         assert config.TRAIN in dataset_recipe_fns, "Train dataset recipe function is required."
@@ -69,12 +69,12 @@ class DriverInitializer:
 
     def init_controller(self):
         fabric_connection_config = self._federation_environment.controller \
-            .connection_configs.get_fabric_connection_config()
+            .get_fabric_connection_config()
         connection = Connection(**fabric_connection_config)
         connection.run("rm -rf {}".format(config.get_controller_path()))
         connection.run("mkdir -p {}".format(config.get_controller_path()))
         
-        remote_on_login = self._federation_environment.controller.connection_configs.on_login
+        remote_on_login = self._federation_environment.controller.on_login_command
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
             remote_on_login = remote_on_login[:-1]
 
@@ -90,29 +90,28 @@ class DriverInitializer:
         return
 
     def init_learner(self, index: int):
-        learner_instance, connection = self._get_learner_connection(index)
+        learner, connection = self._get_learner_connection(index)
 
         # We do not use asynchronous or disown, since we want the remote subprocess to return standard (error) output.
-        learner_path = config.get_learner_path(
-            learner_instance.grpc_servicer.port)
+        learner_path = config.get_learner_path(learner.grpc_port)
         MetisLogger.info("Copying model definition, datasets and and dataset recipe files to learner: {}"
-                         .format(learner_instance.learner_id))
+                         .format(learner.id))
         self._copy_assets_to_learner(index, connection, learner_path)
 
         # Fabric runs every command on a non-interactive mode and therefore the $PATH that might be set for a
         # running user might not be visible while running the command. A workaround is to always
         # source the respective bash_environment files.
         cuda_devices_str = ""
-        if learner_instance.cuda_devices and len(learner_instance.cuda_devices) > 0:
+        if learner.cuda_devices and len(learner.cuda_devices) > 0:
             cuda_devices_str = "export CUDA_VISIBLE_DEVICES=\"{}\" " \
-                .format(",".join([str(c) for c in learner_instance.cuda_devices]))
-        remote_on_login = learner_instance.connection_configs.on_login
+                .format(",".join([str(c) for c in learner.cuda_devices]))
+        remote_on_login = learner.on_login_command
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
             remote_on_login = remote_on_login[:-1]
 
         # Un-taring model definition zipped file.
         MetisLogger.info("Un-taring model definition files at learner: {}"
-                         .format(learner_instance.learner_id))
+                         .format(learner.id))
         connection.run("cd {}; tar -xvzf {}".format(
             learner_path,
             self._model_definition_tar_fp))
@@ -120,7 +119,7 @@ class DriverInitializer:
         init_cmd = "{} && {} && cd {} && {}".format(
             remote_on_login,
             cuda_devices_str,
-            learner_instance.project_home,
+            learner.project_home,
             self._init_learner_cmd(index))
         MetisLogger.info(
             "Running init cmd to learner host: {}".format(init_cmd))
@@ -141,35 +140,28 @@ class DriverInitializer:
         if self._model_definition_tar_fp:
             connection.put(self._model_definition_tar_fp, learner_path)
 
-    def _get_learner_connection(self, index):
-        learner_instance = self._federation_environment.learners.learners[index]
+    def _get_learner_connection(self, index) -> Tuple[RemoteHost, Connection]:
+        learner = self._federation_environment.learners[index]
         fabric_connection_config = \
-            learner_instance.connection_configs.get_fabric_connection_config()
+            learner.get_fabric_connection_config()
         connection = Connection(**fabric_connection_config)
-        return learner_instance, connection
+        return learner, connection
 
     def _init_controller_cmd(self):
-        # To create the controller grpc server entity, we need the hostname to which the server
-        # will bind to and the port of the grpc servicer defined in the initial configuration file.
-        # Controller is a subtype of RemoteHost instance, hence we pass it as is.
-        args = {}
-        args["e"] = self._controller_server_entity_pb.SerializeToString().hex()
-        config_attrs = {
-            "g": "global_model_config",
-            "c": "communication_protocol",
-            "m": "local_model_config",
-            "s": "model_store_config",
+        args = {
+            "e": self._controller_server_entity_pb.SerializeToString().hex(),
+            "g": self._federation_environment.get_global_model_config_pb().SerializeToString().hex(),
+            "c": self._federation_environment.get_communication_protocol_pb().SerializeToString().hex(),
+            "m": self._federation_environment.get_local_model_config_pb().SerializeToString().hex(),
+            "s": self._federation_environment.get_model_store_config_pb().SerializeToString().hex(),
         }
-        for key, attr in config_attrs.items():
-            args[key] = getattr(self._federation_environment,
-                                attr).to_proto().SerializeToString().hex()
         return self._get_cmd("controller", args)
 
     def _init_learner_cmd(self, index):
-        learner_instance = self._federation_environment.learners.learners[index]
+        learner = self._federation_environment.learners[index]
 
         remote_metis_path = config.get_learner_path(
-            learner_instance.grpc_servicer.port)
+            learner.grpc_port)
         remote_metis_model_path = os.path.join(
             remote_metis_path, config.MODEL_SAVE_DIR_NAME)
         remote_dataset_recipe_fps = dict()
@@ -180,7 +172,7 @@ class DriverInitializer:
         args = {
             "l": self._learner_server_entities_pb[index].SerializeToString().hex(),
             "c": self._controller_server_entity_pb.SerializeToString().hex(),
-            "f": self._federation_environment.homomorphic_encryption.to_proto().SerializeToString().hex(),
+            "f": self._federation_environment.get_he_scheme_pb().SerializeToString().hex(),
             "m": remote_metis_model_path,
             "t": self._dataset_fps[config.TRAIN][index],
             "v": self._dataset_fps[config.VALIDATION][index] if config.VALIDATION in self._dataset_fps else None,

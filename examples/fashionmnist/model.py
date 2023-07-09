@@ -2,6 +2,7 @@ import tensorflow as tf
 
 
 def get_model(
+    metrics: list = ["accuracy"],
     input_shape: tuple = (28, 28, 1),
     dense_units_per_layer: list = [256, 128],
     num_classes: int = 10,
@@ -34,11 +35,4 @@ def get_model(
     # Add the output layer
     model.add(Dense(num_classes, activation="softmax"))
     
-    # Compile the model
-    model.compile(
-        optimizer=tf.keras.optimizers.SGD(learning_rate=0.05, momentum=0.0),
-        loss="sparse_categorical_crossentropy", 
-        metrics=["accuracy"]
-    )
-
     return model

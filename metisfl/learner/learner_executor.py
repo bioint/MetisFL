@@ -75,10 +75,6 @@ class LearnerExecutor(object):
         config.EVALUATION_TASK: True,
         config.INFERENCE_TASK: True
     }):
-        # If graceful is True, it will allow all pending tasks to be completed,
-        # else it will stop immediately all active tasks. At first, we close the
-        # tasks pool so that no more tasks can be submitted, and then we wait
-        # gracefully or non-gracefully (cancel future) for their completion.
         for task, (pool, _) in self.pool.items():
             pool.close()
             self._empty_tasks_q(config.LEARNING_TASK,
