@@ -97,6 +97,7 @@ class MetisProtoMessages(object):
     def construct_empty_he_scheme_pb(cls):
         return metis_pb2.EmptyHEScheme()
 
+    
     @classmethod
     def construct_fhe_scheme_pb(cls, batch_size, scaling_bits):
         return metis_pb2.FHEScheme(batch_size=batch_size, scaling_bits=scaling_bits)

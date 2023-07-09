@@ -31,7 +31,7 @@ class PyTorchModelOps(ModelOps):
         epochs_num = get_num_of_epochs(total_steps, dataset_size, batch_size)
         dataset = construct_dataset_pipeline(train_dataset) #TODO: this is inconsistent with tf counterpart
         
-        self._metis_model._backend_model.train()
+        self._metis_model._backend_model.train() # set to training mode
         train_res = self._metis_model.fit(dataset, epochs=epochs_num)
         
         # TODO (dstripelis) Need to add the metrics for computing the execution time
@@ -48,7 +48,7 @@ class PyTorchModelOps(ModelOps):
             raise RuntimeError("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
         dataset = construct_dataset_pipeline(eval_dataset)
-        self._metis_model._backend_model.eval()
+        self._metis_model._backend_model.eval() # set to evaluation mode
         eval_res = self._metis_model.evaluate(dataset)            
         MetisLogger.info("Model evaluation is complete.")
         metric_values = DictionaryFormatter.stringify(eval_res, stringify_nan=True)

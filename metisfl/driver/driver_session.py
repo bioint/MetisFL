@@ -195,7 +195,7 @@ class DriverSession(object):
                 # TODO We perform a sleep because if the learners are co-located, e.g., localhost, then an exception
                 #  is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
                 time.sleep(0.1)
-            learner_future.result()
+            
     def get_federation_statistics(self):
         return self._monitor.get_federation_statistics()
 

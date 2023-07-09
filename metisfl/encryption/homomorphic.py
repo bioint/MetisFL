@@ -12,12 +12,17 @@ class HomomorphicEncryption(object):
         assert isinstance(
             he_scheme_pb, metis_pb2.HEScheme), "Not a valid HE scheme protobuf."
         
+        self._he_scheme = None        
         if he_scheme_pb and he_scheme_pb.HasField("fhe_scheme"):
             self._he_scheme = fhe.CKKS(
                 he_scheme_pb.fhe_scheme.batch_size,
                 he_scheme_pb.fhe_scheme.scaling_bits,
                 CRYPTO_RESOURCES_DIR)
             self._he_scheme.load_crypto_params()
+            
+    @staticmethod
+    def from_proto(he_scheme_pb: metis_pb2.HEScheme):
+        return HomomorphicEncryption(he_scheme_pb)
 
     def decrypt_pb_weights(self,
                            variables: list[model_pb2.Model.Variable]) -> ModelWeightsDescriptor:

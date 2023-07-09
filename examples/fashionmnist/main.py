@@ -8,7 +8,6 @@ from recipe import dataset_recipe_fn
 
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.keras.wrapper import MetisKerasModel
-from metisfl.utils.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -29,7 +28,7 @@ if __name__ == "__main__":
     x_train, y_train, x_test, y_test = load_data()
 
     # Partition the data, iid partitions
-    num_learners = 1 # Must match the number of learners in the federation environment yaml file
+    num_learners = 1  # Must match the number of learners in the federation environment yaml file
     x_chunks, y_chunks = partition_data_iid(x_train, y_train, num_learners)
 
     # Save the data
@@ -42,9 +41,7 @@ if __name__ == "__main__":
     # Get the tf.keras model
     model = get_model()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer="sgd",
-                    metrics=["accuracy"])
-                  
+                  optimizer="sgd", metrics=["accuracy"])
 
     # Wrap the model in a MetisKerasModel
     metis_model = MetisKerasModel(model)

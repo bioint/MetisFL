@@ -10,10 +10,10 @@ from .controller_client import GRPCControllerClient
 
 
 class FederationMonitor:
-    
+      
     def __init__(self, 
                  federation_environment: FederationEnvironment, 
-                 driver_controller_grpc_client: GRPCControllerClient):
+                 driver_controller_grpc_client: GRPCControllerClient):   
         self._driver_controller_grpc_client = driver_controller_grpc_client
         self._federation_environment = federation_environment
         self._federation_rounds_cutoff = self._federation_environment.federation_rounds
@@ -73,7 +73,7 @@ class FederationMonitor:
                     test_set_scores.append(float(test_score))
             if test_set_scores:
                 mean_test_score = sum(test_set_scores) / len(test_set_scores)
-                if mean_test_score >= self.metric_cutoff_score:
+                if mean_test_score >= self._metric_cutoff_score:
                     MetisLogger.info("Exceeded evaluation metric cutoff score. Exiting ...")
                     return True
         return False
@@ -84,7 +84,7 @@ class FederationMonitor:
         if diff_mins > self._execution_time_cutoff_mins:
             MetisLogger.info("Exceeded execution time cutoff minutes. Exiting ...")
             return True
-        return True
+        return False
 
     def collect_local_statistics(self) -> None:
         learners_pb = self._driver_controller_grpc_client.get_participating_learners()

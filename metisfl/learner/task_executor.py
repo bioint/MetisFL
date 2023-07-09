@@ -30,7 +30,7 @@ class TaskExecutor(object):
             model_backend_fn (Callable[[str], model_ops.ModelOps]): A function that returns a model backend.
             model_dir (str): The directory where the model is stored.
         """
-        self._homomorphic_encryption = HomomorphicEncryption(he_scheme_pb)
+        self._he_scheme_pb = he_scheme_pb
         self._learner_dataset = learner_dataset
         self._learner_server_entity_pb = learner_server_entity_pb
         self._model_ops = None 
@@ -40,12 +40,7 @@ class TaskExecutor(object):
     def _init_model_ops(self) -> ModelOps:
         if not self._model_ops:
             self._model_ops = self._model_ops_fn(self._model_dir)
-        
-    def _set_weights_from_model_pb(self, model_pb: model_pb2.Model):
-        model_weights_descriptor = self._homomorphic_encryption.decrypt_pb_weights(model_pb.variables)
-        if len(model_weights_descriptor.weights_values) > 0:
-            self._model_ops.get_model().set_model_weights(model_weights_descriptor)
-    
+            
     # @stripeli metrics_pb was not used anywhere, removed it
     def evaluate_model(self, 
                         model_pb: model_pb2.Model, 
@@ -109,8 +104,18 @@ class TaskExecutor(object):
         self._log(state="completed", task="learning")
         return  self._get_completed_learning_task_pb(model_weights_descriptor, learning_task_stats)
 
+    def _get_he_obj(self):
+        return HomomorphicEncryption(self._he_scheme_pb)
+
+    def _set_weights_from_model_pb(self, model_pb: model_pb2.Model):
+        homomorphic_encryption = self._get_he_obj()
+        model_weights_descriptor = homomorphic_encryption.decrypt_pb_weights(model_pb.variables)
+        if len(model_weights_descriptor.weights_values) > 0:
+            self._model_ops.get_model().set_model_weights(model_weights_descriptor)
+
     def _get_completed_learning_task_pb(self, model_weights_descriptor, learning_task_stats):
-        variables = self._homomorphic_encryption.encrypt_np_weights(model_weights_descriptor)
+        homomorphic_encryption = self._get_he_obj()
+        variables = homomorphic_encryption.encrypt_np_weights(model_weights_descriptor)
         model_pb = model_pb2.Model(variables=variables)
         completed_learning_task_pb = get_completed_learning_task_pb(
             model_pb=model_pb,

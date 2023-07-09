@@ -36,6 +36,7 @@ class KerasModelOps(ModelOps):
         dataset_size = train_dataset.get_size()
         step_counter_callback = StepCounter(total_steps=total_steps)
         performance_cb = PerformanceProfiler()
+        self._construct_optimizer(hyperparameters_pb.optimizer)
         
         # @stripeli why is the epoch number calculated? Isn't it given in the yaml?
         # @stripeli why there are two batch sizes?
