@@ -1,8 +1,6 @@
 # Install Ubuntu image from docker hub.
 FROM ubuntu:focal as ubuntu
 ARG PYV="3.10"
-# Assign simple root password.
-RUN echo "root:root" | chpasswd
 
 # Assign simple root password.
 RUN echo "root:root" | chpasswd
@@ -19,11 +17,7 @@ WORKDIR /metisfl
 RUN apt-get -y update
 
 # Install helper packages and bazelisk (i.e., bazel versioning resolution tool at runtime).
-<<<<<<< HEAD:.devcontainer/Dockerfile
-RUN apt-get -y install wget git nano 
-=======
 RUN apt-get -y install wget nano git
->>>>>>> bugfix/migration_path_deps_issues:docker/DockerfileUbuntuPY38
 RUN wget https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-amd64
 RUN chmod +x ./bazelisk-linux-amd64
 RUN mv ./bazelisk-linux-amd64 /usr/bin/bazelisk
@@ -34,18 +28,10 @@ RUN apt-get -y install build-essential gcc autoconf libomp-dev
 # Install and setup python$PYV.
 RUN apt -y install software-properties-common
 RUN add-apt-repository ppa:deadsnakes/ppa
-<<<<<<< HEAD:.devcontainer/Dockerfile
-RUN apt -y update
-RUN apt -y install -f python$PYV-dev pip
-RUN apt -y install python$PYV-distutils
+RUN apt-get -y update
+RUN apt-get -y install -f python$PYV-dev python$PYV-distutils python3-pip
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python$PYV 1
 RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python$PYV 1
-=======
-RUN apt-get -y update
-RUN apt-get -y install -f python3.8-dev python3.8-distutils python3-pip
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.8 1
-RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.8 1
->>>>>>> bugfix/migration_path_deps_issues:docker/DockerfileUbuntuPY38
 
 # Clean up.
 RUN apt-get clean

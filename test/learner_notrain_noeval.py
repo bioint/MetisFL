@@ -1,16 +1,17 @@
-import cloudpickle
 import gc
-import time
 import os
+import time
 
-import metisfl.utils.proto_messages_factory as proto_factory
-
+import cloudpickle
 from pebble import ProcessPool
 
+import metisfl.utils.proto_messages_factory as proto_factory
+from metisfl.learner.grpc_controller_client import GRPCControllerClient
+from metisfl.models.model_dataset import (ModelDataset,
+                                          ModelDatasetClassification,
+                                          ModelDatasetRegression)
+from metisfl.proto import learner_pb2, metis_pb2, model_pb2
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.models.model_dataset import ModelDataset, ModelDatasetClassification, ModelDatasetRegression
-from metisfl.utils.grpc_controller_client import GRPCControllerClient
-from metisfl.proto import learner_pb2, model_pb2, metis_pb2
 
 
 class Learner(object):
