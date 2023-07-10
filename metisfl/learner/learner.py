@@ -23,17 +23,15 @@ def parse_server_hex(hex_str, default_host, default_port):
 
 def parse_he_scheme_hex(hex_str):
     if hex_str is not None:
-        he_scheme_pb = metis_pb2.HEScheme()
-        he_scheme_pb_ser = bytes.fromhex(hex_str)
-        he_scheme_pb.ParseFromString(he_scheme_pb_ser)
+        he_scheme_protobuff_ser = bytes.fromhex(hex_str)
+        he_scheme_config_pb = metis_pb2.HEScheme()
+        he_scheme_config_pb.ParseFromString(he_scheme_protobuff_ser)
     else:
-        empty_scheme_pb = metis_pb2.EmptyHEScheme()
-        he_scheme_pb = metis_pb2.HEScheme(enabled=False,
-                                          name=None,
-                                          public_key=None,
-                                          private_key=None,
-                                          empty_he_scheme=empty_scheme_pb)
-    return he_scheme_pb
+        empty_scheme_config_pb = MetisProtoMessages.construct_empty_scheme_config_pb()
+        he_scheme_config_pb = MetisProtoMessages.construct_he_scheme_config_pb(
+            enabled=False, empty_scheme_config_pb=empty_scheme_config_pb)
+
+    return he_scheme_config_pb
 
 
 def create_servers(args):

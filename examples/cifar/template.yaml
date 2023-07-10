@@ -1,17 +1,13 @@
-# Termination Signals
+# EnvironmentConfig:
 FederationRounds: 5 # only in synchronous execution
 ExecutionCutoffTimeMins: 100000
-EvaluationMetric: "accuracy" # Others are "accuracy", "loss"
-EvaluationMetricCutoffScore: 0.5
-
-# CommunicationProtocol
+EvaluationMetric: "accuracy" # Others are "accuracy", "loss
+EvaluationMetricCutoffScore: 0.8
 CommunicationProtocol: "Synchronous"
-EnableSSL: false
-
-# ModelStore 
 ModelStore: "InMemory" # Others are "InMemory", "Redis"
-ModelStoreHostname: "localhost"
-ModelStorePort: 6379
+# ModelStoreConnectionConfigs:
+#   Hostname: ""
+#   Port: 0000
 EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"
 LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "LineageLengthEviction"
 
@@ -21,9 +17,8 @@ LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "Li
 # HEScalingBits: 52
 
 # GlobalTrainingConfig:
-AggregationRule: "FedAvg" # Others are FedAvg, FedStride, FedStride, PWA
+AggregationRule: "FedAvg" # Others are FedAvg, FedStride, FedRec, PWA
 ScalingFactor: "NumTrainingExamples" # Others are NUM_COMPLETED_BATCHES, NUM_PARTICIPANTS, NUM_TRAINING_EXAMPLES
-StrideLength: 2
 ParticipationRatio: 1
 
 # LocalTrainingConfig:
@@ -37,25 +32,31 @@ OptimizerParams:
 # ControllerConfig:
 Controller:
   ProjectHome: "/home/panoskyriakis/metisfl"
-  Hostname: "localhost"
-  Username: "panoskyriakis"
-  KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
-  OnLoginCommand: "source /etc/profile;"
-  GRPCServicerHostname: "localhost"
-  GRPCServicerPort: 50051
-  SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-  SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
+  ConnectionConfigs:
+    Hostname: "localhost"
+    Username: "panoskyriakis"
+    KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
+    OnLoginCommand: "source /etc/profile;"
+  GRPCServicer:
+    Hostname: "localhost"
+    Port: 50051
+  SSLConfigs:
+    PrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+    PublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
 
 # LearnersConfig:
 Learners:
   - LearnerID: "localhost-1"
     ProjectHome: "/home/panoskyriakis/metisfl"
-    Hostname: "localhost"
-    Username: "panoskyriakis"
-    KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
-    OnLoginCommand: "source /etc/profile;"
-    GRPCServicerHostname: "localhost"
-    GRPCServicerPort: 50052
+    ConnectionConfigs:
+      Hostname: "localhost"
+      Username: "panoskyriakis"
+      KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
+      OnLoginCommand: "source /etc/profile;"
+    GRPCServicer:
+      Hostname: "localhost"
+      Port: 50052
     CudaDevices: [0]
-    SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-    SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
+    SSLConfigs:
+      PrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+      PublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"

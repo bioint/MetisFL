@@ -2,7 +2,7 @@ import yaml
 
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
-
+from .schema import env_schema
 
 OPTIMIZER_PB_MAP = {
     "VanillaSGD": model_pb2.VanillaSGD,
@@ -18,6 +18,7 @@ class FederationEnvironment(object):
     def __init__(self, federation_environment_config_fp):
         fstream = open(federation_environment_config_fp).read()
         self._yaml = yaml.load(fstream, Loader=yaml.SafeLoader)
+        env_schema.validate(self._yaml)
         self.controller = RemoteHost(self._yaml.get("Controller"))
         self.learners = [RemoteHost(learner)
                          for learner in self._yaml.get("Learners")]
@@ -25,15 +26,15 @@ class FederationEnvironment(object):
     # Environment configuration
     @property
     def federation_rounds(self):
-        return self._yaml.get("FederationRounds", 100)
+        return self._yaml.get("FederationRounds")
 
     @property
     def execution_time_cutoff_mins(self):
-        return self._yaml.get("ExecutionTimeCutoffMins", 1e6)
+        return self._yaml.get("ExecutionCutoffTimeMins")
 
     @property
     def metric_cutoff_score(self):
-        return self._yaml.get("MetricCutoffScore", 1)
+        return self._yaml.get("EvaluationMetricCutoffScore")
 
     @property
     def communication_protocol(self):
@@ -41,7 +42,7 @@ class FederationEnvironment(object):
 
     @property
     def enable_ssl(self):
-        return self._yaml.get("EnableSSL", False)
+        return self._yaml.get("EnableSSL")
 
     @property
     def model_store(self):
@@ -83,7 +84,7 @@ class FederationEnvironment(object):
 
     @property
     def participation_ratio(self):
-        return self._yaml.get("ParticipationRatio", 1)
+        return self._yaml.get("ParticipationRatio")
 
     @property
     def scaling_factor(self):
@@ -91,7 +92,7 @@ class FederationEnvironment(object):
 
     @property
     def stride_length(self):
-        return self._yaml.get("StrideLength", -1)
+        return self._yaml.get("StrideLength")
 
     @property
     def particiapation_ratio(self):
@@ -109,6 +110,14 @@ class FederationEnvironment(object):
     @property
     def local_epochs(self):
         return self._yaml.get("LocalEpochs")
+
+    @property
+    def optimizer(self):
+        return self._yaml.get("Optimizer")
+    
+    @property
+    def optimizer_params(self):
+        return self._yaml.get("OptimizerParams")
 
     @property
     def validation_percentage(self):
@@ -132,7 +141,7 @@ class FederationEnvironment(object):
             rule_name=self.aggregation_rule,
             scaling_factor=self.scaling_factor,
             stride_length=self.stride_length,
-            he_scheme_pb=self.get_he_scheme_pb())
+            he_scheme_config_pb=self.get_he_scheme_pb())
         return MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.participation_ratio)
@@ -196,7 +205,7 @@ class RemoteHost(object):
 
     @property
     def hostname(self):
-        return self._config_map.get("ConnectionConfigs").get("Hostname")
+        return self._config_map.get("Hostname")
 
     @property
     def cuda_devices(self):
@@ -204,43 +213,43 @@ class RemoteHost(object):
 
     @property
     def port(self):
-        return self._config_map.get("ConnectionConfigs").get("Port", None)
+        return self._config_map.get("Port", None)
 
     @property
     def username(self):
-        return self._config_map.get("ConnectionConfigs").get("Username")
+        return self._config_map.get("Username")
 
     @property
     def password(self):
-        return self._config_map.get("ConnectionConfigs").get("Password")
+        return self._config_map.get("Password")
 
     @property
     def key_filename(self):
-        return self._config_map.get("ConnectionConfigs").get("KeyFilename")
+        return self._config_map.get("KeyFilename")
 
     @property
     def passphrase(self):
-        return self._config_map.get("ConnectionConfigs").get("Passphrase")
+        return self._config_map.get("Passphrase")
 
     @property
     def on_login_command(self):
-        return self._config_map.get("ConnectionConfigs").get("OnLoginCommand")
+        return self._config_map.get("OnLoginCommand")
 
     @property
     def grpc_hostname(self):
-        return self._config_map.get("GRPCServicer").get("Hostname")
+        return self._config_map.get("GRPCServicerHostname")
 
     @property
     def grpc_port(self):
-        return self._config_map.get("GRPCServicer").get("Port")
+        return self._config_map.get("GRPCServicerPort")
 
     @property
     def ssl_private_key(self):
-        return self._config_map.get("SSLConfigs").get("PrivateKey")
+        return self._config_map.get("SSLPrivateKey")
 
     @property
     def ssl_public_certificate(self):
-        return self._config_map.get("SSLConfigs").get("PublicCertificate")
+        return self._config_map.get("SSLPublicCertificate")
 
     def get_fabric_connection_config(self):
         # Look for parameters values here:

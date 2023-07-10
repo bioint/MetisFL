@@ -3,7 +3,47 @@ import sys
 
 import numpy as np
 
-from metisfl.proto import learner_pb2, model_pb2, metis_pb2, service_common_pb2
+from metisfl.proto import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
+
+
+class ControllerServiceProtoMessages(object):
+
+    @classmethod
+    def construct_get_community_model_evaluation_lineage_request_pb(cls, num_backtracks):
+        return controller_pb2.GetCommunityModelEvaluationLineageRequest(num_backtracks=num_backtracks)
+
+    @classmethod
+    def construct_get_local_task_lineage_request_pb(cls, num_backtracks, learner_ids):
+        return controller_pb2.GetLocalTaskLineageRequest(num_backtracks=num_backtracks,
+                                                         learner_ids=learner_ids)
+
+    @classmethod
+    def construct_get_runtime_metadata_lineage_request_pb(cls, num_backtracks):
+        return controller_pb2.GetRuntimeMetadataLineageRequest(num_backtracks=num_backtracks)
+
+    @classmethod
+    def construct_get_participating_learners_request_pb(cls):
+        return controller_pb2.GetParticipatingLearnersRequest()
+
+    @classmethod
+    def construct_join_federation_request_pb(cls, server_entity_pb, local_dataset_spec_pb):
+        return controller_pb2.JoinFederationRequest(server_entity=server_entity_pb,
+                                                    local_dataset_spec=local_dataset_spec_pb)
+
+    @classmethod
+    def construct_leave_federation_request_pb(cls, learner_id, auth_token):
+        return controller_pb2.LeaveFederationRequest(learner_id=learner_id, auth_token=auth_token)
+
+    @classmethod
+    def construct_mark_task_completed_request_pb(cls, learner_id, auth_token, completed_learning_task_pb):
+        return controller_pb2.MarkTaskCompletedRequest(learner_id=learner_id,
+                                                       auth_token=auth_token,
+                                                       task=completed_learning_task_pb)
+
+    @classmethod
+    def construct_replace_community_model_request_pb(cls, federated_model_pb):
+        assert isinstance(federated_model_pb, model_pb2.FederatedModel)
+        return controller_pb2.ReplaceCommunityModelRequest(model=federated_model_pb)
 
 
 class LearnerServiceProtoMessages(object):
@@ -78,29 +118,29 @@ class MetisProtoMessages(object):
             private_key_stream=private_key_stream)
 
     @classmethod
-    def construct_he_scheme_pb(cls, enabled=False, name=None, cryptocontext=None, public_key=None, private_key=None,
-                               empty_scheme_pb=None, fhe_scheme_pb=None):
-        if empty_scheme_pb:
-            return metis_pb2.HEScheme(enabled=enabled,
-                                      name=name,
-                                      public_key=public_key,
-                                      private_key=private_key,
-                                      empty_he_scheme=empty_scheme_pb)
-        if fhe_scheme_pb:
-            return metis_pb2.HEScheme(enabled=enabled,
-                                      name=name,
-                                      public_key=public_key,
-                                      private_key=private_key,
-                                      fhe_scheme=fhe_scheme_pb)
+    def construct_he_scheme_config_pb(cls, enabled=False, crypto_context_file=None,
+                                      public_key_file=None, private_key_file=None,
+                                      empty_scheme_config_pb=None, ckks_scheme_config_pb=None):
+        if empty_scheme_config_pb is not None:
+            return metis_pb2.HESchemeConfig(enabled=enabled,
+                                            crypto_context_file=crypto_context_file,
+                                            public_key_file=public_key_file,
+                                            private_key_file=private_key_file,
+                                            empty_scheme_config=empty_scheme_config_pb)
+        if ckks_scheme_config_pb is not None:
+            return metis_pb2.HESchemeConfig(enabled=enabled,
+                                            crypto_context_file=crypto_context_file,
+                                            public_key_file=public_key_file,
+                                            private_key_file=private_key_file,
+                                            ckks_scheme_config=ckks_scheme_config_pb)
 
     @classmethod
-    def construct_empty_he_scheme_pb(cls):
-        return metis_pb2.EmptyHEScheme()
+    def construct_empty_scheme_config_pb(cls):
+        return metis_pb2.EmptySchemeConfig()
 
-    
     @classmethod
-    def construct_fhe_scheme_pb(cls, batch_size, scaling_bits):
-        return metis_pb2.FHEScheme(batch_size=batch_size, scaling_bits=scaling_bits)
+    def construct_ckks_scheme_config_pb(cls, batch_size, scaling_factor_bits):
+        return metis_pb2.CKKSSchemeConfig(batch_size=batch_size, scaling_factor_bits=scaling_factor_bits)
 
     @classmethod
     def construct_dataset_spec_pb(cls, num_training_examples, num_validation_examples, num_test_examples,
@@ -296,8 +336,8 @@ class MetisProtoMessages(object):
         return metis_pb2.FedRec()
 
     @classmethod
-    def construct_pwa_pb(cls, he_scheme_pb):
-        return metis_pb2.PWA(he_scheme=he_scheme_pb)
+    def construct_pwa_pb(cls, he_scheme_config_pb):
+        return metis_pb2.PWA(he_scheme_config=he_scheme_config_pb)
 
     @classmethod
     def construct_aggregation_rule_specs_pb(cls, scaling_factor):
@@ -314,7 +354,7 @@ class MetisProtoMessages(object):
         return metis_pb2.AggregationRuleSpecs(scaling_factor=scaling_factor_pb)
 
     @classmethod
-    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, he_scheme_pb):
+    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, he_scheme_config_pb):
         aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(scaling_factor)
         if rule_name.upper() == "FEDAVG":
             return metis_pb2.AggregationRule(fed_avg=MetisProtoMessages.construct_fed_avg_pb(),
@@ -327,7 +367,7 @@ class MetisProtoMessages(object):
                                              aggregation_rule_specs=aggregation_rule_specs_pb)
         elif rule_name.upper() == "PWA":
             return metis_pb2.AggregationRule(
-                pwa=MetisProtoMessages.construct_pwa_pb(he_scheme_pb=he_scheme_pb),
+                pwa=MetisProtoMessages.construct_pwa_pb(he_scheme_config_pb=he_scheme_config_pb),
                 aggregation_rule_specs=aggregation_rule_specs_pb)
         else:
             raise RuntimeError("Unsupported rule name.")
@@ -500,6 +540,30 @@ class ModelProtoMessages(object):
         return model_pb2.Model(variables=variables_pb)
 
     @classmethod
+    def construct_model_pb_from_np(
+            cls, weights_values, weights_names, weights_trainable, he_scheme=None):
+
+        # np.savez('/tmp/test.npz', **weights_values)
+        with open('/tmp/test.npy', 'wb') as f:
+            for v in weights_values:
+                np.savez(f, v)
+
+        variables_pb = []
+        for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
+            ciphertext = None
+            if he_scheme is not None:
+                ciphertext = he_scheme.encrypt(w_v.flatten())
+                non_encrypted = he_scheme.decrypt(ciphertext, len(w_v.flatten()))
+            # If we have a ciphertext we prioritize it over the plaintext.
+            tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
+                                                               ciphertext=ciphertext)
+            model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
+                                                                       trainable=w_t,
+                                                                       tensor_pb=tensor_pb)
+            variables_pb.append(model_var)
+        return model_pb2.Model(variables=variables_pb)
+
+    @classmethod
     def construct_federated_model_pb(cls, num_contributors, model_pb):
         assert isinstance(model_pb, model_pb2.Model)
         return model_pb2.FederatedModel(num_contributors=num_contributors, model=model_pb)
@@ -567,3 +631,28 @@ class ModelProtoMessages(object):
             return model_pb2.OptimizerConfig(adam_weight_decay=optimizer_pb)
         else:
             raise RuntimeError("Optimizer proto message refers to a non-supported optimizer.")
+
+
+class ServiceCommonProtoMessages(object):
+
+    @classmethod
+    def construct_ack_pb(cls, status, google_timestamp, message=None):
+        return service_common_pb2.Ack(status=status, timestamp=google_timestamp, message=message)
+
+    @classmethod
+    def construct_get_services_health_status_request_pb(cls):
+        return service_common_pb2.GetServicesHealthStatusRequest()
+
+    @classmethod
+    def construct_get_services_health_status_response_pb(cls, services_status):
+        assert isinstance(services_status, dict)
+        return service_common_pb2.GetServicesHealthStatusResponse(services_status=services_status)
+
+    @classmethod
+    def construct_shutdown_request_pb(cls):
+        return service_common_pb2.ShutDownRequest()
+
+    @classmethod
+    def construct_shutdown_response_pb(cls, ack_pb):
+        assert isinstance(ack_pb, service_common_pb2.Ack)
+        return service_common_pb2.ShutDownResponse(ack=ack_pb)

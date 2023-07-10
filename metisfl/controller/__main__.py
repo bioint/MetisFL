@@ -1,13 +1,10 @@
 import argparse
-import signal
-import time
-from metisfl.proto import model_pb2
 
 import metisfl.proto.metis_pb2 as metis_pb2
-
-from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from metisfl.controller.controller_instance import ControllerInstance
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.proto_messages_factory import MetisProtoMessages
+                                                  
 
 
 def init_controller(args):
@@ -38,7 +35,7 @@ def init_controller(args):
             rule_name="FEDAVG",
             scaling_factor="NUMTRAININGEXAMPLES",
             stride_length=None,
-            he_scheme_pb=None)
+            he_scheme_config_pb=None)
         global_model_specs_pb = MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=1)
@@ -64,9 +61,8 @@ def init_controller(args):
         model_hyperparams_pb.ParseFromString(
             model_hyperparameters_protobuff_ser)
     else:
-        model_hyperparams_pb = metis_pb2.ControllerParams.ModelHyperparams(
-            batch_size=100, epochs=5, percent_validation=0.0,
-            optimizer_pb=model_pb2.VanillaSGD(learning_rate=0.01, L1_reg=0.0, L2_reg=0.0))
+        model_hyperparams_pb = MetisProtoMessages.construct_controller_modelhyperparams_pb(
+            batch_size=100, epochs=5, percent_validation=0.0, optimizer_pb=None)
 
     # Use parsed protobuff to initialize Metis.ModelStoreConfig() object.
     if args.model_store_config_protobuff_serialized_hexadecimal is not None:

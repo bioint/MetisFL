@@ -67,12 +67,16 @@ class FederationMonitor:
             test_set_scores = []
             # Since we evaluate the community model across all learners,
             # we need to measure the average performance across the test sets.
+            # FIXME(@stripeli) : what if there is no test set?
             for learner_id, evaluations in res.evaluations.items():
                 if self._evaluation_metric in evaluations.test_evaluation.metric_values:
                     test_score = evaluations.test_evaluation.metric_values[self._evaluation_metric]
                     test_set_scores.append(float(test_score))
             if test_set_scores:
+                print(test_set_scores)
                 mean_test_score = sum(test_set_scores) / len(test_set_scores)
+                print(mean_test_score)
+                print(self._metric_cutoff_score)
                 if mean_test_score >= self._metric_cutoff_score:
                     MetisLogger.info("Exceeded evaluation metric cutoff score. Exiting ...")
                     return True
