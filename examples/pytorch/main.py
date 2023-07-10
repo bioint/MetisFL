@@ -48,6 +48,7 @@ if __name__ == "__main__":
 
     driver_session = DriverSession(args.env,
                                    model=model,
+                                   train_dataset_fps=[path],
                                    train_dataset_recipe_fn=train_dataset_recipe_fn)
 
     driver_session.run()

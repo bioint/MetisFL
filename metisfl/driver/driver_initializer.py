@@ -43,7 +43,7 @@ class DriverInitializer:
         for key, dataset_recipe_fn in dataset_recipe_fns.items():
             if dataset_recipe_fn:
                 dataset_pkl = os.path.join(
-                    self._driver_dir, config.DATASET_recipe_FILENAMES[key])
+                    self._driver_dir, config.DATASET_RECIPE_FILENAMES[key])
                 cloudpickle.register_pickle_by_value(
                     inspect.getmodule(dataset_recipe_fn))
                 cloudpickle.dump(obj=dataset_recipe_fn,

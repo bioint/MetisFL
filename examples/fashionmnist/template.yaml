@@ -1,6 +1,6 @@
 # Termination Signals
 FederationRounds: 5 # only in synchronous execution
-ExecutionCutoffTimeMins: 100000
+# ExecutionCutoffTimeMins: 100000
 EvaluationMetric: "accuracy" # Others are "accuracy", "loss"
 EvaluationMetricCutoffScore: 0.5
 
@@ -43,8 +43,6 @@ Controller:
   OnLoginCommand: "source /etc/profile;"
   GRPCServicerHostname: "localhost"
   GRPCServicerPort: 50051
-  SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-  SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
 
 # LearnersConfig:
 Learners:
@@ -57,5 +55,3 @@ Learners:
     GRPCServicerHostname: "localhost"
     GRPCServicerPort: 50052
     CudaDevices: [0]
-    SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-    SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"

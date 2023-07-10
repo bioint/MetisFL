@@ -1,16 +1,8 @@
 import yaml
 
-from metisfl.proto import metis_pb2, model_pb2
+from metisfl.proto import metis_pb2
 from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
-from .schema import env_schema
-
-OPTIMIZER_PB_MAP = {
-    "VanillaSGD": model_pb2.VanillaSGD,
-    "MomentumSGD": model_pb2.MomentumSGD,
-    "FedProx": model_pb2.FedProx,
-    "Adam": model_pb2.Adam,
-    "AdamWeightDecay": model_pb2.AdamWeightDecay,
-}
+from .schema import env_schema, OPTIMIZER_PB_MAP
 
 
 class FederationEnvironment(object):
@@ -42,11 +34,11 @@ class FederationEnvironment(object):
 
     @property
     def enable_ssl(self):
-        return self._yaml.get("EnableSSL")
+        return self._yaml.get("EnableSSL", False)
 
     @property
     def model_store(self):
-        return self._yaml.get("ModelStore")
+        return self._yaml.get("ModelStore", "InMemory")
 
     @property
     def model_store_hostname(self):
@@ -58,11 +50,11 @@ class FederationEnvironment(object):
 
     @property
     def eviction_policy(self):
-        return self._yaml.get("EvictionPolicy")
+        return self._yaml.get("EvictionPolicy", "LineageLengthEviction")
 
     @property
     def lineage_length(self):
-        return self._yaml.get("LineageLength")
+        return self._yaml.get("LineageLength", 1)
 
     # Homomorphic encryption configuration
     @property
@@ -96,7 +88,7 @@ class FederationEnvironment(object):
 
     @property
     def particiapation_ratio(self):
-        return self._yaml.get("ParticipationRatio")
+        return self._yaml.get("ParticipationRatio", 1.0)
 
     # Local training configuration
     @property
@@ -118,10 +110,6 @@ class FederationEnvironment(object):
     @property
     def optimizer_params(self):
         return self._yaml.get("OptimizerParams")
-
-    @property
-    def validation_percentage(self):
-        return self._yaml.get("ValidationPercentage")
 
     def get_local_model_config_pb(self):
         return MetisProtoMessages.construct_controller_modelhyperparams_pb(
@@ -197,7 +185,7 @@ class RemoteHost(object):
 
     @property
     def id(self):
-        return self._config_map.get("LearnerID") or self._config_map.get("ControllerID") or None
+        return "{}:{}".format(self.grpc_hostname, self.grpc_port)
 
     @property
     def project_home(self):

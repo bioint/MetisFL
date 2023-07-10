@@ -1,52 +1,61 @@
-FederationEnvironment:
-  TerminationSignals:
-    FederationRounds: 3 # only in synchronous execution
-    ExecutionCutoffTimeMins: null
-    MetricCutoffScore: 1.0
-  EvaluationMetric: "accuracy"
-  CommunicationProtocol:
-    Name: "Synchronous"
-  ModelStoreConfig:
-    Name: "InMemory" # Others are "InMemory", "Redis"
-    EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"
-    LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "LineageLengthEviction"
-  GlobalModelConfig:
-    AggregationRule:
-      Name: "FedAvg" # Others are FedAvg, FedStride, FedRec, PWA
-      RuleSpecifications:
-        ScalingFactor: "NumTrainingExamples" # Others are NUM_COMPLETED_BATCHES, NUM_PARTICIPANTS, NUM_TRAINING_EXAMPLES
-    ParticipationRatio: 1
-  LocalModelConfig:
-    BatchSize: 32
-    LocalEpochs: 4
-    ValidationPercentage: 0.0
-    OptimizerConfig:
-      OptimizerName: "VanillaSGD"
-      LearningRate: 0.05
-      L2Reg: 0.0
-  Controller:
-    ProjectHome: "/metisfl"
-    ConnectionConfigs:
-      Hostname: "localhost"
-      Username: "root"
-      Password: "root"
-      OnLogin: "source /etc/profile;"
-    GRPCServicer:
-      Hostname: "localhost"
-      Port: 50051
-  Learners:
-    - LearnerID: "localhost-1"
-      ProjectHome: "/metisfl"
-      ConnectionConfigs:
-        Hostname: "localhost"
-        Username: "root"
-        Password: "root"
-        OnLogin: "source /etc/profile;"
-      GRPCServicer:
-        Hostname: "localhost"
-        Port: 50052
-      CudaDevices: [0]
-      DatasetConfigs:
-        TrainDatasetPath: ""
-        ValidationDatasetPath: ""
-        TestDatasetPath: ""
+# Termination Signals
+FederationRounds: 5 # only in synchronous execution
+ExecutionCutoffTimeMins: 100000
+EvaluationMetric: "accuracy" # Others are "accuracy", "loss"
+EvaluationMetricCutoffScore: 0.5
+
+# CommunicationProtocol
+CommunicationProtocol: "Synchronous"
+EnableSSL: false
+
+# ModelStore 
+ModelStore: "InMemory" # Others are "InMemory", "Redis"
+ModelStoreHostname: "localhost"
+ModelStorePort: 6379
+EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"
+LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "LineageLengthEviction"
+
+# # homomorphic encryption scheme - if provided run with it, else disabled.
+# HEScheme: "CKKS" # Others are "CKKS" (a fully-homomorphic encryption scheme).
+# HEBatchSize: 4096
+# HEScalingBits: 52
+
+# GlobalTrainingConfig:
+AggregationRule: "FedAvg" # Others are FedAvg, FedStride, FedStride, PWA
+ScalingFactor: "NumTrainingExamples" # Others are NUM_COMPLETED_BATCHES, NUM_PARTICIPANTS, NUM_TRAINING_EXAMPLES
+StrideLength: 2
+ParticipationRatio: 1
+
+# LocalTrainingConfig:
+BatchSize: 32
+LocalEpochs: 4
+ValidationPercentage: 0.0
+Optimizer: "VanillaSGD" # Others are "MomentumSGD", "Adam", "RMSProp"
+OptimizerParams:
+  learning_rate: 0.01
+
+# ControllerConfig:
+Controller:
+  ProjectHome: "/home/panoskyriakis/metisfl"
+  Hostname: "localhost"
+  Username: "panoskyriakis"
+  KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
+  OnLoginCommand: "source /etc/profile;"
+  GRPCServicerHostname: "localhost"
+  GRPCServicerPort: 50051
+  SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+  SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
+
+# LearnersConfig:
+Learners:
+  - LearnerID: "localhost-1"
+    ProjectHome: "/home/panoskyriakis/metisfl"
+    Hostname: "localhost"
+    Username: "panoskyriakis"
+    KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
+    OnLoginCommand: "source /etc/profile;"
+    GRPCServicerHostname: "localhost"
+    GRPCServicerPort: 50052
+    CudaDevices: [0]
+    SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+    SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"

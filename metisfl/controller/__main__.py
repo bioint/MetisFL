@@ -3,8 +3,8 @@ import argparse
 import metisfl.proto.metis_pb2 as metis_pb2
 from metisfl.controller.controller_instance import ControllerInstance
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.proto_messages_factory import MetisProtoMessages
-                                                  
+from metisfl.utils.proto_messages_factory import (MetisProtoMessages,
+                                                  ModelProtoMessages)
 
 
 def init_controller(args):
@@ -62,7 +62,10 @@ def init_controller(args):
             model_hyperparameters_protobuff_ser)
     else:
         model_hyperparams_pb = MetisProtoMessages.construct_controller_modelhyperparams_pb(
-            batch_size=100, epochs=5, percent_validation=0.0, optimizer_pb=None)
+            batch_size=100, epochs=5, percent_validation=0.0,
+            optimizer_pb=ModelProtoMessages.construct_optimizer_config_pb(
+                ModelProtoMessages.construct_vanilla_sgd_optimizer_pb(learning_rate=0.01)))
+        model_hyperparams_pb = metis_pb2.ControllerParams.ModelHyperparams()
 
     # Use parsed protobuff to initialize Metis.ModelStoreConfig() object.
     if args.model_store_config_protobuff_serialized_hexadecimal is not None:
