@@ -1,4 +1,5 @@
 
+#include <filesystem>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -86,15 +87,18 @@ TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
   auto aggregated_dec =
     ckks_scheme.Decrypt(aggregated_ciphertext, model_values.size());
 
-  // TODO(hamzahsaleem) Why the returned aggregated vector is not equal to
-  // the original vector even after casting the two vectors to int?
+  // PLOG(INFO) << model_values;
+  // PLOG(INFO) << aggregated_dec;
+
+  // // TODO(hamzahsaleem) Why the returned aggregated vector is not equal to
+  // // the original vector even after casting the two vectors to int?
   // auto equal_vectors = model_values == aggregated_dec;
   // PLOG(INFO) << "Equal as doubles: " << equal_vectors;
 
-  std::vector<int> model_values_as_int(model_values.begin(), model_values.end());
-  std::vector<int> aggregated_dec_as_int(aggregated_dec.begin(), aggregated_dec.end());
-  auto equal_vectors = model_values_as_int == aggregated_dec_as_int;
-  PLOG(INFO) << "Equal as ints: " << equal_vectors;
+  // std::vector<int> model_values_as_int(model_values.begin(), model_values.end());
+  // std::vector<int> aggregated_dec_as_int(aggregated_dec.begin(), aggregated_dec.end());
+  // auto equal_vectors = model_values_as_int == aggregated_dec_as_int;
+  // PLOG(INFO) << "Equal as ints: " << equal_vectors;
 
 
   // To validate whether the returned aggregated value is correct
@@ -102,19 +106,19 @@ TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
   // Note that the comparison is based on absolute values because the encryption,
   // weighted aggregation and then the decryption operations might slightly modify
   // the decimal points of the original double values.
-//  bool equal_vectors = 1;
-//  if (model_values.size() != aggregated_dec.size()) {
-//    PLOG(INFO) << "Different sizes: " << model_values.size() << " " << aggregated_dec.size();
-//    equal_vectors = 0;
-//  } else {
-//    for (size_t i = 0; i < model_values.size(); i++) {
-//      if ( round(aggregated_dec[i]) != (int) (model_values[i])) {
-//        PLOG(INFO) << "Not Equal: " << aggregated_dec[i] << " " << model_values[i];
-//        equal_vectors = 0;
-//        break;
-//      }
-//    }
-//  }
+  bool equal_vectors = 1;
+  if (model_values.size() != aggregated_dec.size()) {
+    PLOG(INFO) << "Different sizes: " << model_values.size() << " " << aggregated_dec.size();
+    equal_vectors = 0;
+  } else {
+    for (size_t i = 0; i < model_values.size(); i++) {
+      if ( (int) aggregated_dec[i] != (int) model_values[i] ) {
+        PLOG(INFO) << "Not Equal: " << aggregated_dec[i] << " " << model_values[i];
+        equal_vectors = 0;
+        break;
+      }
+    }
+  }
 
   EXPECT_TRUE(equal_vectors);
 

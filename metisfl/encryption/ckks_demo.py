@@ -34,10 +34,10 @@ def decrypt(crypto_params_files, ckks_scheme, data_enc, number_of_elems):
 
     data_dec = []
     for x_enc in data_enc:
-        res_dec = ckks_scheme.decrypt(x_enc, number_of_elems)
+        # res_dec = ckks_scheme.decrypt(x_enc, number_of_elems)
         # FIXME(hamzahsaleem): Why if the function call is not correct an encrypted message is generated?
         #  Just comment the line above and uncomment the one below to regenerate issue.
-        # res_dec = ckks_scheme.decrypt(x_enc)
+        res_dec = ckks_scheme.decrypt(x_enc)
         data_dec.append(res_dec)
     MetisLogger.info("Decrypting is complete.")
 
