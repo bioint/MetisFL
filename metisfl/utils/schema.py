@@ -1,3 +1,4 @@
+import os
 from schema import Schema, And, Use, Optional, Or
 
 from metisfl.proto import model_pb2
@@ -10,7 +11,7 @@ OPTIMIZER_PB_MAP = {
     "AdamWeightDecay": model_pb2.AdamWeightDecay,
 }
 
-METRICS = ["accuracy", "mse"]
+METRICS = ["accuracy", "loss"]
 COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
 MODEL_STORES = ["InMemory", "Redis"]
 EVICTION_POLICIES = ["LineageLengthEviction", "NoEviction"]
@@ -18,6 +19,12 @@ HE_SCHEMES = ["CKKS"]
 AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "PWA"]
 SCALING_FACTORS = ["NumTrainingExamples", "NUM_COMPLETED_BATCHES",
                    "NUM_PARTICIPANTS", "NUM_TRAINING_EXAMPLES"]
+
+def _existing_file(s):
+    if not os.path.exists(s):
+        raise FileNotFoundError(f"{s} does not exist.")
+    return s
+
 
 remote_host_schema = Schema({
     "ProjectHome": str,
@@ -29,8 +36,8 @@ remote_host_schema = Schema({
     "OnLoginCommand": str,
     "GRPCServicerHostname": str,
     "GRPCServicerPort": And(Use(int), lambda n: n > 0),
-    "SSLPrivateKey": str, 
-    "SSLPublicCertificate": str,
+    Optional("SSLPrivateKey"): And(_existing_file, str),
+    Optional("SSLPublicCertificate"): And(_existing_file, str),
     Optional("CudaDevices"): list[int]
 })
 
@@ -57,8 +64,9 @@ env_schema = Schema({
     Optional("ParticipationRatio"): And(Use(float), lambda n: n > 0 and n <= 1),  
     "BatchSize": And(Use(int), lambda n: n > 0),
     "LocalEpochs": And(Use(int), lambda n: n > 0),
+    "ValidationPercentage": And(Or(float, int), lambda n: n >= 0 and n <= 1),
     "Optimizer": And(str, lambda s: s in OPTIMIZER_PB_MAP.keys()),
     "OptimizerParams": dict,
     "Controller": remote_host_schema,
-    "Learners": [remote_host_schema],
+    "Learners": And(list, lambda l: len(l) > 0, error="Learners must be a non-empty list."),
 })

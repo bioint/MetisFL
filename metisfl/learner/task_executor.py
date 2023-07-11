@@ -13,7 +13,7 @@ from .dataset_handler import LearnerDataset
 class TaskExecutor(object):
 
     def __init__(self, 
-                 he_scheme_pb: metis_pb2.HEScheme,
+                 he_scheme_pb: metis_pb2.HESchemeConfig,
                  learner_dataset: LearnerDataset,
                  learner_server_entity_pb: metis_pb2.ServerEntity,
                  model_dir: str,
@@ -25,7 +25,7 @@ class TaskExecutor(object):
             backend is imported correctly.    
 
         Args:
-            he_scheme_pb (metis_pb2.HEScheme): A protobuf message that contains the HE scheme.
+            he_scheme_pb (metis_pb2.HESchemeConfig): A protobuf message that contains the HE scheme.
             learner_dataset (LearnerDataset): A LearnerDataset object that contains the datasets.
             model_backend_fn (Callable[[str], model_ops.ModelOps]): A function that returns a model backend.
             model_dir (str): The directory where the model is stored.

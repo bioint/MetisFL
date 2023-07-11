@@ -10,7 +10,7 @@ class ControllerInstance(object):
 
     def __init__(self):
         self.__controller_wrapper = controller.ControllerWrapper()
-        self.__shutdown_signal = False
+        self.__shutdown_signal_received = False
 
     def start(self, controller_params_pb):
         assert isinstance(controller_params_pb, ControllerParams)
@@ -18,34 +18,22 @@ class ControllerInstance(object):
         self.__controller_wrapper.start(controller_params_ser)
 
     def shutdown(self, instantly=False):
-        """
-        The function registers the termination signals that will modify the
-        internal state of the controller instance and trigger a shutdown() event.
 
-        The function also checks whether the controller has received any shutdown
-        requests at the servicer level; recall this instance is a wrapper of the
-        actual controller class. In such a case we only need to wait() for any
-        resources to be released by the main thread that started the controller.
-
-        Parameters
-        ----------
-        instantly : bool, optional
-            Whether to stop/shutdown the controller instance right away.
-        """
         def sigint_handler(signum, frame):
-            self.__shutdown_signal = True
+            self.__shutdown_signal_received = True
 
         # Registering signal termination/shutdown calls.
         signal.signal(signal.SIGTERM, sigint_handler)
         signal.signal(signal.SIGINT, sigint_handler)
 
-        # Infinite loop till shutdown signal is triggered
-        # or shutdown request is received. The
+        # Infinite loop till shutdown signal is triggered.
         while True:
-            if instantly or self.__shutdown_signal:
-                self.__controller_wrapper.shutdown()
-                break
-            if self.__controller_wrapper.shutdown_request_received():
-                self.__controller_wrapper.wait()
+            shutdown_condition = \
+                instantly or \
+                self.__shutdown_signal_received or \
+                self.__controller_wrapper.shutdown_request_received()
+            if shutdown_condition:
                 break
             time.sleep(0.01)
+
+        self.__controller_wrapper.shutdown()

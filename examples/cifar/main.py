@@ -44,7 +44,6 @@ if __name__ == "__main__":
     nn_model.compile(optimizer="adam",
                      loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     
-
     # Wrap it with MetisKerasModel
     model = MetisKerasModel(nn_model)
 

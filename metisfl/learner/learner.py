@@ -11,7 +11,7 @@ from .task_executor import TaskExecutor
 
 
 def parse_server_hex(hex_str, default_host, default_port):
-    if hex_str is not None:
+    if hex_str:
         server_entity_pb = metis_pb2.ServerEntity()
         server_entity_pb_ser = bytes.fromhex(hex_str)
         server_entity_pb.ParseFromString(server_entity_pb_ser)
@@ -22,9 +22,9 @@ def parse_server_hex(hex_str, default_host, default_port):
 
 
 def parse_he_scheme_hex(hex_str):
-    if hex_str is not None:
+    if hex_str:
         he_scheme_protobuff_ser = bytes.fromhex(hex_str)
-        he_scheme_config_pb = metis_pb2.HEScheme()
+        he_scheme_config_pb = metis_pb2.HESchemeConfig()
         he_scheme_config_pb.ParseFromString(he_scheme_protobuff_ser)
     else:
         empty_scheme_config_pb = MetisProtoMessages.construct_empty_scheme_config_pb()

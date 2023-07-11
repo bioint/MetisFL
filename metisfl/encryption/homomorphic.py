@@ -4,24 +4,22 @@ from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.proto_messages_factory import ModelProtoMessages
 
-CRYPTO_RESOURCES_DIR = "/home/panoskyriakis/metisfl/metisfl/resources/fheparams/cryptoparams/"
 
 class HomomorphicEncryption(object):
 
-    def __init__(self, he_scheme_pb: metis_pb2.HEScheme):
+    def __init__(self, he_scheme_pb: metis_pb2.HESchemeConfig):
         assert isinstance(
-            he_scheme_pb, metis_pb2.HEScheme), "Not a valid HE scheme protobuf."
+            he_scheme_pb, metis_pb2.HESchemeConfig), "Not a valid HE scheme protobuf."
         
         self._he_scheme = None        
-        if he_scheme_pb and he_scheme_pb.HasField("fhe_scheme"):
+        if he_scheme_pb and he_scheme_pb.HasField("ckks_scheme_config"):
             self._he_scheme = fhe.CKKS(
                 he_scheme_pb.fhe_scheme.batch_size,
-                he_scheme_pb.fhe_scheme.scaling_bits,
-                CRYPTO_RESOURCES_DIR)
+                he_scheme_pb.fhe_scheme.scaling_bits)
             self._he_scheme.load_crypto_params()
             
     @staticmethod
-    def from_proto(he_scheme_pb: metis_pb2.HEScheme):
+    def from_proto(he_scheme_pb: metis_pb2.HESchemeConfig):
         return HomomorphicEncryption(he_scheme_pb)
 
     def decrypt_pb_weights(self,

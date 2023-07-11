@@ -102,11 +102,15 @@ class FederationEnvironment(object):
     @property
     def local_epochs(self):
         return self._yaml.get("LocalEpochs")
+    
+    @property
+    def validation_percentage(self):
+        return self._yaml.get("ValidationPercentage")
 
     @property
     def optimizer(self):
         return self._yaml.get("Optimizer")
-    
+
     @property
     def optimizer_params(self):
         return self._yaml.get("OptimizerParams")
@@ -136,25 +140,23 @@ class FederationEnvironment(object):
 
     def get_he_scheme_pb(self):
         if self.he_scheme == "CKKS":
-            fhe_scheme_pb = metis_pb2.FHEScheme(
+            fhe_scheme_pb = metis_pb2.CKKSSchemeConfig(
                 batch_size=self.he_batch_size, scaling_bits=self.he_scaling_bits)
-            return metis_pb2.HEScheme(enabled=True, name="CKKS", fhe_scheme=fhe_scheme_pb, public_key=None, private_key=None)
+            return metis_pb2.HESchemeConfig(enabled=True, fhe_scheme=fhe_scheme_pb)
         else:
-            empty_scheme_pb = metis_pb2.EmptyHEScheme()
-            return metis_pb2.HEScheme(enabled=False,
-                                      name=None,
-                                      public_key=None,
-                                      private_key=None,
-                                      empty_he_scheme=empty_scheme_pb)
+            empty_scheme_pb = metis_pb2.EmptySchemeConfig()
+            return metis_pb2.HESchemeConfig(enabled=False,
+                                            empty_scheme_config=empty_scheme_pb)
 
     def get_communication_protocol_pb(self):
-        specifications = self._yaml.get("Specifications", None)
+        # @stripeli clarify this
+        protocol = self._yaml.get("CommunicationProtocol")
         semi_synchronous_lambda, semi_sync_recompute_num_updates = None, None
-        if specifications and self.is_semi_synchronous:
-            self.semi_synchronous_lambda = self.specifications.get(
-                "SemiSynchronousLambda", None)
-            self.semi_sync_recompute_num_updates = self.specifications.get(
-                "SemiSynchronousRecomputeSteps", None)
+        if protocol == "SemiSynchronous":
+            semi_synchronous_lambda = self._yaml.get(
+                "SemiSynchronousLambda")
+            semi_sync_recompute_num_updates = self._yaml.get(
+                "SemiSynchronousRecomputeSteps")
 
         return MetisProtoMessages.construct_communication_specs_pb(
             protocol=self.communication_protocol,

@@ -41,7 +41,7 @@ if __name__ == "__main__":
     # Get the tf.keras model
     model = get_model()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer="sgd", metrics=["accuracy"])
+                  optimizer="SGD", metrics=["accuracy"])
 
     # Wrap the model in a MetisKerasModel
     metis_model = MetisKerasModel(model)

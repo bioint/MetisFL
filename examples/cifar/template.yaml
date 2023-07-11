@@ -13,7 +13,7 @@ EnableSSL: false
 # ModelStore: "InMemory" # Others are "InMemory", "Redis"
 ModelStoreHostname: "localhost"
 ModelStorePort: 6379
-# EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"
+EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"
 LineageLength: 10 # This field is only applicable if EvictionPolicy is set to "LineageLengthEviction"
 
 # # homomorphic encryption scheme - if provided run with it, else disabled.
@@ -30,9 +30,7 @@ ParticipationRatio: 1
 # LocalTrainingConfig:
 BatchSize: 32
 LocalEpochs: 4
-Optimizer: "VanillaSGD" # Others are "MomentumSGD", "Adam", "RMSProp"
-OptimizerParams:
-  learning_rate: 0.01
+ValidationPercentage: 0
 
 # ControllerConfig:
 Controller:
@@ -43,8 +41,8 @@ Controller:
   OnLoginCommand: "source /etc/profile;"
   GRPCServicerHostname: "localhost"
   GRPCServicerPort: 50051
-  SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-  SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
+  SSLPrivateKey: "/home/panoskyriakis/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+  SSLPublicCertificate: "/home/panoskyriakis/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
 
 # LearnersConfig:
 Learners:
@@ -56,35 +54,3 @@ Learners:
     GRPCServicerHostname: "localhost"
     GRPCServicerPort: 50052
     CudaDevices: [0]
-    SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-    SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
-  - ProjectHome: "/home/panoskyriakis/metisfl"
-    Hostname: "localhost"
-    Username: "panoskyriakis"
-    KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
-    OnLoginCommand: "source /etc/profile;"
-    GRPCServicerHostname: "localhost"
-    GRPCServicerPort: 50053
-    CudaDevices: [0]
-    SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-    SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
-  - ProjectHome: "/home/panoskyriakis/metisfl"
-    Hostname: "localhost"
-    Username: "panoskyriakis"
-    KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
-    OnLoginCommand: "source /etc/profile;"
-    GRPCServicerHostname: "localhost"
-    GRPCServicerPort: 50054
-    CudaDevices: [0]
-    SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-    SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
-  - ProjectHome: "/home/panoskyriakis/metisfl"
-    Hostname: "localhost"
-    Username: "panoskyriakis"
-    KeyFilename: "/home/panoskyriakis/.ssh/id_rsa"
-    OnLoginCommand: "source /etc/profile;"
-    GRPCServicerHostname: "localhost"
-    GRPCServicerPort: 50055
-    CudaDevices: [0]
-    SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-    SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
