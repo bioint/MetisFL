@@ -1,27 +1,27 @@
 
-import os
-import tarfile
-from typing import Callable, Tuple
-
 import cloudpickle
 import inspect
+import os
+import tarfile
+
 from fabric import Connection
+from typing import Callable, Dict, List, Tuple
 
 from metisfl import config
-from metisfl.models.model_wrapper import MetisModel
+from metisfl.models.metis_model import MetisModel
 from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils.fedenv import FederationEnvironment, RemoteHost
 from metisfl.utils.metis_logger import MetisLogger
 
 
-class DriverInitializer:
+class ServiceInitializer:
 
     def __init__(self,
                  controller_server_entity_pb: ServerEntity,
-                 dataset_recipe_fns: dict[str, Callable],
-                 dataset_fps: dict[str, list[str]],
+                 dataset_recipe_fns: Dict[str, Callable],
+                 dataset_fps: Dict[str, List[str]],
                  fed_env: FederationEnvironment,
-                 learner_server_entities_pb: list[ServerEntity],
+                 learner_server_entities_pb: List[ServerEntity],
                  model: MetisModel):
         assert config.TRAIN in dataset_recipe_fns, "Train dataset recipe function is required."
         
@@ -38,39 +38,8 @@ class DriverInitializer:
             dataset_recipe_fns)
         self._model_definition_tar_fp = self._save_initial_model(model)
 
-    def _save_dataset_recipes(self, dataset_recipe_fns) -> str:
-        dataset_recipe_fps = dict()
-        for key, dataset_recipe_fn in dataset_recipe_fns.items():
-            if dataset_recipe_fn:
-                dataset_pkl = os.path.join(
-                    self._driver_dir, config.DATASET_RECIPE_FILENAMES[key])
-                cloudpickle.register_pickle_by_value(
-                    inspect.getmodule(dataset_recipe_fn))
-                cloudpickle.dump(obj=dataset_recipe_fn,
-                                 file=open(dataset_pkl, "wb+"))
-                dataset_recipe_fps[key] = dataset_pkl
-        return dataset_recipe_fps
-
-    def _save_initial_model(self, model: MetisModel) -> str:
-        self._model_weights_descriptor = model.get_weights_descriptor()
-        model.save(self._model_save_dir, is_initial=True)
-        return self._make_tarfile(
-            source_dir=self._model_save_dir,
-            output_filename=os.path.basename(self._model_save_dir)
-        )
-
-    def _make_tarfile(self, output_filename, source_dir):
-        output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))
-        output_filepath = os.path.join(
-            output_dir, "{}.tar.gz".format(output_filename))
-        with tarfile.open(output_filepath, "w:gz") as tar:
-            tar.add(source_dir, arcname=os.path.basename(source_dir))
-        return output_filepath
-
     def init_controller(self):
-        fabric_connection_config = self._federation_environment.controller \
-            .get_fabric_connection_config()
-        connection = Connection(**fabric_connection_config)
+        connection = self._get_controller_connection()
         connection.run("rm -rf {}".format(config.get_controller_path()))
         connection.run("mkdir -p {}".format(config.get_controller_path()))
         
@@ -125,20 +94,56 @@ class DriverInitializer:
             "Running init cmd to learner host: {}".format(init_cmd))
         connection.run(init_cmd)
         connection.close()
+        return
+
+    def _save_dataset_recipes(self, dataset_recipe_fns) -> str:
+        dataset_recipe_fps = dict()
+        for dataset_id, dataset_recipe_fn in dataset_recipe_fns.items():
+            if dataset_recipe_fn:
+                dataset_pkl = os.path.join(
+                    self._driver_dir, config.DATASET_RECIPE_FILENAMES[dataset_id])
+                cloudpickle.register_pickle_by_value(
+                    inspect.getmodule(dataset_recipe_fn))
+                cloudpickle.dump(obj=dataset_recipe_fn,
+                                 file=open(dataset_pkl, "wb+"))
+                dataset_recipe_fps[dataset_id] = dataset_pkl
+        return dataset_recipe_fps
+
+    def _save_initial_model(self, model: MetisModel) -> str:
+        self._model_weights_descriptor = model.get_weights_descriptor()
+        model.save(self._model_save_dir, initialize=True)
+        return self._make_tarfile(
+            source_dir=self._model_save_dir,
+            output_filename=os.path.basename(self._model_save_dir)
+        )
+
+    def _make_tarfile(self, output_filename, source_dir):
+        output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))
+        output_filepath = os.path.join(
+            output_dir, "{}.tar.gz".format(output_filename))
+        with tarfile.open(output_filepath, "w:gz") as tar:
+            tar.add(source_dir, arcname=os.path.basename(source_dir))
+        return output_filepath
 
     def _copy_assets_to_learner(self, index, connection, learner_path):
         connection.run("rm -rf {}".format(learner_path))
         connection.run("mkdir -p {}".format(learner_path))
         
-        for _, filepath in self._dataset_recipe_fps.items():
-            connection.put(filepath, learner_path) if filepath else None
-        for _, dataset_fps in self._dataset_fps.items():
-            dataset_fp = dataset_fps[index]
+        for recipe_fp in self._dataset_recipe_fps.values():
+            connection.put(recipe_fp, learner_path) if recipe_fp else None
+        for dataset_fp in self._dataset_fps.values():
+            dataset_fp = dataset_fp[index]
             MetisLogger.info("Copying dataset file {} to learner: {}".format(
                 dataset_fp, learner_path))
             connection.put(dataset_fp, learner_path) if dataset_fp else None
         if self._model_definition_tar_fp:
             connection.put(self._model_definition_tar_fp, learner_path)
+
+    def _get_controller_connection(self):
+        fabric_connection_config = self._federation_environment.controller \
+            .get_fabric_connection_config()
+        connection = Connection(**fabric_connection_config)
+        return connection        
 
     def _get_learner_connection(self, index) -> Tuple[RemoteHost, Connection]:
         learner = self._federation_environment.learners[index]

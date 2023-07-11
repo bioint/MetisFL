@@ -8,18 +8,18 @@ import torch
 import numpy as np
 
 from metisfl import config
-from metisfl.models.model_wrapper import MetisModel, ModelWeightsDescriptor
+from metisfl.models.metis_model import MetisModel, ModelWeightsDescriptor
 from metisfl.utils.metis_logger import MetisLogger
 
 
-class MetisTorchModel(MetisModel):
+class MetisModelTorch(MetisModel):
 
     def __init__(self, model: torch.nn.Module):
         assert isinstance(
-            model, torch.nn.Module), "MetisTorchModel must be a torch.nn.Module"
-        assert hasattr(model, "fit"), "MetisTorchModel requires a .fit method"
+            model, torch.nn.Module), "MetisModelTorch must be a torch.nn.Module"
+        assert hasattr(model, "fit"), "MetisModelTorch requires a .fit method"
         assert hasattr(
-            model, "evaluate"), "MetisTorchModel requires an .evaluate method"
+            model, "evaluate"), "MetisModelTorch requires an .evaluate method"
 
         self._backend_model = model
         self.nn_engine = config.PYTORCH_NN_ENGINE
@@ -31,14 +31,14 @@ class MetisTorchModel(MetisModel):
         return model_def_path, model_weights_path
 
     @staticmethod
-    def load(model_dir) -> "MetisTorchModel":
-        model_def_path, model_weights_path = MetisTorchModel.get_paths(
+    def load(model_dir) -> "MetisModelTorch":
+        model_def_path, model_weights_path = MetisModelTorch.get_paths(
             model_dir)
         MetisLogger.info("Loading model from: {}".format(model_dir))
         model_loaded = cloudpickle.load(open(model_def_path, "rb"))
         model_loaded.load_state_dict(torch.load(model_weights_path))
         MetisLogger.info("Loaded model from: {}".format(model_dir))
-        return MetisTorchModel(model_loaded)
+        return MetisModelTorch(model_loaded)
 
     def get_weights_descriptor(self) -> ModelWeightsDescriptor:
         weights_names, weights_trainable, weights_values = [], [], []
@@ -55,7 +55,7 @@ class MetisTorchModel(MetisModel):
 
     # The is_initial flag is not used in the torch implementation; simply here for compatibility with the tf version
     def save(self, model_dir, is_initial=False):
-        model_def_path, model_weights_path = MetisTorchModel.get_paths(
+        model_def_path, model_weights_path = MetisModelTorch.get_paths(
             model_dir)
         MetisLogger.info("Saving model to: {}".format(model_dir))
         # @stripeli why are you removing the model dir on torch.save but not on the respective tf save?

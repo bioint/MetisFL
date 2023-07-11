@@ -1,5 +1,7 @@
 import os
+
 from schema import Schema, And, Use, Optional, Or
+from typing import List
 
 from metisfl.proto import model_pb2
 
@@ -38,7 +40,7 @@ remote_host_schema = Schema({
     "GRPCServicerPort": And(Use(int), lambda n: n > 0),
     Optional("SSLPrivateKey"): And(_existing_file, str),
     Optional("SSLPublicCertificate"): And(_existing_file, str),
-    Optional("CudaDevices"): list[int]
+    Optional("CudaDevices"): List[int]
 })
 
 env_schema = Schema({

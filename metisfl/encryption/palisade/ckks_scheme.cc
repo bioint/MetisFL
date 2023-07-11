@@ -73,24 +73,37 @@ CryptoParamsFiles CKKS::GetCryptoParamsFiles() {
 }
 
 template <typename T>
-void CKKS::DeserializeFromFile(std::string filepath, T &obj) {
-  if (!Serial::DeserializeFromFile(filepath,
-                                   obj,
-                                   SerType::BINARY)) {
-    PLOG(ERROR) << "Could not deserialize from file: " << filepath;
+bool CKKS::DeserializeFromFile(std::string filepath, T &obj) {
+  // Perform loading operation only if the object is still not loaded.
+  bool successful_deser = false; 
+  if (obj == nullptr) {
+    if (!Serial::DeserializeFromFile(filepath,
+                                    obj,
+                                    SerType::BINARY)) {
+      PLOG(ERROR) << "Could not deserialize from file: " << filepath;
+    } else {
+      successful_deser = true;
+    }
   }
+  return successful_deser;
 }
 
 void CKKS::LoadCryptoContextFromFile(std::string crypto_context_file) {
-  CKKS::DeserializeFromFile<CryptoContext<DCRTPoly>>(crypto_context_file, cc);
+  auto deser = CKKS::DeserializeFromFile<CryptoContext<DCRTPoly>>(crypto_context_file, cc);
+  // If deserialization is successful save the filepath of the crypto context key.
+  if (deser) crypto_params_files_.crypto_context_file = crypto_context_file;
 }
 
 void CKKS::LoadPublicKeyFromFile(std::string public_key_file) {
-  DeserializeFromFile<LPPublicKey<DCRTPoly>>(public_key_file, pk);
+  auto deser = DeserializeFromFile<LPPublicKey<DCRTPoly>>(public_key_file, pk);
+  // If deserialization is successful save the filepath of the public key.
+  if (deser) crypto_params_files_.public_key_file = public_key_file;
 }
 
 void CKKS::LoadPrivateKeyFromFile(std::string private_key_file) {
-  CKKS::DeserializeFromFile<LPPrivateKey<DCRTPoly>>(private_key_file, sk);
+  auto deser = CKKS::DeserializeFromFile<LPPrivateKey<DCRTPoly>>(private_key_file, sk);
+  // If deserialization is successful save the filepath of the private key.
+  if (deser) crypto_params_files_.private_key_file = private_key_file;
 }
 
 void CKKS::LoadContextAndKeysFromFiles(std::string crypto_context_file,

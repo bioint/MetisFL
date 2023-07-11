@@ -56,4 +56,3 @@ Learners:
       Hostname: "localhost"
       Port: 50052
     CudaDevices: [0]
-

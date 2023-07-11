@@ -1,9 +1,9 @@
 import tensorflow as tf
 
-from metisfl.models.keras.wrapper import MetisKerasModel
+from metisfl.models.keras.keras_model import MetisModelKeras
 
 
-class HousingMLP(MetisKerasModel):
+class HousingMLP(MetisModelKeras):
 
     def __init__(self, params_per_layer=10, hidden_layers_num=1, learning_rate=0.0, data_type="float32"):
         super(HousingMLP, self).__init__()

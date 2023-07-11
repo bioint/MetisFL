@@ -4,7 +4,7 @@ from metisfl.utils.metis_logger import MetisLogger
 from metisfl.utils.proto_messages_factory import ModelProtoMessages
 
 
-# FIXME: @stripeli - logic here implies that requests go through without errors
+# FIXME(@stripeli) - logic here implies that requests go through without errors
 # what about error handling?
 class GRPCControllerClient(GRPCClient):
     def __init__(self,

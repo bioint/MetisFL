@@ -1,9 +1,9 @@
 import tensorflow as tf
 
-from metisfl.models.keras.wrapper import MetisKerasModel
+from metisfl.models.keras.keras_model import MetisModelKeras
 
 
-class MelanomaFC(MetisKerasModel):
+class MelanomaFC(MetisModelKeras):
 
     def __init__(self, IMAGE_SIZE=[1024, 1024]):
         self.IMAGE_SIZE = IMAGE_SIZE

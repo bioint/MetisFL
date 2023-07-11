@@ -4,18 +4,18 @@ from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 import torch
 
-from metisfl.models.pytorch.helper import construct_dataset_pipeline
+from metisfl.models.torch.helper import construct_dataset_pipeline
 from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.model_ops import LearningTaskStats, ModelOps
-from metisfl.models.pytorch.wrapper import MetisTorchModel
+from metisfl.models.torch.torch_model import MetisModelTorch
 from metisfl.proto import metis_pb2
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.models.utils import get_num_of_epochs
 
-class PyTorchModelOps(ModelOps):
+class TorchModelOps(ModelOps):
     
     def __init__(self, model_dir: str):
-        self._metis_model = MetisTorchModel.load(model_dir)
+        self._metis_model = MetisModelTorch.load(model_dir)
 
     def train_model(self,
                     train_dataset: ModelDataset,

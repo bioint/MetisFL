@@ -3,12 +3,12 @@ import numpy as np
 
 from metisfl import config
 from metisfl.models.keras.optimizers.fed_prox import FedProx
-from metisfl.models.model_wrapper import MetisModel
+from metisfl.models.metis_model import MetisModel
 from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.utils.metis_logger import MetisLogger
 
 
-class MetisKerasModel(MetisModel):
+class MetisModelKeras(MetisModel):
 
     def __init__(self, model: tf.keras.Model):
         assert isinstance(
@@ -17,14 +17,14 @@ class MetisKerasModel(MetisModel):
         self._nn_engine = config.KERAS_NN_ENGINE
 
     @staticmethod
-    def load(model_dir) -> "MetisKerasModel":
+    def load(model_dir) -> "MetisModelKeras":
         MetisLogger.info("Loading model from: {}".format(model_dir))
 
         m = tf.keras.models.load_model(
             model_dir, custom_objects={"FedProx": FedProx})
 
         MetisLogger.info("Loaded model from: {}".format(model_dir))
-        return MetisKerasModel(m)
+        return MetisModelKeras(m)
 
     def get_weights_descriptor(self) -> ModelWeightsDescriptor:
         weights_names, weights_trainable, weights_values = [], [], []

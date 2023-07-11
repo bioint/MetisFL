@@ -6,11 +6,7 @@ from metisfl.utils.ssl_configurator import SSLConfigurator
 
 def create_server_entity(enable_ssl: bool,
                          remote_host_instance: RemoteHost,
-                         initialization_entity=False,
-                         connection_entity=False):
-    if initialization_entity is False and connection_entity is False:
-        raise RuntimeError(
-            "One field of Initialization or connection entity needs to be provided.")
+                         gen_connection_entity=False):
 
     # By default ssl is disabled.
     ssl_config_pb = None
@@ -30,7 +26,7 @@ def create_server_entity(enable_ssl: bool,
             public_cert, private_key = \
                 ssl_configurator.gen_default_certificates(as_stream=True)
 
-        if connection_entity:
+        if gen_connection_entity:
             # We only need to use the public certificate
             # to issue requests to the remote entity,
             # hence the private key is set to None.

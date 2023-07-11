@@ -2,7 +2,7 @@ import yaml
 
 from metisfl.proto import metis_pb2
 from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
-from .schema import env_schema, OPTIMIZER_PB_MAP
+from .fedenv_schema import env_schema, OPTIMIZER_PB_MAP
 
 
 class FederationEnvironment(object):

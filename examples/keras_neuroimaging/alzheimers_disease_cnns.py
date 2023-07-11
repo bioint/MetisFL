@@ -1,11 +1,11 @@
 import tensorflow as tf
 import tensorflow_addons as tfa
 
-from metisfl.models.keras.wrapper import MetisKerasModel
+from metisfl.models.keras.keras_model import MetisModelKeras
 from tensorflow.keras import regularizers
 
 
-class AlzheimersDisease2DCNN(MetisKerasModel):
+class AlzheimersDisease2DCNN(MetisModelKeras):
 
     # Model def
     def __init__(self, learning_rate=5e-5):
@@ -56,7 +56,7 @@ class AlzheimersDisease2DCNN(MetisKerasModel):
         return model
 
 
-class AlzheimersDisease3DCNN(MetisKerasModel):
+class AlzheimersDisease3DCNN(MetisModelKeras):
 
     # Model def
     def __init__(self, learning_rate=5e-5):

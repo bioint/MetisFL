@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.model_dataset import ModelDatasetClassification
-from metisfl.models.pytorch.wrapper import MetisTorchModel
+from metisfl.models.torch.torch_model import MetisModelTorch
 
 if __name__ == "__main__":
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     model = MLP(n_inputs=34)
 
     # Wrap the model.
-    model = MetisTorchModel(model)
+    model = MetisModelTorch(model)
 
     driver_session = DriverSession(args.env,
                                    model=model,

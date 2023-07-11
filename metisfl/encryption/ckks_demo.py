@@ -63,8 +63,8 @@ def test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factor
     ckks_scheme.gen_crypto_context_and_keys(crypto_params_dir)
     crypto_params_files = ckks_scheme.get_crypto_params_files()
     MetisLogger.info("Crypto parameters files:")
-    for param, file in crypto_params_files.items():
-        MetisLogger.info("\t {}:{}".format(param, file))
+    for param, filename in crypto_params_files.items():
+        MetisLogger.info("\t {}:{}".format(param, filename))
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
     learners_data_enc = encrypt(crypto_params_files, ckks_scheme, learners_data)

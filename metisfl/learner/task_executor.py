@@ -1,6 +1,6 @@
-from typing import Callable
+from typing import Callable, List
 
-from metisfl.encryption.homomorphic import HomomorphicEncryption
+from metisfl.encryption.homomorphic import Homomorphic
 from metisfl.models.model_ops import ModelOps
 from metisfl.models.utils import get_completed_learning_task_pb
 from metisfl.proto import learner_pb2, metis_pb2, model_pb2
@@ -45,7 +45,7 @@ class TaskExecutor(object):
     def evaluate_model(self, 
                         model_pb: model_pb2.Model, 
                         batch_size: int,
-                        evaluation_dataset_pb: list[learner_pb2.EvaluateModelRequest.dataset_to_eval],
+                        evaluation_dataset_pb: List[learner_pb2.EvaluateModelRequest.dataset_to_eval],
                         verbose=False):       
         self._init_model_ops() 
         self._set_weights_from_model_pb(model_pb)
@@ -105,7 +105,7 @@ class TaskExecutor(object):
         return  self._get_completed_learning_task_pb(model_weights_descriptor, learning_task_stats)
 
     def _get_he_obj(self):
-        return HomomorphicEncryption(self._he_scheme_pb)
+        return Homomorphic(self._he_scheme_pb)
 
     def _set_weights_from_model_pb(self, model_pb: model_pb2.Model):
         homomorphic_encryption = self._get_he_obj()
@@ -119,16 +119,14 @@ class TaskExecutor(object):
         model_pb = model_pb2.Model(variables=variables)
         completed_learning_task_pb = get_completed_learning_task_pb(
             model_pb=model_pb,
-            learning_task_stats=learning_task_stats
-        )
+            learning_task_stats=learning_task_stats)
         return completed_learning_task_pb
     
     def _get_completed_evaluation_task_pb(self, train_eval, validation_eval, test_eval):
         return metis_pb2.ModelEvaluations(
             training_evaluation=self._get_metric_pb(train_eval),
             validation_evaluation=self._get_metric_pb(validation_eval),
-            test_evaluation=self._get_metric_pb(test_eval)
-        )
+            test_evaluation=self._get_metric_pb(test_eval))
         
     def _get_metric_pb(self, metrics):
         if not metrics:

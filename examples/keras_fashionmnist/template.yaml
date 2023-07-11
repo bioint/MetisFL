@@ -43,8 +43,8 @@ Controller:
   OnLoginCommand: "source /etc/profile;"
   GRPCServicerHostname: "localhost"
   GRPCServicerPort: 50051
-  SSLPrivateKey: "/home/panoskyriakis/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
-  SSLPublicCertificate: "/home/panoskyriakis/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
+  SSLPrivateKey: "/metisfl/metisfl/resources/ssl_config/default/server-key.pem"
+  SSLPublicCertificate: "/metisfl/metisfl/resources/ssl_config/default/server-cert.pem"
 
 # LearnersConfig:
 Learners:

@@ -5,7 +5,7 @@ import tensorflow as tf
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.keras.wrapper import MetisKerasModel
+from metisfl.models.keras.keras_model import MetisModelKeras
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
 from metisfl.models.model_ops import LearningTaskStats, ModelOps
@@ -17,7 +17,7 @@ class KerasModelOps(ModelOps):
     def __init__(self, model_dir: str):
         self._model_dir = model_dir
         self._set_gpu_memory_growth()
-        self._metis_model = MetisKerasModel.load(model_dir)
+        self._metis_model = MetisModelKeras.load(model_dir)
 
     def train_model(self,
                     train_dataset: ModelDataset,

@@ -60,7 +60,7 @@ class CKKS : public HEScheme {
   LPPrivateKey<DCRTPoly> sk;
 
   template<typename T>
-  void DeserializeFromFile(std::string filepath, T &obj);
+  bool DeserializeFromFile(std::string filepath, T &obj);
 
 };
 

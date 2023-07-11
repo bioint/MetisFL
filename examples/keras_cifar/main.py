@@ -7,7 +7,7 @@ from model import get_model
 from recipe import dataset_recipe_fn
 
 from metisfl.driver.driver_session import DriverSession
-from metisfl.models.keras.wrapper import MetisKerasModel
+from metisfl.models.keras.keras_model import MetisModelKeras
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -45,7 +45,7 @@ if __name__ == "__main__":
                      loss="sparse_categorical_crossentropy", metrics=["accuracy"])
     
     # Wrap it with MetisKerasModel
-    model = MetisKerasModel(nn_model)
+    model = MetisModelKeras(nn_model)
 
     # Create the driver session
     driver_session = DriverSession(fed_env=args.env,

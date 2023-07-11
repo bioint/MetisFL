@@ -9,7 +9,7 @@ from metisfl.utils.metis_logger import MetisLogger
 from .controller_client import GRPCControllerClient
 
 
-class FederationMonitor:
+class ServiceMonitor:
       
     def __init__(self, 
                  federation_environment: FederationEnvironment, 
