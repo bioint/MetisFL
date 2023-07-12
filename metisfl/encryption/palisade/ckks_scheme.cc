@@ -53,8 +53,7 @@ void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
   std::ofstream emkeyfile(crypto_params_files.eval_mult_key_file,
                           std::ios::out | std::ios::binary);
   if (emkeyfile.is_open()) {
-    if (cryptoContext->SerializeEvalMultKey(emkeyfile, SerType::BINARY)
-        == false) {
+    if (cryptoContext->SerializeEvalMultKey(emkeyfile, SerType::BINARY) == false) {
       PLOG(FATAL) << "Error writing serialization of the eval mult keys";
     }
 

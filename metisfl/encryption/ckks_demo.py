@@ -35,9 +35,12 @@ def decrypt(crypto_params_files, ckks_scheme, data_enc, number_of_elems):
     data_dec = []
     for x_enc in data_enc:
         res_dec = ckks_scheme.decrypt(x_enc, number_of_elems)
-        # FIXME(hamzahsaleem): Why if the function call is not correct an encrypted message is generated?
-        #  Just comment the line above and uncomment the one below to regenerate issue.
-        # res_dec = ckks_scheme.decrypt(x_enc)
+        # TODO(@stripeli) If the function is not invoked with the 
+        #  correct arguments then the arguments are printed but the 
+        #  problem is that the encrypted argument (cihpertext) is an
+        #  exteremly large byte text so we need to change the length
+        #  of the ciphertext that will be printed in the console. 
+        #  res_dec = ckks_scheme.decrypt(x_enc)
         data_dec.append(res_dec)
     MetisLogger.info("Decrypting is complete.")
 
@@ -63,8 +66,8 @@ def test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factor
     ckks_scheme.gen_crypto_context_and_keys(crypto_params_dir)
     crypto_params_files = ckks_scheme.get_crypto_params_files()
     MetisLogger.info("Crypto parameters files:")
-    for param, file in crypto_params_files.items():
-        MetisLogger.info("\t {}:{}".format(param, file))
+    for param, filename in crypto_params_files.items():
+        MetisLogger.info("\t {}:{}".format(param, filename))
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
     learners_data_enc = encrypt(crypto_params_files, ckks_scheme, learners_data)

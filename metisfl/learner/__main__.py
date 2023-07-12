@@ -1,6 +1,90 @@
 import argparse
 
+import metisfl.proto.metis_pb2 as metis_pb2
+
+from metisfl.learner.learner import Learner
+from metisfl.learner.learner_servicer import LearnerServicer
+from metisfl.utils.proto_messages_factory import MetisProtoMessages
+
 from .learner import init_learner
+
+
+def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
+                 controller_server_entity_protobuff_serialized_hexadecimal,
+                 he_scheme_protobuff_serialized_hexadecimal,
+                 neural_engine,
+                 model_dir,
+                 train_dataset="/tmp/metis/model/model_train_dataset.npz",
+                 validation_dataset="",
+                 test_dataset="",
+                 train_dataset_recipe="/tmp/metis/model/model_train_dataset_ops.pkl",
+                 validation_dataset_recipe="",
+                 test_dataset_recipe=""):
+    if learner_server_entity_protobuff_serialized_hexadecimal is not None:
+        learner_server_entity_pb = metis_pb2.ServerEntity()
+        learner_server_entity_pb_ser = bytes.fromhex(args.learner_server_entity_protobuff_serialized_hexadecimal)
+        learner_server_entity_pb.ParseFromString(learner_server_entity_pb_ser)
+    else:
+        learner_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(
+            hostname="[::]", port=50052)
+
+    if controller_server_entity_protobuff_serialized_hexadecimal is not None:
+        controller_server_entity_pb = metis_pb2.ServerEntity()
+        controller_server_entity_pb_ser = bytes.fromhex(args.controller_server_entity_protobuff_serialized_hexadecimal)
+        controller_server_entity_pb.ParseFromString(controller_server_entity_pb_ser)
+    else:
+        controller_server_entity_pb = MetisProtoMessages.construct_server_entity_pb(
+            hostname="[::]", port=50051)
+
+    # Training model engine and architecture definition.
+    nn_engine = neural_engine
+    model_dir = model_dir
+
+    # Load train dataset specifications.
+    train_dataset_filepath = train_dataset
+    train_dataset_recipe_fp_pkl = train_dataset_recipe
+
+    # Load validation dataset specifications.
+    validation_dataset_filepath = validation_dataset
+    validation_dataset_recipe_fp_pkl = validation_dataset_recipe
+
+    # Load test dataset specifications.
+    test_dataset_filepath = test_dataset
+    test_dataset_recipe_fp_pkl = test_dataset_recipe
+
+    if he_scheme_protobuff_serialized_hexadecimal is not None:
+        # Parse serialized model hyperparameters object, 'recover' bytes object.
+        # To do so, we need to convert the incoming hexadecimal representation
+        # to bytes and pass it as initialization to the proto message object.
+        he_scheme_protobuff_ser = bytes.fromhex(he_scheme_protobuff_serialized_hexadecimal)
+        he_scheme_config_pb = metis_pb2.HESchemeConfig()
+        he_scheme_config_pb.ParseFromString(he_scheme_protobuff_ser)
+    else:
+        empty_scheme_config_pb = MetisProtoMessages.construct_empty_scheme_config_pb()
+        he_scheme_config_pb = MetisProtoMessages.construct_he_scheme_config_pb(
+            enabled=False, empty_scheme_config_pb=empty_scheme_config_pb)
+
+    learner_credentials_fp = "/tmp/metis/learner_{}_credentials/".format(learner_server_entity_pb.port)
+    learner = Learner(
+        learner_server_entity=learner_server_entity_pb,
+        controller_server_entity=controller_server_entity_pb,
+        he_scheme_config_pb=he_scheme_config_pb,
+        nn_engine=nn_engine,
+        model_dir=model_dir,
+        train_dataset_fp=train_dataset_filepath,
+        train_dataset_recipe_pkl=train_dataset_recipe_fp_pkl,
+        test_dataset_fp=test_dataset_filepath,
+        test_dataset_recipe_pkl=test_dataset_recipe_fp_pkl,
+        validation_dataset_fp=validation_dataset_filepath,
+        validation_dataset_recipe_pkl=validation_dataset_recipe_fp_pkl,
+        learner_credentials_fp=learner_credentials_fp)
+    learner_servicer = LearnerServicer(
+        learner=learner,
+        servicer_workers=5)
+    # First, initialize learner servicer for receiving train/evaluate/inference tasks.
+    learner_servicer.init_servicer()
+    # Second, block the servicer till a shutdown request is issued and no more requests are received.
+    learner_servicer.wait_servicer()
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
