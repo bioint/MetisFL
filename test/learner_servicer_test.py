@@ -3,15 +3,16 @@ import numpy as np
 import datetime
 import time
 
-from examples.keras.models.brainage_cnns import BrainAge3DCNN
-from examples.keras.models.cifar_cnn import CifarCNN
-from examples.keras.models.fashion_mnist_fc import FashionMnistModel
-from examples.keras.models.housing_mlp import HousingMLP
+from examples.neuroimaging.brainage_cnns import BrainAge3DCNN
+from examples.cifar.model import CifarCNN
+from examples.fashionmnist.model import FashionMnistModel
+
+from examples.scalability.housing_mlp import HousingMLP
 from metisfl.proto import learner_pb2_grpc
-from metisfl.utils.grpc_services import GRPCChannelMaxMsgLength, GRPCServerMaxMsgLength
+from metisfl.grpc.grpc_services import GRPCChannelMaxMsgLength, GRPCServerMaxMsgLength
 from metisfl.utils.proto_messages_factory import \
     MetisProtoMessages, ModelProtoMessages, LearnerServiceProtoMessages, ServiceCommonProtoMessages
-from metisfl.proto import learner_pb2, model_pb2, metis_pb2
+from metisfl.proto import metis_pb2
 
 
 def check_health_status(channel):

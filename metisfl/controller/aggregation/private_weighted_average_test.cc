@@ -88,20 +88,6 @@ TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
   auto aggregated_dec =
     ckks_scheme.Decrypt(aggregated_ciphertext, model_values.size());
 
-  // PLOG(INFO) << model_values;
-  // PLOG(INFO) << aggregated_dec;
-
-  // // TODO(hamzahsaleem) Why the returned aggregated vector is not equal to
-  // // the original vector even after casting the two vectors to int?
-  // auto equal_vectors = model_values == aggregated_dec;
-  // PLOG(INFO) << "Equal as doubles: " << equal_vectors;
-
-  // std::vector<int> model_values_as_int(model_values.begin(), model_values.end());
-  // std::vector<int> aggregated_dec_as_int(aggregated_dec.begin(), aggregated_dec.end());
-  // auto equal_vectors = model_values_as_int == aggregated_dec_as_int;
-  // PLOG(INFO) << "Equal as ints: " << equal_vectors;
-
-
   // To validate whether the returned aggregated value is correct
   // we compare the aggregated value with the original vector element-by-element.
   // Note that the comparison is based on absolute values because the encryption,

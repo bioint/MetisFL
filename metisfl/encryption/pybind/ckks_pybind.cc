@@ -110,7 +110,7 @@ PYBIND11_MODULE(fhe, m) {
         .. currentmodule:: cmake_example
         .. autosummary::
            :toctree: _generate
-    )pbdoc"; 
+    )pbdoc";
 
   #ifdef VERSION_INFO
   m.attr("__version__") = MACRO_STRINGIFY(VERSION_INFO);

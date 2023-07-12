@@ -1,4 +1,6 @@
-import abc
+import tensorflow as tf
+
+from metisfl.utils.metis_logger import MetisLogger
 
 
 class ModelDataset(object):
@@ -6,30 +8,39 @@ class ModelDataset(object):
     Private Class. Users need to wrap their datasets as one of its subclasses.
     """
 
-    def __init__(self, x=None, y=None, size=0):
+    def __init__(self, x, y=None, size=0):
         """
         A ModelDataset is a wrapper over the model's train/test/validation dataset input and expected output.
         :param dataset: dataset input
         :param x: model input
         :param y: output
-        :param size: total number of dataset records
         """
         self._x = x
-        self._y = y
+        if isinstance(x, tf.data.Dataset):
+            MetisLogger.info("Model dataset input is a tf.data.Dataset; ignoring fed y values.")
+        else: 
+            self._y = y
         self._size = size
 
-    def get_x(self, *args, **kwargs):
+    def get_x(self):
         return self._x
 
-    def get_y(self, *args, **kwargs):
+    def get_y(self):
         return self._y
 
-    def get_size(self, *args, **kwargs):
+    def get_size(self):
         return self._size
 
-    @abc.abstractmethod
-    def get_model_dataset_specifications(self, *args, **kwargs):
-        return dict()
+    def construct_dataset_pipeline(self, batch_size, is_train=False):
+        _x, _y = self._x, self._y
+        if isinstance(self._x, tf.data.Dataset):
+            if is_train:
+                # Shuffle all records only if dataset is used for training.
+                _x = _x.shuffle(self.get_size())
+            # If the input is of tf.Dataset we only need to return the input x,
+            # we do not need to set a value for target y.
+            _x, _y = _x.batch(batch_size), None
+        return _x, _y
 
 
 class ModelDatasetClassification(ModelDataset):
@@ -42,7 +53,7 @@ class ModelDatasetClassification(ModelDataset):
         else:
             assert isinstance(self.examples_per_class, dict)
 
-    def get_model_dataset_specifications(self, *args, **kwargs):
+    def get_model_dataset_specifications(self):
         return self.examples_per_class
 
 
@@ -60,7 +71,7 @@ class ModelDatasetRegression(ModelDataset):
         self.mode_val = mode_val
         self.stddev = stddev_val
 
-    def get_model_dataset_specifications(self, *args, **kwargs):
+    def get_model_dataset_specifications(self):
         regression_specs = dict()
         regression_specs["min"] = self.min_val
         regression_specs["max"] = self.max_val

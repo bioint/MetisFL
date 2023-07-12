@@ -6,6 +6,8 @@ from metisfl.learner.learner import Learner
 from metisfl.learner.learner_servicer import LearnerServicer
 from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
+from .learner import init_learner
+
 
 def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
                  controller_server_entity_protobuff_serialized_hexadecimal,
@@ -84,9 +86,10 @@ def init_learner(learner_server_entity_protobuff_serialized_hexadecimal,
     # Second, block the servicer till a shutdown request is issued and no more requests are received.
     learner_servicer.wait_servicer()
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    # @stripeli the first 3-4 args are the most verbose I've ever seen :)
+    # and some of them shorthands do not make sense, e.g. -e for neural engine :)
     parser.add_argument("-l", "--learner_server_entity_protobuff_serialized_hexadecimal", type=str,
                         default="",
                         help="Learner server entity.")
@@ -120,18 +123,5 @@ if __name__ == "__main__":
     parser.add_argument("-z", "--test_dataset_recipe", type=str,
                         default="",
                         help="test dataset recipe")
-
     args = parser.parse_args()
-
-    init_learner(
-        learner_server_entity_protobuff_serialized_hexadecimal=args.learner_server_entity_protobuff_serialized_hexadecimal,
-        controller_server_entity_protobuff_serialized_hexadecimal=args.controller_server_entity_protobuff_serialized_hexadecimal,
-        he_scheme_protobuff_serialized_hexadecimal=args.he_scheme_protobuff_serialized_hexadecimal,
-        neural_engine=args.neural_engine,
-        model_dir=args.model_dir,
-        train_dataset=args.train_dataset,
-        validation_dataset=args.validation_dataset,
-        test_dataset=args.test_dataset,
-        train_dataset_recipe=args.train_dataset_recipe,
-        validation_dataset_recipe=args.validation_dataset_recipe,
-        test_dataset_recipe=args.test_dataset_recipe)
+    init_learner(args)
