@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <cmath>
 
 #include "metisfl/controller/aggregation/private_weighted_average.h"
 #include "metisfl/controller/common/macros.h"
@@ -112,8 +113,17 @@ TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
     equal_vectors = 0;
   } else {
     for (size_t i = 0; i < model_values.size(); i++) {
-      if ( (int) aggregated_dec[i] != (int) model_values[i] ) {
-        PLOG(INFO) << "Not Equal: " << aggregated_dec[i] << " " << model_values[i];
+      double diff = aggregated_dec[i] - model_values[i];
+      // Given that the encryption library (PALISADE) may introduce some numerical 
+      // error (e.g., 1e-11, 2e-12) during encryption, private weighted aggregation 
+      // and decryption, we first find the difference of the decrypted value from its 
+      // true value, then we truncate the difference, which will return either -0 or 0,
+      // and finally we get the absolute value of -0 / 0 which is equal to 0.
+      // This approach should work only for this case, because we are working with integers.
+      diff = abs(trunc(diff));
+      if (diff != 0) {
+        PLOG(INFO) << "Numbers after truncation and absolute value are not equal."
+        << " Their difference is: " << diff;
         equal_vectors = 0;
         break;
       }
