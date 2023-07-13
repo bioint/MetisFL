@@ -1,5 +1,6 @@
 name: 📚 Documentation
 description: Report an issue related to our documentation
+labels: ["documentation"]
 
 body:
   - type: textarea
