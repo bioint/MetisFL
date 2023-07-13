@@ -12,7 +12,7 @@ from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
 from metisfl.proto import metis_pb2
 from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.proto_messages_factory import MetisProtoMessages
+from metisfl.proto.proto_messages_factory import MetisProtoMessages
 
 class TorchModelOps(ModelOps):
     

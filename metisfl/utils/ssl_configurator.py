@@ -4,7 +4,7 @@
 import os
 import yaml
 
-import metisfl.utils.proto_messages_factory as proto_factory
+import metisfl.proto.proto_messages_factory as proto_factory
 
 from OpenSSL import crypto
 from OpenSSL.crypto import \

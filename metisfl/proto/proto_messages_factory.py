@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from metisfl.proto import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
+import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
 
 
 class ControllerServiceProtoMessages(object):

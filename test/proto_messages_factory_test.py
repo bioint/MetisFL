@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from metisfl.utils.proto_messages_factory import ModelProtoMessages
+from metisfl.proto.proto_messages_factory import ModelProtoMessages
 
 
 class TensorSpecProtoTest(unittest.TestCase):

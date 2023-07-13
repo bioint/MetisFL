@@ -6,6 +6,22 @@ from metisfl.proto import metis_pb2
 class Homomorphic(object):
 
     def __init__(self, he_scheme_pb: metis_pb2.HESchemeConfig):
+        """Initializes the Homomorphic object using the given HE scheme protobuf.
+
+        **** ATTENTION ****
+        If you modify the signature of this constructor, you must also modify the following accordingly:
+        
+        1. The constructor of the metisfl.learner.task_executor.TaskExecutor class.
+        2. The functions metisfl.models.utils.{construct_model_pb, get_weights_from_model_pb}.
+        3. The method metisfl.utils.fedenv.FederatedEnvironment.get_controller_he_scheme_pb.
+        4. The state of the metisfl.driver.driver_session.DriverSession class.
+
+        Args:
+            he_scheme_pb (metis_pb2.HESchemeConfig): The protobuf object containing the HE scheme config.
+
+        Raises:
+            MetisLogger.fatal: If the given protobuf is not a valid HE scheme protobuf.
+        """
         assert isinstance(
             he_scheme_pb, metis_pb2.HESchemeConfig), "Not a valid HE scheme protobuf."
         

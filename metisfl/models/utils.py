@@ -6,7 +6,7 @@ from metisfl import config
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.formatting import DictionaryFormatter
-from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
+from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from metisfl.encryption.homomorphic import Homomorphic
 
 from .model_ops import ModelOps

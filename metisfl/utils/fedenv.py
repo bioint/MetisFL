@@ -1,7 +1,7 @@
 import yaml
 
 from metisfl.proto import metis_pb2
-from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
+from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from .fedenv_schema import env_schema, OPTIMIZER_PB_MAP
 
 
@@ -142,10 +142,6 @@ class FederationEnvironment(object):
     def get_controller_he_scheme_pb(self) -> metis_pb2.HESchemeConfig:
         if self.he_scheme == "CKKS":
             
-            # files = encryption.utils.get_files
-            if not self.crypto_files_generated:
-                generate()
-
             ckks_scheme_pb = metis_pb2.CKKSSchemeConfig(
                 batch_size=self.he_batch_size, scaling_factor_bits=self.he_scaling_bits)
             # TODO Need to add the path to the crypto params files.
@@ -164,9 +160,9 @@ class FederationEnvironment(object):
             return metis_pb2.HESchemeConfig(enabled=False,
                                             empty_scheme_config=empty_scheme_pb)
 
-    def get_learner_he_scheme_pb(self):
-        if self.he_scheme == "CKKS":            
-            # files = encryption.utils.get_files        
+    # def get_learner_he_scheme_pb(self):
+    #     if self.he_scheme == "CKKS":            
+    #         # files = encryption.utils.get_files        
 
 
     def get_communication_protocol_pb(self):

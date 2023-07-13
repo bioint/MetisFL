@@ -4,7 +4,7 @@ from metisfl import config
 from metisfl.grpc.grpc_services import GRPCClient
 from metisfl.proto import controller_pb2, controller_pb2_grpc
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.proto_messages_factory import MetisProtoMessages
+from metisfl.proto.proto_messages_factory import MetisProtoMessages
 from metisfl.utils.ssl_configurator import SSLConfigurator
 
 

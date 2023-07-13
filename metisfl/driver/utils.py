@@ -1,5 +1,5 @@
 
-from metisfl.utils import proto_messages_factory
+from metisfl.proto import proto_messages_factory
 from metisfl.utils.fedenv import RemoteHost
 from metisfl.utils.ssl_configurator import SSLConfigurator
 
