@@ -38,9 +38,11 @@ def construct_model_pb(weights: ModelWeightsDescriptor,
                                                                    trainable=w_t,
                                                                    tensor_pb=tensor_pb)
         variables_pb.append(model_var)
-    return variables_pb    
     
-def get_weights_from_model_pb(model_pb: metis_pb2.Model,
+    model_pb = metis_pb2.Model(variables=variables_pb)
+    return model_pb
+    
+def get_weights_from_model_pb(model_pb: model_pb2.Model,
                               he_scheme_pb: metis_pb2.HESchemeConfig) -> ModelWeightsDescriptor:
     variables = model_pb.variables
     var_names, var_trainables, var_nps = list(), list(), list()

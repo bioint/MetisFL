@@ -1,15 +1,16 @@
-from typing import Any
+from typing import Any, Dict, Tuple
 
 import tensorflow as tf
 
 from metisfl.proto import metis_pb2, model_pb2
-from metisfl.utils.metis_logger import MetisLogger
-from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.keras.keras_model import MetisModelKeras
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
+from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.model_ops import LearningTaskStats, ModelOps
 from metisfl.models.utils import calc_mean_wall_clock, get_num_of_epochs
+from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
+from metisfl.utils.metis_logger import MetisLogger
 
 
 class KerasModelOps(ModelOps):
@@ -25,7 +26,7 @@ class KerasModelOps(ModelOps):
                     hyperparameters_pb: metis_pb2.Hyperparameters,
                     validation_dataset: ModelDataset = None,
                     test_dataset: ModelDataset = None,
-                    verbose=False) -> metis_pb2.CompletedLearningTask:
+                    verbose=False) -> Tuple[ModelWeightsDescriptor, LearningTaskStats]:
         if train_dataset is None:
             raise RuntimeError("Provided `dataset` for training is None.")
         MetisLogger.info("Starting model training.")
@@ -101,7 +102,7 @@ class KerasModelOps(ModelOps):
     def evaluate_model(self,
                        eval_dataset: ModelDataset,
                        batch_size=100,
-                       verbose=False) -> Any | dict:
+                       verbose=False) -> Dict:
         if eval_dataset is None:
             raise RuntimeError("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
@@ -116,7 +117,7 @@ class KerasModelOps(ModelOps):
 
     def infer_model(self,
                     infer_dataset: ModelDataset,
-                    batch_size=100) -> Any | None:
+                    batch_size=100) -> Any:
         if infer_dataset is None:
             raise RuntimeError("Provided `dataset` for inference is None.")
         MetisLogger.info("Starting model inference.")

@@ -57,12 +57,12 @@ env_schema = Schema({
     Optional("LineageLength"): And(Use(int), lambda n: n > 0),
     
     Optional("HEScheme"): And(str, lambda s: s in HE_SCHEMES),
-    Optional("BatchSize"): And(Use(int), lambda n: n > 0),
-    Optional("ScalingBits"): And(Use(int), lambda n: n > 0),
+    Optional("HEBatchSize"): And(Use(int), lambda n: n > 0),
+    Optional("HEScalingBits"): And(Use(int), lambda n: n > 0),
     
     "AggregationRule": And(str, lambda s: s in AGGREGATION_RULES), # FedRec only if async; PWA only if FHE
     "ScalingFactor": And(Use(str), lambda s: s in SCALING_FACTORS), # required; forbitten in fedrec
-    "StrideLength": And(Use(int), lambda n: n > 0), # required only if FedStride; forbitten o/w 
+    Optional("StrideLength"): And(Use(int), lambda n: n > 0), # required only if FedStride; forbitten o/w 
     Optional("ParticipationRatio"): And(Use(float), lambda n: n > 0 and n <= 1),  
     "BatchSize": And(Use(int), lambda n: n > 0),
     "LocalEpochs": And(Use(int), lambda n: n > 0),

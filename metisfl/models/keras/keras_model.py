@@ -44,8 +44,8 @@ class MetisModelKeras(MetisModel):
                                       weights_trainable=weights_trainable,
                                       weights_values=weights_values)
 
-    def save(self, model_dir, is_initial=False) -> None:
-        if is_initial:
+    def save(self, model_dir, initialize=False) -> None:
+        if initialize:
             self._run_initial_evaluation()
         MetisLogger.info("Saving model to: {}".format(model_dir))
         self._backend_model.save(filepath=model_dir)

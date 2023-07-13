@@ -54,7 +54,7 @@ class MetisModelTorch(MetisModel):
                                       weights_values=weights_values)
 
     # The is_initial flag is not used in the torch implementation; simply here for compatibility with the tf version
-    def save(self, model_dir, is_initial=False):
+    def save(self, model_dir, initialize=False):
         model_def_path, model_weights_path = MetisModelTorch.get_paths(
             model_dir)
         MetisLogger.info("Saving model to: {}".format(model_dir))

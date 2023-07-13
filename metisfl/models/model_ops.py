@@ -1,6 +1,6 @@
 import abc
 
-from typing import List
+from typing import Any, Dict, Tuple
 
 from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.metis_model import MetisModel
@@ -21,7 +21,7 @@ class ModelOps(object):
                     hyperparameters_pb: metis_pb2.Hyperparameters,
                     validation_dataset: ModelDataset = None,
                     test_dataset: ModelDataset = None,
-                    verbose=False) -> List[ModelWeightsDescriptor, LearningTaskStats]:
+                    verbose=False) -> Tuple[ModelWeightsDescriptor, LearningTaskStats]:
         pass
     
     @abc.abstractmethod
@@ -29,11 +29,11 @@ class ModelOps(object):
                        eval_dataset: ModelDataset,
                        batch_size=100,
                        metrics=None,
-                       verbose=False) -> dict:
+                       verbose=False) -> Dict:
         pass
     
     @abc.abstractmethod
     def infer_model(self,
                     infer_dataset: ModelDataset,
-                    batch_size=100):
+                    batch_size=100) -> Any:
         pass

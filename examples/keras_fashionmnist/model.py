@@ -1,12 +1,12 @@
+from typing import List, Tuple
 import tensorflow as tf
 
 
 def get_model(
-    metrics: list = ["accuracy"],
-    input_shape: tuple = (28, 28, 1),
-    dense_units_per_layer: list = [256, 128],
-    num_classes: int = 10,
-) -> tf.keras.Model:
+    metrics: List[str] = ["accuracy"],
+    input_shape: Tuple[int] = (28, 28, 1),
+    dense_units_per_layer: List[int] = [256, 128],
+    num_classes: int = 10) -> tf.keras.Model:
     """A helper function to create a simple sequential model.
 
     Args:

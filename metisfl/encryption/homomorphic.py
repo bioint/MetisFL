@@ -15,29 +15,28 @@ class Homomorphic(object):
         elif he_scheme_pb.HasField("empty_scheme_config"):
             self._he_scheme = metis_pb2.EmptySchemeConfig()
         else:
-            raise MetisLogger.fatal("Not a supported HE scheme config. Received: {}".format(he_scheme_pb))
+            raise MetisLogger.fatal(
+                "Not a supported HE scheme config. Received: {}".format(he_scheme_pb))
 
     @staticmethod
     def from_proto(he_scheme_pb: metis_pb2.HESchemeConfig):
         return Homomorphic(he_scheme_pb)
 
     def decrypt_data(self, ciphertext: str, num_elems: int):
-        assert self._he_scheme, "The homomorphic encryption scheme is not initialized."
         if isinstance(self._he_scheme, metis_pb2.EmptySchemeConfig):
             return None
         else:
             return self._he_scheme.decrypt(ciphertext, num_elems)
 
     def encrypt_data(self, values):
-        assert self._he_scheme, "The homomorphic encryption scheme is not initialized."
         if isinstance(self._he_scheme, metis_pb2.EmptySchemeConfig):
             return None
         else:                
             return self._he_scheme.encrypt(values)
 
-    def _load_crypto_params(he_scheme_pb: metis_pb2.HESchemeConfig):
-        ckks_scheme = fhe.CKKS(he_scheme_pb.fhe_scheme.batch_size,
-                               he_scheme_pb.fhe_scheme.scaling_bits)
+    def _construct_ckks_scheme(self, he_scheme_pb: metis_pb2.HESchemeConfig):
+        ckks_scheme = fhe.CKKS(he_scheme_pb.ckks_scheme_config.batch_size,
+                               he_scheme_pb.ckks_scheme_config.scaling_factor_bits)
         if he_scheme_pb.crypto_context_file:
             ckks_scheme.load_crypto_context_from_file(he_scheme_pb.crypto_context_file)
         if he_scheme_pb.public_key_file:

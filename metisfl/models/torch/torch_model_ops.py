@@ -1,16 +1,18 @@
 import gc
-from metisfl.utils.formatting import DictionaryFormatter
-from metisfl.utils.proto_messages_factory import MetisProtoMessages
-
 import torch
 
-from metisfl.models.torch.helper import construct_dataset_pipeline
+from typing import Any, Dict, Tuple
+
 from metisfl.models.model_dataset import ModelDataset
 from metisfl.models.model_ops import LearningTaskStats, ModelOps
-from metisfl.models.torch.torch_model import MetisModelTorch
-from metisfl.proto import metis_pb2
-from metisfl.utils.metis_logger import MetisLogger
 from metisfl.models.utils import get_num_of_epochs
+from metisfl.models.torch.helper import construct_dataset_pipeline
+from metisfl.models.torch.torch_model import MetisModelTorch
+from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
+from metisfl.proto import metis_pb2
+from metisfl.utils.formatting import DictionaryFormatter
+from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.proto_messages_factory import MetisProtoMessages
 
 class TorchModelOps(ModelOps):
     
@@ -20,7 +22,9 @@ class TorchModelOps(ModelOps):
     def train_model(self,
                     train_dataset: ModelDataset,
                     learning_task_pb: metis_pb2.LearningTask,
-                    hyperparameters_pb: metis_pb2.Hyperparameters):
+                    hyperparameters_pb: metis_pb2.Hyperparameters) \
+        -> Tuple[ModelWeightsDescriptor, LearningTaskStats]:
+        
         if not train_dataset:
             raise RuntimeError("Provided `dataset` for training is None.")
         MetisLogger.info("Starting model training.")
@@ -43,7 +47,7 @@ class TorchModelOps(ModelOps):
         MetisLogger.info("Model training is complete.")
         return model_weights_descriptor, learning_task_stats
 
-    def evaluate_model(self, eval_dataset: ModelDataset):
+    def evaluate_model(self, eval_dataset: ModelDataset) -> Dict:
         if not eval_dataset:
             raise RuntimeError("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
@@ -54,7 +58,7 @@ class TorchModelOps(ModelOps):
         metric_values = DictionaryFormatter.stringify(eval_res, stringify_nan=True)
         return MetisProtoMessages.construct_model_evaluation_pb(metric_values)
     
-    def infer_model(self):
+    def infer_model(self) -> Any:
         # Set model to evaluation state.
         # FIXME @panoskyriakis: check this
         self._metis_model._backend_model.eval()

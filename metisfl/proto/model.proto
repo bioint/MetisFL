@@ -120,6 +120,7 @@ message OptimizerConfig {
     FedProx fed_prox = 3;
     Adam adam = 4;
     AdamWeightDecay adam_weight_decay = 5;
+    Custom custom = 6;
   }
 }
 

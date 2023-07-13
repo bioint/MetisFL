@@ -2,7 +2,7 @@ from typing import Callable, List
 
 from metisfl.encryption.homomorphic import Homomorphic
 from metisfl.models.model_ops import ModelOps
-from metisfl.models.utils import get_completed_learning_task_pb
+from metisfl.models.utils import get_completed_learning_task_pb, get_weights_from_model_pb, construct_model_pb
 from metisfl.proto import learner_pb2, metis_pb2, model_pb2
 from metisfl.utils.formatting import DictionaryFormatter
 from metisfl.utils.metis_logger import MetisLogger
@@ -45,7 +45,7 @@ class TaskExecutor(object):
     def evaluate_model(self, 
                         model_pb: model_pb2.Model, 
                         batch_size: int,
-                        evaluation_dataset_pb: List[learner_pb2.EvaluateModelRequest.dataset_to_eval],
+                        evaluation_dataset_pb: List[int],
                         verbose=False):       
         self._init_model_ops() 
         self._set_weights_from_model_pb(model_pb)
@@ -104,19 +104,13 @@ class TaskExecutor(object):
         self._log(state="completed", task="learning")
         return  self._get_completed_learning_task_pb(model_weights_descriptor, learning_task_stats)
 
-    def _get_he_obj(self):
-        return Homomorphic(self._he_scheme_pb)
-
     def _set_weights_from_model_pb(self, model_pb: model_pb2.Model):
-        homomorphic_encryption = self._get_he_obj()
-        model_weights_descriptor = homomorphic_encryption.decrypt_pb_weights(model_pb.variables)
+        model_weights_descriptor = get_weights_from_model_pb(model_pb, self._he_scheme_pb)        
         if len(model_weights_descriptor.weights_values) > 0:
             self._model_ops.get_model().set_model_weights(model_weights_descriptor)
 
     def _get_completed_learning_task_pb(self, model_weights_descriptor, learning_task_stats):
-        homomorphic_encryption = self._get_he_obj()
-        variables = homomorphic_encryption.encrypt_np_weights(model_weights_descriptor)
-        model_pb = model_pb2.Model(variables=variables)
+        model_pb = construct_model_pb(model_weights_descriptor, self._he_scheme_pb)
         completed_learning_task_pb = get_completed_learning_task_pb(
             model_pb=model_pb,
             learning_task_stats=learning_task_stats)

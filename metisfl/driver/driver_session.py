@@ -7,7 +7,7 @@ from pebble import ProcessPool
 
 from metisfl import config
 from metisfl.models.metis_model import MetisModel
-from metisfl.proto import model_pb2
+from metisfl.models.utils import construct_model_pb
 from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
 
@@ -113,7 +113,7 @@ class DriverSession(object):
         lagging time till the federation controller is live so that every learner can
         connect to it.
         """
-        # NOTE If we need to test the pipeline we force a future return here, 
+        # NOTE: If we need to test the pipeline we force a future return here, 
         # i.e., controller_future.result(). The following initialization futures are 
         # always running (status=running) since we need to keep the connections open 
         # in order to retrieve logs regarding the execution progress of the federation.
@@ -128,7 +128,7 @@ class DriverSession(object):
                 learner_future = self._executor.schedule(
                     function=self._service_initilizer.init_learner,
                     args=(idx, ))  # NOTE: args must be a tuple.
-                # NOTE If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
+                # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
                 # learner_future.result()
                 self._executor_learners_tasks_q.put(learner_future)
 
@@ -224,8 +224,7 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = self._model.
-        
+        model_pb = construct_model_pb(weights_descriptor, self._he_scheme_pb)        
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

@@ -2,7 +2,7 @@ import numpy as np
 import os
 import random
 
-from fhe import CKKS
+from metisfl.encryption.fhe import CKKS
 from metisfl.utils.metis_logger import MetisLogger
 
 

@@ -14,6 +14,7 @@ class FederationEnvironment(object):
         self.controller = RemoteHost(self._yaml.get("Controller"))
         self.learners = [RemoteHost(learner)
                          for learner in self._yaml.get("Learners")]
+        self.crypto_files_generated = False
 
     # Environment configuration
     @property
@@ -63,11 +64,11 @@ class FederationEnvironment(object):
 
     @property
     def he_batch_size(self):
-        return self._yaml.get("BatchSize")
+        return self._yaml.get("HEBatchSize")
 
     @property
     def he_scaling_bits(self):
-        return self._yaml.get("ScalingBits")
+        return self._yaml.get("HEScalingBits")
 
     # Global training configuration
     @property
@@ -138,15 +139,35 @@ class FederationEnvironment(object):
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.participation_ratio)
 
-    def get_he_scheme_pb(self):
+    def get_controller_he_scheme_pb(self) -> metis_pb2.HESchemeConfig:
         if self.he_scheme == "CKKS":
-            fhe_scheme_pb = metis_pb2.CKKSSchemeConfig(
-                batch_size=self.he_batch_size, scaling_bits=self.he_scaling_bits)
-            return metis_pb2.HESchemeConfig(enabled=True, fhe_scheme=fhe_scheme_pb)
+            
+            # files = encryption.utils.get_files
+            if not self.crypto_files_generated:
+                generate()
+
+            ckks_scheme_pb = metis_pb2.CKKSSchemeConfig(
+                batch_size=self.he_batch_size, scaling_factor_bits=self.he_scaling_bits)
+            # TODO Need to add the path to the crypto params files.
+            controller = metis_pb2.HESchemeConfig(
+                enabled=True,
+                crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
+                ckks_scheme_config=ckks_scheme_pb)            
+            learner = metis_pb2.HESchemeConfig(
+                enabled=True,
+                crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
+                public_key_file="/metisfl/metisfl/resources/fheparams/cryptoparams/key-public.txt",
+                private_key_file="/metisfl/metisfl/resources/fheparams/cryptoparams/key-private.txt",
+                ckks_scheme_config=ckks_scheme_pb)
         else:
             empty_scheme_pb = metis_pb2.EmptySchemeConfig()
             return metis_pb2.HESchemeConfig(enabled=False,
                                             empty_scheme_config=empty_scheme_pb)
+
+    def get_learner_he_scheme_pb(self):
+        if self.he_scheme == "CKKS":            
+            # files = encryption.utils.get_files        
+
 
     def get_communication_protocol_pb(self):
         # @stripeli clarify this
