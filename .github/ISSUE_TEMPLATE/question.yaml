@@ -1,5 +1,5 @@
 name: 🙋 Question and Discussion
-description: Discuss or ask question about how to use prompttools and what the best practice may be.
+description: Discuss or ask question about how to use MetisFL and what the best practice may be.
 
 body:
   - type: textarea
