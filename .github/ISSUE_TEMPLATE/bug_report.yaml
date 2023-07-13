@@ -23,9 +23,9 @@ body:
       Tell us what bug you encountered and what should have happened. If relevant, add a minimal example so that we can reproduce the error by running the code.
 
 
-        If the code is too long, feel free to put it in a public gist and link it here: https://gist.github.com.
+      If the code is too long, feel free to put it in a public gist and link it here: https://gist.github.com.
 
-        Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in ```` ```triple quotes blocks``` ````.
+      Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in ```` ```triple quotes blocks``` ````.
     validations:
       required: true
   - type: markdown
