@@ -10,10 +10,10 @@ from .controller_client import GRPCControllerClient
 
 
 class ServiceMonitor:
-      
-    def __init__(self, 
-                 federation_environment: FederationEnvironment, 
-                 driver_controller_grpc_client: GRPCControllerClient):   
+
+    def __init__(self,
+                 federation_environment: FederationEnvironment,
+                 driver_controller_grpc_client: GRPCControllerClient):
         self._driver_controller_grpc_client = driver_controller_grpc_client
         self._federation_environment = federation_environment
         self._federation_rounds_cutoff = self._federation_environment.federation_rounds
@@ -24,8 +24,9 @@ class ServiceMonitor:
         self._federation_statistics = dict()
 
     def monitor_federation(self, request_every_secs=10):
-        self._monitor_termination_signals(request_every_secs=request_every_secs)
-        
+        self._monitor_termination_signals(
+            request_every_secs=request_every_secs)
+
     def get_federation_statistics(self):
         return self._federation_statistics
 
@@ -38,18 +39,19 @@ class ServiceMonitor:
             time.sleep(request_every_secs)
 
             terminate = self._reached_federation_rounds() or \
-                        self._reached_evaluation_score() or \
-                        self._reached_execution_time(st)
-            
+                self._reached_evaluation_score() or \
+                self._reached_execution_time(st)
 
     def _reached_federation_rounds(self) -> bool:
         metadata_pb = self._driver_controller_grpc_client \
-                .get_runtime_metadata(num_backtracks=0).metadata
+            .get_runtime_metadata(num_backtracks=0).metadata
         if not self._is_async():
             if self._federation_rounds_cutoff and len(metadata_pb) > 0:
-                current_global_iteration = max([m.global_iteration for m in metadata_pb])
+                current_global_iteration = max(
+                    [m.global_iteration for m in metadata_pb])
                 if current_global_iteration > self._federation_rounds_cutoff:
-                    MetisLogger.info("Exceeded federation rounds cutoff point. Exiting ...")
+                    MetisLogger.info(
+                        "Exceeded federation rounds cutoff point. Exiting ...")
                     return True
         return False
 
@@ -58,8 +60,8 @@ class ServiceMonitor:
 
     def _reached_evaluation_score(self) -> bool:
         community_results = self._driver_controller_grpc_client \
-                .get_community_model_evaluation_lineage(-1)
-        
+            .get_community_model_evaluation_lineage(-1)
+
         # Need to materialize the iterator in order to get all community results.
         community_results = [x for x in community_results.community_evaluation]
 
@@ -75,15 +77,17 @@ class ServiceMonitor:
             if test_set_scores:
                 mean_test_score = sum(test_set_scores) / len(test_set_scores)
                 if mean_test_score >= self._metric_cutoff_score:
-                    MetisLogger.info("Exceeded evaluation metric cutoff score. Exiting ...")
+                    MetisLogger.info(
+                        "Exceeded evaluation metric cutoff score. Exiting ...")
                     return True
         return False
-                    
+
     def _reached_execution_time(self, st) -> bool:
         et = datetime.datetime.now()
         diff_mins = (et - st).seconds / 60
         if self._execution_time_cutoff_mins and diff_mins > self._execution_time_cutoff_mins:
-            MetisLogger.info("Exceeded execution time cutoff minutes. Exiting ...")
+            MetisLogger.info(
+                "Exceeded execution time cutoff minutes. Exiting ...")
             return True
         return False
 
@@ -111,6 +115,6 @@ class ServiceMonitor:
                                                preserving_proto_field_name=True)
         self._federation_statistics["federation_runtime_metadata"] = runtime_metadata_dict
         self._federation_statistics["community_model_results"] = community_results_dict
-        
+
     def get_statistics(self) -> dict:
         return self._federation_statistics
