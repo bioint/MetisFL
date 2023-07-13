@@ -1,6 +1,5 @@
 from typing import Callable, List
 
-from metisfl.encryption.homomorphic import Homomorphic
 from metisfl.models.model_ops import ModelOps
 from metisfl.models.utils import get_completed_learning_task_pb, get_weights_from_model_pb, construct_model_pb
 from metisfl.proto import learner_pb2, metis_pb2, model_pb2
