@@ -103,18 +103,10 @@ class FederationEnvironment(object):
     @property
     def local_epochs(self):
         return self._yaml.get("LocalEpochs")
-    
+
     @property
     def validation_percentage(self):
         return self._yaml.get("ValidationPercentage")
-
-    @property
-    def optimizer(self):
-        return self._yaml.get("Optimizer")
-
-    @property
-    def optimizer_params(self):
-        return self._yaml.get("OptimizerParams")
 
     def get_local_model_config_pb(self):
         return MetisProtoMessages.construct_controller_modelhyperparams_pb(
@@ -124,10 +116,12 @@ class FederationEnvironment(object):
             percent_validation=self.validation_percentage)
 
     def _get_optimizer_pb(self):
-        optimizer = self._yaml.get("Optimizer")
+        optimizer_name = self._yaml.get("Optimizer")
         params = self._yaml.get("OptimizerParams")
-        optimizer_pb = OPTIMIZER_PB_MAP[optimizer](**params)
-        return ModelProtoMessages.construct_optimizer_config_pb(optimizer_pb=optimizer_pb)
+        learning_rate = params.get("LearningRate") 
+        return ModelProtoMessages.construct_optimizer_config_pb(optimizer_name=optimizer_name,
+                                                                learning_rate=learning_rate,
+                                                                optimizer_params=params)
 
     def get_global_model_config_pb(self):
         aggregation_rule_pb = MetisProtoMessages.construct_aggregation_rule_pb(
@@ -141,14 +135,14 @@ class FederationEnvironment(object):
 
     def get_controller_he_scheme_pb(self) -> metis_pb2.HESchemeConfig:
         if self.he_scheme == "CKKS":
-            
+
             ckks_scheme_pb = metis_pb2.CKKSSchemeConfig(
                 batch_size=self.he_batch_size, scaling_factor_bits=self.he_scaling_bits)
             # TODO Need to add the path to the crypto params files.
             controller = metis_pb2.HESchemeConfig(
                 enabled=True,
                 crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
-                ckks_scheme_config=ckks_scheme_pb)            
+                ckks_scheme_config=ckks_scheme_pb)
             learner = metis_pb2.HESchemeConfig(
                 enabled=True,
                 crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
@@ -159,11 +153,6 @@ class FederationEnvironment(object):
             empty_scheme_pb = metis_pb2.EmptySchemeConfig()
             return metis_pb2.HESchemeConfig(enabled=False,
                                             empty_scheme_config=empty_scheme_pb)
-
-    # def get_learner_he_scheme_pb(self):
-    #     if self.he_scheme == "CKKS":            
-    #         # files = encryption.utils.get_files        
-
 
     def get_communication_protocol_pb(self):
         # @stripeli clarify this

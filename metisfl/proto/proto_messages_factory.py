@@ -540,97 +540,14 @@ class ModelProtoMessages(object):
         return model_pb2.Model(variables=variables_pb)
 
     @classmethod
-    def construct_model_pb_from_np(
-            cls, weights_values, weights_names, weights_trainable, he_scheme=None):
-
-        # np.savez('/tmp/test.npz', **weights_values)
-        with open('/tmp/test.npy', 'wb') as f:
-            for v in weights_values:
-                np.savez(f, v)
-
-        variables_pb = []
-        for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
-            ciphertext = None
-            if he_scheme is not None:
-                ciphertext = he_scheme.encrypt(w_v.flatten())
-                non_encrypted = he_scheme.decrypt(ciphertext, len(w_v.flatten()))
-            # If we have a ciphertext we prioritize it over the plaintext.
-            tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
-                                                               ciphertext=ciphertext)
-            model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
-                                                                       trainable=w_t,
-                                                                       tensor_pb=tensor_pb)
-            variables_pb.append(model_var)
-        return model_pb2.Model(variables=variables_pb)
-
-    @classmethod
     def construct_federated_model_pb(cls, num_contributors, model_pb):
         assert isinstance(model_pb, model_pb2.Model)
         return model_pb2.FederatedModel(num_contributors=num_contributors, model=model_pb)
-
+    
     @classmethod
-    def construct_vanilla_sgd_optimizer_pb(cls, learning_rate, l1_reg=0.0, l2_reg=0.0):
-        return model_pb2.VanillaSGD(learning_rate=learning_rate, L1_reg=l1_reg, L2_reg=l2_reg)
-
-    @classmethod
-    def construct_momentum_sgd_optimizer_pb(cls, learning_rate, momentum_factor=0.0):
-        return model_pb2.MomentumSGD(learning_rate=learning_rate, momentum_factor=momentum_factor)
-
-    @classmethod
-    def construct_fed_prox_optimizer_pb(cls, learning_rate, proximal_term=0.0):
-        return model_pb2.FedProx(learning_rate=learning_rate, proximal_term=proximal_term)
-
-    @classmethod
-    def construct_adam_optimizer_pb(cls, learning_rate, beta_1=0.0, beta_2=0.0, epsilon=0.0):
-        return model_pb2.Adam(learning_rate=learning_rate, beta_1=beta_1, beta_2=beta_2, epsilon=epsilon)
-
-    @classmethod
-    def construct_adam_optimizer_with_weight_decay_pb(cls, learning_rate, weight_decay):
-        return model_pb2.AdamWeightDecay(learning_rate=learning_rate, weight_decay=weight_decay)
-
-    @classmethod
-    def construct_optimizer_config_pb_from_kwargs(cls, optimizer_pb_kwargs):
-        # We remove the optimizer name from the given dictionary, because
-        # no optimizer pb function takes 'name' as a keyword argument.
-        optimizer_pb_kwargs_cp = optimizer_pb_kwargs.copy()
-        optimizer_name = optimizer_pb_kwargs_cp.pop("name", None)
-
-        if optimizer_name == "VanillaSGD":
-            optimizer_pb = ModelProtoMessages \
-                .construct_vanilla_sgd_optimizer_pb(**optimizer_pb_kwargs_cp)
-        elif optimizer_name == "MomentumSGD":
-            optimizer_pb = ModelProtoMessages \
-                .construct_momentum_sgd_optimizer_pb(**optimizer_pb_kwargs_cp)
-        elif optimizer_name == "FedProx":
-            optimizer_pb = ModelProtoMessages \
-                .construct_fed_prox_optimizer_pb(**optimizer_pb_kwargs_cp)
-        elif optimizer_name == "Adam":
-            optimizer_pb = ModelProtoMessages \
-                .construct_adam_optimizer_pb(**optimizer_pb_kwargs_cp)
-        elif optimizer_name == "AdamWeightDecay":
-            optimizer_pb = ModelProtoMessages \
-                .construct_adam_optimizer_with_weight_decay_pb(**optimizer_pb_kwargs_cp)
-        else:
-            raise RuntimeError("Optimizer kwargs refer to a non-supported optimizer.")
-
-        optimizer_config_pb = \
-            ModelProtoMessages.construct_optimizer_config_pb(optimizer_pb)
-        return optimizer_config_pb
-
-    @classmethod
-    def construct_optimizer_config_pb(cls, optimizer_pb):
-        if isinstance(optimizer_pb, model_pb2.VanillaSGD):
-            return model_pb2.OptimizerConfig(vanilla_sgd=optimizer_pb)
-        elif isinstance(optimizer_pb, model_pb2.MomentumSGD):
-            return model_pb2.OptimizerConfig(momentum_sgd=optimizer_pb)
-        elif isinstance(optimizer_pb, model_pb2.FedProx):
-            return model_pb2.OptimizerConfig(fed_prox=optimizer_pb)
-        elif isinstance(optimizer_pb, model_pb2.Adam):
-            return model_pb2.OptimizerConfig(adam=optimizer_pb)
-        elif isinstance(optimizer_pb, model_pb2.AdamWeightDecay):
-            return model_pb2.OptimizerConfig(adam_weight_decay=optimizer_pb)
-        else:
-            raise RuntimeError("Optimizer proto message refers to a non-supported optimizer.")
+    def construct_optimizer_config_pb(cls, optimizer_name, learning_rate, kwargs):
+        return model_pb2.OptimizerConfig(
+            name=optimizer_name, learning_rate=learning_rate, kwargs=kwargs)
 
 
 class ServiceCommonProtoMessages(object):

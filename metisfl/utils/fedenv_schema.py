@@ -5,13 +5,6 @@ from typing import List
 
 from metisfl.proto import model_pb2
 
-OPTIMIZER_PB_MAP = {
-    "VanillaSGD": model_pb2.VanillaSGD,
-    "MomentumSGD": model_pb2.MomentumSGD,
-    "FedProx": model_pb2.FedProx,
-    "Adam": model_pb2.Adam,
-    "AdamWeightDecay": model_pb2.AdamWeightDecay,
-}
 
 METRICS = ["accuracy", "loss"]
 COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
