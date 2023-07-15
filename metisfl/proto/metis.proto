@@ -17,32 +17,35 @@ message ServerEntity {
   // The server port that the service is running on.
   uint32 port = 2;
 
-  // For enabling secure communication between the learners and the controller.
-  SSLConfig ssl_config = 3;
-}
-
-message SSLConfigFiles {
   // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
-  string public_certificate_file = 1;
+  string public_certificate_file = 3;
+
   // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
-  string private_key_file = 2;
+  string private_key_file = 4;
 }
 
-message SSLConfigStream {
-  // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
-  bytes public_certificate_stream = 1;
-  // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
-  bytes private_key_stream = 2;
-}
+// message SSLConfigFiles {
+//   // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
+//   string public_certificate_file = 1;
+//   // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
+//   string private_key_file = 2;
+// }
 
-message SSLConfig {
-  bool enable_ssl = 1; // Whether SSL is enabled or not.
-  // We enable
-  oneof config {
-    SSLConfigFiles ssl_config_files = 6;
-    SSLConfigStream ssl_config_stream = 7;
-  }
-}
+// message SSLConfigStream {
+//   // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
+//   bytes public_certificate_stream = 1;
+//   // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
+//   bytes private_key_stream = 2;
+// }
+
+// message SSLConfig {
+//   bool enable_ssl = 1; // Whether SSL is enabled or not.
+//   // We enable
+//   oneof config {
+//     SSLConfigFiles ssl_config_files = 6;
+//     SSLConfigStream ssl_config_stream = 7;
+//   }
+// }
 
 
 

@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
+from metisfl.proto import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
 
 
 class ControllerServiceProtoMessages(object):
@@ -73,8 +73,8 @@ class LearnerServiceProtoMessages(object):
     @classmethod
     def construct_run_task_request_pb(cls, federated_model_pb=None, learning_task_pb=None, hyperparameters_pb=None):
         assert isinstance(federated_model_pb, model_pb2.FederatedModel) \
-               and isinstance(learning_task_pb, metis_pb2.LearningTask) \
-               and isinstance(hyperparameters_pb, metis_pb2.Hyperparameters)
+            and isinstance(learning_task_pb, metis_pb2.LearningTask) \
+            and isinstance(hyperparameters_pb, metis_pb2.Hyperparameters)
         return learner_pb2.RunTaskRequest(
             federated_model=federated_model_pb,
             task=learning_task_pb,
@@ -89,10 +89,11 @@ class LearnerServiceProtoMessages(object):
 class MetisProtoMessages(object):
 
     @classmethod
-    def construct_server_entity_pb(cls, hostname, port, ssl_config_pb=None):
-        if ssl_config_pb is None:
-            ssl_config_pb = cls.construct_ssl_config_pb(enable_ssl=False)
-        return metis_pb2.ServerEntity(hostname=hostname, port=port, ssl_config=ssl_config_pb)
+    def construct_server_entity_pb(cls, hostname, port, public_certificate_file=None, private_key_file=None):
+        return metis_pb2.ServerEntity(hostname=hostname,
+                                      port=port,
+                                      public_certificate_file=public_certificate_file,
+                                      private_key_file=private_key_file)
 
     @classmethod
     def construct_ssl_config_pb(cls, enable_ssl=False, config_pb=None):
@@ -147,8 +148,10 @@ class MetisProtoMessages(object):
                                   training_spec, validation_spec, test_spec,
                                   is_classification=False, is_regression=False):
         if is_classification is True:
-            training_spec = cls.construct_classification_dataset_spec_pb(training_spec)
-            validation_spec = cls.construct_classification_dataset_spec_pb(validation_spec)
+            training_spec = cls.construct_classification_dataset_spec_pb(
+                training_spec)
+            validation_spec = cls.construct_classification_dataset_spec_pb(
+                validation_spec)
             test_spec = cls.construct_classification_dataset_spec_pb(test_spec)
             return metis_pb2.DatasetSpec(num_training_examples=num_training_examples,
                                          num_validation_examples=num_validation_examples,
@@ -157,8 +160,10 @@ class MetisProtoMessages(object):
                                          validation_classification_spec=validation_spec,
                                          test_classification_spec=test_spec)
         elif is_regression:
-            training_spec = cls.construct_regression_dataset_spec_pb(training_spec)
-            validation_spec = cls.construct_regression_dataset_spec_pb(validation_spec)
+            training_spec = cls.construct_regression_dataset_spec_pb(
+                training_spec)
+            validation_spec = cls.construct_regression_dataset_spec_pb(
+                validation_spec)
             test_spec = cls.construct_regression_dataset_spec_pb(test_spec)
             return metis_pb2.DatasetSpec(num_training_examples=num_training_examples,
                                          num_validation_examples=num_validation_examples,
@@ -167,7 +172,8 @@ class MetisProtoMessages(object):
                                          validation_regression_spec=validation_spec,
                                          test_regression_spec=test_spec)
         else:
-            raise RuntimeError("Need to specify whether incoming dataset spec is regression or classification.")
+            raise RuntimeError(
+                "Need to specify whether incoming dataset spec is regression or classification.")
 
     @classmethod
     def construct_classification_dataset_spec_pb(cls, class_distribution_specs=None):
@@ -301,10 +307,13 @@ class MetisProtoMessages(object):
     @classmethod
     def construct_model_store_config_pb(cls, name, eviction_policy,
                                         lineage_length=None, store_hostname=None, store_port=None):
-        eviction_policy_pb = MetisProtoMessages.construct_eviction_policy_pb(eviction_policy, lineage_length)
-        model_store_specs_pb = MetisProtoMessages.construct_model_store_specs_pb(eviction_policy_pb)
+        eviction_policy_pb = MetisProtoMessages.construct_eviction_policy_pb(
+            eviction_policy, lineage_length)
+        model_store_specs_pb = MetisProtoMessages.construct_model_store_specs_pb(
+            eviction_policy_pb)
         if name.upper() == "INMEMORY":
-            model_store_pb = MetisProtoMessages.construct_in_memory_store_pb(model_store_specs_pb)
+            model_store_pb = MetisProtoMessages.construct_in_memory_store_pb(
+                model_store_specs_pb)
             return metis_pb2.ModelStoreConfig(in_memory_store=model_store_pb)
         elif name.upper() == "REDIS":
             model_store_pb = MetisProtoMessages.construct_redis_store_pb(
@@ -319,7 +328,8 @@ class MetisProtoMessages(object):
 
     @classmethod
     def construct_redis_store_pb(cls, model_store_specs_pb, hostname, port):
-        server_entity_pb = MetisProtoMessages.construct_server_entity_pb(hostname=hostname, port=port)
+        server_entity_pb = MetisProtoMessages.construct_server_entity_pb(
+            hostname=hostname, port=port)
         return metis_pb2.RedisDBStore(model_store_specs=model_store_specs_pb,
                                       server_entity=server_entity_pb)
 
@@ -355,7 +365,8 @@ class MetisProtoMessages(object):
 
     @classmethod
     def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, he_scheme_config_pb):
-        aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(scaling_factor)
+        aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(
+            scaling_factor)
         if rule_name.upper() == "FEDAVG":
             return metis_pb2.AggregationRule(fed_avg=MetisProtoMessages.construct_fed_avg_pb(),
                                              aggregation_rule_specs=aggregation_rule_specs_pb)
@@ -367,7 +378,8 @@ class MetisProtoMessages(object):
                                              aggregation_rule_specs=aggregation_rule_specs_pb)
         elif rule_name.upper() == "PWA":
             return metis_pb2.AggregationRule(
-                pwa=MetisProtoMessages.construct_pwa_pb(he_scheme_config_pb=he_scheme_config_pb),
+                pwa=MetisProtoMessages.construct_pwa_pb(
+                    he_scheme_config_pb=he_scheme_config_pb),
                 aggregation_rule_specs=aggregation_rule_specs_pb)
         else:
             raise RuntimeError("Unsupported rule name.")
@@ -453,11 +465,14 @@ class ModelProtoMessages(object):
             nparray_dtype = descr[1:]
             if nparray_dtype in ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP:
                 proto_data_type = \
-                    ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[nparray_dtype]
+                    ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[
+                        nparray_dtype]
             else:
-                raise RuntimeError("Provided data type: {}, is not supported".format(nparray_dtype))
+                raise RuntimeError(
+                    "Provided data type: {}, is not supported".format(nparray_dtype))
 
-            dtype = model_pb2.DType(type=proto_data_type, byte_order=endian, fortran_order=fortran_order)
+            dtype = model_pb2.DType(
+                type=proto_data_type, byte_order=endian, fortran_order=fortran_order)
 
             flatten_array_bytes = arr.flatten().tobytes()
             tensor_spec = model_pb2.TensorSpec(
@@ -483,12 +498,14 @@ class ModelProtoMessages(object):
         @classmethod
         def proto_tensor_spec_to_numpy_array(cls, tensor_spec):
             np_data_type = \
-                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(tensor_spec)
+                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(
+                    tensor_spec)
             dimensions = tensor_spec.dimensions
             value = tensor_spec.value
             length = tensor_spec.length
 
-            np_array = np.frombuffer(buffer=value, dtype=np_data_type, count=length)
+            np_array = np.frombuffer(
+                buffer=value, dtype=np_data_type, count=length)
             np_array = np_array.reshape(dimensions)
 
             return np_array
@@ -496,7 +513,8 @@ class ModelProtoMessages(object):
         @classmethod
         def proto_tensor_spec_with_list_values_to_numpy_array(cls, tensor_spec, list_of_values):
             np_data_type = \
-                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(tensor_spec)
+                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(
+                    tensor_spec)
             dimensions = tensor_spec.dimensions
 
             np_array = np.array(list_of_values, dtype=np_data_type)
@@ -508,10 +526,12 @@ class ModelProtoMessages(object):
     def construct_tensor_pb(cls, nparray, ciphertext=None):
         # We prioritize the ciphertext over the plaintext.
         if not isinstance(nparray, np.ndarray):
-            raise TypeError("Parameter {} must be of type {}.".format(nparray, np.ndarray))
+            raise TypeError(
+                "Parameter {} must be of type {}.".format(nparray, np.ndarray))
 
         tensor_spec = \
-            ModelProtoMessages.TensorSpecProto.numpy_array_to_proto_tensor_spec(nparray)
+            ModelProtoMessages.TensorSpecProto.numpy_array_to_proto_tensor_spec(
+                nparray)
 
         if ciphertext is not None:
             # If the tensor is a ciphertext we need to set the bytes of the
@@ -530,20 +550,22 @@ class ModelProtoMessages(object):
         elif isinstance(tensor_pb, model_pb2.CiphertextTensor):
             return model_pb2.Model.Variable(name=name, trainable=trainable, ciphertext_tensor=tensor_pb)
         else:
-            raise RuntimeError("Tensor proto message refers to a non-supported tensor protobuff datatype.")
+            raise RuntimeError(
+                "Tensor proto message refers to a non-supported tensor protobuff datatype.")
 
     @classmethod
     def construct_model_pb_from_vars_pb(
             cls, variables_pb):
         assert isinstance(variables_pb, list) and \
-               all([isinstance(var, model_pb2.Model.Variable) for var in variables_pb])
+            all([isinstance(var, model_pb2.Model.Variable)
+                for var in variables_pb])
         return model_pb2.Model(variables=variables_pb)
 
     @classmethod
     def construct_federated_model_pb(cls, num_contributors, model_pb):
         assert isinstance(model_pb, model_pb2.Model)
         return model_pb2.FederatedModel(num_contributors=num_contributors, model=model_pb)
-    
+
     @classmethod
     def construct_optimizer_config_pb(cls, optimizer_name, learning_rate, kwargs):
         return model_pb2.OptimizerConfig(

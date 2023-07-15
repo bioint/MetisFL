@@ -10,9 +10,14 @@ DRIVER_DIR_NAME = "driver"
 CONTROLLER_DIR_NAME = "controller"
 LEARNER_DIR_NAME = "learner_{}"
 MODEL_SAVE_DIR_NAME = "model_definition"
-SSL_CONFIG_DIR_NAME = "resources/ssl_config"
-GEN_CERTS_SCRIPT_NAME = "gen_certificates.sh"
-DEFAULT_SSL_CONFIG_DIR = "resources/ssl_config/default"
+SSL_PATH = "resources/ssl"
+SSL_PATH_DEFAULT = "resources/ssl"
+GEN_CERTS_SCRIPT_NAME = "generate.sh"
+GEN_CERTS_SCRIPT_NAME_DIR = os.path.join(SSL_PATH, GEN_CERTS_SCRIPT_NAME)
+SERVER_CERT_NAME = "server-cert.pem"
+SERVER_KEY_NAME = "server-key.pem"
+SERVER_CERT_DIR = os.path.join(SSL_PATH_DEFAULT, SERVER_CERT_NAME)
+SERVER_KEY_DIR = os.path.join(SSL_PATH_DEFAULT, SERVER_KEY_NAME)
 
 CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
 
@@ -93,30 +98,43 @@ def get_auth_token_fp(learner_id):
     _get_path_safe(learnet_token_path)
     return os.path.join(learnet_token_path, AUTH_TOKEN_FILE)
 
+def get_default_certificates():
+    script_dir = os.path.dirname(__file__)
+    original_certs_path = os.path.join(script_dir, SSL_PATH_DEFAULT)
+    server_cert = os.path.join(original_certs_path, SERVER_CERT_NAME)
+    server_key = os.path.join(original_certs_path, SERVER_KEY_NAME)
+    return server_cert, server_key
+    
 def get_certificates_dir():
     path = get_project_home()
-    path = os.path.join(path, SSL_CONFIG_DIR_NAME)
+    path = os.path.join(path, SSL_PATH)
     return _get_path_safe(path)
 
 def get_certificates():
     script_dir = os.path.dirname(__file__)
-    gen_cert_script = os.path.join(
-        script_dir, SSL_CONFIG_DIR_NAME, GEN_CERTS_SCRIPT_NAME)
+    script_path_original = os.path.join(script_dir, GEN_CERTS_SCRIPT_NAME_DIR)
+    
     if which("openssl") is None:
-        MetisLogger.warning("No openssl found in path. Using default certificates")
-        return os.path.join(script_dir, DEFAULT_SSL_CONFIG_DIR)
+        return get_default_certificates()
     
-    if os.path.exists(os.path.join(get_certificates_dir(), GEN_CERTS_SCRIPT_NAME)):
-        return get_certificates_dir() # already generated
-      
-    # copy the script to the certificates dir
-    copyfile(gen_cert_script, os.path.join(get_certificates_dir(), GEN_CERTS_SCRIPT_NAME))
+    cert_dir = get_certificates_dir()
+    cert_script_path = os.path.join(cert_dir, GEN_CERTS_SCRIPT_NAME)
+    if not os.path.exists(cert_script_path):
+        copyfile(script_path_original, cert_script_path)
+        cwd = os.getcwd()
+        os.chdir(cert_dir)
+        os.chmod(GEN_CERTS_SCRIPT_NAME, 0o755)
+        os.system("./{}".format(GEN_CERTS_SCRIPT_NAME))
+        os.chdir(cwd)
     
-    # generate the certificates
-    os.chdir(get_certificates_dir())
-    os.system("./{}".format(GEN_CERTS_SCRIPT_NAME))    
+    server_cert = os.path.join(cert_dir, SERVER_CERT_NAME)
+    server_key = os.path.join(cert_dir, SERVER_KEY_NAME)
+    return server_cert, server_key
+    
 
 def _get_path_safe(path: str) -> str:
     if not os.path.exists(path):
         os.makedirs(path)
     return path
+
+print(get_certificates())

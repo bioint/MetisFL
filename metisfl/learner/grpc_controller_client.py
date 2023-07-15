@@ -2,10 +2,9 @@ import grpc
 
 from metisfl import config
 from metisfl.grpc.grpc_services import GRPCClient
-from metisfl.proto import controller_pb2, controller_pb2_grpc
+from metisfl.proto import controller_pb2, controller_pb2_grpc, metis_pb2
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.proto.proto_messages_factory import MetisProtoMessages
-from metisfl.utils.ssl_configurator import SSLConfigurator
 
 
 class GRPCControllerClient(GRPCClient):
@@ -105,13 +104,13 @@ class GRPCControllerClient(GRPCClient):
 
 
 def _get_join_request_pb(learner_server_entity, dataset_metadata):
-    public_ssl_config = \
-        SSLConfigurator.gen_public_ssl_config_pb_as_stream(
-            ssl_config_pb=learner_server_entity.ssl_config)
-    learner_server_entity_public = MetisProtoMessages.construct_server_entity_pb(
+    # @stripeli why is the server enntity being recreated here?
+    learner_server_entity_public = metis_pb2.ServerEntity(
         hostname=learner_server_entity.hostname,
         port=learner_server_entity.port,
-        ssl_config_pb=public_ssl_config)
+        public_certificate=learner_server_entity.public_certificate_file,
+        private_key=learner_server_entity.private_key_file
+    )
     dataset_spec_pb = MetisProtoMessages.construct_dataset_spec_pb(
         num_training_examples=dataset_metadata["train_dataset_size"],
         num_validation_examples=dataset_metadata["validation_dataset_size"],

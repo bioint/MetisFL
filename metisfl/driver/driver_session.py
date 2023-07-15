@@ -1,8 +1,8 @@
 import multiprocessing as mp
 import queue
 import time
-
 from typing import Callable, List
+
 from pebble import ProcessPool
 
 from metisfl import config
@@ -10,12 +10,12 @@ from metisfl.models.metis_model import MetisModel
 from metisfl.models.utils import construct_model_pb
 from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
+from metisfl.utils.ssl_utils import get_server_params_pb
 
 from .controller_client import GRPCControllerClient
+from .learner_client import GRPCLearnerClient
 from .service_initializer import ServiceInitializer
 from .service_monitor import ServiceMonitor
-from .learner_client import GRPCLearnerClient
-from .utils import create_server_entity
 
 
 class DriverSession(object):
@@ -172,16 +172,22 @@ class DriverSession(object):
         self._executor.join()
 
     def _create_controller_server_entity(self):
-        return create_server_entity(
+        return get_server_params_pb(
             enable_ssl=self._federation_environment.enable_ssl,
-            remote_host_instance=self._federation_environment.controller)
+            grpc_hostname=self._federation_environment.controller.grpc_hostname,
+            grpc_port=self._federation_environment.controller.grpc_port,
+            ssl_public_certificate=self._federation_environment.controller.ssl_public_certificate,
+            ssl_private_key=self._federation_environment.controller.ssl_private_key)
 
     def _create_learning_server_entities(self):
         learning_server_entities_pb = []
         for learner in self._federation_environment.learners:
-            learning_server_entities_pb.append(create_server_entity(
+            learning_server_entities_pb.append(get_server_params_pb(
+                grpc_hostname=learner.grpc_hostname,
+                grpc_port=learner.grpc_port,
                 enable_ssl=self._federation_environment.enable_ssl,
-                remote_host_instance=learner))
+                ssl_public_certificate=learner.ssl_public_certificate,
+                ssl_private_key=learner.ssl_private_key))
         return learning_server_entities_pb
 
     def _create_driver_controller_grpc_client(self):
