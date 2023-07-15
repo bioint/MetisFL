@@ -15,8 +15,9 @@ class FederationEnvironment(object):
         fstream = open(federation_environment_config_fp).read()
         self._yaml = yaml.load(fstream, Loader=yaml.SafeLoader)
         env_schema.validate(self._yaml)
-        self.controller = RemoteHost(self._yaml.get("Controller"))
-        self.learners = [RemoteHost(learner)
+        self.controller = RemoteHost(self._yaml.get(
+            "Controller"), enable_ssl=self.enable_ssl)
+        self.learners = [RemoteHost(learner, enable_ssl=self.enable_ssl)
                          for learner in self._yaml.get("Learners")]
 
     # Environment configuration
@@ -208,7 +209,7 @@ class RemoteHost(object):
         self._config_map = config_map
         self._enable_ssl = enable_ssl
         self._setup_ssl()
-    
+
     def _setup_ssl(self):
         if self._enable_ssl:
             if not ssl_public_certificate or not ssl_private_key:
@@ -302,11 +303,13 @@ class RemoteHost(object):
         Returns:
             metis_pb2.ServerEntity: The generated ServerEntity proto object.
         """
-        private_key = self._config_map.get("SSLPrivateKey") if not gen_connection_entity else None
+        private_key = self._config_map.get(
+            "SSLPrivateKey") if not gen_connection_entity else None
         server_params_pb = metis_pb2.ServerEntity(
             hostname=self._config_map.get("GRPCServicerHostname"),
             port=self._config_map.get("GRPCServicerPort"),
-            public_certificate_file=self._config_map.get("SSLPublicCertificate"),
+            public_certificate_file=self._config_map.get(
+                "SSLPublicCertificate"),
             private_key_file=private_key)
 
         return server_params_pb
