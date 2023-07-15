@@ -29,7 +29,7 @@ LocalEpochs: 4
 ValidationPercentage: 0.0
 Optimizer: "VanillaSGD" # Others are "MomentumSGD", "Adam", "RMSProp"
 OptimizerParams:
-  learning_rate: 0.01
+  LearningRate: 0.01
 
 # ControllerConfig:
 Controller:
