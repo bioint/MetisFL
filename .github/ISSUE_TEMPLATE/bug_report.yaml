@@ -19,13 +19,23 @@ body:
     id: bug-description
     attributes:
       label: Description of the bug
-      description: | 
-      Tell us what bug you encountered and what should have happened. If relevant, add a minimal example so that we can reproduce the error by running the code.
+      description: |
+        Please provide a clear description of what the bug is.
 
+        If relevant, add a minimal example so that we can reproduce the error by running the code. For example 
 
-      If the code is too long, feel free to put it in a public gist and link it here: https://gist.github.com.
+        If the code is too long, feel free to put it in a public gist and link it here: https://gist.github.com.
 
-      Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in ```` ```triple quotes blocks``` ````.
+        Please also paste or describe the results you observe instead of the expected results. If you observe an error, please paste the error message including the **full** traceback of the exception. It may be relevant to wrap error messages in ```` ```triple quotes blocks``` ````.
+      placeholder: |
+        A clear and concise description of what the bug is.
+
+        ```python
+        Sample code to reproduce the problem
+        ```
+
+        ```
+        The error message you got, with the full traceback.
     validations:
       required: true
   - type: markdown
