@@ -14,6 +14,7 @@ HE_SCHEMES = ["CKKS"]
 AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "PWA"]
 SCALING_FACTORS = ["NumTrainingExamples", "NUM_COMPLETED_BATCHES",
                    "NUM_PARTICIPANTS", "NUM_TRAINING_EXAMPLES"]
+OPTIMIZERS = ["VanillaSGD", "Adam", "Adagrad", "Adadelta", "RMSprop"]
 
 def _existing_file(s):
     if not os.path.exists(s):
@@ -31,7 +32,7 @@ remote_host_schema = Schema({
     "OnLoginCommand": str,
     "GRPCServicerHostname": str,
     "GRPCServicerPort": And(Use(int), lambda n: n > 0),
-    Optional("SSLPrivateKey"): And(_existing_file, str),
+    Optional("SSLPrivateKey"): And(_existing_file, str), # These two must exist together
     Optional("SSLPublicCertificate"): And(_existing_file, str),
     Optional("CudaDevices"): List[int]
 })
@@ -60,7 +61,7 @@ env_schema = Schema({
     "BatchSize": And(Use(int), lambda n: n > 0),
     "LocalEpochs": And(Use(int), lambda n: n > 0),
     "ValidationPercentage": And(Or(float, int), lambda n: n >= 0 and n <= 1),
-    "Optimizer": And(str, lambda s: s in OPTIMIZER_PB_MAP.keys()),
+    "Optimizer": And(str, lambda s: s in OPTIMIZERS),
     "OptimizerParams": dict,
     "Controller": remote_host_schema,
     "Learners": And(list, lambda l: len(l) > 0, error="Learners must be a non-empty list."),

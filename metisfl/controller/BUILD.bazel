@@ -8,7 +8,7 @@ pybind_extension(
     # in python scripts. The rule will generate the lib controller.so, which is
     # also a data dependency for the py_library() rule below; therefore it needs
     # to remain UNCHANGED!
-    name = "controller",
+    name = "controller_pybind",
     srcs = ["pybind/controller_pybind.cc"],
     deps = [
         "//metisfl/controller/core:controller_servicer",
@@ -22,7 +22,7 @@ py_library(
         "controller_instance.py",
         "__main__.py",
     ],
-    data = ["controller.so"],
+    data = ["controller_pybind.so"],
     srcs_version = "PY3",
 )
 

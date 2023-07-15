@@ -1,4 +1,8 @@
 import yaml
+import re
+
+from metisfl import config
+from metisfl.proto import metis_pb2
 
 from metisfl.proto import metis_pb2
 from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
@@ -14,7 +18,6 @@ class FederationEnvironment(object):
         self.controller = RemoteHost(self._yaml.get("Controller"))
         self.learners = [RemoteHost(learner)
                          for learner in self._yaml.get("Learners")]
-        self.crypto_files_generated = False
 
     # Environment configuration
     @property
@@ -118,7 +121,13 @@ class FederationEnvironment(object):
     def _get_optimizer_pb(self):
         optimizer_name = self._yaml.get("Optimizer")
         params = self._yaml.get("OptimizerParams")
-        learning_rate = params.get("LearningRate") 
+        new_params = {}
+        for param in params:
+            snake_case_param = to_snake_case(param)
+            new_params[snake_case_param] = params[param]
+        # FIXME(@panoskyriakis) Need to figure out the default lr of optimizer to send it to the controller.
+        learning_rate = params.get("LearningRate")
+        learning_rate = to_snake_case(learning_rate)
         return ModelProtoMessages.construct_optimizer_config_pb(optimizer_name=optimizer_name,
                                                                 learning_rate=learning_rate,
                                                                 optimizer_params=params)
@@ -128,7 +137,7 @@ class FederationEnvironment(object):
             rule_name=self.aggregation_rule,
             scaling_factor=self.scaling_factor,
             stride_length=self.stride_length,
-            he_scheme_config_pb=self.get_he_scheme_pb())
+            he_scheme_config_pb=self.get_controller_he_scheme_pb())
         return MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.participation_ratio)
@@ -187,9 +196,25 @@ class FederationEnvironment(object):
             raise RuntimeError("Not a supported model store.")
 
 
+def to_snake_case(name):
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    name = re.sub('__([A-Z])', r'_\1', name)
+    name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
+    return name.lower()
+
+
 class RemoteHost(object):
-    def __init__(self, config_map):
+    def __init__(self, config_map, enable_ssl=False):
         self._config_map = config_map
+        self._enable_ssl = enable_ssl
+        self._setup_ssl()
+    
+    def _setup_ssl(self):
+        if self._enable_ssl:
+            if not ssl_public_certificate or not ssl_private_key:
+                ssl_public_certificate, ssl_private_key = config.get_certificates()
+                self._config_map["SSLPublicCertificate"] = ssl_public_certificate
+                self._config_map["SSLPrivateKey"] = ssl_private_key
 
     @property
     def id(self):
@@ -267,3 +292,21 @@ class RemoteHost(object):
             "connect_kwargs": connect_kwargs
         }
         return conn_config
+
+    def get_server_entity_pb(self, gen_connection_entity=False) -> metis_pb2.ServerEntity:
+        """Generate a ServerEntity proto object for the given parameters.
+
+        Args:
+            gen_connection_entity (bool, optional): Sets the private key to None. Defaults to False.
+
+        Returns:
+            metis_pb2.ServerEntity: The generated ServerEntity proto object.
+        """
+        private_key = self._config_map.get("SSLPrivateKey") if not gen_connection_entity else None
+        server_params_pb = metis_pb2.ServerEntity(
+            hostname=self._config_map.get("GRPCServicerHostname"),
+            port=self._config_map.get("GRPCServicerPort"),
+            public_certificate_file=self._config_map.get("SSLPublicCertificate"),
+            private_key_file=private_key)
+
+        return server_params_pb

@@ -2,7 +2,7 @@ import copy
 import itertools
 import os
 
-from metisfl.utils.fedenv_parser import FederationEnvironment
+from metisfl.utils.fedenv import FederationEnvironment
 
 
 ## TODO(@panoskyriakis): Check if correct given new environment
