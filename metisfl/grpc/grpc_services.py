@@ -1,4 +1,5 @@
 import queue
+import os
 import time
 from concurrent import futures
 
@@ -9,7 +10,6 @@ from metisfl.proto import controller_pb2_grpc, service_common_pb2
 
 from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.ssl_configurator import SSLConfigurator
 
 
 class GRPCEndpoint(object):
@@ -31,9 +31,9 @@ class GRPCChannelMaxMsgLength(object):
             [(cygrpc.ChannelArgKey.max_send_message_length, -1),
              (cygrpc.ChannelArgKey.max_receive_message_length, -1)]
 
-        public_certificate, _ = SSLConfigurator().load_certificates_from_ssl_config_pb(
-            ssl_config_pb=server_entity.ssl_config, as_stream=True)
+        public_certificate = server_entity.public_certificate_file
         if public_certificate:
+            public_certificate = load_file_as_stream(public_certificate)
             ssl_credentials = grpc.ssl_channel_credentials(public_certificate)
             self.channel = grpc.secure_channel(
                 target=self.grpc_endpoint.listening_endpoint,
@@ -51,14 +51,16 @@ class GRPCClient(object):
         self.grpc_endpoint = GRPCEndpoint(server_entity)
         self.executor = ThreadPool(max_workers=max_workers)
         self.executor_pool = queue.Queue()
-        self._channel = GRPCChannelMaxMsgLength(self.grpc_endpoint.server_entity).channel
+        self._channel = GRPCChannelMaxMsgLength(
+            self.grpc_endpoint.server_entity).channel
         self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)
 
     def check_health_status(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
             get_services_health_status_request_pb = service_common_pb2.GetServicesHealthStatusRequest()
             MetisLogger.info("Requesting controller's health status.")
-            response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
+            response = self._stub.GetServicesHealthStatus(
+                get_services_health_status_request_pb, timeout=_timeout)
             MetisLogger.info("Received controller's health status, {} - {}".format(
                 self.grpc_endpoint.listening_endpoint, response))
             return response
@@ -88,13 +90,15 @@ class GRPCClient(object):
             try:
                 response = request_fn(request_timeout)
             except grpc.RpcError as rpc_error:
-                MetisLogger.info("Exception Raised: {}, Retrying...".format(rpc_error))
+                MetisLogger.info(
+                    "Exception Raised: {}, Retrying...".format(rpc_error))
                 if rpc_error.code() == grpc.StatusCode.UNAVAILABLE:
-                    time.sleep(10)  # sleep for 10secs in-between requests if server is Unavailable.
+                    # sleep for 10secs in-between requests if server is Unavailable.
+                    time.sleep(10)
             else:
                 break
             count_retries += 1
-        return response       
+        return response
 
 
 class GRPCServerMaxMsgLength(object):
@@ -113,9 +117,11 @@ class GRPCServerMaxMsgLength(object):
         self.executor = futures.ThreadPoolExecutor(max_workers=max_workers)
         self.server = grpc.server(self.executor, options=self.channel_options)
 
-        public_certificate, private_key = SSLConfigurator().load_certificates_from_ssl_config_pb(
-            ssl_config_pb=server_entity.ssl_config, as_stream=True)
+        public_certificate = server_entity.public_certificate_file
+        private_key = server_entity.private_key_file
         if public_certificate and private_key:
+            public_certificate = load_file_as_stream(public_certificate)
+            private_key = load_file_as_stream(private_key)
             server_credentials = grpc.ssl_server_credentials((
                 (private_key, public_certificate, ),
             ))
@@ -125,3 +131,10 @@ class GRPCServerMaxMsgLength(object):
         else:
             self.server.add_insecure_port(
                 self.grpc_endpoint.listening_endpoint)
+
+
+def load_file_as_stream(filepath):
+    if filepath and os.path.exists(filepath):
+        return open(filepath, "rb").read()
+    raise FileNotFoundError("File not found: {}".format(filepath))
+    
