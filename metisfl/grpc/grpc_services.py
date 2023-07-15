@@ -137,4 +137,3 @@ def load_file_as_stream(filepath):
     if filepath and os.path.exists(filepath):
         return open(filepath, "rb").read()
     raise FileNotFoundError("File not found: {}".format(filepath))
-    
