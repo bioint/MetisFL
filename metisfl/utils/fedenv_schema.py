@@ -12,7 +12,7 @@ HE_SCHEMES = ["CKKS"]
 AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "PWA"]
 SCALING_FACTORS = ["NumTrainingExamples", "NUM_COMPLETED_BATCHES",
                    "NUM_PARTICIPANTS", "NUM_TRAINING_EXAMPLES"]
-OPTIMIZERS = ["VanillaSGD", "Adam", "Adagrad", "Adadelta", "RMSprop"]
+OPTIMIZERS = ["SGD", "Adam", "Adagrad", "Adadelta", "RMSprop"]
 
 
 def _existing_file(s):
@@ -67,7 +67,8 @@ env_schema = Schema({
     Optional("ParticipationRatio"): And(Use(float), lambda n: n > 0 and n <= 1),
     "BatchSize": And(Use(int), lambda n: n > 0),
     "LocalEpochs": And(Use(int), lambda n: n > 0),
-    "ValidationPercentage": And(Or(float, int), lambda n: n >= 0 and n <= 1),
+    "Optimizer": And(str, lambda s: s in OPTIMIZERS),
+    Optional("OptimizerParams"): dict,
     "Controller": remote_host_schema,
     "Learners": And(list, lambda l: len(l) > 0, error="Learners must be a non-empty list."),
 })
