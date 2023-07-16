@@ -20,6 +20,7 @@ class FederationEnvironment(object):
         self.learners = [RemoteHost(learner, enable_ssl=self.enable_ssl)
                          for learner in self._yaml.get("Learners")]
         self._setup_ssl()
+        self._setup_fhe()
 
     def _setup_ssl(self):
         if self.enable_ssl:
@@ -166,9 +167,9 @@ class FederationEnvironment(object):
     def get_he_scheme_pb(self, entity: str) -> metis_pb2.HESchemeConfig:
         assert entity in ["controller", "learner"]
         if self.he_scheme == "CKKS":
-            fhe_crypto_context_file = self._config_map["FHECryptoContextFile"]
-            fhe_key_public_file = self._config_map["FHEPublicKeyFile"]
-            fhe_key_private_file = self._config_map["FHEPrivateKeyFile"]
+            fhe_crypto_context_file = self._yaml["FHECryptoContextFile"]
+            fhe_key_public_file = self._yaml["FHEPublicKeyFile"]
+            fhe_key_private_file = self._yaml["FHEPrivateKeyFile"]
             ckks_scheme_pb = metis_pb2.CKKSSchemeConfig(
                 batch_size=self.he_batch_size, scaling_factor_bits=self.he_scaling_bits)
             return metis_pb2.HESchemeConfig(
