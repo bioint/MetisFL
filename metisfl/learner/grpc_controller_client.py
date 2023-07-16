@@ -108,8 +108,8 @@ def _get_join_request_pb(learner_server_entity, dataset_metadata):
     learner_server_entity_public = metis_pb2.ServerEntity(
         hostname=learner_server_entity.hostname,
         port=learner_server_entity.port,
-        public_certificate=learner_server_entity.public_certificate_file,
-        private_key=learner_server_entity.private_key_file
+        public_certificate_file=learner_server_entity.public_certificate_file,
+        private_key_file=None,
     )
     dataset_spec_pb = MetisProtoMessages.construct_dataset_spec_pb(
         num_training_examples=dataset_metadata["train_dataset_size"],
