@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 from shutil import which, copyfile
 
-from metisfl.utils.metis_logger import MetisLogger
 
 METIS_WORKING_DIR = ".metisfl"
 DRIVER_DIR_NAME = "driver"
@@ -11,15 +10,18 @@ CONTROLLER_DIR_NAME = "controller"
 LEARNER_DIR_NAME = "learner_{}"
 MODEL_SAVE_DIR_NAME = "model_definition"
 SSL_PATH = "resources/ssl"
-SSL_PATH_DEFAULT = "resources/ssl"
 GEN_CERTS_SCRIPT_NAME = "generate.sh"
 GEN_CERTS_SCRIPT_NAME_DIR = os.path.join(SSL_PATH, GEN_CERTS_SCRIPT_NAME)
 SERVER_CERT_NAME = "server-cert.pem"
 SERVER_KEY_NAME = "server-key.pem"
-SERVER_CERT_DIR = os.path.join(SSL_PATH_DEFAULT, SERVER_CERT_NAME)
-SERVER_KEY_DIR = os.path.join(SSL_PATH_DEFAULT, SERVER_KEY_NAME)
+SERVER_CERT_DIR = os.path.join(SSL_PATH, SERVER_CERT_NAME)
+SERVER_KEY_DIR = os.path.join(SSL_PATH, SERVER_KEY_NAME)
 
-CRYPTO_RESOURCES_DIR = "resources/fhe/cryptoparams/"
+FHE_RESOURCE_DIR = "resources/fhe"
+FHE_CRYPTO_CONTEXT_FILE = "cryptocontext.txt"
+FHE_KEY_PUBLIC = "key-public.txt"
+FHE_KEY_PRIVATE = "key-private.txt"
+FHE_KEY_EVAL_MULT = "key-eval-mult.txt"
 
 DEFAULT_CONTROLLER_HOSTNAME = "[::]"
 DEFAULT_CONTROLLER_PORT = 50051
@@ -89,9 +91,15 @@ def get_learner_id_fp(learner_id):
     _get_path_safe(learner_id_fp)
     return os.path.join(learner_id_fp, LEARNER_ID_FILE)
 
-def get_crypto_resources_dir():
+def get_crypto_resources():
     path = get_project_home()
-    # FIXME: finish this; must generate the crypto resources on first call
+    path = os.path.join(path, FHE_RESOURCE_DIR)
+    _get_path_safe(path)
+    fhe_crypto_context_file = os.path.join(path, FHE_CRYPTO_CONTEXT_FILE)
+    fhe_key_public_file = os.path.join(path, FHE_KEY_PUBLIC)
+    fhe_key_private_file = os.path.join(path, FHE_KEY_PRIVATE)
+    fhe_key_eval_mult_file = os.path.join(path, FHE_KEY_EVAL_MULT)
+    return fhe_crypto_context_file, fhe_key_public_file, fhe_key_private_file, fhe_key_eval_mult_file
 
 def get_auth_token_fp(learner_id):
     learnet_token_path = get_learner_path(learner_id)
@@ -100,7 +108,7 @@ def get_auth_token_fp(learner_id):
 
 def get_default_certificates():
     script_dir = os.path.dirname(__file__)
-    original_certs_path = os.path.join(script_dir, SSL_PATH_DEFAULT)
+    original_certs_path = os.path.join(script_dir, SSL_PATH)
     server_cert = os.path.join(original_certs_path, SERVER_CERT_NAME)
     server_key = os.path.join(original_certs_path, SERVER_KEY_NAME)
     return server_cert, server_key
@@ -136,5 +144,3 @@ def _get_path_safe(path: str) -> str:
     if not os.path.exists(path):
         os.makedirs(path)
     return path
-
-print(get_certificates())
