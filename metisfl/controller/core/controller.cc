@@ -353,19 +353,12 @@ class ControllerDefaultImpl : public Controller {
         absl::StrCat(server_entity.hostname(), ":", server_entity.port());
 
     auto creds = grpc::InsecureChannelCredentials();
-    if (server_entity.has_ssl_config()) {
+    auto ssl_enabled = server_entity.public_certificate_file() != "" &&
+                       server_entity.private_key_file() != "";
+    if (ssl_enabled) {
         grpc::SslCredentialsOptions ssl_opts;
-        if (server_entity.ssl_config().enable_ssl()) {
-          if (server_entity.ssl_config().has_ssl_config_stream()) {
-            ssl_opts.pem_root_certs =
-                server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
-            creds = grpc::SslCredentials(ssl_opts);
-          } else {
-            PLOG(WARNING) << "Even though learner: " << learner_id <<
-            "has requested TLS/SSL connection, it has not sent a public "
-            "certificate stream to establish connection.";
-          }
-        }
+        ssl_opts.pem_root_certs = server_entity.public_certificate_file();
+        creds = grpc::SslCredentials(ssl_opts);  
     }
     auto channel = grpc::CreateChannel(target, creds);
     return LearnerService::NewStub(channel);

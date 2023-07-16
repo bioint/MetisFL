@@ -115,6 +115,5 @@ message FederatedModel {
 
 message OptimizerConfig {
   string name = 1;
-  string learning_rate = 2;
-  map<string, string> kwargs = 3;
+  map<string, string> params = 2;
 }

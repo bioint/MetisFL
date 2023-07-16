@@ -291,7 +291,6 @@ message HESchemeConfig {
     EmptySchemeConfig empty_scheme_config = 5;
     CKKSSchemeConfig ckks_scheme_config = 6;
   }
-
 }
 
 message EmptySchemeConfig {}

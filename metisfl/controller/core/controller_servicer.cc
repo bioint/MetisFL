@@ -35,30 +35,25 @@ class ServicerBase {
     ServerBuilder builder;
     std::shared_ptr<grpc::ServerCredentials> creds;
 
-    if (server_entity.ssl_config().enable_ssl()) {
-
+    auto ssl_enabled = server_entity.public_certificate_file() != "" &&
+                       server_entity.private_key_file() != "";
+                       
+    if (ssl_enabled) {
       std::string server_cert_loaded;
       std::string server_key_loaded;
-      if (server_entity.ssl_config().has_ssl_config_files()) {
-        auto cert_path = server_entity.ssl_config().ssl_config_files().public_certificate_file();
-        auto key_path = server_entity.ssl_config().ssl_config_files().private_key_file();
+      auto cert_path = server_entity.public_certificate_file();
+      auto key_path = server_entity.private_key_file();
 
-        if (ReadParseFile(server_cert_loaded, cert_path) == -1) {
-          // Logs and terminates the program if public certificate filepath is invalid.
-          PLOG(FATAL) << "Error Reading Controller Certificate: " << cert_path;
-        }
-
-        if (ReadParseFile(server_key_loaded, key_path) == -1) {
-          // Logs and terminates the program if private key filepath is invalid.
-          PLOG(FATAL) << "Error Reading Controller Key: " << key_path;
-        }
-      } else if (server_entity.ssl_config().has_ssl_config_stream()) {
-        server_cert_loaded = server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
-        server_key_loaded = server_entity.ssl_config().ssl_config_stream().private_key_stream();
-      } else {
-        PLOG(FATAL) << "Even though SSL was enabled the (private, public) key pair was not provided.";
+      if (ReadParseFile(server_cert_loaded, cert_path) == -1) {
+        // Logs and terminates the program if public certificate filepath is invalid.
+        PLOG(FATAL) << "Error Reading Controller Certificate: " << cert_path;
       }
 
+      if (ReadParseFile(server_key_loaded, key_path) == -1) {
+        // Logs and terminates the program if private key filepath is invalid.
+        PLOG(FATAL) << "Error Reading Controller Key: " << key_path;
+      }
+      
       PLOG(INFO) << "SSL enabled";
 
       grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp =
@@ -252,10 +247,12 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
     }
 
     // Validates that the incoming request has the required fields populated.
-    if (!request->has_server_entity() && !request->has_local_dataset_spec()) {
+    // FIXME:(@stripeli) if either but not both are not set, it'll crash in line 257
+    // switch to if (!request->has_server_entity() || !request->has_local_dataset_spec())
+    if (!request->has_server_entity() || !request->has_local_dataset_spec()) {
       response->mutable_ack()->set_status(false);
       return {StatusCode::INVALID_ARGUMENT,
-              "Server entity and local dataset cannot be empty."};
+              "Server entity or local dataset cannot be empty."};
     }
 
     const auto learner_or = controller_->AddLearner(
