@@ -5,9 +5,9 @@ import glob
 
 BAZEL_CMD = "bazelisk"
 BUILD_DIR = "build"
-CONTROLER_SO_DST = "metisfl/controller/controller_pybind.so"
-CONTROLER_SO_SRC = "bazel-bin/metisfl/controller/controller_pybind.so"
-CONTROLER_SO_TARGET = "//metisfl/controller:controller_pybind.so"
+CONTROLER_SO_DST = "metisfl/controller/controller.so"
+CONTROLER_SO_SRC = "bazel-bin/metisfl/controller/controller.so"
+CONTROLER_SO_TARGET = "//metisfl/controller:controller.so"
 FHE_SO_DST = "metisfl/encryption/fhe.so"
 FHE_SO_SRC = "bazel-bin/metisfl/encryption/fhe.so"
 FHE_SO_TARGET = "//metisfl/encryption:fhe.so"
