@@ -6,7 +6,7 @@ from metisfl.proto.proto_messages_factory import MetisProtoMessages
 
 from .dataset_handler import LearnerDataset
 from .learner_executor import LearnerExecutor
-from .learner_servicer import LearnerServicer
+from .learner_server import LearnerServer
 from .task_executor import TaskExecutor
 
 
@@ -67,17 +67,11 @@ def init_learner(args):
         model_ops_fn=model_ops_fn,
     )
     learner_executor = LearnerExecutor(task_executor=task_executor)
-    learner_servicer = LearnerServicer(
+    learner_server = LearnerServer(
         controller_server_entity_pb=controller_server_entity_pb,
         dataset_metadata=learner_dataset.get_dataset_metadata(),
         learner_executor=learner_executor,
         learner_server_entity_pb=learner_server_entity_pb,
         servicer_workers=5
     )
-
-    # First, initialize learner servicer for receiving train/evaluate/inference tasks.
-    learner_servicer.init_servicer()
-
-    # Second, block the servicer till a shutdown request is issued and no more requests are received.
-    # @stripeli: moved this to init_servicer() method
-    # learner_servicer.wait_servicer()
+    learner_server.init_server()

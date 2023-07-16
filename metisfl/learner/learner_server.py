@@ -13,7 +13,7 @@ from .grpc_controller_client import GRPCControllerClient
 from .learner_executor import LearnerExecutor
 
 
-class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
+class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
     def __init__(self,
                  learner_executor: LearnerExecutor,
@@ -42,7 +42,7 @@ class LearnerServicer(learner_pb2_grpc.LearnerServiceServicer):
             dataset_metadata=dataset_metadata
         )
 
-    def init_servicer(self):
+    def init_server(self):
         learner_pb2_grpc.add_LearnerServiceServicer_to_server(
             self, self.__grpc_server.server)
         self.__grpc_server.server.start()
