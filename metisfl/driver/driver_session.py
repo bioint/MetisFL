@@ -118,7 +118,6 @@ class DriverSession(object):
         controller_future = self._executor.schedule(
             function=self._service_initilizer.init_controller)
         self._executor_controller_tasks_q.put(controller_future)
-
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model_to_controller()
             for idx in range(self._num_learners):
@@ -193,7 +192,7 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = self._homomorphic_encryption.encrypt_np_weights(
+        model_pb = self._homomorphic_encryption.encrypt(
             weights_descriptor=weights_descriptor)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,

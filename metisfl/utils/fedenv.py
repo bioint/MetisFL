@@ -39,7 +39,7 @@ class FederationEnvironment(object):
     def _setup_fhe(self):
         if self.he_scheme == "CKKS":
             fhe_crypto_context_file, fhe_key_public_file, \
-                fhe_key_private_file, fhe_key_eval_mult_file = config.get_crypto_resources()
+                fhe_key_private_file, fhe_key_eval_mult_file = config.get_fhe_resources()
             self._yaml["FHECryptoContextFile"] = fhe_crypto_context_file
             self._yaml["FHEPublicKeyFile"] = fhe_key_public_file
             self._yaml["FHEPrivateKeyFile"] = fhe_key_private_file

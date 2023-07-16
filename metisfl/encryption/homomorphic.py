@@ -1,4 +1,6 @@
+import os
 
+from metisfl import config
 from metisfl.encryption import fhe
 from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.proto import metis_pb2, model_pb2
@@ -14,12 +16,22 @@ class HomomorphicEncryption(object):
         self._he_scheme = None
         if he_scheme_pb and he_scheme_pb.HasField("ckks_scheme_config"):
             self._he_scheme = fhe.CKKS(
-                he_scheme_pb.fhe_scheme.batch_size,
-                he_scheme_pb.fhe_scheme.scaling_bits)
-            self._he_scheme.load_crypto_params()
+                he_scheme_pb.ckks_scheme_config.batch_size,
+                he_scheme_pb.ckks_scheme_config.scaling_factor_bits)
+            self._setup_fhe()
 
-    def decrypt_pb_weights(self,
-                           variables: list[model_pb2.Model.Variable]) -> ModelWeightsDescriptor:
+    def _setup_fhe(self):
+        paths = config.get_fhe_resources()
+        # check if the resources are available
+        bools = map(lambda path: os.path.exists(path), paths)
+        if not all(bools):
+            fhe_dir = config.get_fhe_dir()
+            self._he_scheme.gen_crypto_context_and_keys(fhe_dir)
+        else:
+            self._he_scheme.load_context_and_keys_from_files(*paths[:3])
+
+    def decrypt(self,
+                variables: list[model_pb2.Model.Variable]) -> ModelWeightsDescriptor:
         assert all([isinstance(var, model_pb2.Model.Variable)
                    for var in variables])
         var_names, var_trainables, var_nps = list(), list(), list()
@@ -41,7 +53,7 @@ class HomomorphicEncryption(object):
                     tensor_spec)
             else:
                 raise RuntimeError("Not a supported tensor type.")
-            
+
             var_names.append(var_name)
             var_trainables.append(var_trainable)
             var_nps.append(np_array)
@@ -50,7 +62,7 @@ class HomomorphicEncryption(object):
                                       weights_trainable=var_trainables,
                                       weights_values=var_nps)
 
-    def encrypt_np_weights(self, weights_descriptor: ModelWeightsDescriptor) -> list[model_pb2.Model]:
+    def encrypt(self, weights_descriptor: ModelWeightsDescriptor) -> list[model_pb2.Model]:
         weights_names = weights_descriptor.weights_names
         weights_trainable = weights_descriptor.weights_trainable
         weights_values = weights_descriptor.weights_values
@@ -66,7 +78,7 @@ class HomomorphicEncryption(object):
         for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
             ciphertext = None
             if self._he_scheme:
-                ciphertext = self._he_scheme.encrypt(w_v.flatten(), 1)
+                ciphertext = self._he_scheme.encrypt(w_v.flatten())
             # If we have a ciphertext we prioritize it over the plaintext.
             # @stripeli what does this mean?
             tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
@@ -75,6 +87,6 @@ class HomomorphicEncryption(object):
                                                                        trainable=w_t,
                                                                        tensor_pb=tensor_pb)
             variables_pb.append(model_var)
-        
-        return  model_pb2.Model(
+
+        return model_pb2.Model(
             variables=variables_pb)

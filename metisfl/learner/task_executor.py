@@ -117,13 +117,13 @@ class TaskExecutor(object):
 
     def _set_weights_from_model_pb(self, model_pb: model_pb2.Model):
         model_weights_descriptor = self._get_homomorphic_encryption(
-        ).decrypt_pb_weights(model_pb.variables)
+        ).decrypt(model_pb.variables)
         if len(model_weights_descriptor.weights_values) > 0:
             self._model_ops.get_model().set_model_weights(model_weights_descriptor)
 
     def _get_completed_learning_task_pb(self, model_weights_descriptor, learning_task_stats):
         model_pb = self._get_homomorphic_encryption(
-        ).encrypt_np_weights(model_weights_descriptor)
+        ).encrypt(model_weights_descriptor)
         completed_learning_task_pb = get_completed_learning_task_pb(
             model_pb=model_pb,
             learning_task_stats=learning_task_stats)
