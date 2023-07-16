@@ -2,7 +2,7 @@ import yaml
 import re
 
 from metisfl import config
-from metisfl.proto import metis_pb2
+from metisfl.proto import metis_pb2, model_pb2
 
 from metisfl.proto import metis_pb2
 from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
@@ -19,6 +19,30 @@ class FederationEnvironment(object):
             "Controller"), enable_ssl=self.enable_ssl)
         self.learners = [RemoteHost(learner, enable_ssl=self.enable_ssl)
                          for learner in self._yaml.get("Learners")]
+        self._setup_ssl()
+
+    def _setup_ssl(self):
+        if self.enable_ssl:
+            ssl_public_certificate = self._yaml.get("SSLPublicCertificate")
+            ssl_private_key = self._yaml.get("SSLPrivateKey")
+            if not ssl_public_certificate and not ssl_private_key:
+                ssl_public_certificate, ssl_private_key = config.get_certificates()
+                self._yaml["SSLPublicCertificate"] = ssl_public_certificate
+                self._yaml["SSLPrivateKey"] = ssl_private_key
+            elif ssl_public_certificate and ssl_private_key:
+                return
+            else:
+                raise ValueError(
+                    "Both SSL public certificate and private key must be provided.")
+
+    def _setup_fhe(self):
+        if self.he_scheme == "CKKS":
+            fhe_crypto_context_file, fhe_key_public_file, \
+                fhe_key_private_file, fhe_key_eval_mult_file = config.get_crypto_resources()
+            self._yaml["FHECryptoContextFile"] = fhe_crypto_context_file
+            self._yaml["FHEPublicKeyFile"] = fhe_key_public_file
+            self._yaml["FHEPrivateKeyFile"] = fhe_key_private_file
+            self._yaml["FHEKeyEvalMultFile"] = fhe_key_eval_mult_file
 
     # Environment configuration
     @property
@@ -121,43 +145,37 @@ class FederationEnvironment(object):
 
     def _get_optimizer_pb(self):
         optimizer_name = self._yaml.get("Optimizer")
-        params = self._yaml.get("OptimizerParams")
+        params = self._yaml.get("OptimizerParams", {})
         new_params = {}
-        for param in params:
-            snake_case_param = to_snake_case(param)
-            new_params[snake_case_param] = params[param]
-        # FIXME(@panoskyriakis) Need to figure out the default lr of optimizer to send it to the controller.
-        learning_rate = params.get("LearningRate")
-        learning_rate = to_snake_case(learning_rate)
-        return ModelProtoMessages.construct_optimizer_config_pb(optimizer_name=optimizer_name,
-                                                                learning_rate=learning_rate,
-                                                                optimizer_params=params)
+        for param_name, param_value in params.items():
+            new_params[param_name] = str(param_value)
+        return model_pb2.OptimizerConfig(name=optimizer_name, params=params)
 
     def get_global_model_config_pb(self):
         aggregation_rule_pb = MetisProtoMessages.construct_aggregation_rule_pb(
             rule_name=self.aggregation_rule,
             scaling_factor=self.scaling_factor,
             stride_length=self.stride_length,
-            he_scheme_config_pb=self.get_controller_he_scheme_pb())
+            he_scheme_config_pb=self.get_he_scheme_pb(entity="controller"))
         return MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.participation_ratio)
 
-    def get_controller_he_scheme_pb(self) -> metis_pb2.HESchemeConfig:
+    # @stripeli this does not make much sense in a realistic scenario.
+    # the file paths here are local to each host, yet the pb constructed here is sent to the controller.
+    def get_he_scheme_pb(self, entity: str) -> metis_pb2.HESchemeConfig:
+        assert entity in ["controller", "learner"]
         if self.he_scheme == "CKKS":
-
+            fhe_crypto_context_file = self._config_map["FHECryptoContextFile"]
+            fhe_key_public_file = self._config_map["FHEPublicKeyFile"]
+            fhe_key_private_file = self._config_map["FHEPrivateKeyFile"]
             ckks_scheme_pb = metis_pb2.CKKSSchemeConfig(
                 batch_size=self.he_batch_size, scaling_factor_bits=self.he_scaling_bits)
-            # TODO Need to add the path to the crypto params files.
-            controller = metis_pb2.HESchemeConfig(
+            return metis_pb2.HESchemeConfig(
                 enabled=True,
-                crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
-                ckks_scheme_config=ckks_scheme_pb)
-            learner = metis_pb2.HESchemeConfig(
-                enabled=True,
-                crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
-                public_key_file="/metisfl/metisfl/resources/fheparams/cryptoparams/key-public.txt",
-                private_key_file="/metisfl/metisfl/resources/fheparams/cryptoparams/key-private.txt",
+                crypto_context_file=fhe_crypto_context_file,
+                public_key_file=fhe_key_public_file if entity == "learner" else None,
+                private_key_file=fhe_key_private_file if entity == "learner" else None,
                 ckks_scheme_config=ckks_scheme_pb)
         else:
             empty_scheme_pb = metis_pb2.EmptySchemeConfig()
@@ -197,25 +215,9 @@ class FederationEnvironment(object):
             raise RuntimeError("Not a supported model store.")
 
 
-def to_snake_case(name):
-    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    name = re.sub('__([A-Z])', r'_\1', name)
-    name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
-    return name.lower()
-
-
 class RemoteHost(object):
     def __init__(self, config_map, enable_ssl=False):
         self._config_map = config_map
-        self._enable_ssl = enable_ssl
-        self._setup_ssl()
-
-    def _setup_ssl(self):
-        if self._enable_ssl:
-            if not ssl_public_certificate or not ssl_private_key:
-                ssl_public_certificate, ssl_private_key = config.get_certificates()
-                self._config_map["SSLPublicCertificate"] = ssl_public_certificate
-                self._config_map["SSLPrivateKey"] = ssl_private_key
 
     @property
     def id(self):

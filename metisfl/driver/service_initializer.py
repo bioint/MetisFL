@@ -24,13 +24,13 @@ class ServiceInitializer:
                  learner_server_entities_pb: List[ServerEntity],
                  model: MetisModel):
         assert config.TRAIN in dataset_recipe_fns, "Train dataset recipe function is required."
-        
+
         self._controller_server_entity_pb = controller_server_entity_pb
         self._dataset_fps = dataset_fps
         self._federation_environment = fed_env
         self._learner_server_entities_pb = learner_server_entities_pb
         self._model = model
-        
+
         self._model_save_dir = config.get_driver_model_save_dir()
         self._driver_dir = config.get_driver_path()
 
@@ -42,7 +42,7 @@ class ServiceInitializer:
         connection = self._get_controller_connection()
         connection.run("rm -rf {}".format(config.get_controller_path()))
         connection.run("mkdir -p {}".format(config.get_controller_path()))
-        
+
         remote_on_login = self._federation_environment.controller.on_login_command
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
             remote_on_login = remote_on_login[:-1]
@@ -128,7 +128,7 @@ class ServiceInitializer:
     def _copy_assets_to_learner(self, index, connection, learner_path):
         connection.run("rm -rf {}".format(learner_path))
         connection.run("mkdir -p {}".format(learner_path))
-        
+
         for recipe_fp in self._dataset_recipe_fps.values():
             connection.put(recipe_fp, learner_path) if recipe_fp else None
         for dataset_fp in self._dataset_fps.values():
@@ -143,7 +143,7 @@ class ServiceInitializer:
         fabric_connection_config = self._federation_environment.controller \
             .get_fabric_connection_config()
         connection = Connection(**fabric_connection_config)
-        return connection        
+        return connection
 
     def _get_learner_connection(self, index) -> Tuple[RemoteHost, Connection]:
         learner = self._federation_environment.learners[index]
@@ -177,7 +177,7 @@ class ServiceInitializer:
         args = {
             "l": self._learner_server_entities_pb[index].SerializeToString().hex(),
             "c": self._controller_server_entity_pb.SerializeToString().hex(),
-            "f": self._federation_environment.get_he_scheme_pb().SerializeToString().hex(),
+            "f": self._federation_environment.get_he_scheme_pb(entity="learner").SerializeToString().hex(),
             "m": remote_metis_model_path,
             "t": self._dataset_fps[config.TRAIN][index],
             "v": self._dataset_fps[config.VALIDATION][index] if config.VALIDATION in self._dataset_fps else None,
@@ -191,6 +191,7 @@ class ServiceInitializer:
 
     def _get_cmd(self, entity, config):
         cmd = "python3 -m metisfl.{} ".format(entity)
+        MetisLogger.info("Running: {}".format(config))
         for key, value in config.items():
             if value:
                 cmd += "-{}={} ".format(key, value)

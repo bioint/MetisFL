@@ -6,11 +6,10 @@ from typing import Callable, List
 from pebble import ProcessPool
 
 from metisfl import config
+from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.models.metis_model import MetisModel
-from metisfl.models.utils import construct_model_pb
 from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
-from metisfl.utils.ssl_utils import get_server_params_pb
 
 from .controller_client import GRPCControllerClient
 from .learner_client import GRPCLearnerClient
@@ -72,14 +71,17 @@ class DriverSession(object):
         # Print welcome message.
         MetisASCIIArt.print()
         self._federation_environment = FederationEnvironment(fed_env)
-        self._he_scheme_pb = self._federation_environment.get_he_scheme_pb()
+        self._homomorphic_encryption = HomomorphicEncryption(
+            he_scheme_pb=self._federation_environment.get_he_scheme_pb(entity="learner"))
         self._num_learners = len(
             self._federation_environment.learners)
         self._model = model
 
         self._init_pool()
-        self._controller_server_entity_pb = self._create_controller_server_entity()
-        self._learner_server_entities_pb = self._create_learning_server_entities()
+        self._controller_server_entity_pb = self._federation_environment.controller.get_server_entity_pb()
+        self._learner_server_entities_pb = [
+            learner.get_server_entity_pb() for learner in self._federation_environment.learners
+        ]
         self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
         self._driver_learner_grpc_clients = self._create_driver_learner_grpc_clients()
 
@@ -106,64 +108,48 @@ class DriverSession(object):
         return self._service_monitor.get_federation_statistics()
 
     def initialize_federation(self):
-        """
-        This func will create N number of processes/workers to create the federation
-        environment. One process for the controller and every other 
-        It first initializes the federation controller and then each learner, with some
-        lagging time till the federation controller is live so that every learner can
-        connect to it.
-        """
-        # NOTE: If we need to test the pipeline we force a future return here, 
-        # i.e., controller_future.result(). The following initialization futures are 
-        # always running (status=running) since we need to keep the connections open 
+        # NOTE: If we need to test the pipeline we force a future return here,
+        # i.e., controller_future.result(). The following initialization futures are
+        # always running (status=running) since we need to keep the connections open
         # in order to retrieve logs regarding the execution progress of the federation.
+        
+        # FIXME(@stripeli): so how would the users be able to see and inform us for any
+        # potential errors?
         controller_future = self._executor.schedule(
             function=self._service_initilizer.init_controller)
         self._executor_controller_tasks_q.put(controller_future)
 
-        # Wait for controller's reply before initializing learners.
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model_to_controller()
             for idx in range(self._num_learners):
                 learner_future = self._executor.schedule(
                     function=self._service_initilizer.init_learner,
                     args=(idx, ))  # NOTE: args must be a tuple.
-                # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
-                # learner_future.result()
                 self._executor_learners_tasks_q.put(learner_future)
-
-                # FIXME(@stripeli): Might need to remove the sleep time in the future.
-                # For now, we perform sleep because if the learners are co-located, e.g., localhost, then an 
-                # exception is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
-                time.sleep(0.1)
+                if self._federation_environment.learners[0].hostname == "localhost":
+                    time.sleep(0.1)
         else:
-            MetisLogger.fatal("Controller is not responsive. Cannot proceed with execution.")
-            
+            MetisLogger.fatal(
+                "Controller is not responsive. Cannot proceed with execution.")
+
     def monitor_federation(self):
         self._service_monitor.monitor_federation()  # Blocking call.
 
     def run(self):
         self.initialize_federation()
-        self.monitor_federation()  # Wait and check for termination signals.
+        self.monitor_federation()  # Blocking call.
         self.shutdown_federation()
 
     def shutdown_federation(self):
-        # Collect all statistics related to learners before sending the shutdown signal.
         self._service_monitor.collect_local_statistics()
-        # Send shutdown signal to all learners in a Round-Robin fashion.
+
         for grpc_client in self._driver_learner_grpc_clients.values():
-            # We send a single non-blocking shutdown request to every learner with a 30secs time-to-live.
             grpc_client.shutdown_learner(
                 request_retries=1, request_timeout=30, block=False)
-        # Blocking-call, wait for learners shutdown acknowledgment.
         for grpc_client in self._driver_learner_grpc_clients.values():
             grpc_client.shutdown()
 
-        # Collect all statistics related to the global execution before sending the shutdown signal.
         self._service_monitor.collect_global_statistics()
-
-        # Similar to the learners, we also give a bit more time in between requests to
-        # the controller since in needs to wrap pending tasks submitted by the learners.
         self._driver_controller_grpc_client.shutdown_controller(
             request_retries=2, request_timeout=30, block=True)
         self._driver_controller_grpc_client.shutdown()
@@ -171,30 +157,10 @@ class DriverSession(object):
         self._executor.close()
         self._executor.join()
 
-    def _create_controller_server_entity(self):
-        return get_server_params_pb(
-            enable_ssl=self._federation_environment.enable_ssl,
-            grpc_hostname=self._federation_environment.controller.grpc_hostname,
-            grpc_port=self._federation_environment.controller.grpc_port,
-            ssl_public_certificate=self._federation_environment.controller.ssl_public_certificate,
-            ssl_private_key=self._federation_environment.controller.ssl_private_key)
-
-    def _create_learning_server_entities(self):
-        learning_server_entities_pb = []
-        for learner in self._federation_environment.learners:
-            learning_server_entities_pb.append(get_server_params_pb(
-                grpc_hostname=learner.grpc_hostname,
-                grpc_port=learner.grpc_port,
-                enable_ssl=self._federation_environment.enable_ssl,
-                ssl_public_certificate=learner.ssl_public_certificate,
-                ssl_private_key=learner.ssl_private_key))
-        return learning_server_entities_pb
-
     def _create_driver_controller_grpc_client(self):
-        grpc_controller_client = GRPCControllerClient(
+        return GRPCControllerClient(
             controller_server_entity=self._controller_server_entity_pb,
             max_workers=1)
-        return grpc_controller_client
 
     def _create_driver_learner_grpc_clients(self):
         grpc_clients = {}
@@ -206,10 +172,10 @@ class DriverSession(object):
                     learner_server_entity=learner_server_entity_pb, max_workers=1)
         return grpc_clients
 
-    def _gen_dataset_dict(self, 
-                          train_val, 
-                          validation_val = None, 
-                          test_val = None):
+    def _gen_dataset_dict(self,
+                          train_val,
+                          validation_val=None,
+                          test_val=None):
         dataset_dict = {}
         dataset_dict[config.TRAIN] = train_val  # always required
         if validation_val:
@@ -219,9 +185,6 @@ class DriverSession(object):
         return dataset_dict
 
     def _init_pool(self):
-        # Unix default is "fork", others: "spawn", "forkserver"
-        # We use spawn so that the parent process starts a fresh Python interpreter process.
-        # The number of workers is the total number of learners + 1 for the controller.
         mp_ctx = mp.get_context("spawn")
         self._executor = ProcessPool(
             max_workers=self._num_learners + 1, context=mp_ctx)
@@ -230,7 +193,8 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = construct_model_pb(weights_descriptor, self._he_scheme_pb)        
+        model_pb = self._homomorphic_encryption.encrypt_np_weights(
+            weights_descriptor=weights_descriptor)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

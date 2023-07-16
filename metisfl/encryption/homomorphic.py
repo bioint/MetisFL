@@ -1,62 +1,80 @@
-from metisfl.utils.metis_logger import MetisLogger
+
 from metisfl.encryption import fhe
-from metisfl.proto import metis_pb2
+from metisfl.models.types import ModelWeightsDescriptor
+from metisfl.proto import metis_pb2, model_pb2
+from metisfl.proto.proto_messages_factory import ModelProtoMessages
 
 
-class Homomorphic(object):
+class HomomorphicEncryption(object):
 
     def __init__(self, he_scheme_pb: metis_pb2.HESchemeConfig):
-        """Initializes the Homomorphic object using the given HE scheme protobuf.
-
-        **** ATTENTION ****
-        If you modify the signature of this constructor, you must also modify the following accordingly:
-        
-        1. The constructor of the metisfl.learner.task_executor.TaskExecutor class.
-        2. The functions metisfl.models.utils.{construct_model_pb, get_weights_from_model_pb}.
-        3. The method metisfl.utils.fedenv.FederatedEnvironment.get_controller_he_scheme_pb.
-        4. The state of the metisfl.driver.driver_session.DriverSession class.
-
-        Args:
-            he_scheme_pb (metis_pb2.HESchemeConfig): The protobuf object containing the HE scheme config.
-
-        Raises:
-            MetisLogger.fatal: If the given protobuf is not a valid HE scheme protobuf.
-        """
         assert isinstance(
-            he_scheme_pb, metis_pb2.HESchemeConfig), "Not a valid HE scheme protobuf."
+            he_scheme_pb, metis_pb2.HESchemeConfig), "Need a valid HE scheme protobuf."
+
+        self._he_scheme = None
+        if he_scheme_pb and he_scheme_pb.HasField("ckks_scheme_config"):
+            self._he_scheme = fhe.CKKS(
+                he_scheme_pb.fhe_scheme.batch_size,
+                he_scheme_pb.fhe_scheme.scaling_bits)
+            self._he_scheme.load_crypto_params()
+
+    def decrypt_pb_weights(self,
+                           variables: list[model_pb2.Model.Variable]) -> ModelWeightsDescriptor:
+        assert all([isinstance(var, model_pb2.Model.Variable)
+                   for var in variables])
+        var_names, var_trainables, var_nps = list(), list(), list()
+        for var in variables:
+            var_name = var.name
+            var_trainable = var.trainable
+
+            if var.HasField("ciphertext_tensor"):
+                assert self._he_scheme is not None, "Need encryption scheme to decrypt tensor."
+                tensor_spec = var.ciphertext_tensor.tensor_spec
+                decoded_value = self._he_scheme.decrypt(
+                    tensor_spec.value, tensor_spec.length, 1)
+                np_array = \
+                    ModelProtoMessages.TensorSpecProto.proto_tensor_spec_with_list_values_to_numpy_array(
+                        tensor_spec, decoded_value)
+            elif var.HasField('plaintext_tensor'):
+                tensor_spec = var.plaintext_tensor.tensor_spec
+                np_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(
+                    tensor_spec)
+            else:
+                raise RuntimeError("Not a supported tensor type.")
+            
+            var_names.append(var_name)
+            var_trainables.append(var_trainable)
+            var_nps.append(np_array)
+
+        return ModelWeightsDescriptor(weights_names=var_names,
+                                      weights_trainable=var_trainables,
+                                      weights_values=var_nps)
+
+    def encrypt_np_weights(self, weights_descriptor: ModelWeightsDescriptor) -> list[model_pb2.Model]:
+        weights_names = weights_descriptor.weights_names
+        weights_trainable = weights_descriptor.weights_trainable
+        weights_values = weights_descriptor.weights_values
+        if not weights_names:
+            # Populating weights names with surrogate keys.
+            weights_names = ["arr_{}".format(widx)
+                             for widx in range(len(weights_values))]
+        if weights_trainable:
+            # Since weights have not specified as trainable or not, we default all weights to trainable.
+            weights_trainable = [True for _ in range(len(weights_values))]
+
+        variables_pb = []
+        for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
+            ciphertext = None
+            if self._he_scheme:
+                ciphertext = self._he_scheme.encrypt(w_v.flatten(), 1)
+            # If we have a ciphertext we prioritize it over the plaintext.
+            # @stripeli what does this mean?
+            tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
+                                                               ciphertext=ciphertext)
+            model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
+                                                                       trainable=w_t,
+                                                                       tensor_pb=tensor_pb)
+            variables_pb.append(model_var)
         
-        self._he_scheme = None        
-        if he_scheme_pb.HasField("ckks_scheme_config"):
-            self._he_scheme = self._construct_ckks_scheme(he_scheme_pb)
-        elif he_scheme_pb.HasField("empty_scheme_config"):
-            self._he_scheme = metis_pb2.EmptySchemeConfig()
-        else:
-            raise MetisLogger.fatal(
-                "Not a supported HE scheme config. Received: {}".format(he_scheme_pb))
-
-    @staticmethod
-    def from_proto(he_scheme_pb: metis_pb2.HESchemeConfig):
-        return Homomorphic(he_scheme_pb)
-
-    def decrypt_data(self, ciphertext: str, num_elems: int):
-        if isinstance(self._he_scheme, metis_pb2.EmptySchemeConfig):
-            return None
-        else:
-            return self._he_scheme.decrypt(ciphertext, num_elems)
-
-    def encrypt_data(self, values):
-        if isinstance(self._he_scheme, metis_pb2.EmptySchemeConfig):
-            return None
-        else:                
-            return self._he_scheme.encrypt(values)
-
-    def _construct_ckks_scheme(self, he_scheme_pb: metis_pb2.HESchemeConfig):
-        ckks_scheme = fhe.CKKS(he_scheme_pb.ckks_scheme_config.batch_size,
-                               he_scheme_pb.ckks_scheme_config.scaling_factor_bits)
-        if he_scheme_pb.crypto_context_file:
-            ckks_scheme.load_crypto_context_from_file(he_scheme_pb.crypto_context_file)
-        if he_scheme_pb.public_key_file:
-            ckks_scheme.load_public_key_from_file(he_scheme_pb.public_key_file)
-        if he_scheme_pb.private_key_file:
-            ckks_scheme.load_private_key_from_file(he_scheme_pb.private_key_file)
-        return ckks_scheme
+        return  model_pb2.Model(
+            variables=variables_pb)
