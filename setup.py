@@ -5,10 +5,9 @@ import glob
 
 BAZEL_CMD = "bazelisk"
 BUILD_DIR = "build"
-CONTROLER_SO_DST = "metisfl/controller/controller.so"
-CONTROLER_SO_SRC = "bazel-bin/metisfl/controller/controller.so"
+CONTROLER_SO_DST = "metisfl/controller/controller_pybind.so"
+CONTROLER_SO_SRC = "bazel-bin/metisfl/controller/controller_pybind.so"
 CONTROLER_SO_TARGET = "//metisfl/controller:controller_pybind.so"
-DOCKER_REPO = "us-west2-docker.pkg.dev/nevron-385600/builders/ubuntu_focal_x86_64_py38"
 FHE_SO_DST = "metisfl/encryption/fhe.so"
 FHE_SO_SRC = "bazel-bin/metisfl/encryption/fhe.so"
 FHE_SO_TARGET = "//metisfl/encryption:fhe.so"
@@ -59,7 +58,8 @@ if __name__ == "__main__":
     py_version = ".".join(map(str, sys.version_info[:2]))
     if py_version not in PY_VERSIONS:
         print(
-            "Detected Python {} in environment. Need {}".format(py_version, PY_VERSIONS)
+            "Detected Python {} in environment. Need {}".format(
+                py_version, PY_VERSIONS)
         )
         exit(1)
     run_build(py_version)
