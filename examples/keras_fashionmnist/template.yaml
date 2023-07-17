@@ -1,5 +1,5 @@
 # Termination Signals
-FederationRounds: 5 # only in synchronous execution
+FederationRounds: 3 # only in synchronous execution
 ExecutionCutoffTimeMins: 100000
 EvaluationMetric: "accuracy" # Others are "accuracy", "loss"
 EvaluationMetricCutoffScore: 1

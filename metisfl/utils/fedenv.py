@@ -4,6 +4,8 @@ import re
 from metisfl import config
 from metisfl.proto import metis_pb2, model_pb2
 
+from metisfl import config
+from metisfl.encryption.homomorphic import Homomorphic
 from metisfl.proto import metis_pb2
 from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from .fedenv_schema import env_schema
@@ -43,7 +45,7 @@ class FederationEnvironment(object):
             self._yaml["FHECryptoContextFile"] = fhe_crypto_context_file
             self._yaml["FHEPublicKeyFile"] = fhe_key_public_file
             self._yaml["FHEPrivateKeyFile"] = fhe_key_private_file
-            self._yaml["FHEKeyEvalMultFile"] = fhe_key_eval_mult_file
+            self._yaml["FHEKeyEvalMultFile"] = fhe_key_eval_mult_file    
 
     # Environment configuration
     @property
@@ -162,7 +164,7 @@ class FederationEnvironment(object):
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.participation_ratio)
 
-    # @stripeli this does not make much sense in a realistic scenario.
+    # TODO(@stripeli): this does not make much sense in a realistic scenario.
     # the file paths here are local to each host, yet the pb constructed here is sent to the controller.
     def get_he_scheme_pb(self, entity: str) -> metis_pb2.HESchemeConfig:
         assert entity in ["controller", "learner"]

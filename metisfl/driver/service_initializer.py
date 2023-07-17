@@ -114,8 +114,7 @@ class ServiceInitializer:
         model.save(self._model_save_dir, initialize=True)
         return self._make_tarfile(
             source_dir=self._model_save_dir,
-            output_filename=os.path.basename(self._model_save_dir)
-        )
+            output_filename=os.path.basename(self._model_save_dir))
 
     def _make_tarfile(self, output_filename, source_dir):
         output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))

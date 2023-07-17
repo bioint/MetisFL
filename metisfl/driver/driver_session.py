@@ -127,6 +127,13 @@ class DriverSession(object):
                 self._executor_learners_tasks_q.put(learner_future)
                 if self._federation_environment.learners[0].hostname == "localhost":
                     time.sleep(0.1)
+                # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
+                self._executor_learners_tasks_q.put(learner_future)
+                
+                # FIXME(@stripeli): Might need to remove the sleep time in the future.
+                # For now, we perform sleep because if the learners are co-located, e.g., localhost, then an 
+                # exception is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
+                time.sleep(0.1)
         else:
             MetisLogger.fatal(
                 "Controller is not responsive. Cannot proceed with execution.")
@@ -176,7 +183,7 @@ class DriverSession(object):
                           validation_val=None,
                           test_val=None):
         dataset_dict = {}
-        dataset_dict[config.TRAIN] = train_val  # always required
+        dataset_dict[config.TRAIN] = train_val  # Always required.
         if validation_val:
             dataset_dict[config.VALIDATION] = validation_val
         if test_val:

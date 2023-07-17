@@ -1,13 +1,15 @@
 import os
 
 from metisfl import config
+
+from metisfl.utils.metis_logger import MetisLogger
 from metisfl.encryption import fhe
 from metisfl.models.types import ModelWeightsDescriptor
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.proto.proto_messages_factory import ModelProtoMessages
 
 
-class HomomorphicEncryption(object):
+class Homomorphic(object):
 
     def __init__(self, he_scheme_pb: metis_pb2.HESchemeConfig):
         assert isinstance(
@@ -20,9 +22,14 @@ class HomomorphicEncryption(object):
                 he_scheme_pb.ckks_scheme_config.scaling_factor_bits)
             self._setup_fhe()
 
+    @staticmethod
+    def from_proto(he_scheme_pb: metis_pb2.HESchemeConfig):
+        return Homomorphic(he_scheme_pb)
+    
+
     def _setup_fhe(self):
         paths = config.get_fhe_resources()
-        # check if the resources are available
+        # Check if the resources are available
         bools = map(lambda path: os.path.exists(path), paths)
         if not all(bools):
             fhe_dir = config.get_fhe_dir()

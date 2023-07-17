@@ -13,7 +13,6 @@ from .model_ops import ModelOps
 def calc_mean_wall_clock(wall_clock):
     return np.mean(wall_clock) * 1000
 
-
 def get_completed_learning_task_pb(model_pb: model_pb2.Model,
                                    learning_task_stats: LearningTaskStats,
                                    aux_metadata=None):
