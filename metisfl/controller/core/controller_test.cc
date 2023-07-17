@@ -21,8 +21,6 @@ class ControllerTest : public ::testing::Test {
     params.mutable_server_entity()->set_port(50051);
 
     // Set federated training protocol specifications.
-    params.mutable_global_model_specs()
-        ->set_learners_participation_ratio(1);
     params.mutable_global_model_specs()->set_aggregation_rule(
         GlobalModelSpecs::FED_AVG);
     params.mutable_communication_specs()->set_protocol(
@@ -39,7 +37,6 @@ class ControllerTest : public ::testing::Test {
     // Set model hyperparams.
     params.mutable_model_hyperparams()->set_epochs(10);
     params.mutable_model_hyperparams()->set_batch_size(100);
-    params.mutable_model_hyperparams()->set_percent_validation(5);
 
     return params;
   }

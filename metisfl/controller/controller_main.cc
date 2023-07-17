@@ -49,7 +49,6 @@ int main(int argc, char **argv) {
         }
     }
     global_model_specs {
-      learners_participation_ratio: 1
       aggregation_rule {
         fed_avg {}
         aggregation_rule_specs {
@@ -78,7 +77,6 @@ int main(int argc, char **argv) {
           L2_reg: 0.001
         }
       }
-      percent_validation: 0
     }
   )pb2");
 

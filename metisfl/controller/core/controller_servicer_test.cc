@@ -315,7 +315,6 @@ TEST_F(ControllerServicerImplTest, StartServiceWithSSL){
         }
     }
     global_model_specs {
-      learners_participation_ratio: 1
       aggregation_rule: FED_AVG
     }
     communication_specs {
@@ -330,7 +329,6 @@ TEST_F(ControllerServicerImplTest, StartServiceWithSSL){
           L2_reg: 0.001
         }
       }
-      percent_validation: 0
     }
     )pb2");
 
@@ -352,7 +350,6 @@ TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL){
       port: 50051
     }
     global_model_specs {
-      learners_participation_ratio: 1
       aggregation_rule: FED_AVG
     }
     communication_specs {
@@ -367,7 +364,6 @@ TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL){
           L2_reg: 0.001
         }
       }
-      percent_validation: 0
     }
   )pb2");
 

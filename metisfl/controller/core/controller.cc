@@ -720,14 +720,10 @@ class ControllerDefaultImpl : public Controller {
     const auto &model_params = params.model_hyperparams();
     next_task->set_num_local_updates(
         task_template.num_local_updates()); // get from task template.
-    next_task->set_training_dataset_percentage_for_stratified_validation(
-        model_params.percent_validation());
     // TODO(stripeli): Add evaluation metrics for the learning task.
 
     auto *hyperparams = request.mutable_hyperparameters();
     hyperparams->set_batch_size(model_params.batch_size());
-    *hyperparams->mutable_optimizer() =
-        params.model_hyperparams().optimizer();
 
     // Call object to store rpc data.
     auto *call = new AsyncLearnerRunTaskCall;

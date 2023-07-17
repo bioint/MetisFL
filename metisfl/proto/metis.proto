@@ -206,20 +206,16 @@ message ControllerParams {
   ModelStoreConfig model_store_config = 4;
 
   message ModelHyperparams {
-
     // TODO(stripeli): Shall we replace (batch_size, optimizer) with Hyperparameters message?
     uint32 batch_size = 1;
 
     uint32 epochs = 2;
-
-    OptimizerConfig optimizer = 3;
-
-    // TODO(stripeli): Need to figure out, if this quantity will be used as part of the aggregation scheme or as part of the actual validation evaluation.
-    float percent_validation = 4;
   }
 
   ModelHyperparams model_hyperparams = 5;
 }
+
+
 
 message ModelStoreConfig {
   // Model cache config shall never be extended. It is just wrapper over the cache configuration.
@@ -306,7 +302,6 @@ message PWA {
 
 message GlobalModelSpecs {
   AggregationRule aggregation_rule = 1;
-  float learners_participation_ratio = 2;
 }
 
 message CommunicationSpecs {

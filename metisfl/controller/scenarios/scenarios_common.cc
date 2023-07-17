@@ -23,9 +23,6 @@ ControllerParams ScenariosCommon::CreateDefaultControllerParams() {
   params.mutable_server_entity()->set_hostname("0.0.0.0");
   params.mutable_server_entity()->set_port(50051);
 
-  // Set federated training protocol specifications.
-  params.mutable_global_model_specs()
-      ->set_learners_participation_ratio(1);
 
 //  FedAvg fed_avg;
 //  *params.mutable_global_model_specs()->mutable_aggregation_rule()->mutable_fed_avg() =
@@ -52,7 +49,6 @@ ControllerParams ScenariosCommon::CreateDefaultControllerParams() {
   // Set model hyperparams.
   params.mutable_model_hyperparams()->set_epochs(10);
   params.mutable_model_hyperparams()->set_batch_size(100);
-  params.mutable_model_hyperparams()->set_percent_validation(0);
 
   return params;
 }
