@@ -273,11 +273,9 @@ class MetisProtoMessages(object):
                                           model_hyperparams=model_hyperparams_pb)
 
     @classmethod
-    def construct_controller_modelhyperparams_pb(cls, batch_size, epochs, optimizer_pb, percent_validation):
+    def construct_controller_modelhyperparams_pb(cls, batch_size, epochs):
         return metis_pb2.ControllerParams.ModelHyperparams(batch_size=batch_size,
-                                                           epochs=epochs,
-                                                           optimizer=optimizer_pb,
-                                                           percent_validation=percent_validation)
+                                                           epochs=epochs)
 
     @classmethod
     def construct_no_eviction_pb(cls):
@@ -385,9 +383,8 @@ class MetisProtoMessages(object):
             raise RuntimeError("Unsupported rule name.")
 
     @classmethod
-    def construct_global_model_specs(cls, aggregation_rule_pb, learners_participation_ratio):
-        return metis_pb2.GlobalModelSpecs(aggregation_rule=aggregation_rule_pb,
-                                          learners_participation_ratio=learners_participation_ratio)
+    def construct_global_model_specs(cls, aggregation_rule_pb):
+        return metis_pb2.GlobalModelSpecs(aggregation_rule=aggregation_rule_pb)
 
     @classmethod
     def construct_communication_specs_pb(cls, protocol, semi_sync_lambda=None, semi_sync_recompute_num_updates=None):

@@ -108,12 +108,3 @@ message FederatedModel {
   // The aggregated community model.
   Model model = 3;
 }
-
-////////////////
-// Optimizers //
-////////////////
-
-message OptimizerConfig {
-  string name = 1;
-  map<string, string> params = 2;
-}

@@ -2,10 +2,10 @@ import yaml
 import re
 
 from metisfl import config
-from metisfl.proto import metis_pb2, model_pb2
+from metisfl.proto import metis_pb2
 
 from metisfl.proto import metis_pb2
-from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
+from metisfl.proto.proto_messages_factory import MetisProtoMessages
 from .fedenv_schema import env_schema
 
 
@@ -15,26 +15,28 @@ class FederationEnvironment(object):
         fstream = open(federation_environment_config_fp).read()
         self._yaml = yaml.load(fstream, Loader=yaml.SafeLoader)
         env_schema.validate(self._yaml)
-        self.controller = RemoteHost(self._yaml.get(
-            "Controller"), enable_ssl=self.enable_ssl)
-        self.learners = [RemoteHost(learner, enable_ssl=self.enable_ssl)
-                         for learner in self._yaml.get("Learners")]
-        self._setup_ssl()
+        ssl_public_certificate, ssl_private_key = self._setup_ssl()
         self._setup_fhe()
+        self.controller = RemoteHost(self._yaml.get("Controller"),
+                                     ssl_public_certificate=ssl_public_certificate,
+                                     ssl_private_key=ssl_private_key)
+        self.learners = [RemoteHost(learner,
+                                    ssl_public_certificate=ssl_public_certificate,
+                                    ssl_private_key=ssl_private_key) for learner in self._yaml.get("Learners")]
 
     def _setup_ssl(self):
+        ssl_public_certificate, ssl_private_key = None, None
         if self.enable_ssl:
             ssl_public_certificate = self._yaml.get("SSLPublicCertificate")
             ssl_private_key = self._yaml.get("SSLPrivateKey")
             if not ssl_public_certificate and not ssl_private_key:
                 ssl_public_certificate, ssl_private_key = config.get_certificates()
-                self._yaml["SSLPublicCertificate"] = ssl_public_certificate
-                self._yaml["SSLPrivateKey"] = ssl_private_key
             elif ssl_public_certificate and ssl_private_key:
                 return
             else:
                 raise ValueError(
                     "Both SSL public certificate and private key must be provided.")
+        return ssl_public_certificate, ssl_private_key
 
     def _setup_fhe(self):
         if self.he_scheme == "CKKS":
@@ -105,10 +107,6 @@ class FederationEnvironment(object):
         return self._yaml.get("AggregationRule")
 
     @property
-    def participation_ratio(self):
-        return self._yaml.get("ParticipationRatio")
-
-    @property
     def scaling_factor(self):
         return self._yaml.get("ScalingFactor")
 
@@ -133,24 +131,10 @@ class FederationEnvironment(object):
     def local_epochs(self):
         return self._yaml.get("LocalEpochs")
 
-    @property
-    def validation_percentage(self):
-        return self._yaml.get("ValidationPercentage")
-
     def get_local_model_config_pb(self):
         return MetisProtoMessages.construct_controller_modelhyperparams_pb(
             batch_size=self.train_batch_size,
-            epochs=self.local_epochs,
-            optimizer_pb=self._get_optimizer_pb(),
-            percent_validation=self.validation_percentage)
-
-    def _get_optimizer_pb(self):
-        optimizer_name = self._yaml.get("Optimizer")
-        params = self._yaml.get("OptimizerParams", {})
-        new_params = {}
-        for param_name, param_value in params.items():
-            new_params[param_name] = str(param_value)
-        return model_pb2.OptimizerConfig(name=optimizer_name, params=params)
+            epochs=self.local_epochs)
 
     def get_global_model_config_pb(self):
         aggregation_rule_pb = MetisProtoMessages.construct_aggregation_rule_pb(
@@ -159,8 +143,7 @@ class FederationEnvironment(object):
             stride_length=self.stride_length,
             he_scheme_config_pb=self.get_he_scheme_pb(entity="controller"))
         return MetisProtoMessages.construct_global_model_specs(
-            aggregation_rule_pb=aggregation_rule_pb,
-            learners_participation_ratio=self.participation_ratio)
+            aggregation_rule_pb=aggregation_rule_pb)
 
     # @stripeli this does not make much sense in a realistic scenario.
     # the file paths here are local to each host, yet the pb constructed here is sent to the controller.
@@ -217,8 +200,10 @@ class FederationEnvironment(object):
 
 
 class RemoteHost(object):
-    def __init__(self, config_map, enable_ssl=False):
+    def __init__(self, config_map, ssl_public_certificate=None, ssl_private_key=None):
         self._config_map = config_map
+        self._ssl_public_certificate = ssl_public_certificate
+        self._ssl_private_key = ssl_private_key
 
     @property
     def id(self):
@@ -297,22 +282,11 @@ class RemoteHost(object):
         }
         return conn_config
 
+    # @stripeli: what does this param do?
     def get_server_entity_pb(self, gen_connection_entity=False) -> metis_pb2.ServerEntity:
-        """Generate a ServerEntity proto object for the given parameters.
-
-        Args:
-            gen_connection_entity (bool, optional): Sets the private key to None. Defaults to False.
-
-        Returns:
-            metis_pb2.ServerEntity: The generated ServerEntity proto object.
-        """
-        private_key = self._config_map.get(
-            "SSLPrivateKey") if not gen_connection_entity else None
-        server_params_pb = metis_pb2.ServerEntity(
+        return metis_pb2.ServerEntity(
             hostname=self._config_map.get("GRPCServicerHostname"),
             port=self._config_map.get("GRPCServicerPort"),
-            public_certificate_file=self._config_map.get(
-                "SSLPublicCertificate"),
-            private_key_file=private_key)
-
-        return server_params_pb
+            public_certificate_file=self._ssl_public_certificate,
+            private_key_file=self._ssl_private_key if not gen_connection_entity else None,
+        )

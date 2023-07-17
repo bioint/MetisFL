@@ -24,12 +24,10 @@ LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "Li
 AggregationRule: "FedAvg" # Others are FedAvg, FedStride, FedStride, PWA
 ScalingFactor: "NumTrainingExamples" 
 StrideLength: 2
-ParticipationRatio: 1
 
 # LocalTrainingConfig:
 BatchSize: 32
 LocalEpochs: 4
-Optimizer: "SGD" 
 
 # ControllerConfig:
 Controller:

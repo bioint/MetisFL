@@ -64,11 +64,8 @@ env_schema = Schema({
     "ScalingFactor": And(Use(str), lambda s: s in SCALING_FACTORS),
     # required only if FedStride; forbitten o/w
     Optional("StrideLength"): And(Use(int), lambda n: n > 0),
-    Optional("ParticipationRatio"): And(Use(float), lambda n: n > 0 and n <= 1),
     "BatchSize": And(Use(int), lambda n: n > 0),
     "LocalEpochs": And(Use(int), lambda n: n > 0),
-    "Optimizer": And(str, lambda s: s in OPTIMIZERS),
-    Optional("OptimizerParams"): dict,
     "Controller": remote_host_schema,
     "Learners": And(list, lambda l: len(l) > 0, error="Learners must be a non-empty list."),
 })

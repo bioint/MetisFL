@@ -2,7 +2,7 @@ from typing import Any, Dict, Tuple
 
 import tensorflow as tf
 
-from metisfl.proto import metis_pb2, model_pb2
+from metisfl.proto import metis_pb2
 from metisfl.models.keras.keras_model import MetisModelKeras
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
@@ -37,7 +37,6 @@ class KerasModelOps(ModelOps):
         dataset_size = train_dataset.get_size()
         step_counter_callback = StepCounter(total_steps=total_steps)
         performance_cb = PerformanceProfiler()
-        self._construct_optimizer(hyperparameters_pb.optimizer)
 
         # @stripeli why is the epoch number calculated? Isn't it given in the yaml?
         # @stripeli why there are two batch sizes?
@@ -146,18 +145,6 @@ class KerasModelOps(ModelOps):
                     len(gpus), len(logical_gpus)))
             except RuntimeError as e:
                 MetisLogger.error(e)
-
-    def _construct_optimizer(self, optimizer_config_pb: model_pb2.OptimizerConfig):
-        if optimizer_config_pb is None:
-            raise RuntimeError(
-                "Provided `OptimizerConfig` proto message is None.")
-        opt = tf.keras.optimizers.get(optimizer_config_pb.name)
-        if opt is None:
-            raise RuntimeError(
-                "Optimizer with name {} does not exist.".format(optimizer_config_pb.name))
-        params = optimizer_config_pb.params
-        self._metis_model._backend_model.optimizer = opt.from_config(
-            params)
 
     def cleanup(self):
         del self._metis_model
