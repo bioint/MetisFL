@@ -72,7 +72,6 @@ class DriverSession(object):
         # Print welcome message.
         MetisASCIIArt.print()
         self._federation_environment = FederationEnvironment(fed_env)
-        self._he_scheme_pb = self._federation_environment.get_he_scheme_pb()
         self._num_learners = len(
             self._federation_environment.learners)
         self._model = model
@@ -129,9 +128,8 @@ class DriverSession(object):
                     function=self._service_initilizer.init_learner,
                     args=(idx, ))  # NOTE: args must be a tuple.
                 # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
-                # learner_future.result()
                 self._executor_learners_tasks_q.put(learner_future)
-
+                
                 # FIXME(@stripeli): Might need to remove the sleep time in the future.
                 # For now, we perform sleep because if the learners are co-located, e.g., localhost, then an 
                 # exception is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
@@ -205,7 +203,7 @@ class DriverSession(object):
                           validation_val = None, 
                           test_val = None):
         dataset_dict = {}
-        dataset_dict[config.TRAIN] = train_val  # always required
+        dataset_dict[config.TRAIN] = train_val  # Always required.
         if validation_val:
             dataset_dict[config.VALIDATION] = validation_val
         if test_val:
@@ -224,7 +222,9 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = construct_model_pb(weights_descriptor, self._he_scheme_pb)        
+        model_pb = construct_model_pb(
+            weights_descriptor,
+            self._federation_environment.he_scheme_config)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

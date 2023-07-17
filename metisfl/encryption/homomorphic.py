@@ -1,3 +1,7 @@
+import os
+
+from typing import Dict
+
 from metisfl.utils.metis_logger import MetisLogger
 from metisfl.encryption import fhe
 from metisfl.proto import metis_pb2
@@ -21,6 +25,22 @@ class Homomorphic(object):
     @staticmethod
     def from_proto(he_scheme_pb: metis_pb2.HESchemeConfig):
         return Homomorphic(he_scheme_pb)
+    
+    @staticmethod
+    def generate_crypto_params_ckks(crypto_dir, batch_size, scaling_factor_bits) -> Dict:
+        assert batch_size is not None, "Batch size cannot be empty."
+        assert scaling_factor_bits is not None, "Scaling factor bits cannot be empty."
+        ckks_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
+        if not os.path.exists(crypto_dir):
+            MetisLogger.info(
+                "Creating crypto parameters directory: {}".format(crypto_dir))
+            os.makedirs(crypto_dir)
+        ckks_scheme.gen_crypto_context_and_keys(crypto_dir)
+        crypto_params_files = ckks_scheme.get_crypto_params_files()
+        MetisLogger.info("Crypto parameters files:")
+        for param, filename in crypto_params_files.items():
+            MetisLogger.info("\t {}:{}".format(param, filename))
+        return crypto_params_files
 
     def decrypt_data(self, ciphertext: str, num_elems: int):
         if isinstance(self._he_scheme, metis_pb2.EmptySchemeConfig):

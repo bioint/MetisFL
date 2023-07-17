@@ -1,6 +1,6 @@
 import signal
 import time
-from threading import Thread
+
 from metisfl.proto.metis_pb2 import ControllerParams
 # This imports the controller python module defined inside the `pybind/controller_pybind.cc` script.
 from metisfl.controller import controller
@@ -36,4 +36,7 @@ class ControllerInstance(object):
                 break
             time.sleep(0.01)
 
-        self.__controller_wrapper.shutdown()
+        # We check if the controller has already received a 
+        # shutdown request to avoid sending a new one again.
+        if not self.__controller_wrapper.shutdown_request_received():            
+            self.__controller_wrapper.shutdown()

@@ -39,7 +39,7 @@ def construct_model_pb(weights: ModelWeightsDescriptor,
                                                                    tensor_pb=tensor_pb)
         variables_pb.append(model_var)
     
-    model_pb = metis_pb2.Model(variables=variables_pb)
+    model_pb = model_pb2.Model(variables=variables_pb)
     return model_pb
     
 def get_weights_from_model_pb(model_pb: model_pb2.Model,

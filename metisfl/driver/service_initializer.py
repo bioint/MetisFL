@@ -114,8 +114,7 @@ class ServiceInitializer:
         model.save(self._model_save_dir, initialize=True)
         return self._make_tarfile(
             source_dir=self._model_save_dir,
-            output_filename=os.path.basename(self._model_save_dir)
-        )
+            output_filename=os.path.basename(self._model_save_dir))
 
     def _make_tarfile(self, output_filename, source_dir):
         output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))
@@ -177,7 +176,7 @@ class ServiceInitializer:
         args = {
             "l": self._learner_server_entities_pb[index].SerializeToString().hex(),
             "c": self._controller_server_entity_pb.SerializeToString().hex(),
-            "f": self._federation_environment.get_he_scheme_pb().SerializeToString().hex(),
+            "f": self._federation_environment.get_learner_he_scheme_pb().SerializeToString().hex(),
             "m": remote_metis_model_path,
             "t": self._dataset_fps[config.TRAIN][index],
             "v": self._dataset_fps[config.VALIDATION][index] if config.VALIDATION in self._dataset_fps else None,

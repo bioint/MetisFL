@@ -1,5 +1,7 @@
 import yaml
 
+from metisfl import config
+from metisfl.encryption.homomorphic import Homomorphic
 from metisfl.proto import metis_pb2
 from metisfl.utils.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 from .fedenv_schema import env_schema, OPTIMIZER_PB_MAP
@@ -14,7 +16,7 @@ class FederationEnvironment(object):
         self.controller = RemoteHost(self._yaml.get("Controller"))
         self.learners = [RemoteHost(learner)
                          for learner in self._yaml.get("Learners")]
-        self.crypto_files_generated = False
+        self.he_scheme_config = self.get_he_scheme_config()
 
     # Environment configuration
     @property
@@ -134,40 +136,44 @@ class FederationEnvironment(object):
             rule_name=self.aggregation_rule,
             scaling_factor=self.scaling_factor,
             stride_length=self.stride_length,
-            he_scheme_config_pb=self.get_he_scheme_pb())
+            he_scheme_config_pb=self.get_controller_he_scheme_pb())
         return MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.participation_ratio)
 
-    def get_controller_he_scheme_pb(self) -> metis_pb2.HESchemeConfig:
+    def get_he_scheme_config(self):
         if self.he_scheme == "CKKS":
-            
-            # files = encryption.utils.get_files
-            if not self.crypto_files_generated:
-                generate()
-
+            crypto_params_files = Homomorphic.generate_crypto_params_ckks(
+                # NOTE: For now we are using the default project 
+                # home to generate the crypto files.
+                crypto_dir=config.get_project_home(),
+                batch_size=self.he_batch_size, 
+                scaling_factor_bits=self.he_scaling_bits)
             ckks_scheme_pb = metis_pb2.CKKSSchemeConfig(
-                batch_size=self.he_batch_size, scaling_factor_bits=self.he_scaling_bits)
-            # TODO Need to add the path to the crypto params files.
-            controller = metis_pb2.HESchemeConfig(
+                batch_size=self.he_batch_size, 
+                scaling_factor_bits=self.he_scaling_bits)
+            return metis_pb2.HESchemeConfig(
                 enabled=True,
-                crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
-                ckks_scheme_config=ckks_scheme_pb)            
-            learner = metis_pb2.HESchemeConfig(
-                enabled=True,
-                crypto_context_file="/metisfl/metisfl/resources/fheparams/cryptoparams/cryptocontext.txt",
-                public_key_file="/metisfl/metisfl/resources/fheparams/cryptoparams/key-public.txt",
-                private_key_file="/metisfl/metisfl/resources/fheparams/cryptoparams/key-private.txt",
-                ckks_scheme_config=ckks_scheme_pb)
+                crypto_context_file=crypto_params_files["crypto_context_file"],
+                public_key_file=crypto_params_files["public_key_file"],
+                private_key_file=crypto_params_files["private_key_file"],
+                ckks_scheme_config=ckks_scheme_pb)        
         else:
             empty_scheme_pb = metis_pb2.EmptySchemeConfig()
             return metis_pb2.HESchemeConfig(enabled=False,
                                             empty_scheme_config=empty_scheme_pb)
 
-    def get_learner_he_scheme_pb(self):
-        if self.he_scheme == "CKKS":            
-            # files = encryption.utils.get_files        
+    def get_controller_he_scheme_pb(self) -> metis_pb2.HESchemeConfig:
+        he_scheme_pb = metis_pb2.HESchemeConfig()
+        he_scheme_pb.CopyFrom(self.he_scheme_config)
+        he_scheme_pb.public_key_file = ""
+        he_scheme_pb.private_key_file = ""
+        return he_scheme_pb
 
+    def get_learner_he_scheme_pb(self) -> metis_pb2.HESchemeConfig:
+        he_scheme_pb = metis_pb2.HESchemeConfig()
+        he_scheme_pb.CopyFrom(self.he_scheme_config)
+        return he_scheme_pb
 
     def get_communication_protocol_pb(self):
         # @stripeli clarify this
