@@ -10,7 +10,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from examples.scalability.housing_mlp import HousingMLP
+from housing_mlp import HousingMLP
+
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.model_dataset import ModelDatasetRegression
 from metisfl.utils.environment_generator import EnvGen
@@ -22,7 +23,8 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--communication_protocol", default="Synchronous", type=str)
+    parser.add_argument("--communication_protocol",
+                        default="Synchronous", type=str)
     parser.add_argument("--federation_rounds", default=10, type=int)
     parser.add_argument("--learners_num", default=10, type=int)
     parser.add_argument("--train_samples_per_learner", default=10, type=int)
@@ -42,9 +44,11 @@ if __name__ == "__main__":
         gpu_devices=[-1])
 
     """ Load training and test data. """
-    required_training_samples = int(args.learners_num * args.train_samples_per_learner)
+    required_training_samples = int(
+        args.learners_num * args.train_samples_per_learner)
     total_required_samples = required_training_samples + int(args.test_samples)
-    housing_np = pd.read_csv(script_cwd + "/datasets/housing/original/data.csv").to_numpy()
+    housing_np = pd.read_csv(
+        script_cwd + "/datasets/housing/original/data.csv").to_numpy()
     housing_np = housing_np[~np.isnan(housing_np).any(axis=1)]
 
     total_rows = len(housing_np)
@@ -62,13 +66,15 @@ if __name__ == "__main__":
     x_train, y_train = train_data[:, :-1], train_data[:, -1:]
     x_test, y_test = test_data[:, :-1], test_data[:, -1:]
 
-    x_chunks, y_chunks = np.split(x_train, args.learners_num), np.split(y_train, args.learners_num)
+    x_chunks, y_chunks = np.split(x_train, args.learners_num), np.split(
+        y_train, args.learners_num)
     datasets_path = os.path.join(script_cwd, "datasets/housing/")
     if not os.path.exists(datasets_path):
         os.makedirs(datasets_path)
     np.savez(os.path.join(datasets_path, "test.npz"), x=x_test, y=y_test)
     for cidx, (x_chunk, y_chunk) in enumerate(zip(x_chunks, y_chunks)):
-        np.savez(os.path.join(datasets_path, "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
+        np.savez(os.path.join(datasets_path,
+                 "train_{}.npz".format(cidx)), x=x_chunk, y=y_chunk)
     for lidx, learner in enumerate(federation_environment.learners.learners):
         learner.dataset_configs.test_dataset_path = \
             os.path.join(datasets_path, "test.npz")
@@ -79,7 +85,8 @@ if __name__ == "__main__":
         params_per_layer=args.nn_params_per_layer,
         hidden_layers_num=args.nn_hidden_layers_num,
         data_type=args.data_type).get_model()
-    nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(y_train[0:1].shape), verbose=False)
+    nn_model.evaluate(x=np.random.random(x_train[0:1].shape), y=np.random.random(
+        y_train[0:1].shape), verbose=False)
     nn_model.summary()
 
     def dataset_recipe_fn(dataset_fp):

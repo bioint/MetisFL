@@ -99,7 +99,7 @@ fabric.properties
 /production
 /.sass-cache
 # Bazelisk version file
-.bazelversion
+# .bazelversion
 # User-specific .bazelrc
 user.bazelrc
 
