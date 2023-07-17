@@ -11,11 +11,11 @@ namespace metisfl::controller {
 
 class PWA : public AggregationFunction {
  private:
-  HESchemeConfig he_scheme_config_;
-  std::unique_ptr<HEScheme> he_scheme_;
+  EncryptionConfig encryption_config_;
+  std::unique_ptr<EncryptionScheme> encryption_scheme_;
 
  public:
-  explicit PWA(const HESchemeConfig &he_scheme_config);
+  explicit PWA(const EncryptionConfig &encryption_config);
 
   FederatedModel Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs) override;
 

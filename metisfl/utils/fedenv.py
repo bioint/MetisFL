@@ -5,9 +5,10 @@ from metisfl import config
 from metisfl.proto import metis_pb2, model_pb2
 
 from metisfl import config
-from metisfl.encryption.homomorphic import Homomorphic
+from metisfl.encryption.encryption import Encryption
 from metisfl.proto import metis_pb2
-from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
+from metisfl.proto.proto_messages_factory import MetisProtoMessages
+from metisfl.utils.metis_logger import MetisLogger
 from .fedenv_schema import env_schema
 
 
@@ -22,7 +23,7 @@ class FederationEnvironment(object):
         self.learners = [RemoteHost(learner, enable_ssl=self.enable_ssl)
                          for learner in self._yaml.get("Learners")]
         self._setup_ssl()
-        self._setup_fhe()
+        self._setup_encryption()
 
     def _setup_ssl(self):
         if self.enable_ssl:
@@ -38,14 +39,11 @@ class FederationEnvironment(object):
                 raise ValueError(
                     "Both SSL public certificate and private key must be provided.")
 
-    def _setup_fhe(self):
-        if self.he_scheme == "CKKS":
-            fhe_crypto_context_file, fhe_key_public_file, \
-                fhe_key_private_file, fhe_key_eval_mult_file = config.get_fhe_resources()
-            self._yaml["FHECryptoContextFile"] = fhe_crypto_context_file
-            self._yaml["FHEPublicKeyFile"] = fhe_key_public_file
-            self._yaml["FHEPrivateKeyFile"] = fhe_key_private_file
-            self._yaml["FHEKeyEvalMultFile"] = fhe_key_eval_mult_file    
+    def _setup_encryption(self):
+        encryption_scheme = Encryption(self.he_scheme)
+        initialized_params = encryption_scheme.initialize_crypto_params()
+        for filename, location in initialized_params:
+            self._yaml[filename] = location
 
     # Environment configuration
     @property
@@ -172,8 +170,6 @@ class FederationEnvironment(object):
             fhe_crypto_context_file = self._yaml["FHECryptoContextFile"]
             fhe_key_public_file = self._yaml["FHEPublicKeyFile"]
             fhe_key_private_file = self._yaml["FHEPrivateKeyFile"]
-            ckks_scheme_pb = metis_pb2.CKKSSchemeConfig(
-                batch_size=self.he_batch_size, scaling_factor_bits=self.he_scaling_bits)
             return metis_pb2.HESchemeConfig(
                 enabled=True,
                 crypto_context_file=fhe_crypto_context_file,
@@ -181,9 +177,8 @@ class FederationEnvironment(object):
                 private_key_file=fhe_key_private_file if entity == "learner" else None,
                 ckks_scheme_config=ckks_scheme_pb)
         else:
-            empty_scheme_pb = metis_pb2.EmptySchemeConfig()
-            return metis_pb2.HESchemeConfig(enabled=False,
-                                            empty_scheme_config=empty_scheme_pb)
+            MetisLogger.fatal("Not a supported homomorphic encryption scheme.")
+            
 
     def get_communication_protocol_pb(self):
         # @stripeli clarify this

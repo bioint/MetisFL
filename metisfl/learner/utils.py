@@ -7,7 +7,7 @@ from metisfl.proto.proto_messages_factory import MetisProtoMessages
 from .dataset_handler import LearnerDataset
 from .learner_executor import LearnerExecutor
 from .learner_server import LearnerServer
-from .task_executor import TaskExecutor
+from .learner_task import LearnerTask
 
 
 def parse_server_hex(hex_str, default_host, default_port):
@@ -59,7 +59,7 @@ def init_learner(args):
         validation_dataset_recipe_pkl=args.validation_dataset_recipe,
         test_dataset_recipe_pkl=args.test_dataset_recipe,
     )
-    task_executor = TaskExecutor(
+    task_executor = LearnerTask(
         he_scheme_pb=he_scheme_pb,
         learner_dataset=learner_dataset,
         learner_server_entity_pb=learner_server_entity_pb,

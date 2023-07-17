@@ -52,6 +52,7 @@ cc_library(
     srcs = ["ckks_scheme.cc"],
     deps = [
       "//metisfl/encryption/palisade:palisade_cmake",
+      "//metisfl/encryption:encryption_scheme",
       "@absl//absl/strings",
       "@com_github_google_glog//:glog",
     ],

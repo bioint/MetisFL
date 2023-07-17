@@ -74,9 +74,11 @@ TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
   ckks_scheme_config.set_scaling_factor_bits(ckks_scheme_scaling_factor_bits);
 
   HESchemeConfig he_scheme_config;
-  he_scheme_config.set_enabled(true);
   he_scheme_config.set_crypto_context_file(crypto_params_files.crypto_context_file);
   *he_scheme_config.mutable_ckks_scheme_config() = ckks_scheme_config;
+
+  EncrypotionConfig encryption_config;
+  *encryption_config.mutable_he_scheme_config = he_scheme_config;
 
   // Step 6: Call PWA, perform the aggregation and validate.
   auto pwa = PWA(he_scheme_config);

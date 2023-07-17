@@ -1,7 +1,7 @@
 import numpy as np
 import os
-import random
 
+from metisfl import config
 from metisfl.encryption.fhe import CKKS
 from metisfl.utils.metis_logger import MetisLogger
 
@@ -57,10 +57,7 @@ def pwa(crypto_params_files, ckks_scheme, data_enc, scaling_factors):
 def test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factors, number_of_elems):
     MetisLogger.info("Generating crypto context and keys...")
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    crypto_params_dir = os.path.join(os.getcwd(), "../resources/fheparams/cryptoparams")
-    if not os.path.exists(crypto_params_dir):
-        os.makedirs(crypto_params_dir)
-    ckks_scheme.gen_crypto_context_and_keys(crypto_params_dir)
+    ckks_scheme.gen_crypto_context_and_keys(    config.get_fhe_dir())
     crypto_params_files = ckks_scheme.get_crypto_params_files()
     MetisLogger.info("Crypto parameters files:")
     for param, filename in crypto_params_files.items():

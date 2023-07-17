@@ -1,6 +1,6 @@
 import argparse
 
-from .learner import init_learner
+from .utils import init_learner
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

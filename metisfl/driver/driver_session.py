@@ -6,7 +6,7 @@ from typing import Callable, List
 from pebble import ProcessPool
 
 from metisfl import config
-from metisfl.encryption.homomorphic import HomomorphicEncryption
+from metisfl.models.utils import construct_model_pb
 from metisfl.models.metis_model import MetisModel
 from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
@@ -125,15 +125,13 @@ class DriverSession(object):
                     function=self._service_initilizer.init_learner,
                     args=(idx, ))  # NOTE: args must be a tuple.
                 self._executor_learners_tasks_q.put(learner_future)
-                if self._federation_environment.learners[0].hostname == "localhost":
-                    time.sleep(0.1)
-                # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
-                self._executor_learners_tasks_q.put(learner_future)
-                
                 # FIXME(@stripeli): Might need to remove the sleep time in the future.
                 # For now, we perform sleep because if the learners are co-located, e.g., localhost, then an 
                 # exception is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
-                time.sleep(0.1)
+                if self._federation_environment.learners[idx].hostname == "localhost":
+                    time.sleep(0.1)
+                # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
+                self._executor_learners_tasks_q.put(learner_future)                
         else:
             MetisLogger.fatal(
                 "Controller is not responsive. Cannot proceed with execution.")
@@ -199,8 +197,7 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = self._homomorphic_encryption.encrypt(
-            weights_descriptor=weights_descriptor)
+        model_pb = construct_model_pb(weights_descriptor, )
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

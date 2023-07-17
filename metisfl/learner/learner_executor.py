@@ -6,13 +6,13 @@ from typing import Callable
 from pebble import ProcessPool
 
 from metisfl import config
-from metisfl.learner.task_executor import TaskExecutor
+from metisfl.learner.learner_task import LearnerTask
 from metisfl.proto import metis_pb2
 
 
 class LearnerExecutor(object):
 
-    def __init__(self, task_executor: TaskExecutor, recreate_queue_task_worker=False):
+    def __init__(self, task_executor: LearnerTask, recreate_queue_task_worker=False):
         self.task_executor = task_executor
         self._init_tasks_pools(recreate_queue_task_worker)
 

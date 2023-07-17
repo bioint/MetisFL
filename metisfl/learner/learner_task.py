@@ -10,7 +10,7 @@ from metisfl.utils.metis_logger import MetisLogger
 from .dataset_handler import LearnerDataset
 
 
-class TaskExecutor(object):
+class LearnerTask(object):
 
     def __init__(self,
                  he_scheme_pb: metis_pb2.HESchemeConfig,

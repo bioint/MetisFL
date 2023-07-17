@@ -10,7 +10,7 @@ CKKS::CKKS(uint32_t batch_size, uint32_t scaling_factor_bits) : HEScheme("CKKS")
   this->scaling_factor_bits = scaling_factor_bits;
 }
 
-void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
+void CKKS::GenCryptoContextAndKeys(CryptoParamsFiles crypto_params_files) {
 
   usint multDepth = 2;
   CryptoContext <DCRTPoly> cryptoContext;
@@ -19,12 +19,6 @@ void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
   cryptoContext->Enable(ENCRYPTION);
   cryptoContext->Enable(SHE);
   // cryptoContext->Enable(LEVELEDSHE);
-
-  CryptoParamsFiles crypto_params_files;
-  crypto_params_files.crypto_context_file = crypto_dir + "/cryptocontext.txt";
-  crypto_params_files.public_key_file = crypto_dir + "/key-public.txt";
-  crypto_params_files.private_key_file = crypto_dir + "/key-private.txt";
-  crypto_params_files.eval_mult_key_file = crypto_dir + "/key-eval-mult.txt";
 
   if (!Serial::SerializeToFile(crypto_params_files.crypto_context_file,
                                cryptoContext,
@@ -46,24 +40,7 @@ void CKKS::GenCryptoContextAndKeys(std::string crypto_dir) {
                                SerType::BINARY)) {
     PLOG(FATAL) << "Error writing serialization of private key";
   }
-
-  // Generate the relinearization key
-  cryptoContext->EvalMultKeyGen(keyPair.secretKey);
-
-  std::ofstream emkeyfile(crypto_params_files.eval_mult_key_file,
-                          std::ios::out | std::ios::binary);
-  if (emkeyfile.is_open()) {
-    if (cryptoContext->SerializeEvalMultKey(emkeyfile, SerType::BINARY)
-        == false) {
-      PLOG(FATAL) << "Error writing serialization of the eval mult keys";
-    }
-
-    emkeyfile.close();
-
-  } else {
-    PLOG(FATAL) << "Error serializing eval mult keys";
-  }
-
+  
   crypto_params_files_ = crypto_params_files;
 
 }
@@ -120,6 +97,50 @@ void CKKS::Print() {
   " Scaling Factor Bits: " << scaling_factor_bits;
 }
 
+std::string CKKS::Aggregate(std::vector<std::string> data_array,
+                            std::vector<float> scaling_factors) {
+
+  if (cc == nullptr) {
+    PLOG(FATAL) << "Crypto context is not loaded.";
+  }
+
+  if (data_array.size() != scaling_factors.size()) {
+    PLOG(ERROR) << "Error: data_array and scaling_factors size mismatch";
+    return "";
+  }
+
+  const SerType::SERBINARY st;
+  vector<Ciphertext<DCRTPoly>> result_ciphertext;
+
+  for (unsigned long int i = 0; i < data_array.size(); i++) {
+    std::stringstream ss(data_array[i]);
+    vector<Ciphertext<DCRTPoly>> data_ciphertext;
+    Serial::Deserialize(data_ciphertext, ss, st);
+
+    for (unsigned long int j = 0; j < data_ciphertext.size(); j++) {
+      float sc = scaling_factors[i];
+      data_ciphertext[j] = cc->EvalMult(data_ciphertext[j], sc);
+    }
+
+    if (result_ciphertext.size() == 0) {
+
+      result_ciphertext = data_ciphertext;
+    } else {
+      for (unsigned long int j = 0; j < data_ciphertext.size(); j++) {
+        result_ciphertext[j] =
+            cc->EvalAdd(result_ciphertext[j], data_ciphertext[j]);
+      }
+    }
+
+  }
+
+  std::stringstream ss;
+  Serial::Serialize(result_ciphertext, ss, st);
+  result_ciphertext.clear();
+  return ss.str();
+
+}
+
 std::string CKKS::Encrypt(std::vector<double> data_array) {
 
   if (cc == nullptr) {
@@ -171,50 +192,6 @@ std::string CKKS::Encrypt(std::vector<double> data_array) {
   const SerType::SERBINARY st;
   Serial::Serialize(ciphertext_data, ss, st);
 
-  return ss.str();
-
-}
-
-std::string CKKS::ComputeWeightedAverage(std::vector<std::string> data_array,
-                                         std::vector<float> scaling_factors) {
-
-  if (cc == nullptr) {
-    PLOG(FATAL) << "Crypto context is not loaded.";
-  }
-
-  if (data_array.size() != scaling_factors.size()) {
-    PLOG(ERROR) << "Error: data_array and scaling_factors size mismatch";
-    return "";
-  }
-
-  const SerType::SERBINARY st;
-  vector<Ciphertext<DCRTPoly>> result_ciphertext;
-
-  for (unsigned long int i = 0; i < data_array.size(); i++) {
-    std::stringstream ss(data_array[i]);
-    vector<Ciphertext<DCRTPoly>> data_ciphertext;
-    Serial::Deserialize(data_ciphertext, ss, st);
-
-    for (unsigned long int j = 0; j < data_ciphertext.size(); j++) {
-      float sc = scaling_factors[i];
-      data_ciphertext[j] = cc->EvalMult(data_ciphertext[j], sc);
-    }
-
-    if (result_ciphertext.size() == 0) {
-
-      result_ciphertext = data_ciphertext;
-    } else {
-      for (unsigned long int j = 0; j < data_ciphertext.size(); j++) {
-        result_ciphertext[j] =
-            cc->EvalAdd(result_ciphertext[j], data_ciphertext[j]);
-      }
-    }
-
-  }
-
-  std::stringstream ss;
-  Serial::Serialize(result_ciphertext, ss, st);
-  result_ciphertext.clear();
   return ss.str();
 
 }

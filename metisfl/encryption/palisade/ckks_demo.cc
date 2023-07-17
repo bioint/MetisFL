@@ -26,7 +26,6 @@ void generateRandomData(std::vector<double> &learner_Data, int rows, bool ceil_n
 
 }
 
-
 int main() {
 
   std::filesystem::path cwd = std::filesystem::current_path();
@@ -35,7 +34,7 @@ int main() {
   // We use the current working directory, when running demo with bazel,
   // since the cryptoparams are part of the demo target as data dependency,
   // and therefore they will be copied during runtime to the path.
-  std::string cryptodir = cwd / "metisfl/resources/fheparams/cryptoparams";
+  std::string cryptodir = cwd / "metisfl/resources/fhe";
   std::cout << cryptodir << std::endl;
   uint32_t batchsize = 4096;
   uint32_t scalingfactorbits = 52;
@@ -81,7 +80,7 @@ int main() {
   std::cout << "Computing 0.5*L + 0.3*L + 0.5*L" << std::endl;
 
   std::string pwa_result =
-      ckks.ComputeWeightedAverage(learners_Data, scalingFactors);
+      ckks.Aggregate(learners_Data, scalingFactors);
 
   unsigned long int data_dimensions = learner_Data.size();
 

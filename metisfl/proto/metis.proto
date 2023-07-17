@@ -18,34 +18,23 @@ message ServerEntity {
   uint32 port = 2;
 
   // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
-  string public_certificate_file = 3;
+  string ssl_public_certificate_file = 3;
 
   // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
-  string private_key_file = 4;
+  string ssl_private_key_file = 4;
 }
 
-// message SSLConfigFiles {
-//   // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
-//   string public_certificate_file = 1;
-//   // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
-//   string private_key_file = 2;
-// }
+message SSLConfigFiles {
+  // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
+  string public_certificate_file = 1;
+  // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
+  string private_key_file = 2;
+}
 
-// message SSLConfigStream {
-//   // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
-//   bytes public_certificate_stream = 1;
-//   // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
-//   bytes private_key_stream = 2;
-// }
-
-// message SSLConfig {
-//   bool enable_ssl = 1; // Whether SSL is enabled or not.
-//   // We enable
-//   oneof config {
-//     SSLConfigFiles ssl_config_files = 6;
-//     SSLConfigStream ssl_config_stream = 7;
-//   }
-// }
+message SSLConfig {
+  bool enable_ssl = 1; // Whether SSL is enabled or not.
+  SSLConfigFiles ssl_config_files = 2;
+}
 
 
 
@@ -281,19 +270,25 @@ message FedStride {
 
 message FedRec {}
 
-message HESchemeConfig {
-  bool enabled = 1;
-  string crypto_context_file = 2;
-  string public_key_file = 3;
-  string private_key_file = 4;
-
+message EncryptionConfig {
   oneof config {
-    EmptySchemeConfig empty_scheme_config = 5;
-    CKKSSchemeConfig ckks_scheme_config = 6;
+    HESchemeConfig he_scheme_config = 1;
+    MaskingConfig masking_config = 2;
   }
 }
 
-message EmptySchemeConfig {}
+message MaskingConfig {}
+
+message HESchemeConfig {
+  string crypto_context_file = 2;
+  string public_key_file = 3;
+  string private_key_file = 4;
+  string key_eval_mult_file = 5;
+
+  oneof config {
+    CKKSSchemeConfig ckks_scheme_config = 6;
+  }
+}
 
 message CKKSSchemeConfig {
   uint32 batch_size = 1;
@@ -301,7 +296,7 @@ message CKKSSchemeConfig {
 }
 
 message PWA {
-  HESchemeConfig he_scheme_config = 1;
+  EncryptionConfig encryption_config = 1;
 }
 
 message GlobalModelSpecs {

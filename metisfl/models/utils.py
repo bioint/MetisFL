@@ -3,15 +3,69 @@ import math
 import numpy as np
 
 from metisfl import config
+from metisfl.encryption.encryption import Encryption
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.utils.formatting import DictionaryFormatter
-from metisfl.proto.proto_messages_factory import MetisProtoMessages
+from metisfl.proto.proto_messages_factory import MetisProtoMessages, ModelProtoMessages
 
 from .model_ops import ModelOps
 
 def calc_mean_wall_clock(wall_clock):
     return np.mean(wall_clock) * 1000
+
+def construct_model_pb(weights: ModelWeightsDescriptor, 
+                       encryption_scheme: metis_pb2.EncryptionScheme = None):
+    
+    if encryption_scheme:
+        return Encryption.from_proto(encryption_scheme).encrypt_model(weights)
+    else:
+        return _construct_model_pb(weights)
+
+def _construct_model_pb(weights: ModelWeightsDescriptor):
+    weights_names = weights.weights_names
+    weights_trainable = weights.weights_trainable
+    weights_values = weights.weights_values
+    variables_pb = []
+    for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
+        # If we have a ciphertext we prioritize it over the plaintext.
+        tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v)
+        model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
+                                                                   trainable=w_t,
+                                                                   tensor_pb=tensor_pb)
+        variables_pb.append(model_var)
+    
+    model_pb = model_pb2.Model(variables=variables_pb)
+    return model_pb
+
+def get_weights_from_model_pb(model_pb: model_pb2.Model,
+                              encryption_scheme: metis_pb2.EncryptionScheme = None) -> ModelWeightsDescriptor:
+    if encryption_scheme:
+        return Encryption.from_proto(encryption_scheme).decrypt_model(model_pb)
+    else:
+        return _get_weights_from_model_pb(model_pb)
+
+def _get_weights_from_model_pb(model_pb: model_pb2.Model) -> ModelWeightsDescriptor:
+    variables = model_pb.variables
+    var_names, var_trainables, var_nps = list(), list(), list()
+    for var in variables:
+        # Variable specifications.
+        var_name = var.name
+        var_trainable = var.trainable   
+        tensor_spec = var.plaintext_tensor.tensor_spec
+        # If the tensor is a plaintext tensor, then we need to read the byte buffer
+        # and load the tensor as a numpy array casting it to the specified data type.
+        np_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(
+            tensor_spec)
+
+        # Append variable specifications to model's variable list.
+        var_names.append(var_name)
+        var_trainables.append(var_trainable)
+        var_nps.append(np_array)
+
+    return ModelWeightsDescriptor(weights_names=var_names,
+                                  weights_trainable=var_trainables,
+                                  weights_values=var_nps)
 
 def get_completed_learning_task_pb(model_pb: model_pb2.Model,
                                    learning_task_stats: LearningTaskStats,

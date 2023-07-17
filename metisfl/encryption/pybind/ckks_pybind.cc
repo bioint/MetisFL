@@ -4,6 +4,7 @@
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
 
+#include "metisfl/encryption/palisade/he_scheme.h"
 #include "metisfl/encryption/palisade/ckks_scheme.h"
 
 #define STRINGIFY(x) #x
@@ -18,6 +19,17 @@ class CKKSWrapper : public CKKS {
   ~CKKSWrapper() = default;
   CKKSWrapper(uint32_t batch_size, uint32_t scaling_factor_bits)
       : CKKS(batch_size, scaling_factor_bits) {}
+
+  void PyGenCryptoContextAndKeys(std::string crypto_context_file,
+                                 std::string public_key_file,
+                                 std::string private_key_file) {
+
+    CKKS::CryptoParamsFiles crypto_params_files(
+      crypto_context_file, public_key_file, private_key_file);
+    
+    CKKS::GenCryptoContextAndKeys(crypto_params_files);
+
+  }
 
   py::dict PyGetCryptoParamsFiles() {
     py::dict py_dict_crypto_params_files;
@@ -74,7 +86,7 @@ PYBIND11_MODULE(fhe, m) {
   .def(py::init<int, int>(),
       py::arg("batch_size"),
       py::arg("scaling_factor_bits"))
-  .def("gen_crypto_context_and_keys", &CKKS::GenCryptoContextAndKeys)
+  .def("gen_crypto_context_and_keys", &CKKSWrapper::PyGenCryptoContextAndKeys)
   .def("get_crypto_params_files", &CKKSWrapper::PyGetCryptoParamsFiles)
   .def("load_crypto_context_from_file", &CKKS::LoadCryptoContextFromFile)
   .def("load_private_key_from_file", &CKKS::LoadPrivateKeyFromFile)

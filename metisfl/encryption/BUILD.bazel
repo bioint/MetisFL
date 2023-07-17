@@ -38,3 +38,8 @@ py_library(
     name = "encryption_lib",
     data = [":fhe.so"],
 )
+
+cc_library(
+    name = "encryption_scheme",
+    hdrs = ["encryption_scheme.h"],
+)

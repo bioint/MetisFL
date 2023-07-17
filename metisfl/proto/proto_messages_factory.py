@@ -136,10 +136,6 @@ class MetisProtoMessages(object):
                                             ckks_scheme_config=ckks_scheme_config_pb)
 
     @classmethod
-    def construct_empty_scheme_config_pb(cls):
-        return metis_pb2.EmptySchemeConfig()
-
-    @classmethod
     def construct_ckks_scheme_config_pb(cls, batch_size, scaling_factor_bits):
         return metis_pb2.CKKSSchemeConfig(batch_size=batch_size, scaling_factor_bits=scaling_factor_bits)
 

@@ -19,13 +19,6 @@
 using namespace lbcrypto;
 using namespace std::chrono;
 
-struct CryptoParamsFiles {
-  std::string crypto_context_file;
-  std::string public_key_file;
-  std::string private_key_file;
-  std::string eval_mult_key_file;
-};
-
 class CKKS : public HEScheme {
 
  public:
@@ -33,7 +26,7 @@ class CKKS : public HEScheme {
   CKKS();
   CKKS(uint32_t batch_size, uint32_t scaling_factor_bits);
 
-  void GenCryptoContextAndKeys(std::string crypto_dir) override;
+  void GenCryptoContextAndKeys(CryptoParamsFiles crypto_params_files) override;
   CryptoParamsFiles GetCryptoParamsFiles();
   void LoadCryptoContextFromFile(std::string crypto_context_file) override;
   void LoadPrivateKeyFromFile(std::string private_key_file) override;
@@ -41,9 +34,9 @@ class CKKS : public HEScheme {
   void LoadContextAndKeysFromFiles(std::string crypto_context_file,
                                          std::string public_key_file,
                                          std::string private_key_file);
+  std::string Aggregate(vector<std::string> data_array,
+                        vector<float> scaling_factors) override;
   std::string Encrypt(vector<double> data_array) override;
-  std::string ComputeWeightedAverage(vector<std::string> data_array,
-                                     vector<float> scaling_factors) override;
   std::vector<double> Decrypt(std::string data,
                               unsigned long int data_dimensions) override;
   void Print();

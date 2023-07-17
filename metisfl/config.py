@@ -142,7 +142,6 @@ def get_certificates():
     server_key = os.path.join(cert_dir, SERVER_KEY_NAME)
     return server_cert, server_key
     
-
 def _get_path_safe(path: str) -> str:
     if not os.path.exists(path):
         os.makedirs(path)
