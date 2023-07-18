@@ -55,6 +55,10 @@ class FederationEnvironment(object):
     @property
     def execution_time_cutoff_mins(self):
         return self._yaml.get("ExecutionCutoffTimeMins")
+    
+    @property
+    def evaluation_metric(self):
+        return self._yaml.get("EvaluationMetric")
 
     @property
     def metric_cutoff_score(self):
