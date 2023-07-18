@@ -17,11 +17,8 @@ message ServerEntity {
   // The server port that the service is running on.
   uint32 port = 2;
 
-  // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
-  string ssl_public_certificate_file = 3;
-
-  // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
-  string ssl_private_key_file = 4;
+  // For enabling secure communication between the learners and the controller.
+  SSLConfig ssl_config = 3;  
 }
 
 message SSLConfigFiles {
@@ -32,7 +29,7 @@ message SSLConfigFiles {
 }
 
 message SSLConfig {
-  bool enable_ssl = 1; // Whether SSL is enabled or not.
+  bool enable = 1; // Whether SSL is enabled or not.
   SSLConfigFiles ssl_config_files = 2;
 }
 

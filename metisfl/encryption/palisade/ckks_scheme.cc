@@ -3,14 +3,14 @@
 
 #include "ckks_scheme.h"
 
-CKKS::CKKS() : HEScheme("CKKS"), batch_size(0), scaling_factor_bits(0) {}
+CKKS::CKKS() : EncryptionScheme("CKKS"), batch_size(0), scaling_factor_bits(0) {}
 
-CKKS::CKKS(uint32_t batch_size, uint32_t scaling_factor_bits) : HEScheme("CKKS") {
+CKKS::CKKS(uint32_t batch_size, uint32_t scaling_factor_bits) : EncryptionScheme("CKKS") {
   this->batch_size = batch_size;
   this->scaling_factor_bits = scaling_factor_bits;
 }
 
-void CKKS::GenCryptoContextAndKeys(CryptoParamsFiles crypto_params_files) {
+void CKKS::GenCryptoParams(CryptoParamsFiles crypto_params_files) {
 
   usint multDepth = 2;
   CryptoContext <DCRTPoly> cryptoContext;
@@ -23,7 +23,7 @@ void CKKS::GenCryptoContextAndKeys(CryptoParamsFiles crypto_params_files) {
   if (!Serial::SerializeToFile(crypto_params_files.crypto_context_file,
                                cryptoContext,
                                SerType::BINARY)) {
-    PLOG(FATAL) << "Error writing serialization of the crypto context";
+    PLOG(WARNING) << "Error writing serialization of the crypto context";
   }
 
   LPKeyPair<DCRTPoly> keyPair;
@@ -32,20 +32,20 @@ void CKKS::GenCryptoContextAndKeys(CryptoParamsFiles crypto_params_files) {
   if (!Serial::SerializeToFile(crypto_params_files.public_key_file,
                                keyPair.publicKey,
                                SerType::BINARY)) {
-    PLOG(FATAL) << "Error writing serialization of public key";
+    PLOG(WARNING) << "Error writing serialization of public key";
   }
 
   if (!Serial::SerializeToFile(crypto_params_files.private_key_file,
                                keyPair.secretKey,
                                SerType::BINARY)) {
-    PLOG(FATAL) << "Error writing serialization of private key";
+    PLOG(WARNING) << "Error writing serialization of private key";
   }
   
   crypto_params_files_ = crypto_params_files;
 
 }
 
-CryptoParamsFiles CKKS::GetCryptoParamsFiles() {
+CryptoParamsFiles CKKS::GetCryptoParams() {
   return crypto_params_files_;
 }
 
@@ -63,6 +63,12 @@ bool CKKS::DeserializeFromFile(std::string filepath, T &obj) {
     }
   }
   return successful_deser;
+}
+
+void CKKS::LoadCryptoParams(CryptoParamsFiles crypto_params_files) {
+  CKKS::LoadCryptoContextFromFile(crypto_params_files.crypto_context_file);
+  CKKS::LoadPublicKeyFromFile(crypto_params_files.public_key_file);
+  CKKS::LoadPrivateKeyFromFile(crypto_params_files.private_key_file);
 }
 
 void CKKS::LoadCryptoContextFromFile(std::string crypto_context_file) {
@@ -83,13 +89,7 @@ void CKKS::LoadPrivateKeyFromFile(std::string private_key_file) {
   if (deser) crypto_params_files_.private_key_file = private_key_file;
 }
 
-void CKKS::LoadContextAndKeysFromFiles(std::string crypto_context_file,
-                                       std::string public_key_file,
-                                       std::string private_key_file) {
-  CKKS::LoadCryptoContextFromFile(crypto_context_file);
-  CKKS::LoadPublicKeyFromFile(public_key_file);
-  CKKS::LoadPrivateKeyFromFile(private_key_file);
-}
+void CKKS::LoadEvalMultiKeyFromFile(std::string eval_mult_key_file) {}
 
 void CKKS::Print() {
   PLOG(INFO) << "CKKS scheme specifications." <<

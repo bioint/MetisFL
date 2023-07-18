@@ -21,7 +21,6 @@ def encrypt(crypto_params_files, ckks_scheme, data):
 
     return learners_data_encrypted
 
-
 def decrypt(crypto_params_files, ckks_scheme, data_enc, number_of_elems):
     # Make sure the input data is a list.
     if not isinstance(data_enc, list):
@@ -43,40 +42,39 @@ def decrypt(crypto_params_files, ckks_scheme, data_enc, number_of_elems):
 
     return data_dec
 
-
-def pwa(crypto_params_files, ckks_scheme, data_enc, scaling_factors):
-    MetisLogger.info("Computing Private Weighted Average...")
+def aggregate(crypto_params_files, ckks_scheme, data_enc, scaling_factors):
+    MetisLogger.info("Starting aggregation...")
     ckks_scheme.load_crypto_context_from_file(
         crypto_params_files["crypto_context_file"])
-    pwa_res = ckks_scheme.compute_weighted_average(
+    agg_res = ckks_scheme.aggregate(
         data_enc, scaling_factors)
-    MetisLogger.info("Private Weighted Average computation is complete.")
-    return pwa_res
-
+    MetisLogger.info("Aggregation is complete.")
+    return agg_res
 
 def test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factors, number_of_elems):
     MetisLogger.info("Generating crypto context and keys...")
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    ckks_scheme.gen_crypto_context_and_keys(    config.get_fhe_dir())
-    crypto_params_files = ckks_scheme.get_crypto_params_files()
+    # Get crypto parameters filepaths.
+    fctx, fpuk, fprk, _ = config.get_fhe_resources()
+    ckks_scheme.gen_crypto_params(fctx, fpuk, fprk)
+    crypto_params = ckks_scheme.get_crypto_params()
     MetisLogger.info("Crypto parameters files:")
-    for param, filename in crypto_params_files.items():
+    for param, filename in crypto_params.items():
         MetisLogger.info("\t {}:{}".format(param, filename))
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    learners_data_enc = encrypt(crypto_params_files, ckks_scheme, learners_data)
+    learners_data_enc = encrypt(crypto_params, ckks_scheme, learners_data)
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    learners_data_dec = decrypt(crypto_params_files, ckks_scheme, learners_data_enc, number_of_elems)
+    learners_data_dec = decrypt(crypto_params, ckks_scheme, learners_data_enc, number_of_elems)
     MetisLogger.info("Learners Data Decrypted: {}".format(learners_data_dec))
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    pwa_enc = pwa(crypto_params_files, ckks_scheme, learners_data_enc, scaling_factors)
+    pwa_enc = aggregate(crypto_params, ckks_scheme, learners_data_enc, scaling_factors)
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    pwa_dec = decrypt(crypto_params_files, ckks_scheme, pwa_enc, number_of_elems)
+    pwa_dec = decrypt(crypto_params, ckks_scheme, pwa_enc, number_of_elems)
     MetisLogger.info("Aggregated (Decrypted) Result: {}".format(pwa_dec))
-
 
 if __name__ == "__main__":
     """

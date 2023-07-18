@@ -34,12 +34,13 @@ pybind_extension(
     linkstatic=True
 )
 
+cc_library(
+    name = "encryption_cc",
+    hdrs = ["encryption_scheme.h"],
+)
+
 py_library(
     name = "encryption_lib",
     data = [":fhe.so"],
 )
 
-cc_library(
-    name = "encryption_scheme",
-    hdrs = ["encryption_scheme.h"],
-)

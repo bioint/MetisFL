@@ -353,12 +353,12 @@ class ControllerDefaultImpl : public Controller {
         absl::StrCat(server_entity.hostname(), ":", server_entity.port());
 
     auto creds = grpc::InsecureChannelCredentials();
-    auto ssl_enabled = server_entity.public_certificate_file() != "" &&
-                       server_entity.private_key_file() != "";
-    if (ssl_enabled) {
+    auto ssl_enable = server_entity.ssl_config().enable();
+    if (ssl_enable) {
         grpc::SslCredentialsOptions ssl_opts;
-        ssl_opts.pem_root_certs = server_entity.public_certificate_file();
-        creds = grpc::SslCredentials(ssl_opts);  
+        ssl_opts.pem_root_certs = 
+          server_entity.ssl_config().ssl_config_files().public_certificate_file();
+        creds = grpc::SslCredentials(ssl_opts);
     }
     auto channel = grpc::CreateChannel(target, creds);
     return LearnerService::NewStub(channel);

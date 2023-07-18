@@ -3,7 +3,7 @@
 #define METISFL_METISFL_CONTROLLER_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
 
 #include "metisfl/controller/aggregation/aggregation_function.h"
-#include "metisfl/encryption/palisade/he_scheme.h"
+#include "metisfl/encryption/encryption_scheme.h"
 #include "metisfl/proto/model.pb.h"
 #include "metisfl/proto/metis.pb.h"
 

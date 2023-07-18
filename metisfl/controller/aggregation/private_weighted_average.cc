@@ -11,11 +11,11 @@ PWA::PWA(const EncryptionConfig &encryption_config) {
   encryption_config_ = encryption_config;
   if (encryption_config_.has_he_scheme_config()) {
       auto he_scheme_config_ = encryption_config.he_scheme_config();
-      if (he_scheme_config.has_ckks_scheme_config()) {
+      if (he_scheme_config_.has_ckks_scheme_config()) {
         encryption_scheme_.reset(new CKKS(
             he_scheme_config_.ckks_scheme_config().batch_size(),
             he_scheme_config_.ckks_scheme_config().scaling_factor_bits()));
-        auto crypto_context_file = he_scheme_config.crypto_context_file();
+        auto crypto_context_file = he_scheme_config_.crypto_context_file();
         encryption_scheme_->LoadCryptoContextFromFile(crypto_context_file);
       }
   } else {
@@ -71,8 +71,8 @@ PWA::Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs)
     }
     // The `Aggregate` function assumes that each learner's contribution value,
     // scaling factor is already normalized / scaled.
-    std::string pwa_result =
-        encryption_scheme_->Aggregate(local_variable_ciphertexts, local_models_contrib_value);
+    auto pwa_result =
+        encryption_scheme_->Aggregate(local_variable_ciphertexts, local_models_contrib_value);        
     *global_model.mutable_model()->mutable_variables(var_idx)->
         mutable_ciphertext_tensor()->mutable_tensor_spec()->mutable_value() =
         pwa_result;

@@ -1,6 +1,6 @@
 
-#ifndef METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H
-#define METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H
+#ifndef METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H_
+#define METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H_
 
 #include <glog/logging.h>
 #include <omp.h>
@@ -11,29 +11,28 @@
 
 #include "ciphertext-ser.h"
 #include "cryptocontext-ser.h"
+#include "metisfl/encryption/encryption_scheme.h"
 #include "palisade.h"
 #include "pubkeylp-ser.h"
 #include "scheme/ckks/ckks-ser.h"
-#include "he_scheme.h"
 
 using namespace lbcrypto;
 using namespace std::chrono;
 
-class CKKS : public HEScheme {
+class CKKS : public EncryptionScheme {
 
  public:
   ~CKKS() = default;
   CKKS();
   CKKS(uint32_t batch_size, uint32_t scaling_factor_bits);
 
-  void GenCryptoContextAndKeys(CryptoParamsFiles crypto_params_files) override;
-  CryptoParamsFiles GetCryptoParamsFiles();
+  void GenCryptoParams(CryptoParamsFiles crypto_params_files) override;
+  CryptoParamsFiles GetCryptoParams() override;
+  void LoadCryptoParams(CryptoParamsFiles crypto_params_files) override;
   void LoadCryptoContextFromFile(std::string crypto_context_file) override;
-  void LoadPrivateKeyFromFile(std::string private_key_file) override;
   void LoadPublicKeyFromFile(std::string public_key_file) override;
-  void LoadContextAndKeysFromFiles(std::string crypto_context_file,
-                                         std::string public_key_file,
-                                         std::string private_key_file);
+  void LoadPrivateKeyFromFile(std::string private_key_file) override;
+  void LoadEvalMultiKeyFromFile(std::string eval_mult_key_file) override;
   std::string Aggregate(vector<std::string> data_array,
                         vector<float> scaling_factors) override;
   std::string Encrypt(vector<double> data_array) override;
@@ -57,4 +56,4 @@ class CKKS : public HEScheme {
 
 };
 
-#endif //METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H
+#endif //METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H_

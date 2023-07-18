@@ -35,14 +35,13 @@ class ServicerBase {
     ServerBuilder builder;
     std::shared_ptr<grpc::ServerCredentials> creds;
 
-    auto ssl_enabled = server_entity.public_certificate_file() != "" &&
-                       server_entity.private_key_file() != "";
+    auto ssl_enable = server_entity.ssl_config().enable();
                        
-    if (ssl_enabled) {
+    if (ssl_enable) {
       std::string server_cert_loaded;
       std::string server_key_loaded;
-      auto cert_path = server_entity.public_certificate_file();
-      auto key_path = server_entity.private_key_file();
+      auto cert_path = server_entity.ssl_config().ssl_config_files().public_certificate_file();
+      auto key_path = server_entity.ssl_config().ssl_config_files().private_key_file();
 
       if (ReadParseFile(server_cert_loaded, cert_path) == -1) {
         // Logs and terminates the program if public certificate filepath is invalid.
