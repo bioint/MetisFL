@@ -2,6 +2,13 @@ import sys
 import os
 import shutil
 import glob
+from setuptools import setup, find_packages
+
+PY_VERSIONS = ["3.8", "3.9", "3.10", "3.11"]
+os.environ["PYTHON_BIN_PATH"] = sys.executable
+os.environ["PYTHON_LIB_PATH"] = os.path.join(
+    sys.exec_prefix, "lib", "python{}".format(sys.version[:3]), "site-packages"
+)
 
 BAZEL_CMD = "bazelisk"
 BUILD_DIR = "build"
@@ -14,7 +21,7 @@ FHE_SO_TARGET = "//metisfl/encryption:fhe.so"
 PROT_DST_DIR = "metisfl/proto"
 PROTO_GRPC_TARGET = "//metisfl/proto:py_grpc_src"
 PROTO_SRC_DIR = "bazel-bin/metisfl/proto/py_grpc_src/metisfl/proto/"
-PY_VERSIONS = ["3.8", "3.9", "3.10"]
+
 
 def run_build(python_verion):
     # Build targets
@@ -42,6 +49,7 @@ def run_build(python_verion):
     for file in glob.glob("bazel-bin/*.whl"):
         copy_helper(file, BUILD_DIR)
 
+
 def copy_helper(src_file, dst):
     if os.path.isdir(dst):
         fname = os.path.basename(src_file)
@@ -51,12 +59,18 @@ def copy_helper(src_file, dst):
         os.remove(dst)
     shutil.copy(src_file, dst)
 
+
 if __name__ == "__main__":
-    py_version = ".".join(map(str, [sys.version_info.major, sys.version_info.minor]))
+    py_version = ".".join(
+        map(str, [sys.version_info.major, sys.version_info.minor]))
     if py_version not in PY_VERSIONS:
-        print(
-            "Detected Python {} in environment. Need {}".format(
-                py_version, PY_VERSIONS)
+        raise ValueError(
+            "Python version {} is not supported. Supported versions are {}".format(
+                py_version, PY_VERSIONS
+            )
         )
-        exit(1)
+    lib_path = os.environ["PYTHON_LIB_PATH"]
+    if not os.path.isdir(lib_path):
+        raise ValueError("PYTHON_LIB_PATH {} does not exist".format(lib_path))
+    
     run_build(py_version)
