@@ -1,3 +1,6 @@
+# Note: The actual dependencies of the produced wheel are defined in the BUILD.bazel file.
+# This file could be used for manual installation of the dependencies and for testing
+# the code within this workspace.
 cloudpickle>=2.2.1
 fabric>=3.1.0
 future>=0.18.3
@@ -11,7 +14,7 @@ pyopenssl>=23.0
 PyYAML>=6.0
 scikit-learn>=1.2.2
 scipy>=1.10.1
-schema>=0.7.4  # FIXME(@panoskyriakis): Fix the dependency installation.
+schema>=0.7.4  
 tensorflow>=2.0<2.13.0
 termcolor>=2.3.0
 torch>=2.0
