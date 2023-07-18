@@ -4,7 +4,7 @@ import shutil
 import glob
 from setuptools import setup, find_packages
 
-PY_VERSIONS = ["3.8", "3.9", "3.10", "3.11"]
+PY_VERSIONS = ["3.8", "3.9", "3.10"]
 os.environ["PYTHON_BIN_PATH"] = sys.executable
 os.environ["PYTHON_LIB_PATH"] = os.path.join(
     sys.exec_prefix, "lib", "python{}".format(sys.version[:3]), "site-packages"
