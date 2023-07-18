@@ -16,7 +16,6 @@ PROTO_GRPC_TARGET = "//metisfl/proto:py_grpc_src"
 PROTO_SRC_DIR = "bazel-bin/metisfl/proto/py_grpc_src/metisfl/proto/"
 PY_VERSIONS = ["3.8", "3.9", "3.10"]
 
-
 def run_build(python_verion):
     # Build targets
     os.system("{} build {}".format(BAZEL_CMD, CONTROLER_SO_TARGET))
@@ -43,7 +42,6 @@ def run_build(python_verion):
     for file in glob.glob("bazel-bin/*.whl"):
         copy_helper(file, BUILD_DIR)
 
-
 def copy_helper(src_file, dst):
     if os.path.isdir(dst):
         fname = os.path.basename(src_file)
@@ -53,9 +51,8 @@ def copy_helper(src_file, dst):
         os.remove(dst)
     shutil.copy(src_file, dst)
 
-
 if __name__ == "__main__":
-    py_version = ".".join(map(str, sys.version_info[:2]))
+    py_version = ".".join(map(str, [sys.version_info.major, sys.version_info.minor]))
     if py_version not in PY_VERSIONS:
         print(
             "Detected Python {} in environment. Need {}".format(
