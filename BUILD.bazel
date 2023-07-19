@@ -85,7 +85,7 @@ py_wheel(
         python_tag = select({
             ":py38": "cp38",
             ":py39": "cp39",
-            ":py310": "cp310",
+            ":py310": "cp310"
         }),
         # TODO: Make sure to sync req with txt
         requires = [
@@ -104,9 +104,8 @@ py_wheel(
             "schema>=0.7.4",
             "scikit-learn>=1.2.2",
             "scipy>=1.10.1",
-            "tensorflow<=2.11",
             "termcolor>=2.3.0",
-            "tensorflow>=2.0",
+            "tensorflow>=2.0,<2.13",
         ],
         platform = select({
             "//:linux_x86_64": "manylinux2014_x86_64"
