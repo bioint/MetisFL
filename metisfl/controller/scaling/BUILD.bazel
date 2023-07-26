@@ -4,7 +4,7 @@ cc_library(
     name = "scaling",
     srcs = [],
     hdrs = [
-        "model_scaling.h",
+        "scaling.h",
     ],
     deps = [
         ":batches_scaler",

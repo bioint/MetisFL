@@ -4,14 +4,14 @@ import torch
 from typing import Any, Dict, Tuple
 
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.model_ops import LearningTaskStats, ModelOps
+from metisfl.models.model_ops import ModelOps
 from metisfl.models.utils import get_num_of_epochs
 from metisfl.models.torch.helper import construct_dataset_pipeline
 from metisfl.models.torch.torch_model import MetisModelTorch
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
 from metisfl.proto import metis_pb2
-from metisfl.utils.formatting import DictionaryFormatter
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.formatting import DataTypeFormatter
+from metisfl.utils.logger import MetisLogger
 from metisfl.proto.proto_messages_factory import MetisProtoMessages
 
 class TorchModelOps(ModelOps):
@@ -26,19 +26,19 @@ class TorchModelOps(ModelOps):
         -> Tuple[ModelWeightsDescriptor, LearningTaskStats]:
         
         if not train_dataset:
-            raise RuntimeError("Provided `dataset` for training is None.")
+            MetisLogger.fatal("Provided `dataset` for training is None.")
         MetisLogger.info("Starting model training.")
 
         total_steps = learning_task_pb.num_local_updates
         batch_size = hyperparameters_pb.batch_size
         dataset_size = train_dataset.get_size()
         epochs_num = get_num_of_epochs(total_steps, dataset_size, batch_size)
-        dataset = construct_dataset_pipeline(train_dataset) #TODO: this is inconsistent with tf counterpart
+        dataset = construct_dataset_pipeline(train_dataset) # TODO: this is inconsistent with tf counterpart
         
-        self._metis_model._backend_model.train() # set to training mode
+        self._metis_model._backend_model.train() # set model to training mode
         train_res = self._metis_model.fit(dataset, epochs=epochs_num)
         
-        # TODO (dstripelis) Need to add the metrics for computing the execution time
+        # TODO(@stripeli): Need to add the metrics for computing the execution time
         model_weights_descriptor = self.get_model_weights()
         learning_task_stats = LearningTaskStats(
             train_stats=train_res,
@@ -49,22 +49,20 @@ class TorchModelOps(ModelOps):
 
     def evaluate_model(self, eval_dataset: ModelDataset) -> Dict:
         if not eval_dataset:
-            raise RuntimeError("Provided `dataset` for evaluation is None.")
+            MetisLogger.fatal("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
         dataset = construct_dataset_pipeline(eval_dataset)
-        self._metis_model._backend_model.eval() # set to evaluation mode
+        self._metis_model._backend_model.eval() # set model to evaluation mode
         eval_res = self._metis_model.evaluate(dataset)            
         MetisLogger.info("Model evaluation is complete.")
-        metric_values = DictionaryFormatter.stringify(eval_res, stringify_nan=True)
+        metric_values = DataTypeFormatter.stringify_dict(eval_res, stringify_nan=True)
         return MetisProtoMessages.construct_model_evaluation_pb(metric_values)
     
     def infer_model(self) -> Any:
         # Set model to evaluation state.
         # FIXME @panoskyriakis: check this
         self._metis_model._backend_model.eval()
-        pass
 
-    # @stripeli do we really need this?
     def cleanup(self):
         del self._metis_model
         torch.cuda.empty_cache()

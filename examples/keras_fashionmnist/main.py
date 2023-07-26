@@ -8,6 +8,7 @@ from recipe import dataset_recipe_fn
 
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.keras.keras_model import MetisModelKeras
+from metisfl.models.keras.optimizers.fed_prox import FedProx
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     print("Script current working directory: ", script_cwd, flush=True)
     script_cwd = os.path.abspath(script_cwd)
     default_fed_env_fp = os.path.join(
-        script_cwd, "template.yaml")
+        script_cwd, "../fedenv_templates/template_new.yaml")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", default=default_fed_env_fp)
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     # Get the tf.keras model
     model = get_model()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer="SGD", metrics=["accuracy"])
+                  optimizer=FedProx(), metrics=["accuracy"])
 
     # Wrap the model in a MetisKerasModel
     metis_model = MetisModelKeras(model)

@@ -3,7 +3,7 @@ import os
 
 from metisfl import config
 from metisfl.encryption.fhe import CKKS
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 def encrypt(crypto_params_files, ckks_scheme, data):
@@ -55,7 +55,7 @@ def test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factor
     MetisLogger.info("Generating crypto context and keys...")
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
     # Get crypto parameters filepaths.
-    fctx, fpuk, fprk, _ = config.get_fhe_resources()
+    fctx, fpuk, fprk = config.get_crypto_resources()
     ckks_scheme.gen_crypto_params(fctx, fpuk, fprk)
     crypto_params = ckks_scheme.get_crypto_params()
     MetisLogger.info("Crypto parameters files:")

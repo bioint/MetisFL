@@ -26,13 +26,23 @@ class CKKS : public EncryptionScheme {
   CKKS();
   CKKS(uint32_t batch_size, uint32_t scaling_factor_bits);
 
-  void GenCryptoParams(CryptoParamsFiles crypto_params_files) override;
-  CryptoParamsFiles GetCryptoParams() override;
-  void LoadCryptoParams(CryptoParamsFiles crypto_params_files) override;
+  // File-based API.
+  void GenCryptoParamsFiles(CryptoParamsFiles crypto_params_files) override;  
+  CryptoParamsFiles GetCryptoParamsFiles() override;
+  void LoadCryptoParamsFromFiles(CryptoParamsFiles crypto_params_files) override;
   void LoadCryptoContextFromFile(std::string crypto_context_file) override;
   void LoadPublicKeyFromFile(std::string public_key_file) override;
   void LoadPrivateKeyFromFile(std::string private_key_file) override;
-  void LoadEvalMultiKeyFromFile(std::string eval_mult_key_file) override;
+
+  // String-based API.
+  CryptoParams GenCryptoParams() override;
+  CryptoParams GetCryptoParams() override;
+  void LoadCryptoParams(CryptoParams crypto_params) override;
+  void LoadCryptoContext(std::string crypto_context) override;
+  void LoadPublicKey(std::string public_key) override;
+  void LoadPrivateKey(std::string private_key) override;
+
+  // CKKS functionality.
   std::string Aggregate(vector<std::string> data_array,
                         vector<float> scaling_factors) override;
   std::string Encrypt(vector<double> data_array) override;
@@ -53,6 +63,9 @@ class CKKS : public EncryptionScheme {
 
   template<typename T>
   bool DeserializeFromFile(std::string filepath, T &obj);
+
+  template<typename T>
+  void Deserialize(std::string s, T &obj);
 
 };
 

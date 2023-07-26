@@ -10,7 +10,7 @@ CKKS::CKKS(uint32_t batch_size, uint32_t scaling_factor_bits) : EncryptionScheme
   this->scaling_factor_bits = scaling_factor_bits;
 }
 
-void CKKS::GenCryptoParams(CryptoParamsFiles crypto_params_files) {
+void CKKS::GenCryptoParamsFiles(CryptoParamsFiles crypto_params_files) {
 
   usint multDepth = 2;
   CryptoContext <DCRTPoly> cryptoContext;
@@ -18,7 +18,6 @@ void CKKS::GenCryptoParams(CryptoParamsFiles crypto_params_files) {
       multDepth, scaling_factor_bits, batch_size);
   cryptoContext->Enable(ENCRYPTION);
   cryptoContext->Enable(SHE);
-  // cryptoContext->Enable(LEVELEDSHE);
 
   if (!Serial::SerializeToFile(crypto_params_files.crypto_context_file,
                                cryptoContext,
@@ -45,27 +44,11 @@ void CKKS::GenCryptoParams(CryptoParamsFiles crypto_params_files) {
 
 }
 
-CryptoParamsFiles CKKS::GetCryptoParams() {
+CryptoParamsFiles CKKS::GetCryptoParamsFiles() {
   return crypto_params_files_;
 }
 
-template <typename T>
-bool CKKS::DeserializeFromFile(std::string filepath, T &obj) {
-  // Perform loading operation only if the object is still not loaded.
-  bool successful_deser = false; 
-  if (obj == nullptr) {
-    if (!Serial::DeserializeFromFile(filepath,
-                                    obj,
-                                    SerType::BINARY)) {
-      PLOG(ERROR) << "Could not deserialize from file: " << filepath;
-    } else {
-      successful_deser = true;
-    }
-  }
-  return successful_deser;
-}
-
-void CKKS::LoadCryptoParams(CryptoParamsFiles crypto_params_files) {
+void CKKS::LoadCryptoParamsFromFiles(CryptoParamsFiles crypto_params_files) {
   CKKS::LoadCryptoContextFromFile(crypto_params_files.crypto_context_file);
   CKKS::LoadPublicKeyFromFile(crypto_params_files.public_key_file);
   CKKS::LoadPrivateKeyFromFile(crypto_params_files.private_key_file);
@@ -89,7 +72,72 @@ void CKKS::LoadPrivateKeyFromFile(std::string private_key_file) {
   if (deser) crypto_params_files_.private_key_file = private_key_file;
 }
 
-void CKKS::LoadEvalMultiKeyFromFile(std::string eval_mult_key_file) {}
+template <typename T>
+bool CKKS::DeserializeFromFile(std::string filepath, T &obj) {
+  // Perform loading operation only if the object is still not loaded.
+  bool successful_deser = false; 
+  if (obj == nullptr) {
+    if (!Serial::DeserializeFromFile(filepath,
+                                     obj,
+                                     SerType::BINARY)) {
+      PLOG(ERROR) << "Could not deserialize from file: " << filepath;
+    } else {
+      successful_deser = true;
+    }
+  }
+  return successful_deser;
+}
+
+CryptoParams CKKS::GenCryptoParams(){
+  usint multDepth = 2;
+  CryptoContext <DCRTPoly> cryptoContext;
+  cryptoContext = CryptoContextFactory<DCRTPoly>::genCryptoContextCKKS(
+      multDepth, scaling_factor_bits, batch_size);
+  cryptoContext->Enable(ENCRYPTION);
+  cryptoContext->Enable(SHE);
+
+  std::stringstream cc_ss;
+  Serial::Serialize(cryptoContext, cc_ss, SerType::BINARY);
+
+  LPKeyPair<DCRTPoly> keyPair;
+  keyPair = cryptoContext->KeyGen();
+
+  std::stringstream pk_ss;
+  Serial::Serialize(keyPair.publicKey, pk_ss, SerType::BINARY);
+
+  std::stringstream sk_ss;
+  Serial::Serialize(keyPair.secretKey, sk_ss, SerType::BINARY);
+  
+  return CryptoParams{ cc_ss.str(), pk_ss.str(), sk_ss.str() };
+}
+
+CryptoParams CKKS::GetCryptoParams() {
+  return CryptoParams{};
+}
+
+void CKKS::LoadCryptoParams(CryptoParams crypto_params) {
+  CKKS::LoadCryptoContext(crypto_params.crypto_context);
+  CKKS::LoadPublicKey(crypto_params.public_key);
+  CKKS::LoadPrivateKey(crypto_params.private_key);
+}
+
+void CKKS::LoadCryptoContext(std::string crypto_context) {
+  CKKS::Deserialize<CryptoContext<DCRTPoly>>(crypto_context, cc);
+}
+
+void CKKS::LoadPublicKey(std::string public_key) {
+  CKKS::Deserialize<LPPublicKey<DCRTPoly>>(public_key, pk);
+}
+
+void CKKS::LoadPrivateKey(std::string private_key) {
+  CKKS::Deserialize<LPPrivateKey<DCRTPoly>>(private_key, sk);
+}
+
+template<typename T>
+void CKKS::Deserialize(std::string s, T &obj) {
+  std::stringstream ss(s);
+  Serial::Deserialize(obj, ss, SerType::BINARY);
+}
 
 void CKKS::Print() {
   PLOG(INFO) << "CKKS scheme specifications." <<

@@ -3,6 +3,7 @@ from inspect import signature
 import cloudpickle
 from pebble import ProcessPool
 
+from metisfl.utils.logger import MetisLogger
 from metisfl.models.model_dataset import (ModelDataset,
                                           ModelDatasetClassification,
                                           ModelDatasetRegression)
@@ -82,7 +83,7 @@ def create_model_dataset_helper(dataset_recipe_pkl, dataset_fp=None, default_cla
     """
 
     if not dataset_recipe_pkl and not default_class:
-        raise RuntimeError("Neither the dataset recipe or the default class are specified. Exiting ...")
+        MetisLogger.fatal("Neither the dataset recipe or the default class are specified. Exiting ...")
 
     if dataset_recipe_pkl:
         dataset_recipe_fn = cloudpickle.load(open(dataset_recipe_pkl, "rb"))

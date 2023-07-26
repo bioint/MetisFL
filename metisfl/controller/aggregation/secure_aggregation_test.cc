@@ -3,7 +3,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "metisfl/controller/aggregation/private_weighted_average.h"
+#include "metisfl/controller/aggregation/secure_aggregation.h"
 #include "metisfl/controller/common/macros.h"
 #include "metisfl/controller/common/proto_matchers.h"
 #include "metisfl/encryption/palisade/ckks_scheme.h"
@@ -36,28 +36,28 @@ variables {
 }
 )pb";
 
-class PWATest : public ::testing::Test {};
+class SecAggTest : public ::testing::Test {};
 
-TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
+TEST_F(SecAggTest, SecureAggregationCKKS) /* NOLINT */ {
 
   // Step 1: Define the CKKS scheme parameters.
   uint32_t ckks_scheme_batch_size = 4096;
   uint32_t ckks_scheme_scaling_factor_bits = 52;
-  auto ckks_scheme = CKKS(
+  auto ckks_ = CKKS(
     ckks_scheme_batch_size, ckks_scheme_scaling_factor_bits);
   auto tmp_dir = std::filesystem::temp_directory_path();
   CryptoParamsFiles crypto_params_files {
     tmp_dir / "cryptocontext.txt",
     tmp_dir / "key-public.txt",
     tmp_dir / "key-private.txt" };    
-  ckks_scheme.GenCryptoParams(crypto_params_files);
-  ckks_scheme.LoadCryptoContextFromFile(crypto_params_files.crypto_context_file);
-  ckks_scheme.LoadPublicKeyFromFile(crypto_params_files.public_key_file);
-  ckks_scheme.LoadPrivateKeyFromFile(crypto_params_files.private_key_file);
+  ckks_.GenCryptoParams(crypto_params_files);
+  ckks_.LoadCryptoContextFromFile(crypto_params_files.crypto_context_file);
+  ckks_.LoadPublicKeyFromFile(crypto_params_files.public_key_file);
+  ckks_.LoadPrivateKeyFromFile(crypto_params_files.private_key_file);
 
   // Step 2: Define model's variable values and encrypt them.
   std::vector<double> model_values{1, 2, 2, 4, 4, 6, 6, 8, 8, 10};
-  auto model_values_encrypted = ckks_scheme.Encrypt(model_values);
+  auto model_values_encrypted = ckks_.Encrypt(model_values);
 
   // Step 3: Parse proto variables and create proto model instances.
   auto model1 = ParseTextOrDie<Model>(kModel_template_with_10elements);
@@ -73,24 +73,27 @@ TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
   std::vector to_aggregate({seq1, seq2});
 
   // Step 5: Create the CKKS proto instance.
-  CKKSSchemeConfig ckks_scheme_config;
-  ckks_scheme_config.set_batch_size(ckks_scheme_batch_size);
-  ckks_scheme_config.set_scaling_factor_bits(ckks_scheme_scaling_factor_bits);
+  CKKSScheme ckks_scheme;
+  ckks_scheme.set_batch_size(ckks_scheme_batch_size);
+  ckks_scheme.set_scaling_factor_bits(ckks_scheme_scaling_factor_bits);
 
   HESchemeConfig he_scheme_config;
-  he_scheme_config.set_crypto_context_file(crypto_params_files.crypto_context_file);
-  *he_scheme_config.mutable_ckks_scheme_config() = ckks_scheme_config;
+  he_scheme_config.set_crypto_context(crypto_params_files.crypto_context_file);
+
+  HEScheme he_scheme;
+  *he_scheme.mutable_he_scheme_config() = he_scheme_config;
+  *he_scheme.mutable_ckks_scheme() = ckks_scheme;
 
   EncryptionConfig encryption_config;
-  *encryption_config.mutable_he_scheme_config() = he_scheme_config;
+  *encryption_config.mutable_he_scheme() = he_scheme;
 
-  // Step 6: Call PWA, perform the aggregation and validate.
-  auto pwa = PWA(encryption_config);
+  // Step 6: Call SecAgg, perform the aggregation and validate.
+  auto pwa = SecAgg(encryption_config);
   auto federated_model = pwa.Aggregate(to_aggregate);
   auto aggregated_ciphertext =
     federated_model.model().variables().at(0).ciphertext_tensor().tensor_spec().value();
   auto aggregated_dec =
-    ckks_scheme.Decrypt(aggregated_ciphertext, model_values.size());
+    ckks_.Decrypt(aggregated_ciphertext, model_values.size());
 
   // To validate whether the returned aggregated value is correct
   // we compare the aggregated value with the original vector element-by-element.

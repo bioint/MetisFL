@@ -9,33 +9,27 @@ from typing import Callable, Dict, List, Tuple
 
 from metisfl import config
 from metisfl.models.metis_model import MetisModel
-from metisfl.proto.metis_pb2 import ServerEntity
 from metisfl.utils.fedenv import FederationEnvironment, RemoteHost
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 class ServiceInitializer:
 
     def __init__(self,
-                 controller_server_entity_pb: ServerEntity,
+                 federation_environment: FederationEnvironment,
                  dataset_recipe_fns: Dict[str, Callable],
                  dataset_fps: Dict[str, List[str]],
-                 fed_env: FederationEnvironment,
-                 learner_server_entities_pb: List[ServerEntity],
                  model: MetisModel):
         assert config.TRAIN in dataset_recipe_fns, "Train dataset recipe function is required."
-
-        self._controller_server_entity_pb = controller_server_entity_pb
-        self._dataset_fps = dataset_fps
-        self._federation_environment = fed_env
-        self._learner_server_entities_pb = learner_server_entities_pb
-        self._model = model
-
+        # Setup configuration variables.
         self._model_save_dir = config.get_driver_model_save_dir()
         self._driver_dir = config.get_driver_path()
 
+        self._federation_environment = federation_environment
         self._dataset_recipe_fps = self._save_dataset_recipes(
             dataset_recipe_fns)
+        self._dataset_fps = dataset_fps
+        self._model = model
         self._model_definition_tar_fp = self._save_initial_model(model)
 
     def init_controller(self):
@@ -45,10 +39,10 @@ class ServiceInitializer:
 
         remote_on_login = self._federation_environment.controller.on_login_command
         if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
-            remote_on_login = remote_on_login[:-1]
+            remote_on_login = remote_on_login[:-1] + " &&"
 
         # @stripeli this assumes that metisfl is installed in the remote host; make it more robust
-        init_cmd = "{} && cd {} && {}".format(
+        init_cmd = "{} cd {} && {}".format(
             remote_on_login,
             self._federation_environment.controller.project_home,
             self._init_controller_cmd())
@@ -63,8 +57,9 @@ class ServiceInitializer:
 
         # We do not use asynchronous or disown, since we want the remote subprocess to return standard (error) output.
         learner_path = config.get_learner_path(learner.grpc_port)
-        MetisLogger.info("Copying model definition, datasets and and dataset recipe files to learner: {}"
-                         .format(learner.id))
+        MetisLogger.info(
+            "Copying model definition, datasets and and dataset recipe files to learner: {}"
+            .format(learner.identifier))
         self._copy_assets_to_learner(index, connection, learner_path)
 
         # Fabric runs every command on a non-interactive mode and therefore the $PATH that might be set for a
@@ -72,23 +67,23 @@ class ServiceInitializer:
         # source the respective bash_environment files.
         cuda_devices_str = ""
         if learner.cuda_devices and len(learner.cuda_devices) > 0:
-            cuda_devices_str = "export CUDA_VISIBLE_DEVICES=\"{}\" " \
+            cuda_devices_str = "export CUDA_VISIBLE_DEVICES=\"{}\"" \
                 .format(",".join([str(c) for c in learner.cuda_devices]))
         remote_on_login = learner.on_login_command
-        if len(remote_on_login) > 0 and remote_on_login[-1] == ";":
-            remote_on_login = remote_on_login[:-1]
+        if remote_on_login:
+            remote_on_login = + " &&"
 
         # Un-taring model definition zipped file.
         MetisLogger.info("Un-taring model definition files at learner: {}"
-                         .format(learner.id))
+                         .format(learner.identifier))
         connection.run("cd {}; tar -xvzf {}".format(
             learner_path,
             self._model_definition_tar_fp))
 
-        init_cmd = "{} && {} && cd {} && {}".format(
+        init_cmd = "{} cd {} && {} && {}".format(
             remote_on_login,
-            cuda_devices_str,
             learner.project_home,
+            cuda_devices_str,
             self._init_learner_cmd(index))
         MetisLogger.info(
             "Running init cmd to learner host: {}".format(init_cmd))
@@ -116,7 +111,7 @@ class ServiceInitializer:
             source_dir=self._model_save_dir,
             output_filename=os.path.basename(self._model_save_dir))
 
-    def _make_tarfile(self, output_filename, source_dir):
+    def _make_tarfile(self, output_filename, source_dir) -> str:
         output_dir = os.path.abspath(os.path.join(source_dir, os.pardir))
         output_filepath = os.path.join(
             output_dir, "{}.tar.gz".format(output_filename))
@@ -138,7 +133,7 @@ class ServiceInitializer:
         if self._model_definition_tar_fp:
             connection.put(self._model_definition_tar_fp, learner_path)
 
-    def _get_controller_connection(self):
+    def _get_controller_connection(self) -> Connection:
         fabric_connection_config = self._federation_environment.controller \
             .get_fabric_connection_config()
         connection = Connection(**fabric_connection_config)
@@ -153,7 +148,7 @@ class ServiceInitializer:
 
     def _init_controller_cmd(self):
         args = {
-            "e": self._controller_server_entity_pb.SerializeToString().hex(),
+            "e": self._federation_environment.controller.get_server_entity_pb().SerializeToString().hex(),
             "g": self._federation_environment.get_global_model_config_pb().SerializeToString().hex(),
             "c": self._federation_environment.get_communication_protocol_pb().SerializeToString().hex(),
             "m": self._federation_environment.get_local_model_config_pb().SerializeToString().hex(),
@@ -174,9 +169,9 @@ class ServiceInitializer:
                 remote_metis_path, filename) if filename else None
 
         args = {
-            "l": self._learner_server_entities_pb[index].SerializeToString().hex(),
-            "c": self._controller_server_entity_pb.SerializeToString().hex(),
-            "f": self._federation_environment.get_he_scheme_pb(entity="learner").SerializeToString().hex(),
+            "l": self._federation_environment.learners[index].get_server_entity_pb().SerializeToString().hex(),
+            "c": self._federation_environment.controller.get_server_entity_pb(gen_connection_entity=True).SerializeToString().hex(),
+            "f": self._federation_environment.get_encryption_scheme_pb().SerializeToString().hex(),
             "m": remote_metis_model_path,
             "t": self._dataset_fps[config.TRAIN][index],
             "v": self._dataset_fps[config.VALIDATION][index] if config.VALIDATION in self._dataset_fps else None,
@@ -188,7 +183,7 @@ class ServiceInitializer:
         }
         return self._get_cmd("learner", args)
 
-    def _get_cmd(self, entity, config):
+    def _get_cmd(self, entity, config) -> str:
         cmd = "python3 -m metisfl.{} ".format(entity)
         MetisLogger.info("Running: {}".format(config))
         for key, value in config.items():

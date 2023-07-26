@@ -1,11 +1,18 @@
-from metisfl.encryption.encryption import Encryption
-from metisfl.proto import model_pb2
-from metisfl.models.types import ModelWeightsDescriptor
+from typing import Dict
+from metisfl.encryption.encryption_scheme import EncryptionScheme
 
-class Masking(Encryption):
+
+class Masking(EncryptionScheme):
     
-    def decrypt_model(self, model_pb: model_pb2.Model) -> ModelWeightsDescriptor:
+    def __init__(self, init_crypto_params=False):
+        super().__init__(init_crypto_params)
         pass
 
-    def encrypt_model(self, weights_descriptor: ModelWeightsDescriptor) -> model_pb2.Model:
+    def decrypt_data(self, ciphertext: str, num_elems: int):
+        pass
+
+    def encrypt_data(self, values):
+        pass
+    
+    def initialize_crypto_params(self) -> Dict:
         pass

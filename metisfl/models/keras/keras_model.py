@@ -5,7 +5,7 @@ from metisfl import config
 from metisfl.models.keras.optimizers.fed_prox import FedProx
 from metisfl.models.metis_model import MetisModel
 from metisfl.models.types import ModelWeightsDescriptor
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 class MetisModelKeras(MetisModel):
@@ -17,11 +17,12 @@ class MetisModelKeras(MetisModel):
         self._nn_engine = config.KERAS_NN_ENGINE
 
     @staticmethod
-    def load(model_dir) -> "MetisModelKeras":
+    def load(model_dir, custom_objects={}) -> "MetisModelKeras":
         MetisLogger.info("Loading model from: {}".format(model_dir))
 
+        custom_objects.update({"FedProx": FedProx})
         m = tf.keras.models.load_model(
-            model_dir, custom_objects={"FedProx": FedProx})
+            model_dir, custom_objects=custom_objects)
 
         MetisLogger.info("Loaded model from: {}".format(model_dir))
         return MetisModelKeras(m)

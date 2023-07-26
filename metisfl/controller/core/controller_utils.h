@@ -9,9 +9,9 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "metisfl/proto/metis.pb.h"
-#include "metisfl/controller/aggregation/model_aggregation.h"
-#include "metisfl/controller/scaling/model_scaling.h"
-#include "metisfl/controller/selection/model_selection.h"
+#include "metisfl/controller/aggregation/aggregation.h"
+#include "metisfl/controller/scaling/scaling.h"
+#include "metisfl/controller/selection/selection.h"
 #include "metisfl/controller/store/store.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 

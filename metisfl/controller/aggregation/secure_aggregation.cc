@@ -1,22 +1,22 @@
 
 #include <omp.h>
 
-#include "metisfl/controller/aggregation/private_weighted_average.h"
+#include "metisfl/controller/aggregation/secure_aggregation.h"
 #include "metisfl/encryption/palisade/ckks_scheme.h"
 #include "metisfl/proto/model.pb.h"
 
 namespace metisfl::controller {
 
-PWA::PWA(const EncryptionConfig &encryption_config) {
+SecAgg::SecAgg(const EncryptionConfig &encryption_config) {
   encryption_config_ = encryption_config;
-  if (encryption_config_.has_he_scheme_config()) {
-      auto he_scheme_config_ = encryption_config.he_scheme_config();
-      if (he_scheme_config_.has_ckks_scheme_config()) {
+  if (encryption_config_.has_he_scheme()) {
+      auto he_scheme_ = encryption_config.he_scheme();
+      if (he_scheme_.has_ckks_scheme()) {
         encryption_scheme_.reset(new CKKS(
-            he_scheme_config_.ckks_scheme_config().batch_size(),
-            he_scheme_config_.ckks_scheme_config().scaling_factor_bits()));
-        auto crypto_context_file = he_scheme_config_.crypto_context_file();
-        encryption_scheme_->LoadCryptoContextFromFile(crypto_context_file);
+            he_scheme_.ckks_scheme().batch_size(),
+            he_scheme_.ckks_scheme().scaling_factor_bits()));
+        auto crypto_context = he_scheme_.he_scheme_config().crypto_context();
+        encryption_scheme_->LoadCryptoContextFromFile(crypto_context);
       }
   } else {
       throw std::runtime_error("Unsupported encryption scheme.");
@@ -24,7 +24,7 @@ PWA::PWA(const EncryptionConfig &encryption_config) {
 }
 
 FederatedModel
-PWA::Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs) {
+SecAgg::Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs) {
 
   // Throughout this implementation, we use the first model provided in the pair.
   // If only one learner is given for the aggregation step, then we set its scaling
@@ -84,7 +84,7 @@ PWA::Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs)
 
 }
 
-void PWA::Reset() {
+void SecAgg::Reset() {
   // pass
 }
 

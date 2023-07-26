@@ -4,13 +4,13 @@ cc_library(
     name = "aggregation",
     srcs = [],
     hdrs = [
-        "model_aggregation.h",
+        "aggregation.h",
     ],
     deps = [
         ":federated_average",
         ":federated_recency",
         ":federated_stride",
-        ":private_weighted_average",
+        ":secure_aggregation",
         "//metisfl/controller/common:proto_tensor_serde",
         "//metisfl/proto:cc_grpc_lib",
     ]
@@ -127,13 +127,13 @@ cc_test(
 )
 
 cc_library(
-    name = "private_weighted_average",
+    name = "secure_aggregation",
     srcs = [
-        "private_weighted_average.cc",
+        "secure_aggregation.cc",
     ],
     hdrs = [
         "aggregation_function.h",
-        "private_weighted_average.h",
+        "secure_aggregation.h",
     ],
     deps = [
         "//metisfl/proto:cc_grpc_lib",
@@ -150,12 +150,12 @@ cc_library(
 )
 
 cc_test(
-    name = "private_weighted_average_test",
+    name = "secure_aggregation_test",
     srcs = [
-        "private_weighted_average_test.cc",
+        "secure_aggregation_test.cc",
     ],
     deps = [
-        ":private_weighted_average",
+        ":secure_aggregation",
         "//metisfl/controller/common:macros",
         "//metisfl/controller/common:proto_matchers",
         "//metisfl/encryption/palisade:palisade_wrapper",

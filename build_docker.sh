@@ -1,7 +1,7 @@
 #!/bin/bash
 IMAGE_NAME="${1:-nevron/ubuntu_focal_x86_64_py38}"
 
- IMG_LS=$(docker images | awk '$1 ~ /"$IMAGE_NAME"/ { print $1 }')
+IMG_LS=$(docker images | awk '$1 ~ /"$IMAGE_NAME"/ { print $1 }')
 nevron/ubuntu_focal_x86_64_py38
 if [[ $IMG_LS == "" ]]; then
   echo "Image $IMAGE_NAME not found. Pulling.."

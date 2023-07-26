@@ -17,7 +17,7 @@ message ServerEntity {
   // The server port that the service is running on.
   uint32 port = 2;
 
-  // For enabling secure communication between the learners and the controller.
+  // The Server will allow only encrypted communications if enabled.
   SSLConfig ssl_config = 3;  
 }
 
@@ -28,12 +28,23 @@ message SSLConfigFiles {
   string private_key_file = 2;
 }
 
-message SSLConfig {
-  bool enable = 1; // Whether SSL is enabled or not.
-  SSLConfigFiles ssl_config_files = 2;
+message SSLConfigStream {
+  // Public Certificate - This field should be set when SSL is enabled. It allows the authentication among different services to create secure client/server communication.
+  bytes public_certificate_stream = 1;
+  // Private Key - For security reasons, this field needs to be empty. However, we provide the option to set it in case it needs to be used internally or shared with other services.
+  bytes private_key_stream = 2;
 }
 
-
+message SSLConfig {
+  bool enable = 1; // Whether SSL is enabled or not.
+  // We need to support both files and streams because a service might need to be initialized through a byte stream or a file.
+  // For instance, a learner might need to connect to the controller while joining. In that case, the controller needs to reply with 
+  // public ceritificate as a stream!  
+  oneof config {
+    SSLConfigFiles ssl_config_files = 6;
+    SSLConfigStream ssl_config_stream = 7;
+  }
+}
 
 //////////////
 // Learning //
@@ -244,7 +255,7 @@ message AggregationRule {
     FedAvg fed_avg = 1;
     FedStride fed_stride = 2;
     FedRec fed_rec = 3;
-    PWA pwa = 4;
+    SecAgg sec_agg = 4;
   }
   AggregationRuleSpecs aggregation_rule_specs = 5;
 }
@@ -268,31 +279,33 @@ message FedStride {
 message FedRec {}
 
 message EncryptionConfig {
-  oneof config {
-    HESchemeConfig he_scheme_config = 1;
-    MaskingConfig masking_config = 2;
+  oneof scheme {
+    HEScheme he_scheme = 1;
+    MaskingScheme masking_scheme = 2;
   }
 }
 
-message MaskingConfig {}
+message MaskingScheme {}
+
+message HEScheme {
+  HESchemeConfig he_scheme_config = 1;
+  oneof scheme {
+    CKKSScheme ckks_scheme = 2;
+  }
+}
 
 message HESchemeConfig {
-  string crypto_context_file = 2;
-  string public_key_file = 3;
-  string private_key_file = 4;
-  string key_eval_mult_file = 5;
-
-  oneof config {
-    CKKSSchemeConfig ckks_scheme_config = 6;
-  }
+  bytes crypto_context = 1;
+  bytes public_key = 2;
+  bytes private_key = 3;
 }
 
-message CKKSSchemeConfig {
-  uint32 batch_size = 1;
-  uint32 scaling_factor_bits = 2;
+message CKKSScheme {
+  uint32 batch_size = 2;
+  uint32 scaling_factor_bits = 3;
 }
 
-message PWA {
+message SecAgg {
   EncryptionConfig encryption_config = 1;
 }
 

@@ -1,10 +1,11 @@
 
 /**
- * A standalone controller instance running at port 50051.
+ * A standalone controller instance example running at port 50051.
  */
 
 #include <memory>
 #include <signal.h>
+#include <filesystem>
 
 #include <glog/logging.h>
 
@@ -44,9 +45,12 @@ int main(int argc, char **argv) {
       hostname: "0.0.0.0"
       port: 50051
       ssl_config {
-            server_key: "/resources/ssl_config/server-key.pem"
-            server_cert: "/resources/ssl_config/server-cert.pem"
+        enable: true
+        ssl_config_files {
+          public_certificate_file: "metisfl/resources/ssl/ca-cert.pem"
+          private_key_file: "metisfl/resources/ssl/ca-key.pem"
         }
+      }
     }
     global_model_specs {
       learners_participation_ratio: 1

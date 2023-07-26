@@ -1,15 +1,16 @@
-import multiprocessing as mp
 import queue
 import time
-from typing import Callable, List
 
+import multiprocessing as mp
+
+from typing import Callable, List
 from pebble import ProcessPool
 
 from metisfl import config
 from metisfl.models.utils import construct_model_pb
 from metisfl.models.metis_model import MetisModel
 from metisfl.utils.fedenv import FederationEnvironment
-from metisfl.utils.metis_logger import MetisASCIIArt, MetisLogger
+from metisfl.utils.logger import MetisASCIIArt, MetisLogger
 
 from .controller_client import GRPCControllerClient
 from .learner_client import GRPCLearnerClient
@@ -27,7 +28,8 @@ class DriverSession(object):
                  validation_dataset_recipe_fn: Callable = None,
                  test_dataset_fps: List[str] = None,
                  test_dataset_recipe_fn: Callable = None):
-        """Entry point for MetisFL Driver Session API.
+        """ 
+        Entry point for MetisFL Driver Session API.
 
             This class is the entry point of the MetisFL Driver Session API. It is responsible for initializing the federation environment
             defined by the :param:`fed_env` and starting the federated training for the :param:`model` using the datasets defined by
@@ -58,52 +60,47 @@ class DriverSession(object):
             :meth:`ServiceMonitor.monitor_federation`, which blocks execution and waits for the termination signals and 
             :meth:`shutdown_federation()`.
 
-        Args:
-            fed_env (str): The path to the federation environment yaml file.
-            model (MetisModel): A :class:`MetisModel` instance.
-            train_datset_fps (List[str]): A list of file paths to the training datasets (one for each learner)
-            train_dataset_recipe_fn (Callable): A function that will be used to create the training datasets on the remote Learner machines.
-            validation_dataset_fps (List[str], optional): A list of file paths to the validation datasets (one for each learner). Defaults to None.
-            validation_dataset_recipe_fn (Callable, optional): A function that will be used to create the validation datasets on the remote Learner machines. Defaults to None.
-            test_dataset_fps (List[str], optional): A list of file paths to the test datasets (one for each learner). Defaults to None.
-            test_dataset_recipe_fn (Callable, optional): A function that will be used to create the test datasets on the remote Learner machines. Defaults to None.
+            Args:
+                fed_env (str): The path to the federation environment yaml file.
+                model (MetisModel): A :class:`MetisModel` instance.
+                train_datset_fps (List[str]): A list of file paths to the training datasets (one for each learner)
+                train_dataset_recipe_fn (Callable): A function that will be used to create the training datasets on the remote Learner machines.
+                validation_dataset_fps (List[str], optional): A list of file paths to the validation datasets (one for each learner). Defaults to None.
+                validation_dataset_recipe_fn (Callable, optional): A function that will be used to create the validation datasets on the remote Learner machines. Defaults to None.
+                test_dataset_fps (List[str], optional): A list of file paths to the test datasets (one for each learner). Defaults to None.
+                test_dataset_recipe_fn (Callable, optional): A function that will be used to create the test datasets on the remote Learner machines. Defaults to None.
         """
         # Print welcome message.
         MetisASCIIArt.print()
         self._federation_environment = FederationEnvironment(fed_env)
-        self._homomorphic_encryption = HomomorphicEncryption(
-            he_scheme_pb=self._federation_environment.get_he_scheme_pb(entity="learner"))
-        self._num_learners = len(
-            self._federation_environment.learners)
+        self._num_learners = len(self._federation_environment.learners)
         self._model = model
-
+        self._encryption_pb = \
+            self._federation_environment.get_encryption_scheme_pb(init_crypto_params=)
         self._init_pool()
-        self._controller_server_entity_pb = self._federation_environment.controller.get_server_entity_pb()
-        self._learner_server_entities_pb = [
-            learner.get_server_entity_pb() for learner in self._federation_environment.learners
-        ]
-        self._driver_controller_grpc_client = self._create_driver_controller_grpc_client()
-        self._driver_learner_grpc_clients = self._create_driver_learner_grpc_clients()
+        self._driver_controller_grpc_client = \
+            self._create_driver_controller_grpc_client()
+        self._driver_learner_grpc_clients = \
+            self._create_driver_learner_grpc_clients()
 
         dataset_fps = self._gen_dataset_dict(
             train_dataset_fps, validation_dataset_fps, test_dataset_fps)
 
         dataset_recipe_fns = self._gen_dataset_dict(
-            train_dataset_recipe_fn, validation_dataset_recipe_fn, test_dataset_recipe_fn)
+            train_dataset_recipe_fn, 
+            validation_dataset_recipe_fn, 
+            test_dataset_recipe_fn)
 
         self._service_initilizer = ServiceInitializer(
-            controller_server_entity_pb=self._controller_server_entity_pb,
+            federation_environment=self._federation_environment,
             dataset_recipe_fns=dataset_recipe_fns,
             dataset_fps=dataset_fps,
-            fed_env=self._federation_environment,
-            learner_server_entities_pb=self._learner_server_entities_pb,
-            model=self._model
-        )
+            model=self._model)
 
         self._service_monitor = ServiceMonitor(
             federation_environment=self._federation_environment,
             driver_controller_grpc_client=self._driver_controller_grpc_client)
-
+        
     def get_federation_statistics(self):
         return self._service_monitor.get_federation_statistics()
 
@@ -131,7 +128,7 @@ class DriverSession(object):
                 if self._federation_environment.learners[idx].hostname == "localhost":
                     time.sleep(0.1)
                 # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
-                self._executor_learners_tasks_q.put(learner_future)                
+                self._executor_learners_tasks_q.put(learner_future)                             
         else:
             MetisLogger.fatal(
                 "Controller is not responsive. Cannot proceed with execution.")
@@ -162,18 +159,23 @@ class DriverSession(object):
         self._executor.join()
 
     def _create_driver_controller_grpc_client(self):
+        controller_server_entity_pb = \
+            self._federation_environment.controller.get_server_entity_pb(
+                gen_connection_entity=True)
         return GRPCControllerClient(
-            controller_server_entity=self._controller_server_entity_pb,
+            controller_server_entity=controller_server_entity_pb,
             max_workers=1)
 
     def _create_driver_learner_grpc_clients(self):
         grpc_clients = {}
         for idx in range(self._num_learners):
             learner = self._federation_environment.learners[idx]
-            learner_server_entity_pb = self._learner_server_entities_pb[idx]
-            grpc_clients[learner.id] = \
+            learner_server_entity_pb = \
+                learner.get_server_entity_pb(gen_connection_entity=True)
+            grpc_clients[learner.identifier] = \
                 GRPCLearnerClient(
-                    learner_server_entity=learner_server_entity_pb, max_workers=1)
+                    learner_server_entity=learner_server_entity_pb, 
+                    max_workers=1)
         return grpc_clients
 
     def _gen_dataset_dict(self,
@@ -197,7 +199,7 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = construct_model_pb(weights_descriptor, )
+        model_pb = construct_model_pb(weights_descriptor, self._encryption_pb)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

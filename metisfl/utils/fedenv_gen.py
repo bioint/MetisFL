@@ -2,6 +2,7 @@ import copy
 import itertools
 import os
 
+from metisfl.utils.logger import MetisLogger
 from metisfl.utils.fedenv import FederationEnvironment
 
 
@@ -29,7 +30,7 @@ class EnvGen(object):
         federation_environment.learners = []
         gpu_devices_iter = itertools.cycle(gpu_devices)
         if gpu_assignment != "round_robin":
-            raise RuntimeError("Only Round-Robin assignment is currently supported.")
+            MetisLogger.fatal("Only Round-Robin assignment is currently supported.")
         for k in range(learners_num):
             new_learner = copy.deepcopy(learner_template)
             new_learner.learner_id = "localhost:{}".format(k)

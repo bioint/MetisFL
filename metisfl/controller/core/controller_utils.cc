@@ -2,9 +2,9 @@
 #include <sys/resource.h>
 
 #include "controller_utils.h"
-#include "metisfl/controller/aggregation/model_aggregation.h"
-#include "metisfl/controller/scaling/model_scaling.h"
-#include "metisfl/controller/selection/model_selection.h"
+#include "metisfl/controller/aggregation/aggregation.h"
+#include "metisfl/controller/scaling/scaling.h"
+#include "metisfl/controller/selection/selection.h"
 #include "metisfl/controller/store/store.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 
@@ -19,8 +19,8 @@ CreateAggregator(const AggregationRule &aggregation_rule) {
     return absl::make_unique<FederatedRecency>();
   } else if (aggregation_rule.has_fed_stride()) {
     return absl::make_unique<FederatedStride>();
-  } else if (aggregation_rule.has_pwa()) {
-    return absl::make_unique<PWA>(aggregation_rule.pwa().encryption_config());
+  } else if (aggregation_rule.has_sec_agg()) {
+    return absl::make_unique<SecAgg>(aggregation_rule.sec_agg().encryption_config());
   } else {
     throw std::runtime_error("Unsupported aggregation rule.");
   }

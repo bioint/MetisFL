@@ -7,9 +7,9 @@ from metisfl import config
 from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
 from metisfl.proto import learner_pb2, learner_pb2_grpc, service_common_pb2
 from metisfl.proto.metis_pb2 import ServerEntity
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
-from .grpc_controller_client import GRPCControllerClient
+from .controller_client import GRPCControllerClient
 from .learner_executor import LearnerExecutor
 
 
@@ -20,9 +20,9 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
                  controller_server_entity_pb: ServerEntity,
                  learner_server_entity_pb: ServerEntity,
                  dataset_metadata: dict,
-                 servicer_workers=10):
+                 server_workers=10):
         self._learner_executor = learner_executor
-        self._servicer_workers = servicer_workers
+        self.__server_workers = server_workers
         self.__community_models_received = 0
         self.__model_evaluation_requests = 0
         # event to stop serving inbound requests
@@ -30,17 +30,20 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         # event to stop all grpc related tasks
         self.__shutdown_event = threading.Event()
 
-        # @stripeli: any reason why this was not in __init__?
+        # Here, we just define the grpc server specifications.
+        # The initialization of the server takes place once 
+        # after the init_server() procedure is called.
         self.__grpc_server = GRPCServerMaxMsgLength(
-            max_workers=self._servicer_workers,
-            server_entity=learner_server_entity_pb,
-        )
+            max_workers=self.__server_workers,
+            server_entity_pb=learner_server_entity_pb)
 
+        # Similarly, here, we only define the client specifications
+        # to connect to the controller server. The client invokes 
+        # the controller in subsequent calls, e.g., join_federation().
         self._learner_controller_client = GRPCControllerClient(
-            controller_server_entity=controller_server_entity_pb,
-            learner_server_entity=learner_server_entity_pb,
-            dataset_metadata=dataset_metadata
-        )
+            controller_server_entity_pb=controller_server_entity_pb,
+            learner_server_entity_pb=learner_server_entity_pb,
+            dataset_metadata=dataset_metadata)
 
     def init_server(self):
         learner_pb2_grpc.add_LearnerServiceServicer_to_server(
@@ -124,21 +127,21 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         return True
 
     def _log_init_learner(self):
-        MetisLogger.info("Initialized Learner Servicer {}".format(
+        MetisLogger.info("Initialized Learner GRPC Server {}".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
 
     def _log_evaluation_task_receive(self):
-        MetisLogger.info("Learner Servicer {} received model evaluation task.".format(
+        MetisLogger.info("Learner Server {} received model evaluation task.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
 
     def _log_health_check_receive(self):
-        MetisLogger.info("Learner Servicer {} received a health status request.".format(
+        MetisLogger.info("Learner Server {} received a health status request.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
 
     def _log_training_task_receive(self):
-        MetisLogger.info("Learner Servicer {} received local training task.".format(
+        MetisLogger.info("Learner Server {} received local training task.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))
 
     def _log_shutdown(self):
-        MetisLogger.info("Learner Servicer {} received shutdown request.".format(
+        MetisLogger.info("Learner Server {} received shutdown request.".format(
             self.__grpc_server.grpc_endpoint.listening_endpoint))

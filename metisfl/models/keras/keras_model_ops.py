@@ -1,16 +1,18 @@
-from typing import Any, Dict, Tuple
-
 import tensorflow as tf
+
+from keras import backend as K
+from typing import Any, Dict, Tuple
 
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.models.keras.keras_model import MetisModelKeras
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.model_ops import LearningTaskStats, ModelOps
+from metisfl.models.model_ops import ModelOps
 from metisfl.models.utils import calc_mean_wall_clock, get_num_of_epochs
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
+from metisfl.utils.formatting import DataTypeFormatter
 
 
 class KerasModelOps(ModelOps):
@@ -28,7 +30,7 @@ class KerasModelOps(ModelOps):
                     test_dataset: ModelDataset = None,
                     verbose=False) -> Tuple[ModelWeightsDescriptor, LearningTaskStats]:
         if train_dataset is None:
-            raise RuntimeError("Provided `dataset` for training is None.")
+            MetisLogger.fatal("Provided `dataset` for training is None.")
         MetisLogger.info("Starting model training.")
 
         global_iteration = learning_task_pb.global_iteration
@@ -37,7 +39,7 @@ class KerasModelOps(ModelOps):
         dataset_size = train_dataset.get_size()
         step_counter_callback = StepCounter(total_steps=total_steps)
         performance_cb = PerformanceProfiler()
-        self._construct_optimizer(hyperparameters_pb.optimizer)
+        self._construct_optimizer(hyperparameters_pb.optimizer)        
 
         # @stripeli why is the epoch number calculated? Isn't it given in the yaml?
         # @stripeli why there are two batch sizes?
@@ -105,7 +107,7 @@ class KerasModelOps(ModelOps):
                        batch_size=100,
                        verbose=False) -> Dict:
         if eval_dataset is None:
-            raise RuntimeError("Provided `dataset` for evaluation is None.")
+            MetisLogger.fatal("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
         x_eval, y_eval = eval_dataset.construct_dataset_pipeline(
             batch_size=batch_size, is_train=False)
@@ -124,7 +126,7 @@ class KerasModelOps(ModelOps):
                     infer_dataset: ModelDataset,
                     batch_size=100) -> Any:
         if infer_dataset is None:
-            raise RuntimeError("Provided `dataset` for inference is None.")
+            MetisLogger.fatal("Provided `dataset` for inference is None.")
         MetisLogger.info("Starting model inference.")
         if x_infer is None:
             x_infer, _ = infer_dataset.construct_dataset_pipeline(
@@ -133,6 +135,10 @@ class KerasModelOps(ModelOps):
             x_infer, batch_size)
         MetisLogger.info("Model inference is complete.")
         return predictions
+
+    def cleanup(self):
+        del self._metis_model
+        K.clear_session()
 
     def _set_gpu_memory_growth(self):
         gpus = tf.config.list_physical_devices('GPU')
@@ -149,16 +155,34 @@ class KerasModelOps(ModelOps):
 
     def _construct_optimizer(self, optimizer_config_pb: model_pb2.OptimizerConfig):
         if optimizer_config_pb is None:
-            raise RuntimeError(
+            MetisLogger.fatal(
                 "Provided `OptimizerConfig` proto message is None.")
-        opt = tf.keras.optimizers.get(optimizer_config_pb.name)
-        if opt is None:
-            raise RuntimeError(
-                "Optimizer with name {} does not exist.".format(optimizer_config_pb.name))
         params = optimizer_config_pb.params
-        self._metis_model._backend_model.optimizer = opt.from_config(
-            params)
-
-    def cleanup(self):
-        del self._metis_model
-        tf.keras.backend.clear_session()
+        # We do this transformation to convert the optimizer parameters to snake case. 
+        # For instance: `LearningRate` -> `learning_rate`
+        params = DataTypeFormatter.camel_to_snake_case_dict_keys(params)
+        # We do not pick the optimizer using `tf.keras.optimizers.get(name)`
+        # because the user might have defined an optimizer that is not part of 
+        # the standard Keras library. Therefore, we access directly the optimizer 
+        # of the defined model.
+        optimizer = self._metis_model._backend_model.optimizer
+        for param_name, param_val in params.items():
+            for attr_name, attr_val in optimizer.__dict__.items():
+                if param_name in attr_name:
+                    attr_type = type(attr_val)
+                    try:
+                        # Need to see if we can cast the given value to 
+                        # the data type of the model's optimizer variable.
+                        # If we can, then we assign the corresponding value.
+                        param_val = (attr_type) (param_val)                    
+                        if isinstance(optimizer, tf.keras.optimizers.legacy.Optimizer):
+                            # When using the older Optimizer versions we simply 
+                            # assign the new value to the optimizer's attribute.
+                            setattr(optimizer, attr_name, param_val)
+                            # optimizer._learning_rate = param_val
+                        else:
+                            # When using the newer Optimizer versions we need to use 
+                            # the Keras Backend to set the corresponding value.
+                            K.set_value(getattr(optimizer, attr_name), param_val)                        
+                    except Exception as e:
+                        MetisLogger.warning(e)

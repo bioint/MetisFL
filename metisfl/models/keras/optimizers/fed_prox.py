@@ -1,45 +1,47 @@
 import tensorflow as tf
 
-from tensorflow.keras.optimizers import Optimizer
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import state_ops
 
 
-class FedProx(Optimizer):
+class FedProx(tf.keras.optimizers.legacy.Optimizer):
     """Implementation of Perturbed Gradient Descent, i.e., FedProx optimizer"""
 
-    def __init__(self, learning_rate=0.01, proximal_term=0.001, use_locking=False, name="FedProx", **kwargs):
+    def __init__(self, learning_rate=0.01, prox_mu=0.001, use_locking=False, name="FedProx", **kwargs):
         super().__init__(name, **kwargs)
         self._set_hyper("learning_rate", learning_rate)
-        self._set_hyper("proximal_term", proximal_term)
-        self.learning_rate = learning_rate
-        self.proximal_term = proximal_term
+        self._set_hyper("prox_mu", prox_mu)
+        self._learning_rate = learning_rate
+        self._prox_mu = prox_mu
         self._use_locking = use_locking
 
-        self._is_learning_rate_scheduled = False
+        self.is_lr_scheduled = False
         if isinstance(learning_rate, tf.keras.optimizers.schedules.LearningRateSchedule):
-            self._is_learning_rate_scheduled = True
+            self.is_lr_scheduled = True
 
         # Tensor versions of the constructor arguments, created in _prepare().
         self.learning_rate_t = None
-        self.proximal_term_t = None
+        self.prox_mu_t = None
 
     def get_config(self):
         base_config = super().get_config()
         return {
             **base_config,
             "learning_rate": self._serialize_hyperparameter("learning_rate"),
-            "proximal_term": self._serialize_hyperparameter("proximal_term"),
+            "prox_mu": self._serialize_hyperparameter("prox_mu"),
         }
 
     def _prepare(self, var_list):
-        if self._is_learning_rate_scheduled:
-            self.learning_rate_t = ops.convert_to_tensor(self._lr(self.iterations), name="learning_rate")
+        if self.is_lr_scheduled:
+            self.learning_rate_t = \
+                ops.convert_to_tensor(self._lr(self.iterations), name="learning_rate")
         else:
-            self.learning_rate_t = ops.convert_to_tensor(self.learning_rate, name="learning_rate")
-        self.proximal_term_t = ops.convert_to_tensor(self.proximal_term, name="proximal_term")
+            self.learning_rate_t = \
+                ops.convert_to_tensor(self._learning_rate, name="learning_rate")
+        self.prox_mu_t = \
+            ops.convert_to_tensor(self._prox_mu, name="prox_mu_t")
 
     def _create_slots(self, var_list):
         # Create slots for the global solution.
@@ -49,7 +51,7 @@ class FedProx(Optimizer):
 
     def _resource_apply_dense(self, grad, var, **apply_kwargs):
         lr_t = math_ops.cast(self.learning_rate_t, var.dtype.base_dtype)
-        mu_t = math_ops.cast(self.proximal_term_t, var.dtype.base_dtype)
+        mu_t = math_ops.cast(self.prox_mu_t, var.dtype.base_dtype)
         vstar = self.get_slot(var, "vstar")
 
         scaled_regularization_term = lr_t * mu_t * (var - vstar)
@@ -61,7 +63,7 @@ class FedProx(Optimizer):
 
     def _apply_sparse_shared(self, grad, var, indices, scatter_add):
         lr_t = math_ops.cast(self.learning_rate_t, var.dtype.base_dtype)
-        mu_t = math_ops.cast(self.proximal_term_t, var.dtype.base_dtype)
+        mu_t = math_ops.cast(self.prox_mu_t, var.dtype.base_dtype)
         vstar = self.get_slot(var, "vstar")
 
         scaled_regularization_term = lr_t * mu_t * (var - vstar)
@@ -81,7 +83,7 @@ class FedProx(Optimizer):
 
     def _resource_apply_sparse(self, grad, var, indices, apply_state):
         lr_t = math_ops.cast(self.learning_rate_t, var.dtype.base_dtype)
-        mu_t = math_ops.cast(self.proximal_term_t, var.dtype.base_dtype)
+        mu_t = math_ops.cast(self.prox_mu_t, var.dtype.base_dtype)
         vstar = self.get_slot(var, "vstar")
 
         scaled_regularization_term = lr_t * mu_t * (var - vstar)

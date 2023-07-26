@@ -1,70 +1,69 @@
 import os
 
-from metisfl import config
+from typing import Any, Dict, List
 
-from metisfl.encryption.encryption import Encryption
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.encryption.encryption_scheme import EncryptionScheme
+from metisfl.proto.proto_messages_factory import MetisProtoMessages
+from metisfl.utils.logger import MetisLogger
 from metisfl.encryption import fhe
-from metisfl.models.types import ModelWeightsDescriptor
-from metisfl.proto import metis_pb2, model_pb2
-from metisfl.proto.proto_messages_factory import ModelProtoMessages
+from metisfl.proto import metis_pb2
 
 
-class Homomorphic(Encryption):
+class Homomorphic(EncryptionScheme):
 
-    def __init__(self, he_scheme_pb: metis_pb2.HESchemeConfig):
-        assert isinstance(
-            he_scheme_pb, metis_pb2.HESchemeConfig), "Need a valid HE scheme protobuf."
+    def __init__(self, he_scheme_pb: metis_pb2.HEScheme, init_crypto_params=False):
+        assert isinstance(he_scheme_pb, metis_pb2.HEScheme), \
+            "Need a valid HE scheme protobuf."
+        super().__init__(init_crypto_params)
 
+        self._he_scheme_config_pb = he_scheme_pb.config
+        self._he_scheme_pb = he_scheme_pb
         self._he_scheme = None
-        if he_scheme_pb and he_scheme_pb.HasField("ckks_scheme_config"):
+        if he_scheme_pb and he_scheme_pb.HasField("ckks_scheme"):
             self._he_scheme = fhe.CKKS(
-                he_scheme_pb.ckks_scheme_config.batch_size,
-                he_scheme_pb.ckks_scheme_config.scaling_factor_bits)
+                he_scheme_pb.ckks_scheme.batch_size,
+                he_scheme_pb.ckks_scheme.scaling_factor_bits)            
         else:
-            MetisLogger.fatal("Not a supported homomorphic encryption scheme: {}".format(he_scheme_pb))
+            MetisLogger.fatal(
+                "Not a supported homomorphic encryption scheme: {}".format(
+                he_scheme_pb))
         
-    def decrypt_model(self, model_pb: model_pb2.Model) -> ModelWeightsDescriptor:
-        var_names, var_trainables, var_nps = list(), list(), list()
-        for var in model_pb.variables:
-            var_name = var.name
-            var_trainable = var.trainable
-            tensor_spec = var.ciphertext_tensor.tensor_spec
-            decoded_value = self._he_scheme.decrypt(
-                tensor_spec.value, tensor_spec.length)
-            np_array = \
-                ModelProtoMessages.TensorSpecProto.proto_tensor_spec_with_list_values_to_numpy_array(
-                    tensor_spec, decoded_value)
-            var_names.append(var_name)
-            var_trainables.append(var_trainable)
-            var_nps.append(np_array)
+        if init_crypto_params:
+            # If we need to initialize the crypto params, we need to
+            # override 
+            self._he_scheme_config_pb = self._generate_crypto_params()
+        self._load_crypto_params()
 
-        return ModelWeightsDescriptor(weights_names=var_names,
-                                      weights_trainable=var_trainables,
-                                      weights_values=var_nps)
-
-    def encrypt_model(self, weights_descriptor: ModelWeightsDescriptor) -> model_pb2.Model:
-        weights_names = weights_descriptor.weights_names
-        weights_trainable = weights_descriptor.weights_trainable
-        weights_values = weights_descriptor.weights_values
-        variables_pb = []
-        for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):            
-            ciphertext = self._he_scheme.encrypt(w_v.flatten())            
-            tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
-                                                               ciphertext=ciphertext)
-            model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
-                                                                       trainable=w_t,
-                                                                       tensor_pb=tensor_pb)
-            variables_pb.append(model_var)
-
-        return model_pb2.Model(
-            variables=variables_pb)
-
-    def initialize_crypto_params(self, crypto_dir):
-        self._he_scheme.gen_crypto_context_and_keys(crypto_dir)
-
-    def _decrypt_data(self, ciphertext: str, num_elems: int):
+    def decrypt_data(self, ciphertext: str, num_elems: int) -> List[Any]:
         return self._he_scheme.decrypt(ciphertext, num_elems)
 
-    def _encrypt_data(self, values):      
+    def encrypt_data(self, values) -> Any:
         return self._he_scheme.encrypt(values)
+
+    def to_proto(self) -> metis_pb2.EncryptionScheme:
+        he_scheme_pb = None
+        if self._he_scheme_pb.HasField("ckks_scheme"):
+            he_scheme_pb = MetisProtoMessages.construct_he_scheme_pb(
+                config_pb=self._he_scheme_config_pb,
+                ckks_scheme_pb=self._he_scheme_pb.ckks_scheme)        
+        return MetisProtoMessages.construct_encryption_scheme_pb(
+            he_scheme_pb=he_scheme_pb)
+
+    def _generate_crypto_params(self) -> metis_pb2.HESchemeConfig:
+        cc, pubk, pk = self._he_scheme.gen_crypto_params(
+            self._he_scheme_pb.config.crypto_context,
+            self._he_scheme_pb.config.public_key,
+            self._he_scheme_pb.config.private_key)
+        return MetisProtoMessages.construct_he_scheme_config(cc, pubk, pk)
+
+    def _load_crypto_params(self):
+        # We only load crypto params when they are defined.
+        if self._he_scheme_config_pb.crypto_context:
+            self._he_scheme.load_crypto_context(
+                self._he_scheme_config_pb.crypto_context)
+        if self._he_scheme_config_pb.public_key:
+            self._he_scheme.load_public_key(
+                self._he_scheme_config_pb.public_key)
+        if self._he_scheme_config_pb.private_key:
+            self._he_scheme.load_private_key(
+                self._he_scheme_config_pb.private_key)

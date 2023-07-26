@@ -11,7 +11,7 @@ from metisfl.models.model_dataset import (ModelDataset,
                                           ModelDatasetClassification,
                                           ModelDatasetRegression)
 from metisfl.proto import learner_pb2, metis_pb2, model_pb2
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 class Learner(object):

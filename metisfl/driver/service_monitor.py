@@ -4,7 +4,7 @@ import time
 from google.protobuf.json_format import MessageToDict
 
 from metisfl.utils.fedenv import FederationEnvironment
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 from .controller_client import GRPCControllerClient
 
@@ -56,7 +56,7 @@ class ServiceMonitor:
         return False
 
     def _is_async(self) -> bool:
-        return "async" in self._communication_protocol.lower()
+        return "ASYNCHRONOUS" == self._communication_protocol.upper()
 
     def _reached_evaluation_score(self) -> bool:
         community_results = self._driver_controller_grpc_client \

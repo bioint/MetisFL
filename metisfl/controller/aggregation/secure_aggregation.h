@@ -1,6 +1,6 @@
 
-#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
-#define METISFL_METISFL_CONTROLLER_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
+#ifndef METISFL_METISFL_CONTROLLER_AGGREGATION_SECURE_AGGREGATION_H_
+#define METISFL_METISFL_CONTROLLER_AGGREGATION_SECURE_AGGREGATION_H_
 
 #include "metisfl/controller/aggregation/aggregation_function.h"
 #include "metisfl/encryption/encryption_scheme.h"
@@ -9,13 +9,13 @@
 
 namespace metisfl::controller {
 
-class PWA : public AggregationFunction {
+class SecAgg : public AggregationFunction {
  private:
   EncryptionConfig encryption_config_;
   std::unique_ptr<EncryptionScheme> encryption_scheme_;
 
  public:
-  explicit PWA(const EncryptionConfig &encryption_config);
+  explicit SecAgg(const EncryptionConfig &encryption_config);
 
   FederatedModel Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs) override;
 
@@ -33,4 +33,4 @@ class PWA : public AggregationFunction {
 
 } // namespace metisfl::controller
 
-#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_PRIVATE_WEIGHTED_AVERAGE_H_
+#endif //METISFL_METISFL_CONTROLLER_AGGREGATION_SECURE_AGGREGATION_H_

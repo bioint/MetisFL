@@ -38,23 +38,31 @@ class ServicerBase {
     auto ssl_enable = server_entity.ssl_config().enable();
                        
     if (ssl_enable) {
+
       std::string server_cert_loaded;
       std::string server_key_loaded;
-      auto cert_path = server_entity.ssl_config().ssl_config_files().public_certificate_file();
-      auto key_path = server_entity.ssl_config().ssl_config_files().private_key_file();
+      if (server_entity.ssl_config().has_ssl_config_files()) {
+        auto cert_path = server_entity.ssl_config().ssl_config_files().public_certificate_file();
+        auto key_path = server_entity.ssl_config().ssl_config_files().private_key_file();
 
-      if (ReadParseFile(server_cert_loaded, cert_path) == -1) {
-        // Logs and terminates the program if public certificate filepath is invalid.
-        PLOG(FATAL) << "Error Reading Controller Certificate: " << cert_path;
+        if (ReadParseFile(server_cert_loaded, cert_path) == -1) {
+          // Logs and terminates the program if public certificate filepath is invalid.
+          PLOG(FATAL) << "Error reading controller certificate: " << cert_path;
+        }
+
+        if (ReadParseFile(server_key_loaded, key_path) == -1) {
+          // Logs and terminates the program if private key filepath is invalid.
+          PLOG(FATAL) << "Error reading controller key: " << key_path;
+        }
+      } else if (server_entity.ssl_config().has_ssl_config_stream()) {
+        server_cert_loaded = server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
+        server_key_loaded = server_entity.ssl_config().ssl_config_stream().private_key_stream();
+      } else {
+        PLOG(FATAL) << "Even though SSL was enabled the (private, public) key pair was not provided.";
       }
 
-      if (ReadParseFile(server_key_loaded, key_path) == -1) {
-        // Logs and terminates the program if private key filepath is invalid.
-        PLOG(FATAL) << "Error Reading Controller Key: " << key_path;
-      }
+      PLOG(INFO) << "SSL enabled.";
       
-      PLOG(INFO) << "SSL enabled";
-
       grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp =
           {server_key_loaded, server_cert_loaded};
       grpc::SslServerCredentialsOptions ssl_opts;
@@ -66,6 +74,7 @@ class ServicerBase {
       PLOG(INFO) << "SSL disabled";
       creds = grpc::InsecureServerCredentials();
     }
+
 
     // Listens on the given address without any authentication mechanism.
     builder.AddListeningPort(server_address, creds);

@@ -1,6 +1,6 @@
 
 from metisfl.models.model_dataset import ModelDataset
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 def construct_dataset_pipeline(dataset: ModelDataset):

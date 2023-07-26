@@ -17,12 +17,6 @@ SERVER_KEY_NAME = "server-key.pem"
 SERVER_CERT_DIR = os.path.join(SSL_PATH, SERVER_CERT_NAME)
 SERVER_KEY_DIR = os.path.join(SSL_PATH, SERVER_KEY_NAME)
 
-FHE_RESOURCE_DIR = "resources/fhe"
-FHE_CRYPTO_CONTEXT_FILE = "cryptocontext.txt"
-FHE_KEY_PUBLIC = "key-public.txt"
-FHE_KEY_PRIVATE = "key-private.txt"
-FHE_KEY_EVAL_MULT = "key-eval-mult.txt"
-
 DEFAULT_CONTROLLER_HOSTNAME = "[::]"
 DEFAULT_CONTROLLER_PORT = 50051
 DEFAULT_LEARNER_HOST = "[::]"
@@ -90,19 +84,6 @@ def get_learner_id_fp(learner_id):
     learner_id_fp = get_learner_path(learner_id)
     _get_path_safe(learner_id_fp)
     return os.path.join(learner_id_fp, LEARNER_ID_FILE)
-
-def get_fhe_dir():
-    path = get_project_home()
-    path = os.path.join(path, FHE_RESOURCE_DIR)
-    return _get_path_safe(path)
-
-def get_fhe_resources():
-    path = get_fhe_dir()
-    fhe_crypto_context_file = os.path.join(path, FHE_CRYPTO_CONTEXT_FILE)
-    fhe_key_public_file = os.path.join(path, FHE_KEY_PUBLIC)
-    fhe_key_private_file = os.path.join(path, FHE_KEY_PRIVATE)
-    fhe_key_eval_mult_file = os.path.join(path, FHE_KEY_EVAL_MULT)
-    return fhe_crypto_context_file, fhe_key_public_file, fhe_key_private_file, fhe_key_eval_mult_file
 
 def get_auth_token_fp(learner_id):
     learnet_token_path = get_learner_path(learner_id)

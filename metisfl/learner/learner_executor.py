@@ -12,33 +12,15 @@ from metisfl.proto import metis_pb2
 
 class LearnerExecutor(object):
 
-    def __init__(self, task_executor: LearnerTask, recreate_queue_task_worker=False):
-        self.task_executor = task_executor
+    def __init__(self, task: LearnerTask, recreate_queue_task_worker=False):
+        self._task = task
         self._init_tasks_pools(recreate_queue_task_worker)
 
-    def _init_tasks_pools(self, recreate_queue_task_worker=False):
-        mp_ctx = mp.get_context("spawn")
-        max_tasks = 1 if recreate_queue_task_worker else 0
-        self.pool = dict()
-        for task in config.TASKS:
-            self.pool[task] = self._init_task_pool(max_tasks, mp_ctx)
-
-    def _init_task_pool(self, max_tasks, mp_ctx):
-        # @stripeli: why maxsize=1?
-        return ProcessPool(max_workers=1, max_tasks=max_tasks, context=mp_ctx), \
-            queue.Queue(maxsize=1)
-
-    def _empty_tasks_q(self, task, force=False):
-        # Get the tasks queue; the second element of the tuple.
-        future_tasks_q = self.pool[task][1]
-        while not future_tasks_q.empty():
-            future_tasks_q.get(block=False).cancel(
-            ) if force else future_tasks_q.get().result()
 
     def run_evaluation_task(self, block=False, **kwargs):
         future = self._run_task(
             task_name=config.EVALUATION_TASK,
-            task_fn=self.task_executor.evaluate_model,
+            task_fn=self._task.evaluate_model,
             callback=None,
             **kwargs
         )
@@ -48,7 +30,7 @@ class LearnerExecutor(object):
     def run_inference_task(self, block=False, **kwargs):
         future = self._run_task(
             task_name=config.INFERENCE_TASK,
-            task_fn=self.task_executor.infer_model,
+            task_fn=self._task.infer_model,
             callback=None,
             **kwargs
         )
@@ -60,7 +42,7 @@ class LearnerExecutor(object):
                           block=False, **kwargs):
         future = self._run_task(
             task_name=config.LEARNING_TASK,
-            task_fn=self.task_executor.train_model,
+            task_fn=self._task.train_model,
             callback=callback,
             **kwargs
         )
@@ -82,6 +64,28 @@ class LearnerExecutor(object):
             pool.join()
         gc.collect()
         return True  # FIXME: We need to capture any failures.
+
+    def _init_tasks_pools(self, recreate_queue_task_worker=False):
+        mp_ctx = mp.get_context("spawn")
+        max_tasks = 1 if recreate_queue_task_worker else 0
+        self.pool = dict()
+        for task in config.TASKS:
+            self.pool[task] = self._init_task_pool(max_tasks, mp_ctx)
+
+    def _init_task_pool(self, max_tasks, mp_ctx):
+        # The executor can execute only **one** training, **one** evaluation and **one** inference
+        # task in parallel at every point in time. To enforce that, we set the max_workers to one.
+        # For instance, if the executor is already running a training task, then if it receives a 
+        # new training task the current training task will exit/killed.
+        return ProcessPool(max_workers=1, max_tasks=max_tasks, context=mp_ctx), \
+            queue.Queue(maxsize=1)
+
+    def _empty_tasks_q(self, task, force=False):
+        # Get the tasks queue; the second element of the tuple.
+        future_tasks_q = self.pool[task][1]
+        while not future_tasks_q.empty():
+            future_tasks_q.get(block=False).cancel(
+            ) if force else future_tasks_q.get().result()
 
     def _run_task(self,
                   task_name: str,
