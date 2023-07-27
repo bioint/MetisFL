@@ -106,19 +106,19 @@ class FederationEnvironment(object):
                 MetisProtoMessages.construct_ckks_scheme_pb(
                     self.he_batch_size, self.he_scaling_factor_bits)
             fcc, fpb, fsk = config.get_crypto_resources()
-            # he_scheme_config_pb = \
-            #     MetisProtoMessages.construct_he_scheme_config_pb(
-            #     as_files=True,
-            #     crypto_context=fcc,
-            #     public_key=fpb,
-            #     private_key=fsk)
+            he_scheme_config_pb = \
+                MetisProtoMessages.construct_he_scheme_config_pb(
+                as_files=True,
+                crypto_context=fcc,
+                public_key=fpb,
+                private_key=fsk)
             # FIXME(@stripeli): If homomorphic encryption files are 
             #  passed over the wire then fabric raises EOFError. This
             #  is due to the size of the transmitted text, which is 
             #  greater than the allowed stream.
-            he_scheme_config_pb = \
-                MetisProtoMessages.construct_he_scheme_config_pb(
-                as_files=False)
+            # he_scheme_config_pb = \
+            #     MetisProtoMessages.construct_he_scheme_config_pb(
+            #     as_files=False)
             he_scheme_pb = \
                 MetisProtoMessages.construct_he_scheme_pb(
                     he_scheme_config_pb=he_scheme_config_pb,
@@ -126,7 +126,7 @@ class FederationEnvironment(object):
             encryption_config_pb = \
                 MetisProtoMessages.construct_encryption_config_pb(
                     he_scheme_pb=he_scheme_pb)
-            # Initialize 
+            # Initialize crypto parameters of encryption scheme.
             encryption = EncryptionScheme(init_crypto_params=True) \
                     .from_proto(encryption_config_pb)
             encryption_scheme_pb = encryption.to_proto()

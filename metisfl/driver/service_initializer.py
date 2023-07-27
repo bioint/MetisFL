@@ -46,8 +46,8 @@ class ServiceInitializer:
             remote_on_login,
             self._federation_environment.controller.project_home,
             self._init_controller_cmd())
-        # MetisLogger.info(
-        #     "Running init cmd to controller host: {}".format(init_cmd))
+        MetisLogger.info(
+            "Running init cmd to controller host: {}".format(init_cmd))
         connection.run(init_cmd)
         connection.close()
         return

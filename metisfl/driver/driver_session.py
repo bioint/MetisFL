@@ -115,7 +115,6 @@ class DriverSession(object):
         controller_future = self._executor.schedule(
             function=self._service_initilizer.init_controller)
         self._executor_controller_tasks_q.put(controller_future)
-        controller_future.result()
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model_to_controller()
             for idx in range(self._num_learners):

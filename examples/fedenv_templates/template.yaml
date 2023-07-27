@@ -15,7 +15,7 @@ ModelStoreConfig:  # Example for In-Memory (HashMap) Model Store
   LineageLength: 1 # This field is only applicable if EvictionPolicy is set to "LineageLengthEviction"
 
 # ModelStoreConfig:  # Example for Redis Model Store
-#   ModelStore: "Redis" # Others are "InMemory", "Redis"
+#   ModelStore: "Redis" # Others are "InMemory", "Redis" - Careful Redis requires the server to be running!
 #   ModelStoreHostname: "localhost" # This field is only applicable if ModelStore is set to "Redis"
 #   ModelStorePort: 6379 # This field is only applicable if ModelStore is set to "Redis"
 #   EvictionPolicy: "LineageLengthEviction" # Others are "NoEviction", "LineageLengthEviction"

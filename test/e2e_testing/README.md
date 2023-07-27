@@ -1,18 +1,18 @@
 ### Simple Testing
 ```
-python examples/keras_fashionmnist/main.py --env examples/fedenv_templates/e2e_testing/template_fedavg.yaml
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/template_fedavg.yaml
 
-python examples/keras_fashionmnist/main.py --env examples/fedenv_templates/e2e_testing/template_fedprox.yaml --opt="FedProx"
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/template_fedprox.yaml --opt="FedProx"
 ```
 
 ### SSL Testing
 
 ```
 # Case-1: End-to-End test integration test with SSL only for the Controller.
-python examples/keras_fashionmnist/main.py --env examples/fedenv_templates/e2e_testing/template_ssl_controller.yaml
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/template_ssl_controller.yaml
 
 # Case-2: End-to-End test integration test with SSL for both the Controller and the Learner.
-python examples/keras_fashionmnist/main.py --env examples/fedenv_templates/e2e_testing/template_ssl_controller_learner.yaml
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/template_ssl_controller_learner.yaml
 ```
 
 ### Homomorphic Library Testing
@@ -25,5 +25,5 @@ bazelisk run //metisfl/controller/aggregation:secure_aggregation_test
 python metisfl/encryption/pybind_ckks_demo.py
 
 # Case-3: End-to-End test integration test (Secure Aggregation with CKKS + SSL).
-python examples/keras_fashionmnist/main.py --env examples/fedenv_templates/e2e_testing/template_ssl_secagg_ckks.yaml
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/template_ssl_secagg_ckks.yaml
 ```
