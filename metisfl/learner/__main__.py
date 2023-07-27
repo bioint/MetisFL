@@ -12,9 +12,9 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--controller_server_entity_protobuff_serialized_hexadecimal", type=str,
                         default="",
                         help="Controller server entity.")
-    parser.add_argument("-f", "--he_scheme_protobuff_serialized_hexadecimal", type=str,
+    parser.add_argument("-f", "--encryption_config_protobuff_serialized_hexadecimal", type=str,
                         default="",
-                        help="A serialized HE Scheme protobuf message.")
+                        help="A serialized Encryption Config protobuf message.")
     parser.add_argument("-e", "--neural_engine", type=str,
                         default="keras",
                         help="neural network training library")

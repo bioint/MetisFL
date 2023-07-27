@@ -15,8 +15,13 @@ SecAgg::SecAgg(const EncryptionConfig &encryption_config) {
         encryption_scheme_.reset(new CKKS(
             he_scheme_.ckks_scheme().batch_size(),
             he_scheme_.ckks_scheme().scaling_factor_bits()));
+        auto as_files = he_scheme_.he_scheme_config().as_files();
         auto crypto_context = he_scheme_.he_scheme_config().crypto_context();
-        encryption_scheme_->LoadCryptoContextFromFile(crypto_context);
+        if (as_files) {
+          encryption_scheme_->LoadCryptoContextFromFile(crypto_context);
+        } else {
+          encryption_scheme_->LoadCryptoContext(crypto_context);
+        }          
       }
   } else {
       throw std::runtime_error("Unsupported encryption scheme.");

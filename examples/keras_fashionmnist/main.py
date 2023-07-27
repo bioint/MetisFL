@@ -23,6 +23,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", default=default_fed_env_fp)
+    parser.add_argument("--optimizer", default="SGD")
     args = parser.parse_args()
 
     # Load the data
@@ -41,8 +42,11 @@ if __name__ == "__main__":
 
     # Get the tf.keras model
     model = get_model()
+    optimizer = args.optimizer
+    if optimizer == "FedProx":
+        optimizer = FedProx()
     model.compile(loss="sparse_categorical_crossentropy",
-                  optimizer=FedProx(), metrics=["accuracy"])
+                  optimizer=optimizer, metrics=["accuracy"])
 
     # Wrap the model in a MetisKerasModel
     metis_model = MetisModelKeras(model)

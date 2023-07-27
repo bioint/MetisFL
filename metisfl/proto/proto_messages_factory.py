@@ -120,33 +120,36 @@ class MetisProtoMessages(object):
             private_key_stream=private_key_stream)
 
     @classmethod
-    def construct_encryption_scheme_pb(cls, he_scheme_pb=None, masking_scheme_pb=None):
+    def construct_encryption_config_pb(cls, he_scheme_pb=None, masking_scheme_pb=None):
         if isinstance(he_scheme_pb, metis_pb2.HEScheme):
-            return metis_pb2.EncryptionScheme(he_scheme=he_scheme_pb)
+            return metis_pb2.EncryptionConfig(he_scheme=he_scheme_pb)
         elif isinstance(masking_scheme_pb, metis_pb2.MaskingScheme):
-            return metis_pb2.EncryptionScheme(masking_scheme=masking_scheme_pb)
+            return metis_pb2.EncryptionConfig(masking_scheme=masking_scheme_pb)
         else:
-            return metis_pb2.EncryptionScheme()
+            return metis_pb2.EncryptionConfig()
 
     @classmethod
     def construct_masking_scheme_pb(cls):
         return metis_pb2.MaskingScheme()
 
     @classmethod
-    def construct_he_scheme(cls, he_scheme_config_pb=None, scheme_pb=None):
+    def construct_he_scheme_pb(cls, he_scheme_config_pb=None, scheme_pb=None):
         if isinstance(scheme_pb, metis_pb2.CKKSScheme):
-            return metis_pb2.HEScheme(config=he_scheme_config_pb, ckks_scheme=scheme_pb)
+            return metis_pb2.HEScheme(he_scheme_config=he_scheme_config_pb, ckks_scheme=scheme_pb)
         else:
             return metis_pb2.HEScheme()
 
     @classmethod
-    def construct_he_scheme_config_pb(cls, 
+    def construct_he_scheme_config_pb(cls,
+                                      as_files=False,
                                       crypto_context=None,
                                       public_key=None, 
                                       private_key=None):
-        return metis_pb2.HESchemeConfig(crypto_context=crypto_context,
-                                        public_key=public_key,
-                                        private_key=private_key)
+        return metis_pb2.HESchemeConfig(
+                as_files=as_files,
+                crypto_context=crypto_context,
+                public_key=public_key,
+                private_key=private_key)
 
     @classmethod
     def construct_ckks_scheme_pb(cls, batch_size, scaling_factor_bits):
@@ -357,8 +360,8 @@ class MetisProtoMessages(object):
         return metis_pb2.FedRec()
 
     @classmethod
-    def construct_sec_agg_pb(cls, encryption_scheme_pb):
-        return metis_pb2.SecAgg(encryption_scheme=encryption_scheme_pb)
+    def construct_sec_agg_pb(cls, encryption_config_pb):
+        return metis_pb2.SecAgg(encryption_config=encryption_config_pb)
 
     @classmethod
     def construct_aggregation_rule_specs_pb(cls, scaling_factor):
@@ -375,7 +378,7 @@ class MetisProtoMessages(object):
         return metis_pb2.AggregationRuleSpecs(scaling_factor=scaling_factor_pb)
 
     @classmethod
-    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, encryption_scheme_pb):
+    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, encryption_config_pb):
         aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(
             scaling_factor)
         if rule_name.upper() == "FEDAVG":
@@ -387,10 +390,10 @@ class MetisProtoMessages(object):
         elif rule_name.upper() == "FEDREC":
             return metis_pb2.AggregationRule(fed_rec=MetisProtoMessages.construct_fed_rec_pb(),
                                              aggregation_rule_specs=aggregation_rule_specs_pb)
-        elif rule_name.upper() == "SecAgg":
+        elif rule_name.upper() == "SECAGG":
             return metis_pb2.AggregationRule(
                 sec_agg=MetisProtoMessages.construct_sec_agg_pb(
-                    encryption_scheme_pb=encryption_scheme_pb),
+                    encryption_config_pb=encryption_config_pb),
                 aggregation_rule_specs=aggregation_rule_specs_pb)
         else:
             MetisLogger.fatal("Unsupported rule name.")

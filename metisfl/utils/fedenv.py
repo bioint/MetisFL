@@ -1,12 +1,15 @@
 import yaml
 import re
 
+import metisfl.config as config
 
 from metisfl.proto import metis_pb2, model_pb2
 from metisfl.encryption.encryption_scheme import EncryptionScheme
 from metisfl.proto import metis_pb2
 from metisfl.proto.proto_messages_factory import MetisProtoMessages
 from metisfl.utils.logger import MetisLogger
+
+
 from .fedenv_schema import env_schema
 
 
@@ -18,9 +21,9 @@ class FederationEnvironment(object):
         # env_schema.validate(self._yaml)
         self.controller = RemoteHost(self._yaml.get("Controller"))
         self.learners = [RemoteHost(learner) for learner in self._yaml.get("Learners")]
-        self._encryption_scheme_pb = self._setup_encryption_scheme()
+        self._encryption_config_pb = self._setup_encryption_config()
 
-    # Communication protocol.
+    # Communication protocol - REQUIRED.
     def get_communication_protocol(self):
         return self._yaml.get("CommunicationProtocol")
 
@@ -36,7 +39,7 @@ class FederationEnvironment(object):
     def semi_sync_recompute(self):
         return self.get_communication_protocol().get("SemiSyncRecompute")
 
-    # Termination signals.
+    # Termination signals - REQUIRED.
     def get_termination_signals(self):
         return self._yaml.get("TerminationSignals")
 
@@ -56,32 +59,31 @@ class FederationEnvironment(object):
     def metric_cutoff_score(self):
         return self.get_termination_signals().get("EvaluationMetricCutoffScore")
 
-    # Model store configurations.
+    # Model store configurations - OPTIONAL.
     def get_model_store_config(self):
         return self._yaml.get("ModelStoreConfig")
 
     @property
     def model_store(self):
-        return self.get_model_store_config().get("ModelStore", "InMemory")
+        return self.get_model_store_config().get("ModelStore")
 
     @property
     def model_store_hostname(self):
-        return self.get_model_store_config().get("ModelStoreHostname", None)
+        return self.get_model_store_config().get("ModelStoreHostname")
 
     @property
     def model_store_port(self):
-        return self.get_model_store_config().get("ModelStorePort", None)
+        return self.get_model_store_config().get("ModelStorePort")
 
     @property
     def eviction_policy(self):
-        return self.get_model_store_config().get(
-            "EvictionPolicy", "LineageLengthEviction")
+        return self.get_model_store_config().get("EvictionPolicy")
 
     @property
     def lineage_length(self):
-        return self.get_model_store_config().get("LineageLength", 1)
+        return self.get_model_store_config().get("LineageLength")
 
-    # Encryption scheme configurations.    
+    # Encryption scheme configurations - OPTIONAL. 
     def get_encryption_scheme(self):
         return self._yaml.get("EncryptionScheme")
 
@@ -97,31 +99,53 @@ class FederationEnvironment(object):
     def he_scaling_factor_bits(self):
         return self.get_encryption_scheme().get("ScalingFactorBits")
 
-    def _setup_encryption_scheme(self) -> metis_pb2.EncryptionScheme: 
-        if self.encryption_scheme_name.upper() == "CKKS":
+    def _setup_encryption_config(self) -> metis_pb2.EncryptionConfig:        
+        if self.get_encryption_scheme() and \
+                self.encryption_scheme_name.upper() == "CKKS":
             ckks_scheme_pb = \
                 MetisProtoMessages.construct_ckks_scheme_pb(
                     self.he_batch_size, self.he_scaling_factor_bits)
-            he_scheme_config_pb = MetisProtoMessages.construct_he_scheme_config_pb()
-            he_scheme_pb = MetisProtoMessages.construct_he_scheme(
-                he_scheme_config_pb=he_scheme_config_pb,
-                scheme_pb=ckks_scheme_pb)            
-            encryption = EncryptionScheme(init_crypto_params=True)\
-                    .from_proto(he_scheme_pb)
+            fcc, fpb, fsk = config.get_crypto_resources()
+            # he_scheme_config_pb = \
+            #     MetisProtoMessages.construct_he_scheme_config_pb(
+            #     as_files=True,
+            #     crypto_context=fcc,
+            #     public_key=fpb,
+            #     private_key=fsk)
+            # FIXME(@stripeli): If homomorphic encryption files are 
+            #  passed over the wire then fabric raises EOFError. This
+            #  is due to the size of the transmitted text, which is 
+            #  greater than the allowed stream.
+            he_scheme_config_pb = \
+                MetisProtoMessages.construct_he_scheme_config_pb(
+                as_files=False)
+            he_scheme_pb = \
+                MetisProtoMessages.construct_he_scheme_pb(
+                    he_scheme_config_pb=he_scheme_config_pb,
+                    scheme_pb=ckks_scheme_pb)
+            encryption_config_pb = \
+                MetisProtoMessages.construct_encryption_config_pb(
+                    he_scheme_pb=he_scheme_pb)
+            # Initialize 
+            encryption = EncryptionScheme(init_crypto_params=True) \
+                    .from_proto(encryption_config_pb)
             encryption_scheme_pb = encryption.to_proto()
             return encryption_scheme_pb
         else:
-            return metis_pb2.EncryptionScheme()
+            return metis_pb2.EncryptionConfig()
 
-    def get_encryption_scheme_pb(self, for_aggregation=False) -> metis_pb2.EncryptionScheme:
-        encryption_scheme_pb = metis_pb2.EncryptionScheme()        
-        if self._encryption_scheme_pb.HasField("he_scheme"):
-            encryption_scheme_pb.he_scheme.CopyFrom(self._encryption_scheme_pb)
+    def get_encryption_config_pb(self, for_aggregation=False) -> metis_pb2.EncryptionConfig:
+        encryption_config_pb = metis_pb2.EncryptionConfig()        
+        if self._encryption_config_pb.HasField("he_scheme"):
+            # We perform a deep copy of the encryption configuration 
+            # because we might need to edit the private and we do not 
+            # want to destroy the original keys.
+            encryption_config_pb.he_scheme.CopyFrom(self._encryption_config_pb.he_scheme)
             if for_aggregation:
-                encryption_scheme_pb.he_scheme.he_scheme_config.private_key = None
-        return encryption_scheme_pb
+                encryption_config_pb.he_scheme.he_scheme_config.private_key = ""
+        return encryption_config_pb
 
-    # Global model configurations.
+    # Global model configurations - REQUIRED.
     def get_global_model_config(self):
         return self._yaml.get("GlobalModelConfig")
 
@@ -141,7 +165,7 @@ class FederationEnvironment(object):
     def stride_length(self):
         return self.get_global_model_config().get("StrideLength")
 
-    # Local model configurations.
+    # Local model configurations - REQUIRED.
     def get_local_model_config(self):
         return self._yaml.get("LocalModelConfig")
 
@@ -175,7 +199,7 @@ class FederationEnvironment(object):
             rule_name=self.aggregation_rule,
             scaling_factor=self.scaling_factor,
             stride_length=self.stride_length,            
-            encryption_scheme_pb=self.get_encryption_scheme_pb(for_aggregation=True))
+            encryption_config_pb=self.get_encryption_config_pb(for_aggregation=True))
         return MetisProtoMessages.construct_global_model_specs(
             aggregation_rule_pb=aggregation_rule_pb,
             learners_participation_ratio=self.participation_ratio)
@@ -229,7 +253,7 @@ class RemoteHost(object):
     def project_home(self):
         return self._config_map.get("ProjectHome")
 
-    # Connection Configurations.
+    # Connection Configurations - REQUIRED.
     def get_connection_config(self):
         return self._config_map.get("ConnectionConfig")
 
@@ -265,7 +289,7 @@ class RemoteHost(object):
     def on_login_command(self):
         return self._config_map.get("OnLoginCommand", "")
 
-    # GRPC Configurations.
+    # GRPC Configurations - REQUIRED.
     def get_grpc_server(self):
         return self._config_map.get("GRPCServer")
 

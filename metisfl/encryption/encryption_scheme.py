@@ -16,7 +16,7 @@ class EncryptionScheme(object):
             # Import happens at the function level to avoid circular imports.
             if encryption_config.HasField("he_scheme"):
                 from metisfl.encryption.homomorphic import Homomorphic
-                return Homomorphic(encryption_scheme.he_scheme, self.init_crypto_params)
+                return Homomorphic(encryption_config.he_scheme, self.init_crypto_params)
             elif encryption_config.HasField("masking_scheme"):
                 from metisfl.encryption.masking import Masking
                 return Masking(encryption_config.masking_scheme, self.init_crypto_params)

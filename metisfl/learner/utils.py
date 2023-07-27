@@ -22,10 +22,10 @@ def parse_server_entity_hex(hex_str, default_host, default_port):
 
 def parse_encryption_config_hex(hex_str):
     if hex_str:
-        he_scheme_protobuff_ser = bytes.fromhex(hex_str)
-        he_scheme_config_pb = metis_pb2.HESchemeConfig()
-        he_scheme_config_pb.ParseFromString(he_scheme_protobuff_ser)
-        return he_scheme_config_pb
+        encryption_config_protobuff_ser = bytes.fromhex(hex_str)
+        encryption_config_pb = metis_pb2.EncryptionConfig()
+        encryption_config_pb.ParseFromString(encryption_config_protobuff_ser)
+        return encryption_config_pb
     else:
         return None
 
@@ -42,7 +42,7 @@ def init_learner(args):
     learner_server_entity_pb, controller_server_entity_pb = \
         create_servers(args)
     encryption_config_pb = parse_encryption_config_hex(
-        args.he_scheme_protobuff_serialized_hexadecimal)
+        args.encryption_config_protobuff_serialized_hexadecimal)
     model_ops_fn = get_model_ops_fn(args.neural_engine)
 
     learner_dataset = LearnerDataset(
@@ -52,13 +52,13 @@ def init_learner(args):
         train_dataset_recipe_pkl=args.train_dataset_recipe,
         validation_dataset_recipe_pkl=args.validation_dataset_recipe,
         test_dataset_recipe_pkl=args.test_dataset_recipe)
-    task_executor = LearnerTask(
+    learner_task = LearnerTask(
         encryption_config_pb=encryption_config_pb,
         learner_dataset=learner_dataset,
         learner_server_entity_pb=learner_server_entity_pb,
         model_dir=args.model_dir,
         model_ops_fn=model_ops_fn)
-    learner_executor = LearnerExecutor(task_executor=task_executor)
+    learner_executor = LearnerExecutor(learner_task=learner_task)
     learner_server = LearnerServer(
         controller_server_entity_pb=controller_server_entity_pb,
         dataset_metadata=learner_dataset.get_dataset_metadata(),

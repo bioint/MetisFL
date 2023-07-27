@@ -17,10 +17,10 @@ def calc_mean_wall_clock(wall_clock):
 
 def construct_model_pb(
         weights: ModelWeightsDescriptor,
-        encryption_scheme_pb: metis_pb2.EncryptionScheme = None) -> model_pb2.Model:
+        encryption_config_pb: metis_pb2.EncryptionConfig = None) -> model_pb2.Model:
     
-    encryption = None if encryption_scheme_pb is None else \
-        EncryptionScheme().from_proto(encryption_scheme_pb)
+    encryption = None if encryption_config_pb is None else \
+        EncryptionScheme().from_proto(encryption_config_pb)
     weights_names = weights.weights_names
     weights_trainable = weights.weights_trainable
     weights_values = weights.weights_values
@@ -41,10 +41,10 @@ def construct_model_pb(
 
 def get_weights_from_model_pb(
         model_pb: model_pb2.Model,
-        encryption_scheme_pb: metis_pb2.EncryptionScheme = None) -> ModelWeightsDescriptor:
+        encryption_config_pb: metis_pb2.EncryptionConfig = None) -> ModelWeightsDescriptor:
     
-    encryption = None if encryption_scheme_pb is None else \
-        EncryptionScheme().from_proto(encryption_scheme_pb)
+    encryption = None if encryption_config_pb is None else \
+        EncryptionScheme().from_proto(encryption_config_pb)
     variables = model_pb.variables
     var_names = [var.name for var in variables]
     var_trainables = [var.trainable for var in variables]
@@ -54,7 +54,7 @@ def get_weights_from_model_pb(
             tensor_spec = var.ciphertext_tensor.tensor_spec
             if encryption:
                 decoded_value = encryption.decrypt_data(
-                    var.ciphertext_tensor.ciphertext, 
+                    tensor_spec.value, 
                     tensor_spec.length)
                 np_array = ModelProtoMessages.TensorSpecProto\
                     .np_array_from_cipherext_tensor_spec(tensor_spec, decoded_value)

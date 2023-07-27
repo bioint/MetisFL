@@ -97,22 +97,24 @@ CryptoParams CKKS::GenCryptoParams(){
   cryptoContext->Enable(SHE);
 
   std::stringstream cc_ss;
-  Serial::Serialize(cryptoContext, cc_ss, SerType::BINARY);
+  Serial::Serialize(cryptoContext, cc_ss, SerType::JSON);
 
   LPKeyPair<DCRTPoly> keyPair;
   keyPair = cryptoContext->KeyGen();
 
   std::stringstream pk_ss;
-  Serial::Serialize(keyPair.publicKey, pk_ss, SerType::BINARY);
+  Serial::Serialize(keyPair.publicKey, pk_ss, SerType::JSON);
 
   std::stringstream sk_ss;
-  Serial::Serialize(keyPair.secretKey, sk_ss, SerType::BINARY);
+  Serial::Serialize(keyPair.secretKey, sk_ss, SerType::JSON);
   
-  return CryptoParams{ cc_ss.str(), pk_ss.str(), sk_ss.str() };
+  crypto_params_ = CryptoParams{ cc_ss.str(), pk_ss.str(), sk_ss.str() };
+
+  return crypto_params_;
 }
 
 CryptoParams CKKS::GetCryptoParams() {
-  return CryptoParams{};
+  return crypto_params_;
 }
 
 void CKKS::LoadCryptoParams(CryptoParams crypto_params) {
@@ -135,8 +137,12 @@ void CKKS::LoadPrivateKey(std::string private_key) {
 
 template<typename T>
 void CKKS::Deserialize(std::string s, T &obj) {
-  std::stringstream ss(s);
-  Serial::Deserialize(obj, ss, SerType::BINARY);
+  try {
+    std::stringstream ss(s);
+    Serial::Deserialize(obj, ss, SerType::JSON);
+  } catch (const std::exception& e) {
+    PLOG(WARNING) << "Deserialization of " << obj << "Failed";
+  }
 }
 
 void CKKS::Print() {

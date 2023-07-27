@@ -12,15 +12,15 @@ from metisfl.proto import metis_pb2
 
 class LearnerExecutor(object):
 
-    def __init__(self, task: LearnerTask, recreate_queue_task_worker=False):
-        self._task = task
+    def __init__(self, learner_task: LearnerTask, recreate_queue_task_worker=False):
+        self._learner_task = learner_task
         self._init_tasks_pools(recreate_queue_task_worker)
 
 
     def run_evaluation_task(self, block=False, **kwargs):
         future = self._run_task(
             task_name=config.EVALUATION_TASK,
-            task_fn=self._task.evaluate_model,
+            task_fn=self._learner_task.evaluate_model,
             callback=None,
             **kwargs
         )
@@ -30,7 +30,7 @@ class LearnerExecutor(object):
     def run_inference_task(self, block=False, **kwargs):
         future = self._run_task(
             task_name=config.INFERENCE_TASK,
-            task_fn=self._task.infer_model,
+            task_fn=self._learner_task.infer_model,
             callback=None,
             **kwargs
         )
@@ -42,7 +42,7 @@ class LearnerExecutor(object):
                           block=False, **kwargs):
         future = self._run_task(
             task_name=config.LEARNING_TASK,
-            task_fn=self._task.train_model,
+            task_fn=self._learner_task.train_model,
             callback=callback,
             **kwargs
         )

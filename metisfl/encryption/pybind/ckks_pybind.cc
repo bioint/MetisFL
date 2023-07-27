@@ -50,18 +50,20 @@ class CKKSWrapper : public CKKS {
   py::dict PyGenCryptoParams() {    
     py::dict py_dict_crypto_params;
     auto crypto_params = CKKS::GenCryptoParams();
-    py_dict_crypto_params[CRYPTO_CONTEXT] = crypto_params.crypto_context;
-    py_dict_crypto_params[CRYPTO_PUBLIC_KEY] = crypto_params.public_key;
-    py_dict_crypto_params[CRYPTO_PRIVATE_KEY] = crypto_params.private_key;
+    // Need to explicitly convert to py::str() to avoid encoding errors.
+    py_dict_crypto_params[CRYPTO_CONTEXT] = py::str(crypto_params.crypto_context);
+    py_dict_crypto_params[CRYPTO_PUBLIC_KEY] = py::str(crypto_params.public_key);
+    py_dict_crypto_params[CRYPTO_PRIVATE_KEY] = py::str(crypto_params.private_key);
     return py_dict_crypto_params;
   }
 
   py::dict PyGetCryptoParams() {
     py::dict py_dict_crypto_params;
     auto crypto_params = CKKS::GetCryptoParams();
-    py_dict_crypto_params[CRYPTO_CONTEXT] = crypto_params.crypto_context;
-    py_dict_crypto_params[CRYPTO_PUBLIC_KEY] = crypto_params.public_key;
-    py_dict_crypto_params[CRYPTO_PRIVATE_KEY] = crypto_params.private_key;
+    // Need to explicitly convert to py::bytes() to avoid encoding errors.
+    py_dict_crypto_params[CRYPTO_CONTEXT] = py::str(crypto_params.crypto_context);
+    py_dict_crypto_params[CRYPTO_PUBLIC_KEY] = py::str(crypto_params.public_key);
+    py_dict_crypto_params[CRYPTO_PRIVATE_KEY] = py::str(crypto_params.private_key);
     return py_dict_crypto_params;
   }
 
@@ -115,11 +117,11 @@ PYBIND11_MODULE(fhe, m) {
   .def("load_crypto_context_from_file", &CKKS::LoadCryptoContextFromFile)
   .def("load_private_key_from_file", &CKKS::LoadPrivateKeyFromFile)
   .def("load_public_key_from_file", &CKKS::LoadPublicKeyFromFile)
-  // .def("gen_crypto_params", &CKKSWrapper::PyGenCryptoParams)
-  // .def("get_crypto_params", &CKKSWrapper::PyGetCryptoParams)
-  // .def("load_crypto_context", &CKKS::LoadCryptoContext)
-  // .def("load_private_key", &CKKS::LoadPrivateKey)
-  // .def("load_public_key", &CKKS::LoadPublicKey)  
+  .def("gen_crypto_params", &CKKSWrapper::PyGenCryptoParams)
+  .def("get_crypto_params", &CKKSWrapper::PyGetCryptoParams)
+  .def("load_crypto_context", &CKKS::LoadCryptoContext)
+  .def("load_private_key", &CKKS::LoadPrivateKey)
+  .def("load_public_key", &CKKS::LoadPublicKey)  
   .def("aggregate", &CKKSWrapper::PyAggregate)
   .def("decrypt", &CKKSWrapper::PyDecrypt)
   .def("encrypt", &CKKSWrapper::PyEncrypt);

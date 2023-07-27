@@ -20,7 +20,7 @@ from .service_monitor import ServiceMonitor
 
 class DriverSession(object):
     def __init__(self,
-                 fed_env: str,
+                 fed_env: FederationEnvironment,
                  model: MetisModel,
                  train_dataset_fps: List[str],
                  train_dataset_recipe_fn: Callable,
@@ -75,8 +75,8 @@ class DriverSession(object):
         self._federation_environment = FederationEnvironment(fed_env)
         self._num_learners = len(self._federation_environment.learners)
         self._model = model
-        self._encryption_pb = \
-            self._federation_environment.get_encryption_scheme_pb(init_crypto_params=)
+        self._encryption_config_pb = \
+            self._federation_environment.get_encryption_config_pb()
         self._init_pool()
         self._driver_controller_grpc_client = \
             self._create_driver_controller_grpc_client()
@@ -115,6 +115,7 @@ class DriverSession(object):
         controller_future = self._executor.schedule(
             function=self._service_initilizer.init_controller)
         self._executor_controller_tasks_q.put(controller_future)
+        controller_future.result()
         if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
             self._ship_model_to_controller()
             for idx in range(self._num_learners):
@@ -199,7 +200,7 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = construct_model_pb(weights_descriptor, self._encryption_pb)
+        model_pb = construct_model_pb(weights_descriptor, self._encryption_config_pb)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

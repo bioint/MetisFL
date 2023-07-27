@@ -12,7 +12,7 @@ from .dataset_handler import LearnerDataset
 class LearnerTask(object):
 
     def __init__(self,
-                 encryption_scheme_pb: metis_pb2.EncryptionScheme,
+                 encryption_config_pb: metis_pb2.EncryptionConfig,
                  learner_dataset: LearnerDataset,
                  learner_server_entity_pb: metis_pb2.ServerEntity,
                  model_dir: str,
@@ -24,12 +24,12 @@ class LearnerTask(object):
             backend is imported correctly.    
 
         Args:
-            he_scheme_pb (metis_pb2.HESchemeConfig): A protobuf message that contains the HE scheme.
+            encryption_config_pb (metis_pb2.EncryptionConfig): A protobuf message that contains the Encryption Scheme configurations.
             learner_dataset (LearnerDataset): A LearnerDataset object that contains the datasets.
             model_backend_fn (Callable[[str], model_ops.ModelOps]): A function that returns a model backend.
             model_dir (str): The directory where the model is stored.
         """
-        self._encryption_scheme_pb = encryption_scheme_pb
+        self._encryption_config_pb = encryption_config_pb
         self._learner_dataset = learner_dataset
         self._learner_server_entity_pb = learner_server_entity_pb
         self._model_ops = None
@@ -110,7 +110,7 @@ class LearnerTask(object):
             return self._get_completed_learning_task_pb(model_weights_descriptor, learning_task_stats)
 
     def _get_completed_learning_task_pb(self, model_weights_descriptor, learning_task_stats):
-        model_pb = construct_model_pb(model_weights_descriptor, self._encryption_scheme_pb)
+        model_pb = construct_model_pb(model_weights_descriptor, self._encryption_config_pb)
         completed_learning_task_pb = get_completed_learning_task_pb(
             model_pb=model_pb,
             learning_task_stats=learning_task_stats)
@@ -138,6 +138,6 @@ class LearnerTask(object):
                          .format(host_port, state, task))
 
     def _set_weights_from_model_pb(self, model_pb: model_pb2.Model):
-        model_weights_descriptor = get_weights_from_model_pb(model_pb, self._encryption_scheme_pb)
+        model_weights_descriptor = get_weights_from_model_pb(model_pb, self._encryption_config_pb)
         if len(model_weights_descriptor.weights_values) > 0:
             self._model_ops.get_model().set_model_weights(model_weights_descriptor)

@@ -46,8 +46,8 @@ class ServiceInitializer:
             remote_on_login,
             self._federation_environment.controller.project_home,
             self._init_controller_cmd())
-        MetisLogger.info(
-            "Running init cmd to controller host: {}".format(init_cmd))
+        # MetisLogger.info(
+        #     "Running init cmd to controller host: {}".format(init_cmd))
         connection.run(init_cmd)
         connection.close()
         return
@@ -171,7 +171,7 @@ class ServiceInitializer:
         args = {
             "l": self._federation_environment.learners[index].get_server_entity_pb().SerializeToString().hex(),
             "c": self._federation_environment.controller.get_server_entity_pb(gen_connection_entity=True).SerializeToString().hex(),
-            "f": self._federation_environment.get_encryption_scheme_pb().SerializeToString().hex(),
+            "f": self._federation_environment.get_encryption_config_pb().SerializeToString().hex(),
             "m": remote_metis_model_path,
             "t": self._dataset_fps[config.TRAIN][index],
             "v": self._dataset_fps[config.VALIDATION][index] if config.VALIDATION in self._dataset_fps else None,

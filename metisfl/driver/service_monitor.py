@@ -76,7 +76,7 @@ class ServiceMonitor:
                     test_set_scores.append(float(test_score))
             if test_set_scores:
                 mean_test_score = sum(test_set_scores) / len(test_set_scores)
-                if mean_test_score >= self._metric_cutoff_score:
+                if self._metric_cutoff_score and mean_test_score >= self._metric_cutoff_score:
                     MetisLogger.info(
                         "Exceeded evaluation metric cutoff score. Exiting ...")
                     return True

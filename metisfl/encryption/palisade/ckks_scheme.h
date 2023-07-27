@@ -54,6 +54,7 @@ class CKKS : public EncryptionScheme {
   uint32_t batch_size;
   uint32_t scaling_factor_bits;
   CryptoParamsFiles crypto_params_files_;
+  CryptoParams crypto_params_;
 
   // The double-CRT (DCRT) ciphertext representation is
   // an extension of the Chinese Remainder Transform.

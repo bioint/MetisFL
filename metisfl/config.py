@@ -17,6 +17,11 @@ SERVER_KEY_NAME = "server-key.pem"
 SERVER_CERT_DIR = os.path.join(SSL_PATH, SERVER_CERT_NAME)
 SERVER_KEY_DIR = os.path.join(SSL_PATH, SERVER_KEY_NAME)
 
+CRYPTO_RESOURCE_DIR = "resources/crypto"
+CRYPTO_CONTEXT_FILE = "cryptocontext.txt"
+CRYPTO_KEY_PUBLIC_FILE = "public.txt"
+CRYPTO_KEY_PRIVATE_FILE = "private.txt"
+
 DEFAULT_CONTROLLER_HOSTNAME = "[::]"
 DEFAULT_CONTROLLER_PORT = 50051
 DEFAULT_LEARNER_HOST = "[::]"
@@ -84,6 +89,18 @@ def get_learner_id_fp(learner_id):
     learner_id_fp = get_learner_path(learner_id)
     _get_path_safe(learner_id_fp)
     return os.path.join(learner_id_fp, LEARNER_ID_FILE)
+
+def get_crypto_dir():
+    path = get_project_home()
+    path = os.path.join(path, CRYPTO_RESOURCE_DIR)
+    return _get_path_safe(path)
+
+def get_crypto_resources():
+    path = get_crypto_dir()
+    crypto_context_file = os.path.join(path, CRYPTO_CONTEXT_FILE)
+    crypto_key_public_file = os.path.join(path, CRYPTO_KEY_PUBLIC_FILE)
+    crypto_key_private_file = os.path.join(path, CRYPTO_KEY_PRIVATE_FILE)
+    return crypto_context_file, crypto_key_public_file, crypto_key_private_file
 
 def get_auth_token_fp(learner_id):
     learnet_token_path = get_learner_path(learner_id)

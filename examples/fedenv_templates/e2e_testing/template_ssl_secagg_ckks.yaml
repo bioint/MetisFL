@@ -1,39 +1,43 @@
 CommunicationProtocol: 
-  Name: "Synchronous" # Others are "Asynchronous" and "SemiSynchronous"
+  Name: "Synchronous"
   
 TerminationSignals:
-  # In Synchronous Execution if any of the following 
-  # conditions is satisifed then the federation exits.
-  FederationRounds: 3 # this is only applicable in synchronous and semi-synchronous execution
+  FederationRounds: 3
 
 ModelStoreConfig:
   ModelStore: "InMemory"
   EvictionPolicy: "LineageLengthEviction"
   LineageLength: 1
 
+EncryptionScheme:
+  Name: "CKKS"
+  BatchSize: 4096
+  ScalingFactorBits: 52
+
 GlobalModelConfig:
-  AggregationRule: "FedAvg" # Others are FedAvg (for Sync & Semi-Sync), FedStride (for Sync & Semi-Sync), FedRec (for Asynchronous), PWA (for {Sync, Semi-Sync, Async} + FHE)
-  ScalingFactor: "NumTrainingExamples" # Others are NumCompletedBatches, NumParticipants
+  AggregationRule: "SecAgg"
+  ScalingFactor: "NumTrainingExamples"
   ParticipationRatio: 1
 
 LocalModelConfig:
   BatchSize: 32
   LocalEpochs: 1
-  OptimizerParams:  # Provide optimizer parameters as CamelCase.
+  OptimizerParams:
     LearningRate: 0.01
 
-# Controller Configurations.
 Controller:
   ProjectHome: "/metisfl"
   ConnectionConfig:
     Hostname: "localhost"
     Username: "root"
     Password: "root"
+  SSLConfig:
+    PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem"
+    PublicCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem"
   GRPCServer:
     Hostname: "localhost"
     Port: 50051
 
-# Learners Configurations.
 Learners:
   - ProjectHome: "/metisfl"
     ConnectionConfig:
@@ -43,4 +47,7 @@ Learners:
     GRPCServer:
       Hostname: "localhost"
       Port: 50052
+    SSLConfig:
+        PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem"
+        PublicCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem"
     CudaDevices: [0]

@@ -45,9 +45,9 @@ Controller:
     Username: "root"
     Password: "root"
     # OnLoginCommand: "source /etc/profile" # Optional
-  # SSLConfigs: # Optional
-  #   PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem"
-  #   PublicCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem"
+  SSLConfig: # Optional
+    PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem"
+    PublicCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem"
   GRPCServer:
     Hostname: "localhost"
     Port: 50051
@@ -63,7 +63,7 @@ Learners:
     GRPCServer:
       Hostname: "localhost"
       Port: 50052
-    # SSLConfig: # Optional
-    #     PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem"
-    #     PublicCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem"
+    SSLConfig: # Optional
+        PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem"
+        PublicCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem"
     CudaDevices: [0]
