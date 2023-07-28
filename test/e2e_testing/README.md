@@ -7,7 +7,7 @@ For all model store environments, we use a synchronous execution protocol over 3
 ```
 python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/template_fedavg.yaml
 
-python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/template_fedavg_3learners.yaml --num_learners=5
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/template_fedavg_3learners.yaml --num_learners=3
 
 python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/template_fedprox.yaml --opt="FedProx"
 ```
@@ -23,7 +23,13 @@ python examples/keras_fashionmnist/main.py --env test/e2e_testing/modelstore/tem
 ```
 python examples/keras_fashionmnist/main.py --env test/e2e_testing/asynchronous/template_accuracy_cutoff_3learners.yaml
 
-python examples/keras_fashionmnist/main.py --env test/e2e_testing/asynchronous/template_time_cutoff_3learners.yaml --opt="FedProx"
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/asynchronous/template_time_cutoff_3learners.yaml --opt="FedProx" --num_learners=3
+```
+
+### SemiSynchronous Testing
+```
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/semisynchronous/template_fedavg_3learners.yaml --num_learners=3
+
 ```
 
 ### SSL Testing
@@ -49,5 +55,5 @@ python metisfl/encryption/pybind_ckks_demo.py
 python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/template_ssl_secagg_ckks.yaml
 
 # Case-4: End-to-End test integration test (Secure Aggregation with CKKS + SSL) for 3 learners.
-python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/template_ssl_secagg_ckks_3learners.yaml
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/template_ssl_secagg_ckks_3learners.yaml --num_learners=3
 ```

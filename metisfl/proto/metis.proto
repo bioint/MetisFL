@@ -294,7 +294,6 @@ message HEScheme {
   }
 }
 
-<<<<<<< HEAD
 message HESchemeConfig {
   bool as_files = 1;
   string crypto_context = 2;
