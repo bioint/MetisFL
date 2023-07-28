@@ -381,6 +381,7 @@ class MetisProtoMessages(object):
     def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, encryption_config_pb):
         aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(
             scaling_factor)
+
         if rule_name.upper() == "FEDAVG":
             return metis_pb2.AggregationRule(fed_avg=MetisProtoMessages.construct_fed_avg_pb(),
                                              aggregation_rule_specs=aggregation_rule_specs_pb)

@@ -1,0 +1,15 @@
+name: 🙋 Question and Discussion
+description: Discuss or ask question about how to use MetisFL and what the best practice may be.
+
+body:
+  - type: textarea
+    attributes:
+      label: 🙋 Discussion/Question
+      description: |
+        Provide context on how you are using MetisFL, what you are trying to achieve, and any questions you have.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: >
+        Thanks for contributing 🎉!

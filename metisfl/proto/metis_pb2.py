@@ -16,7 +16,11 @@ from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
+<<<<<<< HEAD
 DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/metis.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"q\n\x0cServerEntity\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x31\n\nssl_config\x18\x03 \x01(\x0b\x32\x12.metisfl.SSLConfigR\tsslConfig\"r\n\x0eSSLConfigFiles\x12\x36\n\x17public_certificate_file\x18\x01 \x01(\tR\x15publicCertificateFile\x12(\n\x10private_key_file\x18\x02 \x01(\tR\x0eprivateKeyFile\"{\n\x0fSSLConfigStream\x12:\n\x19public_certificate_stream\x18\x01 \x01(\x0cR\x17publicCertificateStream\x12,\n\x12private_key_stream\x18\x02 \x01(\x0cR\x10privateKeyStream\"\xba\x01\n\tSSLConfig\x12\x16\n\x06\x65nable\x18\x01 \x01(\x08R\x06\x65nable\x12\x43\n\x10ssl_config_files\x18\x06 \x01(\x0b\x32\x17.metisfl.SSLConfigFilesH\x00R\x0esslConfigFiles\x12\x46\n\x11ssl_config_stream\x18\x07 \x01(\x0b\x32\x18.metisfl.SSLConfigStreamH\x00R\x0fsslConfigStreamB\x08\n\x06\x63onfig\"\xe7\t\n\x0b\x44\x61tasetSpec\x12\x32\n\x15num_training_examples\x18\x01 \x01(\rR\x13numTrainingExamples\x12\x36\n\x17num_validation_examples\x18\x02 \x01(\rR\x15numValidationExamples\x12*\n\x11num_test_examples\x18\x03 \x01(\rR\x0fnumTestExamples\x12r\n\x1ctraining_classification_spec\x18\x04 \x01(\x0b\x32..metisfl.DatasetSpec.ClassificationDatasetSpecH\x00R\x1atrainingClassificationSpec\x12\x66\n\x18training_regression_spec\x18\x05 \x01(\x0b\x32*.metisfl.DatasetSpec.RegressionDatasetSpecH\x00R\x16trainingRegressionSpec\x12v\n\x1evalidation_classification_spec\x18\x06 \x01(\x0b\x32..metisfl.DatasetSpec.ClassificationDatasetSpecH\x01R\x1cvalidationClassificationSpec\x12j\n\x1avalidation_regression_spec\x18\x07 \x01(\x0b\x32*.metisfl.DatasetSpec.RegressionDatasetSpecH\x01R\x18validationRegressionSpec\x12j\n\x18test_classification_spec\x18\x08 \x01(\x0b\x32..metisfl.DatasetSpec.ClassificationDatasetSpecH\x02R\x16testClassificationSpec\x12^\n\x14test_regression_spec\x18\t \x01(\x0b\x32*.metisfl.DatasetSpec.RegressionDatasetSpecH\x02R\x12testRegressionSpec\x1a\xd4\x01\n\x19\x43lassificationDatasetSpec\x12r\n\x12\x63lass_examples_num\x18\x01 \x03(\x0b\x32\x44.metisfl.DatasetSpec.ClassificationDatasetSpec.ClassExamplesNumEntryR\x10\x63lassExamplesNum\x1a\x43\n\x15\x43lassExamplesNumEntry\x12\x10\n\x03key\x18\x01 \x01(\rR\x03key\x12\x14\n\x05value\x18\x02 \x01(\rR\x05value:\x02\x38\x01\x1a\x93\x01\n\x15RegressionDatasetSpec\x12\x10\n\x03min\x18\x01 \x01(\x01R\x03min\x12\x10\n\x03max\x18\x02 \x01(\x01R\x03max\x12\x12\n\x04mean\x18\x03 \x01(\x01R\x04mean\x12\x16\n\x06median\x18\x04 \x01(\x01R\x06median\x12\x12\n\x04mode\x18\x05 \x01(\x01R\x04mode\x12\x16\n\x06stddev\x18\x06 \x01(\x01R\x06stddevB\x17\n\x15training_dataset_specB\x19\n\x17validation_dataset_specB\x13\n\x11test_dataset_spec\"B\n\x14LearningTaskTemplate\x12*\n\x11num_local_updates\x18\x01 \x01(\rR\x0fnumLocalUpdates\"\x8c\x02\n\x0cLearningTask\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12*\n\x11num_local_updates\x18\x02 \x01(\rR\x0fnumLocalUpdates\x12o\n5training_dataset_percentage_for_stratified_validation\x18\x03 \x01(\x02R0trainingDatasetPercentageForStratifiedValidation\x12\x34\n\x07metrics\x18\x04 \x01(\x0b\x32\x1a.metisfl.EvaluationMetricsR\x07metrics\"\xaf\x01\n\x15\x43ompletedLearningTask\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12M\n\x12\x65xecution_metadata\x18\x02 \x01(\x0b\x32\x1e.metisfl.TaskExecutionMetadataR\x11\x65xecutionMetadata\x12!\n\x0c\x61ux_metadata\x18\x03 \x01(\tR\x0b\x61uxMetadata\"\xe9\x02\n\x15TaskExecutionMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12@\n\x0ftask_evaluation\x18\x02 \x01(\x0b\x32\x17.metisfl.TaskEvaluationR\x0etaskEvaluation\x12)\n\x10\x63ompleted_epochs\x18\x03 \x01(\x02R\x0f\x63ompletedEpochs\x12+\n\x11\x63ompleted_batches\x18\x04 \x01(\rR\x10\x63ompletedBatches\x12\x1d\n\nbatch_size\x18\x05 \x01(\rR\tbatchSize\x12\x35\n\x17processing_ms_per_epoch\x18\x06 \x01(\x02R\x14processingMsPerEpoch\x12\x35\n\x17processing_ms_per_batch\x18\x07 \x01(\x02R\x14processingMsPerBatch\"\xed\x01\n\x0eTaskEvaluation\x12I\n\x13training_evaluation\x18\x01 \x03(\x0b\x32\x18.metisfl.EpochEvaluationR\x12trainingEvaluation\x12M\n\x15validation_evaluation\x18\x02 \x03(\x0b\x32\x18.metisfl.EpochEvaluationR\x14validationEvaluation\x12\x41\n\x0ftest_evaluation\x18\x03 \x03(\x0b\x32\x18.metisfl.EpochEvaluationR\x0etestEvaluation\"q\n\x0f\x45pochEvaluation\x12\x19\n\x08\x65poch_id\x18\x01 \x01(\rR\x07\x65pochId\x12\x43\n\x10model_evaluation\x18\x02 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x0fmodelEvaluation\"+\n\x11\x45valuationMetrics\x12\x16\n\x06metric\x18\x01 \x03(\tR\x06metric\"\xa3\x01\n\x0fModelEvaluation\x12O\n\rmetric_values\x18\x01 \x03(\x0b\x32*.metisfl.ModelEvaluation.MetricValuesEntryR\x0cmetricValues\x1a?\n\x11MetricValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xef\x01\n\x10ModelEvaluations\x12I\n\x13training_evaluation\x18\x01 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x12trainingEvaluation\x12M\n\x15validation_evaluation\x18\x02 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x14validationEvaluation\x12\x41\n\x0ftest_evaluation\x18\x03 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x0etestEvaluation\"Y\n\x12LocalTasksMetadata\x12\x43\n\rtask_metadata\x18\x01 \x03(\x0b\x32\x1e.metisfl.TaskExecutionMetadataR\x0ctaskMetadata\"\xf6\x01\n\x18\x43ommunityModelEvaluation\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12T\n\x0b\x65valuations\x18\x02 \x03(\x0b\x32\x32.metisfl.CommunityModelEvaluation.EvaluationsEntryR\x0b\x65valuations\x1aY\n\x10\x45valuationsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12/\n\x05value\x18\x02 \x01(\x0b\x32\x19.metisfl.ModelEvaluationsR\x05value:\x02\x38\x01\"h\n\x0fHyperparameters\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x36\n\toptimizer\x18\x02 \x01(\x0b\x32\x18.metisfl.OptimizerConfigR\toptimizer\"\xba\x04\n\x10\x43ontrollerParams\x12:\n\rserver_entity\x18\x01 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\x12G\n\x12global_model_specs\x18\x02 \x01(\x0b\x32\x19.metisfl.GlobalModelSpecsR\x10globalModelSpecs\x12L\n\x13\x63ommunication_specs\x18\x03 \x01(\x0b\x32\x1b.metisfl.CommunicationSpecsR\x12\x63ommunicationSpecs\x12G\n\x12model_store_config\x18\x04 \x01(\x0b\x32\x19.metisfl.ModelStoreConfigR\x10modelStoreConfig\x12W\n\x11model_hyperparams\x18\x05 \x01(\x0b\x32*.metisfl.ControllerParams.ModelHyperparamsR\x10modelHyperparams\x1a\xb0\x01\n\x10ModelHyperparams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x16\n\x06\x65pochs\x18\x02 \x01(\rR\x06\x65pochs\x12\x36\n\toptimizer\x18\x03 \x01(\x0b\x32\x18.metisfl.OptimizerConfigR\toptimizer\x12-\n\x12percent_validation\x18\x04 \x01(\x02R\x11percentValidation\"\x9d\x01\n\x10ModelStoreConfig\x12@\n\x0fin_memory_store\x18\x01 \x01(\x0b\x32\x16.metisfl.InMemoryStoreH\x00R\rinMemoryStore\x12=\n\x0eredis_db_store\x18\x02 \x01(\x0b\x32\x15.metisfl.RedisDBStoreH\x00R\x0credisDbStoreB\x08\n\x06\x63onfig\"U\n\rInMemoryStore\x12\x44\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x18.metisfl.ModelStoreSpecsR\x0fmodelStoreSpecs\"\x90\x01\n\x0cRedisDBStore\x12\x44\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x18.metisfl.ModelStoreSpecsR\x0fmodelStoreSpecs\x12:\n\rserver_entity\x18\x02 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\"\x0c\n\nNoEviction\">\n\x15LineageLengthEviction\x12%\n\x0elineage_length\x18\x01 \x01(\rR\rlineageLength\"\xb6\x01\n\x0fModelStoreSpecs\x12\x36\n\x0bno_eviction\x18\x01 \x01(\x0b\x32\x13.metisfl.NoEvictionH\x00R\nnoEviction\x12X\n\x17lineage_length_eviction\x18\x02 \x01(\x0b\x32\x1e.metisfl.LineageLengthEvictionH\x00R\x15lineageLengthEvictionB\x11\n\x0f\x65viction_policy\"\xa7\x02\n\x0f\x41ggregationRule\x12*\n\x07\x66\x65\x64_avg\x18\x01 \x01(\x0b\x32\x0f.metisfl.FedAvgH\x00R\x06\x66\x65\x64\x41vg\x12\x33\n\nfed_stride\x18\x02 \x01(\x0b\x32\x12.metisfl.FedStrideH\x00R\tfedStride\x12*\n\x07\x66\x65\x64_rec\x18\x03 \x01(\x0b\x32\x0f.metisfl.FedRecH\x00R\x06\x66\x65\x64Rec\x12*\n\x07sec_agg\x18\x04 \x01(\x0b\x32\x0f.metisfl.SecAggH\x00R\x06secAgg\x12S\n\x16\x61ggregation_rule_specs\x18\x05 \x01(\x0b\x32\x1d.metisfl.AggregationRuleSpecsR\x14\x61ggregationRuleSpecsB\x06\n\x04rule\"\xd4\x01\n\x14\x41ggregationRuleSpecs\x12R\n\x0escaling_factor\x18\x01 \x01(\x0e\x32+.metisfl.AggregationRuleSpecs.ScalingFactorR\rscalingFactor\"h\n\rScalingFactor\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x19\n\x15NUM_COMPLETED_BATCHES\x10\x01\x12\x14\n\x10NUM_PARTICIPANTS\x10\x02\x12\x19\n\x15NUM_TRAINING_EXAMPLES\x10\x03\"\x08\n\x06\x46\x65\x64\x41vg\"0\n\tFedStride\x12#\n\rstride_length\x18\x01 \x01(\rR\x0cstrideLength\"\x08\n\x06\x46\x65\x64Rec\"\x8f\x01\n\x10\x45ncryptionConfig\x12\x30\n\the_scheme\x18\x01 \x01(\x0b\x32\x11.metisfl.HESchemeH\x00R\x08heScheme\x12?\n\x0emasking_scheme\x18\x02 \x01(\x0b\x32\x16.metisfl.MaskingSchemeH\x00R\rmaskingSchemeB\x08\n\x06scheme\"\x0f\n\rMaskingScheme\"\x8f\x01\n\x08HEScheme\x12\x41\n\x10he_scheme_config\x18\x01 \x01(\x0b\x32\x17.metisfl.HESchemeConfigR\x0eheSchemeConfig\x12\x36\n\x0b\x63kks_scheme\x18\x02 \x01(\x0b\x32\x13.metisfl.CKKSSchemeH\x00R\nckksSchemeB\x08\n\x06scheme\"\x92\x01\n\x0eHESchemeConfig\x12\x19\n\x08\x61s_files\x18\x01 \x01(\x08R\x07\x61sFiles\x12%\n\x0e\x63rypto_context\x18\x02 \x01(\tR\rcryptoContext\x12\x1d\n\npublic_key\x18\x03 \x01(\tR\tpublicKey\x12\x1f\n\x0bprivate_key\x18\x04 \x01(\tR\nprivateKey\"[\n\nCKKSScheme\x12\x1d\n\nbatch_size\x18\x02 \x01(\rR\tbatchSize\x12.\n\x13scaling_factor_bits\x18\x03 \x01(\rR\x11scalingFactorBits\"P\n\x06SecAgg\x12\x46\n\x11\x65ncryption_config\x18\x01 \x01(\x0b\x32\x19.metisfl.EncryptionConfigR\x10\x65ncryptionConfig\"\x99\x01\n\x10GlobalModelSpecs\x12\x43\n\x10\x61ggregation_rule\x18\x01 \x01(\x0b\x32\x18.metisfl.AggregationRuleR\x0f\x61ggregationRule\x12@\n\x1clearners_participation_ratio\x18\x02 \x01(\x02R\x1alearnersParticipationRatio\"\xe6\x01\n\x12\x43ommunicationSpecs\x12@\n\x08protocol\x18\x01 \x01(\x0e\x32$.metisfl.CommunicationSpecs.ProtocolR\x08protocol\x12=\n\x0eprotocol_specs\x18\x02 \x01(\x0b\x32\x16.metisfl.ProtocolSpecsR\rprotocolSpecs\"O\n\x08Protocol\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0f\n\x0bSYNCHRONOUS\x10\x01\x12\x10\n\x0c\x41SYNCHRONOUS\x10\x02\x12\x13\n\x0fSEMISYNCHRONOUS\x10\x03\"\x7f\n\rProtocolSpecs\x12(\n\x10semi_sync_lambda\x18\x01 \x01(\x05R\x0esemiSyncLambda\x12\x44\n\x1fsemi_sync_recompute_num_updates\x18\x02 \x01(\x08R\x1bsemiSyncRecomputeNumUpdates\"\xb7\x01\n\x11LearnerDescriptor\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12:\n\rserver_entity\x18\x03 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\x12\x37\n\x0c\x64\x61taset_spec\x18\x04 \x01(\x0b\x32\x14.metisfl.DatasetSpecR\x0b\x64\x61tasetSpec\"j\n\x0cLearnerState\x12\x34\n\x07learner\x18\x01 \x01(\x0b\x32\x1a.metisfl.LearnerDescriptorR\x07learner\x12$\n\x05model\x18\x02 \x03(\x0b\x32\x0e.metisfl.ModelR\x05model\"\xf1\x10\n\x1c\x46\x65\x64\x65ratedTaskRuntimeMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x39\n\nstarted_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n\x0c\x63ompleted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x0b\x63ompletedAt\x12\x33\n\x16\x61ssigned_to_learner_id\x18\x04 \x03(\tR\x13\x61ssignedToLearnerId\x12\x35\n\x17\x63ompleted_by_learner_id\x18\x05 \x03(\tR\x14\x63ompletedByLearnerId\x12v\n\x17train_task_submitted_at\x18\x06 \x03(\x0b\x32?.metisfl.FederatedTaskRuntimeMetadata.TrainTaskSubmittedAtEntryR\x14trainTaskSubmittedAt\x12s\n\x16train_task_received_at\x18\x07 \x03(\x0b\x32>.metisfl.FederatedTaskRuntimeMetadata.TrainTaskReceivedAtEntryR\x13trainTaskReceivedAt\x12s\n\x16\x65val_task_submitted_at\x18\x08 \x03(\x0b\x32>.metisfl.FederatedTaskRuntimeMetadata.EvalTaskSubmittedAtEntryR\x13\x65valTaskSubmittedAt\x12p\n\x15\x65val_task_received_at\x18\t \x03(\x0b\x32=.metisfl.FederatedTaskRuntimeMetadata.EvalTaskReceivedAtEntryR\x12\x65valTaskReceivedAt\x12\x82\x01\n\x1bmodel_insertion_duration_ms\x18\n \x03(\x0b\x32\x43.metisfl.FederatedTaskRuntimeMetadata.ModelInsertionDurationMsEntryR\x18modelInsertionDurationMs\x12\x82\x01\n\x1bmodel_selection_duration_ms\x18\x0b \x03(\x0b\x32\x43.metisfl.FederatedTaskRuntimeMetadata.ModelSelectionDurationMsEntryR\x18modelSelectionDurationMs\x12[\n\x1cmodel_aggregation_started_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x19modelAggregationStartedAt\x12_\n\x1emodel_aggregation_completed_at\x18\r \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x1bmodelAggregationCompletedAt\x12L\n#model_aggregation_total_duration_ms\x18\x0e \x01(\x01R\x1fmodelAggregationTotalDurationMs\x12?\n\x1cmodel_aggregation_block_size\x18\x0f \x03(\x01R\x19modelAggregationBlockSize\x12H\n!model_aggregation_block_memory_kb\x18\x10 \x03(\x01R\x1dmodelAggregationBlockMemoryKb\x12L\n#model_aggregation_block_duration_ms\x18\x11 \x03(\x01R\x1fmodelAggregationBlockDurationMs\x12S\n\x18model_tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifierR\x16modelTensorQuantifiers\x1a\x63\n\x19TrainTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18TrainTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18\x45valTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x61\n\x17\x45valTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1aK\n\x1dModelInsertionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x1aK\n\x1dModelSelectionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x62\x06proto3')
+=======
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/metis.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"q\n\x0cServerEntity\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x31\n\nssl_config\x18\x03 \x01(\x0b\x32\x12.metisfl.SSLConfigR\tsslConfig\"r\n\x0eSSLConfigFiles\x12\x36\n\x17public_certificate_file\x18\x01 \x01(\tR\x15publicCertificateFile\x12(\n\x10private_key_file\x18\x02 \x01(\tR\x0eprivateKeyFile\"{\n\x0fSSLConfigStream\x12:\n\x19public_certificate_stream\x18\x01 \x01(\x0cR\x17publicCertificateStream\x12,\n\x12private_key_stream\x18\x02 \x01(\x0cR\x10privateKeyStream\"\xc1\x01\n\tSSLConfig\x12\x1d\n\nenable_ssl\x18\x01 \x01(\x08R\tenableSsl\x12\x43\n\x10ssl_config_files\x18\x06 \x01(\x0b\x32\x17.metisfl.SSLConfigFilesH\x00R\x0esslConfigFiles\x12\x46\n\x11ssl_config_stream\x18\x07 \x01(\x0b\x32\x18.metisfl.SSLConfigStreamH\x00R\x0fsslConfigStreamB\x08\n\x06\x63onfig\"\xe7\t\n\x0b\x44\x61tasetSpec\x12\x32\n\x15num_training_examples\x18\x01 \x01(\rR\x13numTrainingExamples\x12\x36\n\x17num_validation_examples\x18\x02 \x01(\rR\x15numValidationExamples\x12*\n\x11num_test_examples\x18\x03 \x01(\rR\x0fnumTestExamples\x12r\n\x1ctraining_classification_spec\x18\x04 \x01(\x0b\x32..metisfl.DatasetSpec.ClassificationDatasetSpecH\x00R\x1atrainingClassificationSpec\x12\x66\n\x18training_regression_spec\x18\x05 \x01(\x0b\x32*.metisfl.DatasetSpec.RegressionDatasetSpecH\x00R\x16trainingRegressionSpec\x12v\n\x1evalidation_classification_spec\x18\x06 \x01(\x0b\x32..metisfl.DatasetSpec.ClassificationDatasetSpecH\x01R\x1cvalidationClassificationSpec\x12j\n\x1avalidation_regression_spec\x18\x07 \x01(\x0b\x32*.metisfl.DatasetSpec.RegressionDatasetSpecH\x01R\x18validationRegressionSpec\x12j\n\x18test_classification_spec\x18\x08 \x01(\x0b\x32..metisfl.DatasetSpec.ClassificationDatasetSpecH\x02R\x16testClassificationSpec\x12^\n\x14test_regression_spec\x18\t \x01(\x0b\x32*.metisfl.DatasetSpec.RegressionDatasetSpecH\x02R\x12testRegressionSpec\x1a\xd4\x01\n\x19\x43lassificationDatasetSpec\x12r\n\x12\x63lass_examples_num\x18\x01 \x03(\x0b\x32\x44.metisfl.DatasetSpec.ClassificationDatasetSpec.ClassExamplesNumEntryR\x10\x63lassExamplesNum\x1a\x43\n\x15\x43lassExamplesNumEntry\x12\x10\n\x03key\x18\x01 \x01(\rR\x03key\x12\x14\n\x05value\x18\x02 \x01(\rR\x05value:\x02\x38\x01\x1a\x93\x01\n\x15RegressionDatasetSpec\x12\x10\n\x03min\x18\x01 \x01(\x01R\x03min\x12\x10\n\x03max\x18\x02 \x01(\x01R\x03max\x12\x12\n\x04mean\x18\x03 \x01(\x01R\x04mean\x12\x16\n\x06median\x18\x04 \x01(\x01R\x06median\x12\x12\n\x04mode\x18\x05 \x01(\x01R\x04mode\x12\x16\n\x06stddev\x18\x06 \x01(\x01R\x06stddevB\x17\n\x15training_dataset_specB\x19\n\x17validation_dataset_specB\x13\n\x11test_dataset_spec\"B\n\x14LearningTaskTemplate\x12*\n\x11num_local_updates\x18\x01 \x01(\rR\x0fnumLocalUpdates\"\x8c\x02\n\x0cLearningTask\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12*\n\x11num_local_updates\x18\x02 \x01(\rR\x0fnumLocalUpdates\x12o\n5training_dataset_percentage_for_stratified_validation\x18\x03 \x01(\x02R0trainingDatasetPercentageForStratifiedValidation\x12\x34\n\x07metrics\x18\x04 \x01(\x0b\x32\x1a.metisfl.EvaluationMetricsR\x07metrics\"\xaf\x01\n\x15\x43ompletedLearningTask\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12M\n\x12\x65xecution_metadata\x18\x02 \x01(\x0b\x32\x1e.metisfl.TaskExecutionMetadataR\x11\x65xecutionMetadata\x12!\n\x0c\x61ux_metadata\x18\x03 \x01(\tR\x0b\x61uxMetadata\"\xe9\x02\n\x15TaskExecutionMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12@\n\x0ftask_evaluation\x18\x02 \x01(\x0b\x32\x17.metisfl.TaskEvaluationR\x0etaskEvaluation\x12)\n\x10\x63ompleted_epochs\x18\x03 \x01(\x02R\x0f\x63ompletedEpochs\x12+\n\x11\x63ompleted_batches\x18\x04 \x01(\rR\x10\x63ompletedBatches\x12\x1d\n\nbatch_size\x18\x05 \x01(\rR\tbatchSize\x12\x35\n\x17processing_ms_per_epoch\x18\x06 \x01(\x02R\x14processingMsPerEpoch\x12\x35\n\x17processing_ms_per_batch\x18\x07 \x01(\x02R\x14processingMsPerBatch\"\xed\x01\n\x0eTaskEvaluation\x12I\n\x13training_evaluation\x18\x01 \x03(\x0b\x32\x18.metisfl.EpochEvaluationR\x12trainingEvaluation\x12M\n\x15validation_evaluation\x18\x02 \x03(\x0b\x32\x18.metisfl.EpochEvaluationR\x14validationEvaluation\x12\x41\n\x0ftest_evaluation\x18\x03 \x03(\x0b\x32\x18.metisfl.EpochEvaluationR\x0etestEvaluation\"q\n\x0f\x45pochEvaluation\x12\x19\n\x08\x65poch_id\x18\x01 \x01(\rR\x07\x65pochId\x12\x43\n\x10model_evaluation\x18\x02 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x0fmodelEvaluation\"+\n\x11\x45valuationMetrics\x12\x16\n\x06metric\x18\x01 \x03(\tR\x06metric\"\xa3\x01\n\x0fModelEvaluation\x12O\n\rmetric_values\x18\x01 \x03(\x0b\x32*.metisfl.ModelEvaluation.MetricValuesEntryR\x0cmetricValues\x1a?\n\x11MetricValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xef\x01\n\x10ModelEvaluations\x12I\n\x13training_evaluation\x18\x01 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x12trainingEvaluation\x12M\n\x15validation_evaluation\x18\x02 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x14validationEvaluation\x12\x41\n\x0ftest_evaluation\x18\x03 \x01(\x0b\x32\x18.metisfl.ModelEvaluationR\x0etestEvaluation\"Y\n\x12LocalTasksMetadata\x12\x43\n\rtask_metadata\x18\x01 \x03(\x0b\x32\x1e.metisfl.TaskExecutionMetadataR\x0ctaskMetadata\"\xf6\x01\n\x18\x43ommunityModelEvaluation\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12T\n\x0b\x65valuations\x18\x02 \x03(\x0b\x32\x32.metisfl.CommunityModelEvaluation.EvaluationsEntryR\x0b\x65valuations\x1aY\n\x10\x45valuationsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12/\n\x05value\x18\x02 \x01(\x0b\x32\x19.metisfl.ModelEvaluationsR\x05value:\x02\x38\x01\"h\n\x0fHyperparameters\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x36\n\toptimizer\x18\x02 \x01(\x0b\x32\x18.metisfl.OptimizerConfigR\toptimizer\"\xba\x04\n\x10\x43ontrollerParams\x12:\n\rserver_entity\x18\x01 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\x12G\n\x12global_model_specs\x18\x02 \x01(\x0b\x32\x19.metisfl.GlobalModelSpecsR\x10globalModelSpecs\x12L\n\x13\x63ommunication_specs\x18\x03 \x01(\x0b\x32\x1b.metisfl.CommunicationSpecsR\x12\x63ommunicationSpecs\x12G\n\x12model_store_config\x18\x04 \x01(\x0b\x32\x19.metisfl.ModelStoreConfigR\x10modelStoreConfig\x12W\n\x11model_hyperparams\x18\x05 \x01(\x0b\x32*.metisfl.ControllerParams.ModelHyperparamsR\x10modelHyperparams\x1a\xb0\x01\n\x10ModelHyperparams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x16\n\x06\x65pochs\x18\x02 \x01(\rR\x06\x65pochs\x12\x36\n\toptimizer\x18\x03 \x01(\x0b\x32\x18.metisfl.OptimizerConfigR\toptimizer\x12-\n\x12percent_validation\x18\x04 \x01(\x02R\x11percentValidation\"\x9d\x01\n\x10ModelStoreConfig\x12@\n\x0fin_memory_store\x18\x01 \x01(\x0b\x32\x16.metisfl.InMemoryStoreH\x00R\rinMemoryStore\x12=\n\x0eredis_db_store\x18\x02 \x01(\x0b\x32\x15.metisfl.RedisDBStoreH\x00R\x0credisDbStoreB\x08\n\x06\x63onfig\"U\n\rInMemoryStore\x12\x44\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x18.metisfl.ModelStoreSpecsR\x0fmodelStoreSpecs\"\x90\x01\n\x0cRedisDBStore\x12\x44\n\x11model_store_specs\x18\x01 \x01(\x0b\x32\x18.metisfl.ModelStoreSpecsR\x0fmodelStoreSpecs\x12:\n\rserver_entity\x18\x02 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\"\x0c\n\nNoEviction\">\n\x15LineageLengthEviction\x12%\n\x0elineage_length\x18\x01 \x01(\rR\rlineageLength\"\xb6\x01\n\x0fModelStoreSpecs\x12\x36\n\x0bno_eviction\x18\x01 \x01(\x0b\x32\x13.metisfl.NoEvictionH\x00R\nnoEviction\x12X\n\x17lineage_length_eviction\x18\x02 \x01(\x0b\x32\x1e.metisfl.LineageLengthEvictionH\x00R\x15lineageLengthEvictionB\x11\n\x0f\x65viction_policy\"\x9d\x02\n\x0f\x41ggregationRule\x12*\n\x07\x66\x65\x64_avg\x18\x01 \x01(\x0b\x32\x0f.metisfl.FedAvgH\x00R\x06\x66\x65\x64\x41vg\x12\x33\n\nfed_stride\x18\x02 \x01(\x0b\x32\x12.metisfl.FedStrideH\x00R\tfedStride\x12*\n\x07\x66\x65\x64_rec\x18\x03 \x01(\x0b\x32\x0f.metisfl.FedRecH\x00R\x06\x66\x65\x64Rec\x12 \n\x03pwa\x18\x04 \x01(\x0b\x32\x0c.metisfl.PWAH\x00R\x03pwa\x12S\n\x16\x61ggregation_rule_specs\x18\x05 \x01(\x0b\x32\x1d.metisfl.AggregationRuleSpecsR\x14\x61ggregationRuleSpecsB\x06\n\x04rule\"\xd4\x01\n\x14\x41ggregationRuleSpecs\x12R\n\x0escaling_factor\x18\x01 \x01(\x0e\x32+.metisfl.AggregationRuleSpecs.ScalingFactorR\rscalingFactor\"h\n\rScalingFactor\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x19\n\x15NUM_COMPLETED_BATCHES\x10\x01\x12\x14\n\x10NUM_PARTICIPANTS\x10\x02\x12\x19\n\x15NUM_TRAINING_EXAMPLES\x10\x03\"\x08\n\x06\x46\x65\x64\x41vg\"0\n\tFedStride\x12#\n\rstride_length\x18\x01 \x01(\rR\x0cstrideLength\"\x08\n\x06\x46\x65\x64Rec\"\xcf\x02\n\x0eHESchemeConfig\x12\x18\n\x07\x65nabled\x18\x01 \x01(\x08R\x07\x65nabled\x12.\n\x13\x63rypto_context_file\x18\x02 \x01(\tR\x11\x63ryptoContextFile\x12&\n\x0fpublic_key_file\x18\x03 \x01(\tR\rpublicKeyFile\x12(\n\x10private_key_file\x18\x04 \x01(\tR\x0eprivateKeyFile\x12L\n\x13\x65mpty_scheme_config\x18\x05 \x01(\x0b\x32\x1a.metisfl.EmptySchemeConfigH\x00R\x11\x65mptySchemeConfig\x12I\n\x12\x63kks_scheme_config\x18\x06 \x01(\x0b\x32\x19.metisfl.CKKSSchemeConfigH\x00R\x10\x63kksSchemeConfigB\x08\n\x06\x63onfig\"\x13\n\x11\x45mptySchemeConfig\"a\n\x10\x43KKSSchemeConfig\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12.\n\x13scaling_factor_bits\x18\x02 \x01(\rR\x11scalingFactorBits\"H\n\x03PWA\x12\x41\n\x10he_scheme_config\x18\x01 \x01(\x0b\x32\x17.metisfl.HESchemeConfigR\x0eheSchemeConfig\"\x99\x01\n\x10GlobalModelSpecs\x12\x43\n\x10\x61ggregation_rule\x18\x01 \x01(\x0b\x32\x18.metisfl.AggregationRuleR\x0f\x61ggregationRule\x12@\n\x1clearners_participation_ratio\x18\x02 \x01(\x02R\x1alearnersParticipationRatio\"\xe7\x01\n\x12\x43ommunicationSpecs\x12@\n\x08protocol\x18\x01 \x01(\x0e\x32$.metisfl.CommunicationSpecs.ProtocolR\x08protocol\x12=\n\x0eprotocol_specs\x18\x02 \x01(\x0b\x32\x16.metisfl.ProtocolSpecsR\rprotocolSpecs\"P\n\x08Protocol\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0f\n\x0bSYNCHRONOUS\x10\x01\x12\x10\n\x0c\x41SYNCHRONOUS\x10\x02\x12\x14\n\x10SEMI_SYNCHRONOUS\x10\x03\"\x7f\n\rProtocolSpecs\x12(\n\x10semi_sync_lambda\x18\x01 \x01(\x05R\x0esemiSyncLambda\x12\x44\n\x1fsemi_sync_recompute_num_updates\x18\x02 \x01(\x08R\x1bsemiSyncRecomputeNumUpdates\"\xb7\x01\n\x11LearnerDescriptor\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12:\n\rserver_entity\x18\x03 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\x12\x37\n\x0c\x64\x61taset_spec\x18\x04 \x01(\x0b\x32\x14.metisfl.DatasetSpecR\x0b\x64\x61tasetSpec\"j\n\x0cLearnerState\x12\x34\n\x07learner\x18\x01 \x01(\x0b\x32\x1a.metisfl.LearnerDescriptorR\x07learner\x12$\n\x05model\x18\x02 \x03(\x0b\x32\x0e.metisfl.ModelR\x05model\"\xf1\x10\n\x1c\x46\x65\x64\x65ratedTaskRuntimeMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x39\n\nstarted_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n\x0c\x63ompleted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x0b\x63ompletedAt\x12\x33\n\x16\x61ssigned_to_learner_id\x18\x04 \x03(\tR\x13\x61ssignedToLearnerId\x12\x35\n\x17\x63ompleted_by_learner_id\x18\x05 \x03(\tR\x14\x63ompletedByLearnerId\x12v\n\x17train_task_submitted_at\x18\x06 \x03(\x0b\x32?.metisfl.FederatedTaskRuntimeMetadata.TrainTaskSubmittedAtEntryR\x14trainTaskSubmittedAt\x12s\n\x16train_task_received_at\x18\x07 \x03(\x0b\x32>.metisfl.FederatedTaskRuntimeMetadata.TrainTaskReceivedAtEntryR\x13trainTaskReceivedAt\x12s\n\x16\x65val_task_submitted_at\x18\x08 \x03(\x0b\x32>.metisfl.FederatedTaskRuntimeMetadata.EvalTaskSubmittedAtEntryR\x13\x65valTaskSubmittedAt\x12p\n\x15\x65val_task_received_at\x18\t \x03(\x0b\x32=.metisfl.FederatedTaskRuntimeMetadata.EvalTaskReceivedAtEntryR\x12\x65valTaskReceivedAt\x12\x82\x01\n\x1bmodel_insertion_duration_ms\x18\n \x03(\x0b\x32\x43.metisfl.FederatedTaskRuntimeMetadata.ModelInsertionDurationMsEntryR\x18modelInsertionDurationMs\x12\x82\x01\n\x1bmodel_selection_duration_ms\x18\x0b \x03(\x0b\x32\x43.metisfl.FederatedTaskRuntimeMetadata.ModelSelectionDurationMsEntryR\x18modelSelectionDurationMs\x12[\n\x1cmodel_aggregation_started_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x19modelAggregationStartedAt\x12_\n\x1emodel_aggregation_completed_at\x18\r \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x1bmodelAggregationCompletedAt\x12L\n#model_aggregation_total_duration_ms\x18\x0e \x01(\x01R\x1fmodelAggregationTotalDurationMs\x12?\n\x1cmodel_aggregation_block_size\x18\x0f \x03(\x01R\x19modelAggregationBlockSize\x12H\n!model_aggregation_block_memory_kb\x18\x10 \x03(\x01R\x1dmodelAggregationBlockMemoryKb\x12L\n#model_aggregation_block_duration_ms\x18\x11 \x03(\x01R\x1fmodelAggregationBlockDurationMs\x12S\n\x18model_tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifierR\x16modelTensorQuantifiers\x1a\x63\n\x19TrainTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18TrainTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18\x45valTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x61\n\x17\x45valTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1aK\n\x1dModelInsertionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x1aK\n\x1dModelSelectionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x62\x06proto3')
+>>>>>>> main
 
 
 
@@ -55,12 +59,19 @@ _AGGREGATIONRULESPECS = DESCRIPTOR.message_types_by_name['AggregationRuleSpecs']
 _FEDAVG = DESCRIPTOR.message_types_by_name['FedAvg']
 _FEDSTRIDE = DESCRIPTOR.message_types_by_name['FedStride']
 _FEDREC = DESCRIPTOR.message_types_by_name['FedRec']
+<<<<<<< HEAD
 _ENCRYPTIONCONFIG = DESCRIPTOR.message_types_by_name['EncryptionConfig']
 _MASKINGSCHEME = DESCRIPTOR.message_types_by_name['MaskingScheme']
 _HESCHEME = DESCRIPTOR.message_types_by_name['HEScheme']
 _HESCHEMECONFIG = DESCRIPTOR.message_types_by_name['HESchemeConfig']
 _CKKSSCHEME = DESCRIPTOR.message_types_by_name['CKKSScheme']
 _SECAGG = DESCRIPTOR.message_types_by_name['SecAgg']
+=======
+_HESCHEMECONFIG = DESCRIPTOR.message_types_by_name['HESchemeConfig']
+_EMPTYSCHEMECONFIG = DESCRIPTOR.message_types_by_name['EmptySchemeConfig']
+_CKKSSCHEMECONFIG = DESCRIPTOR.message_types_by_name['CKKSSchemeConfig']
+_PWA = DESCRIPTOR.message_types_by_name['PWA']
+>>>>>>> main
 _GLOBALMODELSPECS = DESCRIPTOR.message_types_by_name['GlobalModelSpecs']
 _COMMUNICATIONSPECS = DESCRIPTOR.message_types_by_name['CommunicationSpecs']
 _PROTOCOLSPECS = DESCRIPTOR.message_types_by_name['ProtocolSpecs']
@@ -326,6 +337,7 @@ FedRec = _reflection.GeneratedProtocolMessageType('FedRec', (_message.Message,),
   })
 _sym_db.RegisterMessage(FedRec)
 
+<<<<<<< HEAD
 EncryptionConfig = _reflection.GeneratedProtocolMessageType('EncryptionConfig', (_message.Message,), {
   'DESCRIPTOR' : _ENCRYPTIONCONFIG,
   '__module__' : 'metisfl.proto.metis_pb2'
@@ -342,11 +354,16 @@ _sym_db.RegisterMessage(MaskingScheme)
 
 HEScheme = _reflection.GeneratedProtocolMessageType('HEScheme', (_message.Message,), {
   'DESCRIPTOR' : _HESCHEME,
+=======
+HESchemeConfig = _reflection.GeneratedProtocolMessageType('HESchemeConfig', (_message.Message,), {
+  'DESCRIPTOR' : _HESCHEMECONFIG,
+>>>>>>> main
   '__module__' : 'metisfl.proto.metis_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.HEScheme)
+  # @@protoc_insertion_point(class_scope:metisfl.HESchemeConfig)
   })
-_sym_db.RegisterMessage(HEScheme)
+_sym_db.RegisterMessage(HESchemeConfig)
 
+<<<<<<< HEAD
 HESchemeConfig = _reflection.GeneratedProtocolMessageType('HESchemeConfig', (_message.Message,), {
   'DESCRIPTOR' : _HESCHEMECONFIG,
   '__module__' : 'metisfl.proto.metis_pb2'
@@ -360,6 +377,21 @@ CKKSScheme = _reflection.GeneratedProtocolMessageType('CKKSScheme', (_message.Me
   # @@protoc_insertion_point(class_scope:metisfl.CKKSScheme)
   })
 _sym_db.RegisterMessage(CKKSScheme)
+=======
+EmptySchemeConfig = _reflection.GeneratedProtocolMessageType('EmptySchemeConfig', (_message.Message,), {
+  'DESCRIPTOR' : _EMPTYSCHEMECONFIG,
+  '__module__' : 'metisfl.proto.metis_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.EmptySchemeConfig)
+  })
+_sym_db.RegisterMessage(EmptySchemeConfig)
+
+CKKSSchemeConfig = _reflection.GeneratedProtocolMessageType('CKKSSchemeConfig', (_message.Message,), {
+  'DESCRIPTOR' : _CKKSSCHEMECONFIG,
+  '__module__' : 'metisfl.proto.metis_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.CKKSSchemeConfig)
+  })
+_sym_db.RegisterMessage(CKKSSchemeConfig)
+>>>>>>> main
 
 SecAgg = _reflection.GeneratedProtocolMessageType('SecAgg', (_message.Message,), {
   'DESCRIPTOR' : _SECAGG,
@@ -486,6 +518,7 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _SSLCONFIGSTREAM._serialized_start=329
   _SSLCONFIGSTREAM._serialized_end=452
   _SSLCONFIG._serialized_start=455
+<<<<<<< HEAD
   _SSLCONFIG._serialized_end=641
   _DATASETSPEC._serialized_start=644
   _DATASETSPEC._serialized_end=1899
@@ -589,4 +622,105 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_end=9379
   _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_start=9381
   _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_end=9456
+=======
+  _SSLCONFIG._serialized_end=648
+  _DATASETSPEC._serialized_start=651
+  _DATASETSPEC._serialized_end=1906
+  _DATASETSPEC_CLASSIFICATIONDATASETSPEC._serialized_start=1471
+  _DATASETSPEC_CLASSIFICATIONDATASETSPEC._serialized_end=1683
+  _DATASETSPEC_CLASSIFICATIONDATASETSPEC_CLASSEXAMPLESNUMENTRY._serialized_start=1616
+  _DATASETSPEC_CLASSIFICATIONDATASETSPEC_CLASSEXAMPLESNUMENTRY._serialized_end=1683
+  _DATASETSPEC_REGRESSIONDATASETSPEC._serialized_start=1686
+  _DATASETSPEC_REGRESSIONDATASETSPEC._serialized_end=1833
+  _LEARNINGTASKTEMPLATE._serialized_start=1908
+  _LEARNINGTASKTEMPLATE._serialized_end=1974
+  _LEARNINGTASK._serialized_start=1977
+  _LEARNINGTASK._serialized_end=2245
+  _COMPLETEDLEARNINGTASK._serialized_start=2248
+  _COMPLETEDLEARNINGTASK._serialized_end=2423
+  _TASKEXECUTIONMETADATA._serialized_start=2426
+  _TASKEXECUTIONMETADATA._serialized_end=2787
+  _TASKEVALUATION._serialized_start=2790
+  _TASKEVALUATION._serialized_end=3027
+  _EPOCHEVALUATION._serialized_start=3029
+  _EPOCHEVALUATION._serialized_end=3142
+  _EVALUATIONMETRICS._serialized_start=3144
+  _EVALUATIONMETRICS._serialized_end=3187
+  _MODELEVALUATION._serialized_start=3190
+  _MODELEVALUATION._serialized_end=3353
+  _MODELEVALUATION_METRICVALUESENTRY._serialized_start=3290
+  _MODELEVALUATION_METRICVALUESENTRY._serialized_end=3353
+  _MODELEVALUATIONS._serialized_start=3356
+  _MODELEVALUATIONS._serialized_end=3595
+  _LOCALTASKSMETADATA._serialized_start=3597
+  _LOCALTASKSMETADATA._serialized_end=3686
+  _COMMUNITYMODELEVALUATION._serialized_start=3689
+  _COMMUNITYMODELEVALUATION._serialized_end=3935
+  _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY._serialized_start=3846
+  _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY._serialized_end=3935
+  _HYPERPARAMETERS._serialized_start=3937
+  _HYPERPARAMETERS._serialized_end=4041
+  _CONTROLLERPARAMS._serialized_start=4044
+  _CONTROLLERPARAMS._serialized_end=4614
+  _CONTROLLERPARAMS_MODELHYPERPARAMS._serialized_start=4438
+  _CONTROLLERPARAMS_MODELHYPERPARAMS._serialized_end=4614
+  _MODELSTORECONFIG._serialized_start=4617
+  _MODELSTORECONFIG._serialized_end=4774
+  _INMEMORYSTORE._serialized_start=4776
+  _INMEMORYSTORE._serialized_end=4861
+  _REDISDBSTORE._serialized_start=4864
+  _REDISDBSTORE._serialized_end=5008
+  _NOEVICTION._serialized_start=5010
+  _NOEVICTION._serialized_end=5022
+  _LINEAGELENGTHEVICTION._serialized_start=5024
+  _LINEAGELENGTHEVICTION._serialized_end=5086
+  _MODELSTORESPECS._serialized_start=5089
+  _MODELSTORESPECS._serialized_end=5271
+  _AGGREGATIONRULE._serialized_start=5274
+  _AGGREGATIONRULE._serialized_end=5559
+  _AGGREGATIONRULESPECS._serialized_start=5562
+  _AGGREGATIONRULESPECS._serialized_end=5774
+  _AGGREGATIONRULESPECS_SCALINGFACTOR._serialized_start=5670
+  _AGGREGATIONRULESPECS_SCALINGFACTOR._serialized_end=5774
+  _FEDAVG._serialized_start=5776
+  _FEDAVG._serialized_end=5784
+  _FEDSTRIDE._serialized_start=5786
+  _FEDSTRIDE._serialized_end=5834
+  _FEDREC._serialized_start=5836
+  _FEDREC._serialized_end=5844
+  _HESCHEMECONFIG._serialized_start=5847
+  _HESCHEMECONFIG._serialized_end=6182
+  _EMPTYSCHEMECONFIG._serialized_start=6184
+  _EMPTYSCHEMECONFIG._serialized_end=6203
+  _CKKSSCHEMECONFIG._serialized_start=6205
+  _CKKSSCHEMECONFIG._serialized_end=6302
+  _PWA._serialized_start=6304
+  _PWA._serialized_end=6376
+  _GLOBALMODELSPECS._serialized_start=6379
+  _GLOBALMODELSPECS._serialized_end=6532
+  _COMMUNICATIONSPECS._serialized_start=6535
+  _COMMUNICATIONSPECS._serialized_end=6766
+  _COMMUNICATIONSPECS_PROTOCOL._serialized_start=6686
+  _COMMUNICATIONSPECS_PROTOCOL._serialized_end=6766
+  _PROTOCOLSPECS._serialized_start=6768
+  _PROTOCOLSPECS._serialized_end=6895
+  _LEARNERDESCRIPTOR._serialized_start=6898
+  _LEARNERDESCRIPTOR._serialized_end=7081
+  _LEARNERSTATE._serialized_start=7083
+  _LEARNERSTATE._serialized_end=7189
+  _FEDERATEDTASKRUNTIMEMETADATA._serialized_start=7192
+  _FEDERATEDTASKRUNTIMEMETADATA._serialized_end=9353
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY._serialized_start=8801
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY._serialized_end=8900
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY._serialized_start=8902
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY._serialized_end=9000
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY._serialized_start=9002
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY._serialized_end=9100
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY._serialized_start=9102
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY._serialized_end=9199
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_start=9201
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_end=9276
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_start=9278
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_end=9353
+>>>>>>> main
 # @@protoc_insertion_point(module_scope)

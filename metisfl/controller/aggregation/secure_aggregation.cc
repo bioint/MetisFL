@@ -77,7 +77,7 @@ SecAgg::Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pai
     // The `Aggregate` function assumes that each learner's contribution value,
     // scaling factor is already normalized / scaled.
     auto pwa_result =
-        encryption_scheme_->Aggregate(local_variable_ciphertexts, local_models_contrib_value);        
+        encryption_scheme_->Aggregate(local_variable_ciphertexts, local_models_contrib_value);
     *global_model.mutable_model()->mutable_variables(var_idx)->
         mutable_ciphertext_tensor()->mutable_tensor_spec()->mutable_value() =
         pwa_result;
