@@ -11,8 +11,8 @@ BatchesScaler::ComputeScalingFactors(
     const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &participating_metadata) {
 
   /*
-   * For a single learner the scaling factor is its completed batches value.
-   * For multiple learners, the scaling factors are the weighted average of all completed batches.
+   * For a single (active or participating) learner the scaling factor is the identity value (=1).
+   * For multiple learners, the scaling factors are the weighted average of all the participants' completed batches.
    */
   absl::flat_hash_map<std::string, double> scaling_factors;
 
@@ -25,9 +25,7 @@ BatchesScaler::ComputeScalingFactors(
   } else if (participating_metadata.size() == 1) {
 
     auto learner_id = participating_metadata.begin()->first;
-    auto num_batches =
-        static_cast<double>(participating_metadata.begin()->second->completed_batches());
-    scaling_factors[learner_id] = num_batches;
+    scaling_factors[learner_id] = 1;
 
   } else {
 

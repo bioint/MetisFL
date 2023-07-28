@@ -128,7 +128,7 @@ class DriverSession(object):
                 if self._federation_environment.learners[idx].hostname == "localhost":
                     time.sleep(0.1)
                 # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
-                self._executor_learners_tasks_q.put(learner_future)                             
+                self._executor_learners_tasks_q.put(learner_future)                  
         else:
             MetisLogger.fatal(
                 "Controller is not responsive. Cannot proceed with execution.")

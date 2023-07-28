@@ -149,8 +149,8 @@ class ControllerDefaultImpl : public Controller {
         (float) dataset_spec.num_training_examples() /
             (float) params_.model_hyperparams().batch_size());
 
-    task_template.set_num_local_updates(params_.model_hyperparams().epochs() *
-        steps_per_epoch);
+    task_template.set_num_local_updates(
+      params_.model_hyperparams().epochs() * steps_per_epoch);
 
     // Registers learner.
     learners_[learner_id] = learner_state;
@@ -231,17 +231,18 @@ class ControllerDefaultImpl : public Controller {
     //      since we are using a vector to insert learners models.
     //  (2) In the case of Redis, we cannot perform multi-threading,
     //      since Redis is single-thread.
-    PLOG(INFO) << "Insert learner\'s " << learner_id << " model.";
+    PLOG(INFO) << "Inserting learner\'s " << learner_id << " model.";
     model_store_->InsertModel(
         std::vector<std::pair<std::string, Model>> {
             std::pair<std::string, Model>(learner_id, task.model())
         });
+    PLOG(INFO) << "Inserted learner\'s " << learner_id << " model.";
 
     // Update learner collection with metrics from last completed training task.
     if (!local_tasks_metadata_.contains(learner_id)) {
       local_tasks_metadata_[learner_id] = std::list<TaskExecutionMetadata>();
     }
-    local_tasks_metadata_[learner_id].push_front(task.execution_metadata());
+    local_tasks_metadata_[learner_id].push_back(task.execution_metadata());
 
     // Schedules next tasks if necessary. We call ScheduleTasks() asynchronously
     // because during synchronous execution, the learner who completed its local
@@ -430,9 +431,9 @@ class ControllerDefaultImpl : public Controller {
     // Acquires a lock to avoid having multiple threads overwriting the learners
     // data structures. The guard releases the mutex as soon as it goes out of
     // scope so no need to manually release it in the code.
+    // TODO(@stripeli): Maybe put a guard for global_iteration_ as well?
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-    // TODO(stripeli): Maybe for global_iteration_ as well?
-
+  
     auto to_schedule =
         scheduler_->ScheduleNext(learner_id, task, GetLearners());
     if (!to_schedule.empty()) {
@@ -493,9 +494,6 @@ class ControllerDefaultImpl : public Controller {
       // Set the specifications of the next training task.
       UpdateLearnersTaskTemplates(to_schedule);
 
-      // Set the specifications of the next training task.
-      UpdateLearnersTaskTemplates(to_schedule);
-
       // Creates a new federation runtime metadata
       // object for the new scheduling round.
       FederatedTaskRuntimeMetadata new_meta = FederatedTaskRuntimeMetadata();
@@ -507,8 +505,10 @@ class ControllerDefaultImpl : public Controller {
         *new_meta.add_assigned_to_learner_id() = to_schedule_id;
       }
 
+      PLOG(INFO) << "Sending training tasks";
       // Send training task to all scheduled learners.
       SendRunTasks(to_schedule, community_model, new_meta);
+      PLOG(INFO) << "Sent training tasks";
 
       // Save federated task runtime metadata.
       metadata_.emplace_back(new_meta);
@@ -525,8 +525,12 @@ class ControllerDefaultImpl : public Controller {
     const auto &protocol_specs = communication_specs.protocol_specs();
     // We check if it is the 2nd global_iteration_, because the 1st
     // global_iteration_ refers to the very first initially scheduled task.
+    // For the SemiSynchronous protocol, recomputation takes place only
+    // if we are just starting the 2nd federation round or we want to 
+    // recompute the number of updates at every federation round 
+    // (i.e., dynamic assignment of local training steps).
     if (communication_specs.protocol() ==
-        CommunicationSpecs::SEMI_SYNCHRONOUS &&
+        CommunicationSpecs::SEMISYNCHRONOUS &&
         (global_iteration_ == 2 ||
             protocol_specs.semi_sync_recompute_num_updates())) {
 
@@ -820,8 +824,14 @@ class ControllerDefaultImpl : public Controller {
     // All required models are retrieved from the model store.
     absl::flat_hash_map<std::string, LearnerState *> participating_states;
     absl::flat_hash_map<std::string, TaskExecutionMetadata *> participating_metadata;
+
+    // While looping over the learners collection, we need to make sure:
+    // (1)  All learners exist in the learners_ collection. We do so to avoid cases
+    //      where a learner was removed (dropped) from the collection.
+    // (2)  All learners' models used for the aggregation have been committed. 
+    //      In other words, there is at least one (local) model for every learner.
     for (const auto &id: learners_ids) {
-      if (learners_.contains(id)) {
+      if (learners_.contains(id) && local_tasks_metadata_.contains(id)) {
         participating_states[id] = &learners_.at(id);
         participating_metadata[id] = &local_tasks_metadata_.at(id).back();
       }
@@ -833,7 +843,7 @@ class ControllerDefaultImpl : public Controller {
     auto scaling_factors =
         scaler_->ComputeScalingFactors(
             community_model_, learners_, participating_states, participating_metadata);
-
+            
     // Defines the length of the aggregation stride, i.e., how many models
     // to fetch from the model store and feed to the aggregation function.
     // Only FedStride does this stride-based aggregation. All other aggregation
@@ -922,7 +932,8 @@ class ControllerDefaultImpl : public Controller {
 
         long block_memory = GetTotalMemory();
         PLOG(INFO) << "Aggregate block memory usage (kb): " << block_memory;
-        *metadata_.at(metadata_ref_idx).mutable_model_aggregation_block_memory_kb()->Add() = (double) block_memory;
+        *metadata_.at(metadata_ref_idx).mutable_model_aggregation_block_memory_kb()->Add() = 
+            (double) block_memory;
 
         // Cleanup. Clear sentinel block variables and reset
         // model_store's state to reclaim unused memory.

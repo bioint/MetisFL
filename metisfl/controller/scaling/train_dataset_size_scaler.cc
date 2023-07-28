@@ -11,8 +11,8 @@ TrainDatasetSizeScaler::ComputeScalingFactors(
     const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &participating_metadata) {
 
   /*
-   * For a single learner the scaling factor is equal to its raw dataset size value.
-   * For multiple learners, the scaling factors are the weighted average of all raw values.
+   * For a single (active or participating) learner the scaling factor is the identity value (=1).
+   * For multiple learners, the scaling factors are the weighted average of all the participants' training dataset sizes.
    */
   absl::flat_hash_map<std::string, double> scaling_factors;
 
@@ -25,9 +25,7 @@ TrainDatasetSizeScaler::ComputeScalingFactors(
   } else if (participating_states.size() == 1) {
 
     auto learner_id = participating_states.begin()->first;
-    auto num_training_examples = static_cast<double>(
-        participating_states.begin()->second->learner().dataset_spec().num_training_examples());
-    scaling_factors[learner_id] = num_training_examples;
+    scaling_factors[learner_id] = 1;
 
   } else {
 

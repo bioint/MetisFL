@@ -11,8 +11,8 @@ ParticipantsScaler::ComputeScalingFactors(
     const absl::flat_hash_map<std::string, TaskExecutionMetadata*> &participating_metadata) {
 
   /*
-   * For a single learner the scaling factor is the identity value (=1).
-   * For multiple learners, the scaling factors are the weighted average of all identities (=1/N).
+   * For a single (active or participating) learner the scaling factor is the identity value (=1).
+   * For multiple learners, the scaling factors are the weighted average of all participants' identities (=1/N).
    */
   auto num_participants = participating_states.size();
   absl::flat_hash_map<std::string, double> scaling_factors;

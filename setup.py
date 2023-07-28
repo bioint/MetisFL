@@ -68,7 +68,6 @@ if __name__ == "__main__":
             )
         )
     lib_path = os.environ["PYTHON_LIB_PATH"]
-    print(lib_path, flush=True)
     if not os.path.isdir(lib_path):
         raise ValueError("PYTHON_LIB_PATH {} does not exist".format(lib_path))
     

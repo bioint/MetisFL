@@ -1,6 +1,6 @@
 # Install Ubuntu image from docker hub.
 FROM ubuntu:focal as ubuntu
-ARG PYV="3.10"
+ARG PYV="3.8"
 
 # Assign simple root password.
 RUN echo "root:root" | chpasswd
