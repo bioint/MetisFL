@@ -59,7 +59,7 @@ std::unique_ptr<Scheduler>
 CreateScheduler(const CommunicationSpecs &specs) {
 
   if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS ||
-      specs.protocol() == CommunicationSpecs::SEMI_SYNCHRONOUS) {
+      specs.protocol() == CommunicationSpecs::SEMISYNCHRONOUS) {
     return absl::make_unique<SynchronousScheduler>();
   } else if (specs.protocol() == CommunicationSpecs::ASYNCHRONOUS) {
     return absl::make_unique<AsynchronousScheduler>();

@@ -409,8 +409,8 @@ class MetisProtoMessages(object):
             protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SYNCHRONOUS
         elif protocol.upper() == "ASYNCHRONOUS":
             protocol_pb = metis_pb2.CommunicationSpecs.Protocol.ASYNCHRONOUS
-        elif protocol.upper() == "SEMI_SYNCHRONOUS":
-            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SEMI_SYNCHRONOUS
+        elif protocol.upper() == "SEMISYNCHRONOUS":
+            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SEMISYNCHRONOUS
         else:
             protocol_pb = metis_pb2.CommunicationSpecs.Protocol.UNKNOWN
 

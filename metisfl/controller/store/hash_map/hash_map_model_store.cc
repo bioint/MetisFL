@@ -51,8 +51,8 @@ void HashMapModelStore::InsertModel(std::vector<std::pair<std::string, Model>> l
 
     // This is only applicable on the k-Recent-Models policy.
     if (m_model_store_specs.has_lineage_length_eviction()) {
-      // Check to see is learner_id is present in collection
-      if ((m_model_store_cache.find(learner_id) != m_model_store_cache.end())) {
+      // Check to see is learner_id is present in collection.
+      if (m_model_store_cache.find(learner_id) != m_model_store_cache.end()) {
         // Yes, learner_id is present in collection.
         // Check if the model being inserted is greater than max length.
         if (m_model_store_cache[learner_id].size() >=
@@ -64,7 +64,6 @@ void HashMapModelStore::InsertModel(std::vector<std::pair<std::string, Model>> l
       }
     }
     
-    PLOG(INFO) << "Inserting model in learner_id: " << learner_id;
     m_model_store_cache[learner_id].push_back(model);
 
   }

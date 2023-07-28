@@ -69,6 +69,7 @@ class KerasModelOps(ModelOps):
 
         # TODO(dstripelis) We evaluate the local model over the test dataset at the end of training.
         #  Maybe we need to parameterize evaluation at every epoch or at the end of training.
+        # x_test could be an array - we just need to check if it is not None
         if x_test is not None:
             test_res = self._metis_model._backend_model.evaluate(x=x_test,
                                                                  y=y_test,
@@ -111,9 +112,9 @@ class KerasModelOps(ModelOps):
         MetisLogger.info("Starting model evaluation.")
         x_eval, y_eval = eval_dataset.construct_dataset_pipeline(
             batch_size=batch_size, is_train=False)
-        # FIXME(@panoskyriakis) x_eval is None even thought val data is given
         evaluation_metrics = dict()
-        if x_eval is None:
+        # x_eval, y_eval could be arrays - we just need to check if they are not None
+        if x_eval is not None and y_eval is not None:
             evaluation_metrics = self._metis_model._backend_model.evaluate(x=x_eval,
                                                                            y=y_eval,
                                                                            batch_size=batch_size,
@@ -128,11 +129,13 @@ class KerasModelOps(ModelOps):
         if infer_dataset is None:
             MetisLogger.fatal("Provided `dataset` for inference is None.")
         MetisLogger.info("Starting model inference.")
-        if x_infer is None:
+        predictions = None
+        if x_infer:
             x_infer, _ = infer_dataset.construct_dataset_pipeline(
                 batch_size=batch_size, is_train=False)
-        predictions = self._metis_model._backend_model.predict(
-            x_infer, batch_size)
+            if x_infer is not None:  # x_infer could be an array, we just need to check if it is not None
+                predictions = self._metis_model._backend_model.predict(
+                    x_infer, batch_size)
         MetisLogger.info("Model inference is complete.")
         return predictions
 

@@ -320,7 +320,7 @@ message CommunicationSpecs {
     UNKNOWN = 0;
     SYNCHRONOUS = 1;
     ASYNCHRONOUS = 2;
-    SEMI_SYNCHRONOUS = 3;
+    SEMISYNCHRONOUS = 3;
   }
   Protocol protocol = 1;
   ProtocolSpecs protocol_specs = 2;

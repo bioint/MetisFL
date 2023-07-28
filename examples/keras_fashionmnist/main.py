@@ -24,13 +24,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", default=default_fed_env_fp)
     parser.add_argument("--optimizer", default="SGD")
+    parser.add_argument("--num_learners", default=1)
     args = parser.parse_args()
 
     # Load the data
     x_train, y_train, x_test, y_test = load_data()
 
     # Partition the data, iid partitions
-    num_learners = 1  # Must match the number of learners in the federation environment yaml file
+    num_learners = int(args.num_learners)  # Must match the number of learners in the federation environment yaml file
     x_chunks, y_chunks = partition_data_iid(x_train, y_train, num_learners)
 
     # Save the data
