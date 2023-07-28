@@ -35,7 +35,9 @@ class ServicerBase {
     ServerBuilder builder;
     std::shared_ptr<grpc::ServerCredentials> creds;
 
-    if (server_entity.ssl_config().enable_ssl()) {
+    auto ssl_enable = server_entity.ssl_config().enable();
+                       
+    if (ssl_enable) {
 
       std::string server_cert_loaded;
       std::string server_key_loaded;
@@ -45,12 +47,12 @@ class ServicerBase {
 
         if (ReadParseFile(server_cert_loaded, cert_path) == -1) {
           // Logs and terminates the program if public certificate filepath is invalid.
-          PLOG(FATAL) << "Error Reading Controller Certificate: " << cert_path;
+          PLOG(FATAL) << "Error reading controller certificate: " << cert_path;
         }
 
         if (ReadParseFile(server_key_loaded, key_path) == -1) {
           // Logs and terminates the program if private key filepath is invalid.
-          PLOG(FATAL) << "Error Reading Controller Key: " << key_path;
+          PLOG(FATAL) << "Error reading controller key: " << key_path;
         }
       } else if (server_entity.ssl_config().has_ssl_config_stream()) {
         server_cert_loaded = server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
@@ -59,8 +61,8 @@ class ServicerBase {
         PLOG(FATAL) << "Even though SSL was enabled the (private, public) key pair was not provided.";
       }
 
-      PLOG(INFO) << "SSL enabled";
-
+      PLOG(INFO) << "SSL enabled.";
+      
       grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp =
           {server_key_loaded, server_cert_loaded};
       grpc::SslServerCredentialsOptions ssl_opts;
@@ -72,6 +74,7 @@ class ServicerBase {
       PLOG(INFO) << "SSL disabled";
       creds = grpc::InsecureServerCredentials();
     }
+
 
     // Listens on the given address without any authentication mechanism.
     builder.AddListeningPort(server_address, creds);
@@ -252,10 +255,12 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
     }
 
     // Validates that the incoming request has the required fields populated.
-    if (!request->has_server_entity() && !request->has_local_dataset_spec()) {
+    // FIXME:(@stripeli) if either but not both are not set, it'll crash in line 257
+    // switch to if (!request->has_server_entity() || !request->has_local_dataset_spec())
+    if (!request->has_server_entity() || !request->has_local_dataset_spec()) {
       response->mutable_ack()->set_status(false);
       return {StatusCode::INVALID_ARGUMENT,
-              "Server entity and local dataset cannot be empty."};
+              "Server entity or local dataset cannot be empty."};
     }
 
     const auto learner_or = controller_->AddLearner(

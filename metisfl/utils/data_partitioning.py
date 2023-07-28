@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 class DataPartitioning(object):
@@ -105,7 +105,7 @@ class DataPartitioning(object):
         remaining = len(y_chunks)
         MetisLogger.info("Remaining unassigned data points: {}".format(len(y_chunks)))
         if remaining > 0:
-            raise RuntimeError("Not all training data have been assigned.")
+            MetisLogger.fatal("Not all training data have been assigned.")
 
         # set partition object specifications
         self.non_iid = True

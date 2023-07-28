@@ -28,7 +28,7 @@ class ControllerTest : public ::testing::Test {
     params.mutable_communication_specs()->set_protocol(
         CommunicationSpecs::SYNCHRONOUS);
 
-    // Set Fully Homomorphic Encryption specifications.
+    // Set Fully EncryptionScheme EncryptionScheme specifications.
     *params.mutable_fhe_scheme() = FHEScheme();
 
     // Set model store specifications.

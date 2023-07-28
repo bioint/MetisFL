@@ -48,10 +48,11 @@ cmake(
 
 cc_library(
     name = "palisade_wrapper",
-    hdrs = ["he_scheme.h", "ckks_scheme.h"],
+    hdrs = ["ckks_scheme.h"],
     srcs = ["ckks_scheme.cc"],
     deps = [
       "//metisfl/encryption/palisade:palisade_cmake",
+      "//metisfl/encryption:encryption_cc",
       "@absl//absl/strings",
       "@com_github_google_glog//:glog",
     ],

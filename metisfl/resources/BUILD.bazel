@@ -1,11 +1,11 @@
 filegroup(
-    name = "fheparams",
-    srcs = glob(["fheparams/cryptoparams/*.txt"]),
+    name = "crypto",
+    srcs = glob(["crypto/*.txt"]),
     visibility = ["//visibility:public"],
 )
 
 filegroup(
-    name = "ssl_config_default",
-    srcs = glob(["ssl_config/default/*"]),
+    name = "ssl",
+    srcs = glob(["ssl/*.pem"]),
     visibility = ["//visibility:public"],
 )

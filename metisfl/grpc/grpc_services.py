@@ -1,39 +1,78 @@
+import grpc
+import os
 import queue
 import time
-from concurrent import futures
 
-import grpc
+from concurrent import futures
 from grpc._cython import cygrpc
 from pebble import ThreadPool
-from metisfl.proto import controller_pb2_grpc, service_common_pb2
 
-from metisfl.proto.metis_pb2 import ServerEntity
-from metisfl.utils.metis_logger import MetisLogger
-from metisfl.utils.ssl_configurator import SSLConfigurator
+from metisfl.proto import controller_pb2_grpc, service_common_pb2
+from metisfl.proto.metis_pb2 import ServerEntity, SSLConfig, SSLConfigFiles, SSLConfigStream
+from metisfl.utils.logger import MetisLogger
+
+
+class SSLProtoHelper(object):
+
+    @classmethod
+    def from_ssl_config_pb(cls, ssl_config_pb: SSLConfig, as_stream=False):
+        public_certificate, private_key = None, None
+        if ssl_config_pb.enable:            
+            ssl_config_attr = getattr(ssl_config_pb, ssl_config_pb.WhichOneof('config'))
+            # If the certificate is given then establish secure channel connection.
+            if isinstance(ssl_config_attr, SSLConfigFiles):
+                public_certificate = ssl_config_pb.ssl_config_files.public_certificate_file
+                private_key = ssl_config_pb.ssl_config_files.private_key_file
+                if as_stream:
+                    public_certificate = cls.load_file_as_stream(public_certificate)
+                    private_key = cls.load_file_as_stream(private_key)
+            elif isinstance(ssl_config_attr, SSLConfigStream):
+                public_certificate = ssl_config_pb.ssl_config_stream.public_certificate_stream
+                private_key = ssl_config_pb.ssl_config_stream.private_key_stream
+            else:
+                MetisLogger.warning("Even though SSL was requested the certificate "
+                                    "was not provided. Proceeding without SSL.")
+
+        return public_certificate, private_key
+
+    @classmethod
+    def load_file_as_stream(cls, filepath):
+        stream = None
+        if filepath: 
+            if os.path.exists(filepath):
+                stream = open(filepath, "rb").read()
+            else:
+                MetisLogger.warning(
+                    "The given filepath: {} does not exist.".format(filepath))
+        return stream
 
 
 class GRPCEndpoint(object):
 
-    def __init__(self, server_entity: ServerEntity):
-        self.server_entity = server_entity
+    def __init__(self, server_entity_pb: ServerEntity):
         self.listening_endpoint = "{}:{}".format(
-            server_entity.hostname,
-            server_entity.port)
+            server_entity_pb.hostname,
+            server_entity_pb.port)
 
 
 class GRPCChannelMaxMsgLength(object):
 
-    def __init__(self, server_entity: ServerEntity):
-        self.grpc_endpoint = GRPCEndpoint(server_entity)
-        # TODO(stripeli): Remove this. Extend Channel class to read messages as chunks
+    def __init__(self, server_entity_pb: ServerEntity):
+        self.grpc_endpoint = GRPCEndpoint(server_entity_pb)
+        # TODO(@stripeli): Remove this. Extend Channel class to read messages as chunks
         #  similar to this, C++: https://jbrandhorst.com/post/grpc-binary-blob-stream/
         self.channel_options = \
             [(cygrpc.ChannelArgKey.max_send_message_length, -1),
              (cygrpc.ChannelArgKey.max_receive_message_length, -1)]
 
-        public_certificate, _ = SSLConfigurator().load_certificates_from_ssl_config_pb(
-            ssl_config_pb=server_entity.ssl_config, as_stream=True)
-        if public_certificate:
+        # To initialize a grpc connection to a remote 
+        # server using SSL we only need the public 
+        # certificate not the private key.
+        public_certificate, _ = \
+            SSLProtoHelper.from_ssl_config_pb(
+                server_entity_pb.ssl_config, 
+                as_stream=True)
+        if public_certificate:            
             ssl_credentials = grpc.ssl_channel_credentials(public_certificate)
             self.channel = grpc.secure_channel(
                 target=self.grpc_endpoint.listening_endpoint,
@@ -47,24 +86,23 @@ class GRPCChannelMaxMsgLength(object):
 
 class GRPCClient(object):
 
-    def __init__(self, server_entity: ServerEntity, max_workers=1):
-        self.grpc_endpoint = GRPCEndpoint(server_entity)
+    def __init__(self, server_entity_pb: ServerEntity, max_workers=1):
+        self.grpc_endpoint = GRPCEndpoint(server_entity_pb)
         self.executor = ThreadPool(max_workers=max_workers)
         self.executor_pool = queue.Queue()
-        self._channel = GRPCChannelMaxMsgLength(self.grpc_endpoint.server_entity).channel
+        self._channel = GRPCChannelMaxMsgLength(server_entity_pb).channel
         self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)
-
 
     def check_health_status(self, request_retries=1, request_timeout=None, block=True):
         def _request(_timeout=None):
             get_services_health_status_request_pb = service_common_pb2.GetServicesHealthStatusRequest()
             MetisLogger.info("Requesting controller's health status.")
-            response = self._stub.GetServicesHealthStatus(get_services_health_status_request_pb, timeout=_timeout)
+            response = self._stub.GetServicesHealthStatus(
+                get_services_health_status_request_pb, timeout=_timeout)
             MetisLogger.info("Received controller's health status, {} - {}".format(
                 self.grpc_endpoint.listening_endpoint, response))
             return response
         return self.schedule_request(_request, request_retries, request_timeout, block)
-
 
     def schedule_request(self, request, request_retries=1, request_timeout=None, block=True):
         if request_retries > 1:
@@ -90,19 +128,21 @@ class GRPCClient(object):
             try:
                 response = request_fn(request_timeout)
             except grpc.RpcError as rpc_error:
-                MetisLogger.info("Exception Raised: {}, Retrying...".format(rpc_error))
+                MetisLogger.info(
+                    "Exception Raised: {}, Retrying...".format(rpc_error))
                 if rpc_error.code() == grpc.StatusCode.UNAVAILABLE:
-                    time.sleep(10)  # sleep for 10secs in-between requests if server is Unavailable.
+                    # sleep for 10secs in-between requests if server is Unavailable.
+                    time.sleep(10)
             else:
                 break
             count_retries += 1
-        return response       
+        return response
 
 
 class GRPCServerMaxMsgLength(object):
 
-    def __init__(self, max_workers=None, server_entity: ServerEntity = None):
-        self.grpc_endpoint = GRPCEndpoint(server_entity)
+    def __init__(self, max_workers=None, server_entity_pb: ServerEntity = None):
+        self.grpc_endpoint = GRPCEndpoint(server_entity_pb)
 
         # TODO(stripeli): Remove this. Extend Channel class to read messages as chunks
         #  similar to this, C++: https://jbrandhorst.com/post/grpc-binary-blob-stream/
@@ -115,8 +155,9 @@ class GRPCServerMaxMsgLength(object):
         self.executor = futures.ThreadPoolExecutor(max_workers=max_workers)
         self.server = grpc.server(self.executor, options=self.channel_options)
 
-        public_certificate, private_key = SSLConfigurator().load_certificates_from_ssl_config_pb(
-            ssl_config_pb=server_entity.ssl_config, as_stream=True)
+        public_certificate, private_key = \
+            SSLProtoHelper.from_ssl_config_pb(
+                server_entity_pb.ssl_config, as_stream=True)
         if public_certificate and private_key:
             server_credentials = grpc.ssl_server_credentials((
                 (private_key, public_certificate, ),

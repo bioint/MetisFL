@@ -1,15 +1,18 @@
-from typing import Any
-
 import tensorflow as tf
 
+from keras import backend as K
+from typing import Any, Dict, Tuple
+
 from metisfl.proto import metis_pb2, model_pb2
-from metisfl.utils.metis_logger import MetisLogger
-from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.keras.wrapper import MetisKerasModel
+from metisfl.models.keras.keras_model import MetisModelKeras
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
-from metisfl.models.model_ops import LearningTaskStats, ModelOps
+from metisfl.models.model_dataset import ModelDataset
+from metisfl.models.model_ops import ModelOps
 from metisfl.models.utils import calc_mean_wall_clock, get_num_of_epochs
+from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
+from metisfl.utils.logger import MetisLogger
+from metisfl.utils.formatting import DataTypeFormatter
 
 
 class KerasModelOps(ModelOps):
@@ -17,7 +20,7 @@ class KerasModelOps(ModelOps):
     def __init__(self, model_dir: str):
         self._model_dir = model_dir
         self._set_gpu_memory_growth()
-        self._metis_model = MetisKerasModel.load(model_dir)
+        self._metis_model = MetisModelKeras.load(model_dir)
 
     def train_model(self,
                     train_dataset: ModelDataset,
@@ -25,9 +28,9 @@ class KerasModelOps(ModelOps):
                     hyperparameters_pb: metis_pb2.Hyperparameters,
                     validation_dataset: ModelDataset = None,
                     test_dataset: ModelDataset = None,
-                    verbose=False) -> metis_pb2.CompletedLearningTask:
+                    verbose=False) -> Tuple[ModelWeightsDescriptor, LearningTaskStats]:
         if train_dataset is None:
-            raise RuntimeError("Provided `dataset` for training is None.")
+            MetisLogger.fatal("Provided `dataset` for training is None.")
         MetisLogger.info("Starting model training.")
 
         global_iteration = learning_task_pb.global_iteration
@@ -36,8 +39,8 @@ class KerasModelOps(ModelOps):
         dataset_size = train_dataset.get_size()
         step_counter_callback = StepCounter(total_steps=total_steps)
         performance_cb = PerformanceProfiler()
-        self._construct_optimizer(hyperparameters_pb.optimizer)
-        
+        self._construct_optimizer(hyperparameters_pb.optimizer)        
+
         # @stripeli why is the epoch number calculated? Isn't it given in the yaml?
         # @stripeli why there are two batch sizes?
         epochs_num = get_num_of_epochs(
@@ -48,7 +51,7 @@ class KerasModelOps(ModelOps):
             batch_size=batch_size, is_train=False)
         x_test, y_test = test_dataset.construct_dataset_pipeline(
             batch_size=batch_size, is_train=False)
-                
+
         # We assign x_valid, y_valid only if both values
         # are not None, else we assign x_valid (None or not None).
         validation_data = (x_valid, y_valid) \
@@ -66,11 +69,12 @@ class KerasModelOps(ModelOps):
 
         # TODO(dstripelis) We evaluate the local model over the test dataset at the end of training.
         #  Maybe we need to parameterize evaluation at every epoch or at the end of training.
-        test_res = self._metis_model._backend_model.evaluate(x=x_test, 
-                                                             y=y_test, 
-                                                             batch_size=batch_size,
-                                                             verbose=verbose, 
-                                                             return_dict=True)
+        if x_test is not None:
+            test_res = self._metis_model._backend_model.evaluate(x=x_test,
+                                                                 y=y_test,
+                                                                 batch_size=batch_size,
+                                                                 verbose=verbose,
+                                                                 return_dict=True)
 
         # Since model has been changed, save the new model state.
         self._metis_model.save(self._model_dir)
@@ -80,7 +84,7 @@ class KerasModelOps(ModelOps):
         # Replacing "val" so that metric keys are the same for both training and validation datasets.
         validation_res = {k.replace("val_", ""): k_v for k, k_v in sorted(
             history_res.history.items()) if 'val_' in k}
-        
+
         model_weights_descriptor = self._metis_model.get_weights_descriptor()
         learning_task_stats = LearningTaskStats(
             train_stats=training_res,
@@ -101,31 +105,40 @@ class KerasModelOps(ModelOps):
     def evaluate_model(self,
                        eval_dataset: ModelDataset,
                        batch_size=100,
-                       verbose=False) -> Any | dict:
+                       verbose=False) -> Dict:
         if eval_dataset is None:
-            raise RuntimeError("Provided `dataset` for evaluation is None.")
+            MetisLogger.fatal("Provided `dataset` for evaluation is None.")
         MetisLogger.info("Starting model evaluation.")
-        x_eval, y_eval = eval_dataset.construct_dataset_pipeline(batch_size=batch_size, is_train=False)
-        evaluation_metrics = self._metis_model._backend_model.evaluate(x=x_eval,
-                                                                       y=y_eval,
-                                                                       batch_size=batch_size,
-                                                                       verbose=verbose, 
-                                                                       return_dict=True)
+        x_eval, y_eval = eval_dataset.construct_dataset_pipeline(
+            batch_size=batch_size, is_train=False)
+        # FIXME(@panoskyriakis) x_eval is None even thought val data is given
+        evaluation_metrics = dict()
+        if x_eval is None:
+            evaluation_metrics = self._metis_model._backend_model.evaluate(x=x_eval,
+                                                                           y=y_eval,
+                                                                           batch_size=batch_size,
+                                                                           verbose=verbose,
+                                                                           return_dict=True)
         MetisLogger.info("Model evaluation is complete.")
         return evaluation_metrics
 
     def infer_model(self,
                     infer_dataset: ModelDataset,
-                    batch_size=100) -> Any | None:
+                    batch_size=100) -> Any:
         if infer_dataset is None:
-            raise RuntimeError("Provided `dataset` for inference is None.")
+            MetisLogger.fatal("Provided `dataset` for inference is None.")
         MetisLogger.info("Starting model inference.")
-        x_infer, _ = infer_dataset.construct_dataset_pipeline(
-            batch_size=batch_size, is_train=False)
+        if x_infer is None:
+            x_infer, _ = infer_dataset.construct_dataset_pipeline(
+                batch_size=batch_size, is_train=False)
         predictions = self._metis_model._backend_model.predict(
             x_infer, batch_size)
         MetisLogger.info("Model inference is complete.")
         return predictions
+
+    def cleanup(self):
+        del self._metis_model
+        K.clear_session()
 
     def _set_gpu_memory_growth(self):
         gpus = tf.config.list_physical_devices('GPU')
@@ -142,62 +155,34 @@ class KerasModelOps(ModelOps):
 
     def _construct_optimizer(self, optimizer_config_pb: model_pb2.OptimizerConfig):
         if optimizer_config_pb is None:
-            raise RuntimeError(
+            MetisLogger.fatal(
                 "Provided `OptimizerConfig` proto message is None.")
-        optim_fun = {
-            "vanilla_sgd": self._construst_vanila_sgd,
-            "momentum_sgd": self._construct_momentum_sgd,
-            "fed_prox": self._construct_fed_prox,
-            "adam": self._construct_adam,
-            "adam_weight_decay": self._construct_adam_weight_decay
-        }
-        for optim, fun in optim_fun.items():
-            if optimizer_config_pb.HasField(optim):
-                return fun(optimizer_config_pb)
-
-        raise RuntimeError(
-            "TrainingHyperparameters proto message refers to a non-supported optimizer.")
-
-    def _construst_vanila_sgd(self, optimizer_config_pb: model_pb2.OptimizerConfig):
-        learning_rate = optimizer_config_pb.vanilla_sgd.learning_rate
-        return tf.keras.optimizers.SGD(learning_rate=learning_rate)
-
-    def _construct_momentum_sgd(self, optimizer_config_pb: model_pb2.OptimizerConfig):
-        learning_rate = optimizer_config_pb.momentum_sgd.learning_rate
-        momentum_factor = optimizer_config_pb.momentum_sgd.momentum_factor
-        self._metis_model._backend_model.optimizer.learning_rate.assign(
-            learning_rate)
-        self._metis_model._backend_model.optimizer.momentum.assign(
-            momentum_factor)  # FIXME: tf bug, mommentum is not a tf variable
-
-    def _construct_fed_prox(self, optimizer_config_pb: model_pb2.OptimizerConfig):
-        learning_rate = optimizer_config_pb.fed_prox.learning_rate
-        proximal_term = optimizer_config_pb.fed_prox.proximal_term
-        self._metis_model._backend_model.optimizer.learning_rate.assign(
-            learning_rate)
-        self._metis_model._backend_model.optimizer.proximal_term.assign(
-            proximal_term)
-
-    def _construct_adam(self, optimizer_config_pb: model_pb2.OptimizerConfig):
-        learning_rate = optimizer_config_pb.adam.learning_rate
-        beta_1 = optimizer_config_pb.adam.beta_1
-        beta_2 = optimizer_config_pb.adam.beta_2
-        epsilon = optimizer_config_pb.adam.epsilon
-        self._metis_model = self._get_self._mode()
-        self._metis_model._backend_model.optimizer.learning_rate.assign(
-            learning_rate)
-        self._metis_model._backend_model.optimizer.beta_1.assign(beta_1)
-        self._metis_model._backend_model.optimizer.beta_2.assign(beta_2)
-        self._metis_model._backend_model.optimizer.epsilon.assign(epsilon)
-
-    def _construct_adam_weight_decay(self, optimizer_config_pb: model_pb2.OptimizerConfig):
-        learning_rate = optimizer_config_pb.adam_weight_decay.learning_rate
-        weight_decay = optimizer_config_pb.adam_weight_decay.weight_decay
-        self._metis_model._backend_model.optimizer.learning_rate.assign(
-            learning_rate)
-        self._metis_model._backend_model.optimizer.weight_decay.assign(
-            weight_decay)
-
-    def cleanup(self):
-        del self._metis_model
-        tf.keras.backend.clear_session()
+        params = optimizer_config_pb.params
+        # We do this transformation to convert the optimizer parameters to snake case. 
+        # For instance: `LearningRate` -> `learning_rate`
+        params = DataTypeFormatter.camel_to_snake_case_dict_keys(params)
+        # We do not pick the optimizer using `tf.keras.optimizers.get(name)`
+        # because the user might have defined an optimizer that is not part of 
+        # the standard Keras library. Therefore, we access directly the optimizer 
+        # of the defined model.
+        optimizer = self._metis_model._backend_model.optimizer
+        for param_name, param_val in params.items():
+            for attr_name, attr_val in optimizer.__dict__.items():
+                if param_name in attr_name:
+                    attr_type = type(attr_val)
+                    try:
+                        # Need to see if we can cast the given value to 
+                        # the data type of the model's optimizer variable.
+                        # If we can, then we assign the corresponding value.
+                        param_val = (attr_type) (param_val)                    
+                        if isinstance(optimizer, tf.keras.optimizers.legacy.Optimizer):
+                            # When using the older Optimizer versions we simply 
+                            # assign the new value to the optimizer's attribute.
+                            setattr(optimizer, attr_name, param_val)
+                            # optimizer._learning_rate = param_val
+                        else:
+                            # When using the newer Optimizer versions we need to use 
+                            # the Keras Backend to set the corresponding value.
+                            K.set_value(getattr(optimizer, attr_name), param_val)                        
+                    except Exception as e:
+                        MetisLogger.warning(e)

@@ -8,11 +8,11 @@ ModelWeightsDescriptor = \
 
 
 LearningTaskStats = namedtuple('LearningTaskStats', [
-    "train_stats",
-    "completed_epochs",
     "global_iteration",
+    "train_stats",
     "validation_stats",
     "test_stats",
+    "completed_epochs",
     "completes_batches",
     "batch_size",
     "processing_ms_per_epoch",

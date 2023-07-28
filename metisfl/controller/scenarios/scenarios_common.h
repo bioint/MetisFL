@@ -12,7 +12,7 @@
 #include "metisfl/controller/model_aggregation/federated_recency.h"
 #include "metisfl/controller/model_aggregation/federated_average.h"
 #include "metisfl/controller/model_aggregation/private_weighted_average.h"
-#include "metisfl/controller/scaling/model_scaling.h"
+#include "metisfl/controller/scaling/scaling.h"
 #include "metisfl/controller/store/store.h"
 #include "metisfl/controller/core/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"

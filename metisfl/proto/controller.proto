@@ -135,7 +135,8 @@ message JoinFederationResponse {
   Ack ack = 1;
   string learner_id = 2; // The id of the learner assigned by the controller, see `JoinFederationResponse`.
   string auth_token = 3; // For security reasons, the controller generates a random 64-characters string that is associated with the joining learner. The (learner_id, token) composite key is required throughout training when a learner contacts the controller.
-  SSLConfig ssl_config = 4; // Controller sends back to the learner its certificate in order to submit requests through the secure channel.
+  // @stripeli this was not actually set in the response nor accessed by the learner
+  // SSLConfig ssl_config = 4; // Controller sends back to the learner its certificate in order to submit requests through the secure channel.
 }
 
 message LearnerLocalModelResponse {

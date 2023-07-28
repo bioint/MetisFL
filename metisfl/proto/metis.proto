@@ -17,8 +17,8 @@ message ServerEntity {
   // The server port that the service is running on.
   uint32 port = 2;
 
-  // For enabling secure communication between the learners and the controller.
-  SSLConfig ssl_config = 3;
+  // The Server will allow only encrypted communications if enabled.
+  SSLConfig ssl_config = 3;  
 }
 
 message SSLConfigFiles {
@@ -36,15 +36,15 @@ message SSLConfigStream {
 }
 
 message SSLConfig {
-  bool enable_ssl = 1; // Whether SSL is enabled or not.
-  // We enable
+  bool enable = 1; // Whether SSL is enabled or not.
+  // We need to support both files and streams because a service might need to be initialized through a byte stream or a file.
+  // For instance, a learner might need to connect to the controller while joining. In that case, the controller needs to reply with 
+  // public ceritificate as a stream!  
   oneof config {
     SSLConfigFiles ssl_config_files = 6;
     SSLConfigStream ssl_config_stream = 7;
   }
 }
-
-
 
 //////////////
 // Learning //
@@ -255,7 +255,7 @@ message AggregationRule {
     FedAvg fed_avg = 1;
     FedStride fed_stride = 2;
     FedRec fed_rec = 3;
-    PWA pwa = 4;
+    SecAgg sec_agg = 4;
   }
   AggregationRuleSpecs aggregation_rule_specs = 5;
 }
@@ -278,28 +278,36 @@ message FedStride {
 
 message FedRec {}
 
-message HESchemeConfig {
-  bool enabled = 1;
-  string crypto_context_file = 2;
-  string public_key_file = 3;
-  string private_key_file = 4;
-
-  oneof config {
-    EmptySchemeConfig empty_scheme_config = 5;
-    CKKSSchemeConfig ckks_scheme_config = 6;
+message EncryptionConfig {
+  oneof scheme {
+    HEScheme he_scheme = 1;
+    MaskingScheme masking_scheme = 2;
   }
-
 }
 
-message EmptySchemeConfig {}
+message MaskingScheme {}
 
-message CKKSSchemeConfig {
-  uint32 batch_size = 1;
-  uint32 scaling_factor_bits = 2;
-}
-
-message PWA {
+message HEScheme {
   HESchemeConfig he_scheme_config = 1;
+  oneof scheme {
+    CKKSScheme ckks_scheme = 2;
+  }
+}
+
+message HESchemeConfig {
+  bool as_files = 1;
+  string crypto_context = 2;
+  string public_key = 3;
+  string private_key = 4;
+}
+
+message CKKSScheme {
+  uint32 batch_size = 2;
+  uint32 scaling_factor_bits = 3;
+}
+
+message SecAgg {
+  EncryptionConfig encryption_config = 1;
 }
 
 message GlobalModelSpecs {

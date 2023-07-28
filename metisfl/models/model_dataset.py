@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 class ModelDataset(object):

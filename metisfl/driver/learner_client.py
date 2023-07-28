@@ -1,6 +1,6 @@
 from metisfl.grpc.grpc_services import GRPCClient
 from metisfl.proto import learner_pb2_grpc, service_common_pb2
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.utils.logger import MetisLogger
 
 
 class GRPCLearnerClient(GRPCClient):
