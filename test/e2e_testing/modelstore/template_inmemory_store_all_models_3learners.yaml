@@ -1,17 +1,17 @@
 CommunicationProtocol: 
   Name: "Synchronous"
-
+  
 TerminationSignals:
   FederationRounds: 10
 
 ModelStoreConfig:
-  ModelStore: "Redis"
+  ModelStore: "InMemory"
   EvictionPolicy: "NoEviction"
 
-EncryptionScheme:
-  Name: "CKKS"
-  BatchSize: 4096
-  ScalingFactorBits: 52
+GlobalModelConfig:
+  AggregationRule: "FedAvg"
+  ScalingFactor: "NumTrainingExamples"
+  ParticipationRatio: 1
 
 LocalModelConfig:
   BatchSize: 32

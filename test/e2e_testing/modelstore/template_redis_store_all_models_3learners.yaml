@@ -1,20 +1,17 @@
 CommunicationProtocol: 
   Name: "Synchronous"
-  
+
 TerminationSignals:
   FederationRounds: 10
 
 ModelStoreConfig:
-  ModelStore: "InMemory"
+  ModelStore: "Redis"
+  ModelStoreHostname: "localhost"
+  ModelStorePort: 6379
   EvictionPolicy: "NoEviction"
 
-EncryptionScheme:
-  Name: "CKKS"
-  BatchSize: 4096
-  ScalingFactorBits: 52
-
 GlobalModelConfig:
-  AggregationRule: "SecAgg"
+  AggregationRule: "FedAvg"
   ScalingFactor: "NumTrainingExamples"
   ParticipationRatio: 1
 
@@ -44,22 +41,22 @@ Learners:
       Hostname: "localhost"
       Port: 50052
     CudaDevices: [0]
-  - ProjectHome: "/metisfl"
-    ConnectionConfig:
-      Hostname: "localhost"
-      Username: "root"
-      Password: "root"
-    GRPCServer:
-      Hostname: "localhost"
-      Port: 50053
-    CudaDevices: [0]
-  - ProjectHome: "/metisfl"
-    ConnectionConfig:
-      Hostname: "localhost"
-      Username: "root"
-      Password: "root"
-    GRPCServer:
-      Hostname: "localhost"
-      Port: 50054
-    CudaDevices: [0]        
+  # - ProjectHome: "/metisfl"
+  #   ConnectionConfig:
+  #     Hostname: "localhost"
+  #     Username: "root"
+  #     Password: "root"
+  #   GRPCServer:
+  #     Hostname: "localhost"
+  #     Port: 50053
+  #   CudaDevices: [0]
+  # - ProjectHome: "/metisfl"
+  #   ConnectionConfig:
+  #     Hostname: "localhost"
+  #     Username: "root"
+  #     Password: "root"
+  #   GRPCServer:
+  #     Hostname: "localhost"
+  #     Port: 50054
+  #   CudaDevices: [0]        
     

@@ -1,7 +1,13 @@
-By default each template file consists of 1 controller and 1 learner, except if stated otherwise, e.g., *_3learners.yaml
-In all synchronous and semi-synchronous environments, the termination signal is the number of federation rounds, which is set to 3.
-For asynchronous environments, we test the termination of the environment based on accuracy or execution time.
-For all model store environments, we use a synchronous execution protocol over 3 learners and for 10 federation rounds.
+## General Guidelines
+- The e2e testing is conducted using a simple MLP model over the FashionMNIST dataset.
+
+- By default each e2e testing template environment consists of 1 controller and 1 learner; except if stated otherwise, e.g., *_3learners.yaml.
+
+- For all synchronous and semi-synchronous experiments, the termination signal is the number of federation rounds; currently set to 3.
+
+- For asynchronous experiments, the termination signal is accuracy or execution time.
+
+
 
 ### Simple Testing
 ```
@@ -13,10 +19,21 @@ python examples/keras_fashionmnist/main.py --env test/e2e_testing/synchronous/te
 ```
 
 ### Model Store Testing
-```
-python examples/keras_fashionmnist/main.py --env test/e2e_testing/modelstore/template_inmemory_store_all_models.yaml --num_learners=3
 
-python examples/keras_fashionmnist/main.py --env test/e2e_testing/modelstore/template_inmemory_store_all_encrypted_models.yaml --num_learners=3
+```
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/modelstore/template_inmemory_store_all_models_3learners.yaml --num_learners=3
+
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/modelstore/template_inmemory_store_all_encrypted_models_3learners.yaml --num_learners=3
+```
+
+> For the Redis experiments, we need first initialize the Redis instance by running:
+`service redis-server start` inside the container/server MetisFL is running. Then whenever we need to run a 
+new experiment to test the system behavior we need clear the database before executing that experiment. To do so,
+we start the cli client (`redis-cli`) and then we run the `FLUSHALL` command.
+```
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/modelstore/template_redis_store_all_models_3learners.yaml --num_learners=3
+
+python examples/keras_fashionmnist/main.py --env test/e2e_testing/modelstore/template_redis_store_all_encrypted_models_3learners.yaml --num_learners=3
 ```
 
 ### Asynchronous Testing

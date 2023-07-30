@@ -6,12 +6,19 @@ TerminationSignals:
 
 ModelStoreConfig:
   ModelStore: "Redis"
+  ModelStoreHostname: "localhost"
+  ModelStorePort: 6379
   EvictionPolicy: "NoEviction"
 
 EncryptionScheme:
   Name: "CKKS"
   BatchSize: 4096
   ScalingFactorBits: 52
+
+GlobalModelConfig:
+  AggregationRule: "SecAgg"
+  ScalingFactor: "NumTrainingExamples"
+  ParticipationRatio: 1
 
 LocalModelConfig:
   BatchSize: 32

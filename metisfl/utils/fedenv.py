@@ -219,30 +219,18 @@ class FederationEnvironment(object):
             semi_sync_lambda=semi_sync_lambda,
             semi_sync_recompute_num_updates=semi_sync_recompute)
 
-    def get_model_store_config_pb(self) -> metis_pb2.ModelStoreConfig:
-        eviction_policy_pb = MetisProtoMessages.construct_eviction_policy_pb(
-            self.eviction_policy, self.lineage_length)
-        model_store_specs_pb = MetisProtoMessages.construct_model_store_specs_pb(
-            eviction_policy_pb)
-        if self.model_store.upper() == "INMEMORY":
-            model_store_pb = metis_pb2.InMemoryStore(
-                model_store_specs=model_store_specs_pb)
-            return metis_pb2.ModelStoreConfig(in_memory_store=model_store_pb)
-        elif self.model_store.upper() == "REDIS":
-            server_entity_pb = \
-                MetisProtoMessages.construct_server_entity_pb(
-                    hostname=self.model_store_hostname,
-                    port=self.model_store_port)
-            redis_db_store_pb = \
-                metis_pb2.RedisDBStore(model_store_specs=model_store_specs_pb,
-                                       server_entity=server_entity_pb)
-            return metis_pb2.ModelStoreConfig(redis_db_store=redis_db_store_pb)
-        else:
-            MetisLogger.fatal("Not a supported model store.")
-
+    def get_model_store_config_pb(self) -> metis_pb2.ModelStoreConfig:        
+        model_store_config_pb = \
+            MetisProtoMessages.construct_model_store_config_pb(
+                name=self.model_store,
+                eviction_policy=self.eviction_policy,
+                lineage_length=self.lineage_length,
+                store_hostname=self.model_store_hostname,
+                store_port=self.model_store_port)
+        return model_store_config_pb
 
 class RemoteHost(object):
-    def __init__(self, config_map, enable_ssl=False):
+    def __init__(self, config_map):
         self._config_map = config_map
 
     @property

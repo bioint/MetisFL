@@ -922,7 +922,17 @@ class ControllerDefaultImpl : public Controller {
         }
 
         /* --- AGGREGATE MODELS --- */
-        auto start_time_block_aggregation = std::chrono::high_resolution_clock::now();
+        auto start_time_block_aggregation = std::chrono::high_resolution_clock::now();    
+        // FIXME(@stripeli): When using Redis as backend and setting to
+        //  store all models (i.e., EvictionPolicy = NoEviction) then 
+        //  the collection of models passed here are all models and 
+        //  therefore the number of variables becomes inconsistent with the
+        //  number of variables of the original model. For instance, if a 
+        //  learner has two models stored in the collection and each model
+        //  has 6 variables then the total variables of the sampled model 
+        //  will be 12 not 6 (the expected)!. Try the following for testing:
+        //    auto total_sampled_vars = sample_model->variables_size();
+        //    PLOG(INFO) << "TOTAL SAMPLED VARS:" << total_sampled_vars;    
         new_community_model = aggregator_->Aggregate(to_aggregate_block);
         auto end_time_block_aggregation = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double, std::milli> elapsed_time_block_aggregation =

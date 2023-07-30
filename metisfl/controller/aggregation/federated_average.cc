@@ -1,4 +1,5 @@
 
+#include <glog/logging.h>
 #include <omp.h>
 
 #include "metisfl/controller/aggregation/federated_average.h"
@@ -81,6 +82,7 @@ FederatedAverage::Aggregate(
   // Initializes an empty global model.
   FederatedModel global_model;
   const auto &sample_model = pairs.front().front().first;
+
   for (const auto &sample_variable: sample_model->variables()) {
     auto *variable = global_model.mutable_model()->add_variables();
     variable->set_name(sample_variable.name());
@@ -98,7 +100,7 @@ FederatedAverage::Aggregate(
   //  weights. For now, we aggregate all matrices, but if we aggregate only the
   //  trainable, then what should be the value of the non-trainable weights?
   auto total_variables = global_model.model().variables_size();
-  #pragma omp parallel for
+  #pragma omp parallel for  
   for (int var_idx = 0; var_idx < total_variables; ++var_idx) {
       auto var_data_type = global_model.model().variables(var_idx).plaintext_tensor().tensor_spec().type().type();
       auto var_num_values = global_model.model().variables(var_idx).plaintext_tensor().tensor_spec().length();
@@ -135,7 +137,7 @@ FederatedAverage::Aggregate(
         auto aggregated_tensor = AggregateTensorAtIndex<double>(pairs, var_idx, var_num_values);
         serialized_tensor = SerializeTensor<double>(aggregated_tensor);
       } else {
-        throw std::runtime_error("Unsupported tensor data type.");
+        PLOG(FATAL) << "Unsupported tensor data type.";
       }
       // Convert the char vector representing the aggregated result to string and assign to variable.
       std::string serialized_tensor_str(serialized_tensor.begin(), serialized_tensor.end());

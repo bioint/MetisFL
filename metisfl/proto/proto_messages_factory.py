@@ -90,11 +90,10 @@ class LearnerServiceProtoMessages(object):
 class MetisProtoMessages(object):
 
     @classmethod
-    def construct_server_entity_pb(cls, hostname, port, public_certificate_file=None, private_key_file=None):
+    def construct_server_entity_pb(cls, hostname, port, ssl_config_pb=None):
         return metis_pb2.ServerEntity(hostname=hostname,
                                       port=port,
-                                      public_certificate_file=public_certificate_file,
-                                      private_key_file=private_key_file)
+                                      ssl_config=ssl_config_pb)
 
     @classmethod
     def construct_ssl_config_pb(cls, ssl_enable=False, config_pb=None):

@@ -94,7 +94,7 @@ void RedisModelStore::InsertModel(std::vector<std::pair<std::string, Model>> lea
 
       std::string tensor_serialized;
       const ::metisfl::Model_Variable &to_serialize_mv = to_serialize_mdl.variables(index);
-      to_serialize_mv.SerializeToString(&tensor_serialized);
+      to_serialize_mv.SerializeToString(&tensor_serialized);        
 
       auto *redis_reply = (redisReply *) redisCommand(m_redis_context, "RPUSH %b %b",
                                                       model_key.c_str(),
@@ -162,7 +162,7 @@ RedisModelStore::SelectModels(std::vector<std::pair<std::string, int>> learner_p
 
     auto start_select_time = std::chrono::high_resolution_clock::now();
 
-    // Step #2: Submit all the queries.
+    // Step #2: Submit all queries.
     for (const auto &model_key: model_keys) {
 
       PLOG(INFO) << "Select from Redis, Model: " << model_key
@@ -192,13 +192,13 @@ RedisModelStore::SelectModels(std::vector<std::pair<std::string, int>> learner_p
       Model model;
 
       for (auto idx1 = 0; idx1 < (int) model_reply->elements; idx1++) {
-        /*Parse The Serialized String into a regular String for building new Model*/
+        /* Parse The Serialized String into a regular String for building new Model */
         std::string str_construct_tensor;
         for (auto idx2 = 0; idx2 < (int) model_reply->element[idx1]->len; idx2++) {
           str_construct_tensor += model_reply->element[idx1]->str[idx2];
         }
 
-        Model_Variable modelVariable;
+        ::metisfl::Model_Variable modelVariable;
         modelVariable.ParseFromString(str_construct_tensor); // String //
         (*model.add_variables()) = modelVariable;
       }
