@@ -3,48 +3,8 @@ import sys
 
 import numpy as np
 
-from metisfl.utils.logger import MetisLogger
-from metisfl.proto import controller_pb2, learner_pb2, model_pb2, metis_pb2, service_common_pb2
+from metisfl.proto import learner_pb2, model_pb2, metis_pb2, service_common_pb2
 
-
-class ControllerServiceProtoMessages(object):
-
-    @classmethod
-    def construct_get_community_model_evaluation_lineage_request_pb(cls, num_backtracks):
-        return controller_pb2.GetCommunityModelEvaluationLineageRequest(num_backtracks=num_backtracks)
-
-    @classmethod
-    def construct_get_local_task_lineage_request_pb(cls, num_backtracks, learner_ids):
-        return controller_pb2.GetLocalTaskLineageRequest(num_backtracks=num_backtracks,
-                                                         learner_ids=learner_ids)
-
-    @classmethod
-    def construct_get_runtime_metadata_lineage_request_pb(cls, num_backtracks):
-        return controller_pb2.GetRuntimeMetadataLineageRequest(num_backtracks=num_backtracks)
-
-    @classmethod
-    def construct_get_participating_learners_request_pb(cls):
-        return controller_pb2.GetParticipatingLearnersRequest()
-
-    @classmethod
-    def construct_join_federation_request_pb(cls, server_entity_pb, local_dataset_spec_pb):
-        return controller_pb2.JoinFederationRequest(server_entity=server_entity_pb,
-                                                    local_dataset_spec=local_dataset_spec_pb)
-
-    @classmethod
-    def construct_leave_federation_request_pb(cls, learner_id, auth_token):
-        return controller_pb2.LeaveFederationRequest(learner_id=learner_id, auth_token=auth_token)
-
-    @classmethod
-    def construct_mark_task_completed_request_pb(cls, learner_id, auth_token, completed_learning_task_pb):
-        return controller_pb2.MarkTaskCompletedRequest(learner_id=learner_id,
-                                                       auth_token=auth_token,
-                                                       task=completed_learning_task_pb)
-
-    @classmethod
-    def construct_replace_community_model_request_pb(cls, federated_model_pb):
-        assert isinstance(federated_model_pb, model_pb2.FederatedModel)
-        return controller_pb2.ReplaceCommunityModelRequest(model=federated_model_pb)
 
 
 class LearnerServiceProtoMessages(object):
@@ -90,21 +50,22 @@ class LearnerServiceProtoMessages(object):
 class MetisProtoMessages(object):
 
     @classmethod
-    def construct_server_entity_pb(cls, hostname, port, ssl_config_pb=None):
+    def construct_server_entity_pb(cls, hostname, port, public_certificate_file=None, private_key_file=None):
         return metis_pb2.ServerEntity(hostname=hostname,
                                       port=port,
-                                      ssl_config=ssl_config_pb)
+                                      public_certificate_file=public_certificate_file,
+                                      private_key_file=private_key_file)
 
     @classmethod
-    def construct_ssl_config_pb(cls, ssl_enable=False, config_pb=None):
-        if ssl_enable and config_pb:
+    def construct_ssl_config_pb(cls, enable_ssl=False, config_pb=None):
+        if enable_ssl and config_pb:
             if isinstance(config_pb, metis_pb2.SSLConfigFiles):
-                return metis_pb2.SSLConfig(enable=True, ssl_config_files=config_pb)
+                return metis_pb2.SSLConfig(enable_ssl=True, ssl_config_files=config_pb)
             elif isinstance(config_pb, metis_pb2.SSLConfigStream):
-                return metis_pb2.SSLConfig(enable=True, ssl_config_stream=config_pb)
+                return metis_pb2.SSLConfig(enable_ssl=True, ssl_config_stream=config_pb)
         else:
             # Default is TLS/SSL disabled.
-            return metis_pb2.SSLConfig(enable=False)
+            return metis_pb2.SSLConfig(enable_ssl=False)
 
     @classmethod
     def construct_ssl_config_files_pb(cls, public_certificate_file=None, private_key_file=None):
@@ -119,42 +80,29 @@ class MetisProtoMessages(object):
             private_key_stream=private_key_stream)
 
     @classmethod
-    def construct_encryption_config_pb(cls, he_scheme_pb=None, masking_scheme_pb=None):
-        if isinstance(he_scheme_pb, metis_pb2.HEScheme):
-            return metis_pb2.EncryptionConfig(he_scheme=he_scheme_pb)
-        elif isinstance(masking_scheme_pb, metis_pb2.MaskingScheme):
-            return metis_pb2.EncryptionConfig(masking_scheme=masking_scheme_pb)
-        else:
-            return metis_pb2.EncryptionConfig()
+    def construct_he_scheme_config_pb(cls, enabled=False, crypto_context_file=None,
+                                      public_key_file=None, private_key_file=None,
+                                      empty_scheme_config_pb=None, ckks_scheme_config_pb=None):
+        if empty_scheme_config_pb is not None:
+            return metis_pb2.HESchemeConfig(enabled=enabled,
+                                            crypto_context_file=crypto_context_file,
+                                            public_key_file=public_key_file,
+                                            private_key_file=private_key_file,
+                                            empty_scheme_config=empty_scheme_config_pb)
+        if ckks_scheme_config_pb is not None:
+            return metis_pb2.HESchemeConfig(enabled=enabled,
+                                            crypto_context_file=crypto_context_file,
+                                            public_key_file=public_key_file,
+                                            private_key_file=private_key_file,
+                                            ckks_scheme_config=ckks_scheme_config_pb)
 
     @classmethod
-    def construct_masking_scheme_pb(cls):
-        return metis_pb2.MaskingScheme()
+    def construct_empty_scheme_config_pb(cls):
+        return metis_pb2.EmptySchemeConfig()
 
     @classmethod
-    def construct_he_scheme_pb(cls, he_scheme_config_pb=None, scheme_pb=None):
-        if isinstance(scheme_pb, metis_pb2.CKKSScheme):
-            return metis_pb2.HEScheme(he_scheme_config=he_scheme_config_pb, ckks_scheme=scheme_pb)
-        else:
-            return metis_pb2.HEScheme()
-
-    @classmethod
-    def construct_he_scheme_config_pb(cls,
-                                      as_files=False,
-                                      crypto_context=None,
-                                      public_key=None, 
-                                      private_key=None):
-        return metis_pb2.HESchemeConfig(
-                as_files=as_files,
-                crypto_context=crypto_context,
-                public_key=public_key,
-                private_key=private_key)
-
-    @classmethod
-    def construct_ckks_scheme_pb(cls, batch_size, scaling_factor_bits):
-        return metis_pb2.CKKSScheme(
-            batch_size=batch_size, 
-            scaling_factor_bits=scaling_factor_bits)
+    def construct_ckks_scheme_config_pb(cls, batch_size, scaling_factor_bits):
+        return metis_pb2.CKKSSchemeConfig(batch_size=batch_size, scaling_factor_bits=scaling_factor_bits)
 
     @classmethod
     def construct_dataset_spec_pb(cls, num_training_examples, num_validation_examples, num_test_examples,
@@ -185,7 +133,7 @@ class MetisProtoMessages(object):
                                          validation_regression_spec=validation_spec,
                                          test_regression_spec=test_spec)
         else:
-            MetisLogger.fatal(
+            raise RuntimeError(
                 "Need to specify whether incoming dataset spec is regression or classification.")
 
     @classmethod
@@ -286,11 +234,9 @@ class MetisProtoMessages(object):
                                           model_hyperparams=model_hyperparams_pb)
 
     @classmethod
-    def construct_controller_modelhyperparams_pb(cls, batch_size, epochs, optimizer_pb, percent_validation):
+    def construct_controller_modelhyperparams_pb(cls, batch_size, epochs):
         return metis_pb2.ControllerParams.ModelHyperparams(batch_size=batch_size,
-                                                           epochs=epochs,
-                                                           optimizer=optimizer_pb,
-                                                           percent_validation=percent_validation)
+                                                           epochs=epochs)
 
     @classmethod
     def construct_no_eviction_pb(cls):
@@ -315,7 +261,7 @@ class MetisProtoMessages(object):
         elif isinstance(eviction_policy_pb, metis_pb2.LineageLengthEviction):
             return metis_pb2.ModelStoreSpecs(lineage_length_eviction=eviction_policy_pb)
         else:
-            MetisLogger.fatal("Not a supported protobuff eviction policy.")
+            raise RuntimeError("Not a supported protobuff eviction policy.")
 
     @classmethod
     def construct_model_store_config_pb(cls, name, eviction_policy,
@@ -333,7 +279,7 @@ class MetisProtoMessages(object):
                 model_store_specs_pb, store_hostname, store_port)
             return metis_pb2.ModelStoreConfig(redis_db_store=model_store_pb)
         else:
-            MetisLogger.fatal("Not a supported model store.")
+            raise RuntimeError("Not a supported model store.")
 
     @classmethod
     def construct_in_memory_store_pb(cls, model_store_specs_pb):
@@ -359,8 +305,8 @@ class MetisProtoMessages(object):
         return metis_pb2.FedRec()
 
     @classmethod
-    def construct_sec_agg_pb(cls, encryption_config_pb):
-        return metis_pb2.SecAgg(encryption_config=encryption_config_pb)
+    def construct_pwa_pb(cls, he_scheme_config_pb):
+        return metis_pb2.PWA(he_scheme_config=he_scheme_config_pb)
 
     @classmethod
     def construct_aggregation_rule_specs_pb(cls, scaling_factor):
@@ -372,15 +318,14 @@ class MetisProtoMessages(object):
             scaling_factor_pb = metis_pb2.AggregationRuleSpecs.ScalingFactor.NUM_TRAINING_EXAMPLES
         else:
             scaling_factor_pb = metis_pb2.AggregationRuleSpecs.ScalingFactor.UNKNOWN
-            MetisLogger.fatal("Unsupported scaling factor.")
+            raise RuntimeError("Unsupported scaling factor.")
 
         return metis_pb2.AggregationRuleSpecs(scaling_factor=scaling_factor_pb)
 
     @classmethod
-    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, encryption_config_pb):
+    def construct_aggregation_rule_pb(cls, rule_name, scaling_factor, stride_length, he_scheme_config_pb):
         aggregation_rule_specs_pb = MetisProtoMessages.construct_aggregation_rule_specs_pb(
             scaling_factor)
-
         if rule_name.upper() == "FEDAVG":
             return metis_pb2.AggregationRule(fed_avg=MetisProtoMessages.construct_fed_avg_pb(),
                                              aggregation_rule_specs=aggregation_rule_specs_pb)
@@ -390,18 +335,17 @@ class MetisProtoMessages(object):
         elif rule_name.upper() == "FEDREC":
             return metis_pb2.AggregationRule(fed_rec=MetisProtoMessages.construct_fed_rec_pb(),
                                              aggregation_rule_specs=aggregation_rule_specs_pb)
-        elif rule_name.upper() == "SECAGG":
+        elif rule_name.upper() == "PWA":
             return metis_pb2.AggregationRule(
-                sec_agg=MetisProtoMessages.construct_sec_agg_pb(
-                    encryption_config_pb=encryption_config_pb),
+                pwa=MetisProtoMessages.construct_pwa_pb(
+                    he_scheme_config_pb=he_scheme_config_pb),
                 aggregation_rule_specs=aggregation_rule_specs_pb)
         else:
-            MetisLogger.fatal("Unsupported rule name.")
+            raise RuntimeError("Unsupported rule name.")
 
     @classmethod
-    def construct_global_model_specs(cls, aggregation_rule_pb, learners_participation_ratio):
-        return metis_pb2.GlobalModelSpecs(aggregation_rule=aggregation_rule_pb,
-                                          learners_participation_ratio=learners_participation_ratio)
+    def construct_global_model_specs(cls, aggregation_rule_pb):
+        return metis_pb2.GlobalModelSpecs(aggregation_rule=aggregation_rule_pb)
 
     @classmethod
     def construct_communication_specs_pb(cls, protocol, semi_sync_lambda=None, semi_sync_recompute_num_updates=None):
@@ -409,8 +353,8 @@ class MetisProtoMessages(object):
             protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SYNCHRONOUS
         elif protocol.upper() == "ASYNCHRONOUS":
             protocol_pb = metis_pb2.CommunicationSpecs.Protocol.ASYNCHRONOUS
-        elif protocol.upper() == "SEMISYNCHRONOUS":
-            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SEMISYNCHRONOUS
+        elif protocol.upper() == "SEMI_SYNCHRONOUS":
+            protocol_pb = metis_pb2.CommunicationSpecs.Protocol.SEMI_SYNCHRONOUS
         else:
             protocol_pb = metis_pb2.CommunicationSpecs.Protocol.UNKNOWN
 
@@ -482,7 +426,7 @@ class ModelProtoMessages(object):
                     ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[
                         nparray_dtype]
             else:
-                MetisLogger.fatal(
+                raise RuntimeError(
                     "Provided data type: {}, is not supported".format(nparray_dtype))
 
             dtype = model_pb2.DType(
@@ -510,26 +454,30 @@ class ModelProtoMessages(object):
             return np_data_type
 
         @classmethod
-        def np_array_from_plaintext_tensor_spec(cls, tensor_spec):
+        def proto_tensor_spec_to_numpy_array(cls, tensor_spec):
             np_data_type = \
                 ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(
                     tensor_spec)
             dimensions = tensor_spec.dimensions
             value = tensor_spec.value
             length = tensor_spec.length
+
             np_array = np.frombuffer(
                 buffer=value, dtype=np_data_type, count=length)
             np_array = np_array.reshape(dimensions)
+
             return np_array
 
         @classmethod
-        def np_array_from_cipherext_tensor_spec(cls, tensor_spec, decoded_values):
+        def proto_tensor_spec_with_list_values_to_numpy_array(cls, tensor_spec, list_of_values):
             np_data_type = \
                 ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(
                     tensor_spec)
-            dimensions = tensor_spec.dimensions            
-            np_array = np.array(decoded_values, dtype=np_data_type)
+            dimensions = tensor_spec.dimensions
+
+            np_array = np.array(list_of_values, dtype=np_data_type)
             np_array = np_array.reshape(dimensions)
+
             return np_array
 
     @classmethod
@@ -560,7 +508,7 @@ class ModelProtoMessages(object):
         elif isinstance(tensor_pb, model_pb2.CiphertextTensor):
             return model_pb2.Model.Variable(name=name, trainable=trainable, ciphertext_tensor=tensor_pb)
         else:
-            MetisLogger.fatal(
+            raise RuntimeError(
                 "Tensor proto message refers to a non-supported tensor protobuff datatype.")
 
     @classmethod

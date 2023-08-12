@@ -7,8 +7,6 @@ from metisfl.proto import metis_pb2, model_pb2
 from metisfl.models.keras.keras_model import MetisModelKeras
 from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
-from metisfl.models.model_dataset import ModelDataset
-from metisfl.models.model_ops import ModelOps
 from metisfl.models.utils import calc_mean_wall_clock, get_num_of_epochs
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
 from metisfl.utils.logger import MetisLogger
@@ -123,26 +121,6 @@ class KerasModelOps(ModelOps):
         MetisLogger.info("Model evaluation is complete.")
         return evaluation_metrics
 
-    def infer_model(self,
-                    infer_dataset: ModelDataset,
-                    batch_size=100) -> Any:
-        if infer_dataset is None:
-            MetisLogger.fatal("Provided `dataset` for inference is None.")
-        MetisLogger.info("Starting model inference.")
-        predictions = None
-        if x_infer:
-            x_infer, _ = infer_dataset.construct_dataset_pipeline(
-                batch_size=batch_size, is_train=False)
-            if x_infer is not None:  # x_infer could be an array, we just need to check if it is not None
-                predictions = self._metis_model._backend_model.predict(
-                    x_infer, batch_size)
-        MetisLogger.info("Model inference is complete.")
-        return predictions
-
-    def cleanup(self):
-        del self._metis_model
-        K.clear_session()
-
     def _set_gpu_memory_growth(self):
         gpus = tf.config.list_physical_devices('GPU')
         if gpus:
@@ -163,7 +141,7 @@ class KerasModelOps(ModelOps):
         params = optimizer_config_pb.params
         # We do this transformation to convert the optimizer parameters to snake case. 
         # For instance: `LearningRate` -> `learning_rate`
-        params = DataTypeFormatter.camel_to_snake_case_dict_keys(params)
+        params = DataTypeFormatter.camel_to_snake_dict_keys(params)
         # We do not pick the optimizer using `tf.keras.optimizers.get(name)`
         # because the user might have defined an optimizer that is not part of 
         # the standard Keras library. Therefore, we access directly the optimizer 

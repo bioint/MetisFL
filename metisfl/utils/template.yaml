@@ -1,14 +1,12 @@
 GlobalTrainConfig:
   AggregationRule: "SecAgg" # Others are FedAvg (for Sync & Semi-Sync), FedStride (for Sync & Semi-Sync), FedRec (for Asynchronous), SecAgg (for {Sync, Semi-Sync, Async} + {CKKS, Masking})
+  CommunicationProtocol: "Synchronous" # Others are "gRPC", "HTTP"
   ScalingFactor: "NumTrainingExamples" # Others are NumCompletedBatches, NumParticipants
   ParticipationRatio: 1
   EncryptionScheme: "CKKS" # Others are "CKKS" (a fully-homomorphic encryption scheme)
   HEBatchSize: 4096
   HEScalingFactorBits: 52
 
-CommunicationSpecs: 
-  Protocol: "Synchronous" # Others are "Asynchronous" and "SemiSynchronous"
-  
 TerminationSignals:
   # In Synchronous Execution if any of the following 
   # conditions is satisifed then the federation exits.
@@ -32,12 +30,14 @@ LocalTrainConfig:
 Controller:
   Hostname: "localhost"
   Port: 50050
-  RootCertificate: "/metisfl/metisfl/resources/ssl/ca-cert.pem" # Optional
-  ServerCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem" # Optional
-  PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem" # Optional
+  # RootCertificate: "/metisfl/metisfl/resources/ssl/ca-cert.pem" # Optional
+  # ServerCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem" # Optional
+  # PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem" # Optional
 
 # Learners Configurations.
 Learners:
   - Hostname: "localhost"
     Port: 50051
-    RootCertificate: "/metisfl/metisfl/resources/ssl/ca-cert.pem" # Optional
+  # RootCertificate: "/metisfl/metisfl/resources/ssl/ca-cert.pem" # Optional
+  # ServerCertificate: "/metisfl/metisfl/resources/ssl/server-cert.pem" # Optional
+  # PrivateKey: "/metisfl/metisfl/resources/ssl/server-key.pem" # Optional

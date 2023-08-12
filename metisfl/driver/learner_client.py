@@ -1,21 +1,51 @@
-from metisfl.grpc.grpc_services import GRPCClient
-from metisfl.proto import learner_pb2_grpc, service_common_pb2
-from metisfl.utils.logger import MetisLogger
 
 
-class GRPCLearnerClient(GRPCClient):
 
-    def __init__(self, learner_server_entity, max_workers=1):
-        super(GRPCLearnerClient, self).__init__(learner_server_entity, max_workers)
-        self._stub = learner_pb2_grpc.LearnerServiceStub(self._channel)
+from ..proto import service_common_pb2
+from ..utils.fedenv import ServerParams
+from ..utils.logger import MetisLogger
+from ..grpc.client import get_client
 
-    def shutdown_learner(self, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            shutdown_request_pb = service_common_pb2.ShutDownRequest()
-            MetisLogger.info("Sending shutdown request to learner {}.".format(
-                self.grpc_endpoint.listening_endpoint))
-            response = self._stub.ShutDown(shutdown_request_pb, timeout=_timeout)
-            MetisLogger.info("Sent shutdown request to learner {}, response: {}.".format(
-                self.grpc_endpoint.listening_endpoint, response))
-            return response.ack.status
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+
+class GRPCLearnerClient(object):
+
+    def __init__(
+        self, 
+        learner_server_params: ServerParams,
+        max_workers=1
+    ):
+        self._server_params = learner_server_params
+        self._max_workers = max_workers
+
+        self._grpc_endpoint = self._learner_server_params.grpc_endpoint
+        self._stub = None
+        
+    def _get_client(self):
+        return get_client(
+            self._server_params.hostname,
+            self._server_params.port,
+            self._server_params.root_certificate,
+            max_workers=self._max_workers
+        )
+        
+    def shutdown_learner(
+        self, 
+        request_retries=1, 
+        request_timeout=None, 
+        block=True
+    ):
+        with self._get_client() as client:
+            stub, schedule, _ = client
+
+            def _request(_timeout=None):
+                
+                response = stub.ShutDown(
+                    service_common_pb2.ShutDownRequest(), 
+                    timeout=_timeout)
+                
+                MetisLogger.info("Sent shutdown request to learner {}, response: {}.".format(
+                    self._grpc_endpoint.listening_endpoint, response))
+                
+                return response.ack.status
+            
+            return schedule(_request, request_retries, request_timeout, block)

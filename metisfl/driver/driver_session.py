@@ -7,10 +7,11 @@ from typing import Callable, List
 from pebble import ProcessPool
 
 from metisfl import config
-from metisfl.models.utils import construct_model_pb
+from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.models.metis_model import MetisModel
 from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.logger import MetisASCIIArt, MetisLogger
+
 
 from .controller_client import GRPCControllerClient
 from .learner_client import GRPCLearnerClient
@@ -30,53 +31,14 @@ class DriverSession(object):
                  test_dataset_recipe_fn: Callable = None):
         """ 
         Entry point for MetisFL Driver Session API.
-
-            This class is the entry point of the MetisFL Driver Session API. It is responsible for initializing the federation environment
-            defined by the :param:`fed_env` and starting the federated training for the :param:`model` using the datasets defined by
-            :param:`train_datset_fps`, :param:`validation_dataset_fps` and :param:`test_dataset_fps`. The dataset recipes given by
-            :param:`train_dataset_recipe_fn`, :param:`validation_dataset_recipe_fn` and :param:`test_dataset_recipe_fn` are functions
-            that will be used to create the datasets on the remote Learner machine. They must take a single argument, the dataset file path,
-            and return a :class: `metisfl.models.model_dataset.ModelDataset` instance. 
-
-            To boostrap the training process, we ssh into the remote Controller and Learners host machines using the authorization
-            credentials defined in the federation environment yaml file. The boostrapping process involves the following steps:
-
-                - Copy the intial model weights to the remote Learner machines.
-                - Copy the dataset file and the pickled dataset recipe functions to the remote Learner machines.
-                - Start the Controller and Learner processes on the remote machines. 
-
-            The boostraping is delegated to the :class:`ServiceInitializer` class, which exposes a :meth:`ServiceInitializer.init_controller`
-            and a :meth:`ServiceInitializer.init_learner` method. These methods are invoked in parallel using 
-            a [Pebble](https://pypi.org/project/Pebble/) process pool. 
-
-            The present class creates the following GRPC clients
-
-                - one :class:`GRPCControllerClient` for the controller in the federation environment.
-                - one :class:`GRPCLearnerClient` for each learner in the federation environment.
-
-            The Controller client ships the initial model weights state to the Controller and is used from the :class:`ServiceMonitor` 
-            to monitor the training process and collect statistics upon completion. The method :meth:`DriverSession.run` is used to
-            start the federated training process and orderly invokes the methods :meth:`initialize_federation()`, 
-            :meth:`ServiceMonitor.monitor_federation`, which blocks execution and waits for the termination signals and 
-            :meth:`shutdown_federation()`.
-
-            Args:
-                fed_env (str): The path to the federation environment yaml file.
-                model (MetisModel): A :class:`MetisModel` instance.
-                train_datset_fps (List[str]): A list of file paths to the training datasets (one for each learner)
-                train_dataset_recipe_fn (Callable): A function that will be used to create the training datasets on the remote Learner machines.
-                validation_dataset_fps (List[str], optional): A list of file paths to the validation datasets (one for each learner). Defaults to None.
-                validation_dataset_recipe_fn (Callable, optional): A function that will be used to create the validation datasets on the remote Learner machines. Defaults to None.
-                test_dataset_fps (List[str], optional): A list of file paths to the test datasets (one for each learner). Defaults to None.
-                test_dataset_recipe_fn (Callable, optional): A function that will be used to create the test datasets on the remote Learner machines. Defaults to None.
         """
         # Print welcome message.
         MetisASCIIArt.print()
         self._federation_environment = FederationEnvironment(fed_env)
         self._num_learners = len(self._federation_environment.learners)
         self._model = model
-        self._encryption_config_pb = \
-            self._federation_environment.get_encryption_config_pb()
+        self._homomorphic_encryption = HomomorphicEncryption(
+            he_scheme_pb=self._federation_environment.get_he_scheme_pb(entity="learner"))
         self._init_pool()
         self._driver_controller_grpc_client = \
             self._create_driver_controller_grpc_client()
@@ -145,8 +107,7 @@ class DriverSession(object):
         self._service_monitor.collect_local_statistics()
 
         for grpc_client in self._driver_learner_grpc_clients.values():
-            grpc_client.shutdown_learner(
-                request_retries=1, request_timeout=30, block=False)
+            grpc_client.shutdown_learner(request_timeout=30, block=False)
         for grpc_client in self._driver_learner_grpc_clients.values():
             grpc_client.shutdown()
 
@@ -199,7 +160,8 @@ class DriverSession(object):
 
     def _ship_model_to_controller(self):
         weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = construct_model_pb(weights_descriptor, self._encryption_config_pb)
+        model_pb = self._homomorphic_encryption.encrypt(
+            weights_descriptor=weights_descriptor)
         self._driver_controller_grpc_client.replace_community_model(
             num_contributors=self._num_learners,
             model_pb=model_pb)

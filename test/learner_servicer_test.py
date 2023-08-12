@@ -9,7 +9,7 @@ from examples.fashionmnist.model import FashionMnistModel
 
 from examples.scalability.housing_mlp import HousingMLP
 from metisfl.proto import learner_pb2_grpc
-from metisfl.grpc.grpc_services import GRPCChannelMaxMsgLength, GRPCServerMaxMsgLength
+from metisfl.grpc.client import GRPCChannelMaxMsgLength, GRPCServerMaxMsgLength
 from metisfl.proto.proto_messages_factory import \
     MetisProtoMessages, ModelProtoMessages, LearnerServiceProtoMessages, ServiceCommonProtoMessages
 from metisfl.proto import metis_pb2

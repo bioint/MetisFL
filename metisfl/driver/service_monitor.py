@@ -1,120 +1,151 @@
+
+"""Service monitor for the federation."""
+
 import datetime
 import time
+from typing import Dict
 
 from google.protobuf.json_format import MessageToDict
 
-from metisfl.utils.fedenv import FederationEnvironment
-from metisfl.utils.logger import MetisLogger
 
 from .controller_client import GRPCControllerClient
+from ..utils.fedenv import TerminationSingals
+from ..utils.logger import MetisLogger
 
 
 class ServiceMonitor:
 
-    def __init__(self,
-                 federation_environment: FederationEnvironment,
-                 driver_controller_grpc_client: GRPCControllerClient):
-        self._driver_controller_grpc_client = driver_controller_grpc_client
-        self._federation_environment = federation_environment
-        self._federation_rounds_cutoff = self._federation_environment.federation_rounds
-        self._communication_protocol = self._federation_environment.communication_protocol
-        self._execution_time_cutoff_mins = self._federation_environment.execution_time_cutoff_mins
-        self._metric_cutoff_score = self._federation_environment.metric_cutoff_score
-        self._evaluation_metric = self._federation_environment.evaluation_metric
-        self._federation_statistics = dict()
+    def __init__(
+        self,
+        termination_signals: TerminationSingals,
+        controller_client: GRPCControllerClient,
+        is_async: bool
+    ):
+        """Initializes the service monitor for the federation.
 
-    def monitor_federation(self, request_every_secs=10):
-        self._monitor_termination_signals(
-            request_every_secs=request_every_secs)
+        Parameters
+        ----------
+        termination_signals : TerminationSingals
+            The termination signals for the federation. When any of the signals is reached, the training is terminated.
+        controller_client : GRPCControllerClient
+            A gRPC client used from the driver to communicate with the controller.
+        is_async : bool
+            Whether the communication protocol is asynchronous.
+        """       
+        
+        self._controller_client = controller_client
+        self._signals = termination_signals
+        self._is_async = is_async
+        self._statistics = None
 
-    def get_federation_statistics(self):
-        return self._federation_statistics
+    def monitor_federation(self, request_every_secs=10) -> Dict:
+        """Monitors the federation. 
+        
+        The controller and learners are terminated when any of the termination signals is reached,
+        and the collected statistics are returned.
 
-    def _monitor_termination_signals(self, request_every_secs=10):
-        # measuring elapsed wall-clock time
+        Parameters
+        ----------
+        request_every_secs : int, optional
+            The interval in seconds to request statistics from the Controller, by default 10
+
+        Returns
+        -------
+        Dict
+            The collected statistics from the federation.
+        """        
+
         st = datetime.datetime.now()
         terminate = False
+
         while not terminate:
-            # ping controller for latest execution stats
             time.sleep(request_every_secs)
+            self._collect_statistics()
 
             terminate = self._reached_federation_rounds() or \
                 self._reached_evaluation_score() or \
                 self._reached_execution_time(st)
+        
+        return self._statistics
 
     def _reached_federation_rounds(self) -> bool:
-        metadata_pb = self._driver_controller_grpc_client \
-            .get_runtime_metadata(num_backtracks=0).metadata
-        if not self._is_async():
-            if self._federation_rounds_cutoff and len(metadata_pb) > 0:
-                current_global_iteration = max(
-                    [m.global_iteration for m in metadata_pb])
-                if current_global_iteration > self._federation_rounds_cutoff:
-                    MetisLogger.info(
-                        "Exceeded federation rounds cutoff point. Exiting ...")
-                    return True
+        """Checks if the federation has reached the maximum number of rounds."""
+
+        if not self._signals.federation_rounds_cutoff or self._is_async:
+            return False
+
+        metadata = self._statistics["metadata"]
+
+        if metadata:
+            current_global_iteration = max(
+                [m.global_iteration for m in metadata])
+
+            if current_global_iteration > self._signals.federation_rounds_cutoff:
+                MetisLogger.info(
+                    "Exceeded federation rounds cutoff point. Exiting ...")
+                return True
         return False
 
-    def _is_async(self) -> bool:
-        return "ASYNCHRONOUS" == self._communication_protocol.upper()
-
     def _reached_evaluation_score(self) -> bool:
-        community_results = self._driver_controller_grpc_client \
-            .get_community_model_evaluation_lineage(-1)
+        """Checks if the federation has reached the maximum evaluation score."""
 
-        # Need to materialize the iterator in order to get all community results.
-        community_results = [x for x in community_results.community_evaluation]
+        metric_cutoff_score = self._signals.evaluation_metric_cutoff_score
 
-        for res in community_results:
-            test_set_scores = []
-            # Since we evaluate the community model across all learners,
-            # we need to measure the average performance across the test sets.
-            # FIXME(@stripeli) : what if there is no test set?
-            for learner_id, evaluations in res.evaluations.items():
-                if self._evaluation_metric and self._evaluation_metric in evaluations.test_evaluation.metric_values:
-                    test_score = evaluations.test_evaluation.metric_values[self._evaluation_metric]
-                    test_set_scores.append(float(test_score))
-            if test_set_scores:
-                mean_test_score = sum(test_set_scores) / len(test_set_scores)
-                if self._metric_cutoff_score and mean_test_score >= self._metric_cutoff_score:
+        if not metric_cutoff_score:
+            return False
+
+        commmunity_evaluation = [
+            x for x in self._statistics["community_evaluation"]]
+
+        for res in commmunity_evaluation:
+            scores = []
+            for _, evaluations in res.evaluations.items():
+                evaluation_metric = evaluations.evaluation.metric_values
+
+                if evaluation_metric and evaluation_metric in evaluations.evaluation.metric_values:
+                    test_score = evaluations.evaluation.metric_values[evaluation_metric]
+                    scores.append(float(test_score))
+
+            if scores:
+                mean_score = sum(scores) / len(scores)
+                if mean_score >= metric_cutoff_score:
                     MetisLogger.info(
-                        "Exceeded evaluation metric cutoff score. Exiting ...")
+                        "Exceeded evaluation metric cutoff score. Exiting...")
                     return True
         return False
 
     def _reached_execution_time(self, st) -> bool:
+        """Checks if the federation has exceeded the maximum execution time."""
+
         et = datetime.datetime.now()
         diff_mins = (et - st).seconds / 60
-        if self._execution_time_cutoff_mins and diff_mins > self._execution_time_cutoff_mins:
+        cutoff_mins = self._signals.execution_cutoff_time_mins
+
+        if cutoff_mins and diff_mins >= cutoff_mins:
             MetisLogger.info(
                 "Exceeded execution time cutoff minutes. Exiting ...")
             return True
+
         return False
 
-    def collect_local_statistics(self) -> None:
-        learners_pb = self._driver_controller_grpc_client.get_participating_learners()
-        learners_collection = learners_pb.learner
-        learners_id = [learner.id for learner in learners_collection]
-        learners_descriptors_dict = MessageToDict(learners_pb,
-                                                  preserving_proto_field_name=True)
-        learners_results = self._driver_controller_grpc_client \
-            .get_local_task_lineage(-1, learners_id)
-        learners_results_dict = MessageToDict(learners_results,
-                                              preserving_proto_field_name=True)
-        self._federation_statistics["learners_descriptor"] = learners_descriptors_dict
-        self._federation_statistics["learners_models_results"] = learners_results_dict
+    def _collect_statistics(self) -> None:
+        """Collects statistics from the federation."""
 
-    def collect_global_statistics(self) -> None:
-        runtime_metadata_pb = self._driver_controller_grpc_client \
-            .get_runtime_metadata(num_backtracks=0)
-        runtime_metadata_dict = MessageToDict(runtime_metadata_pb,
-                                              preserving_proto_field_name=True)
-        community_results = self._driver_controller_grpc_client \
-            .get_community_model_evaluation_lineage(-1)
-        community_results_dict = MessageToDict(community_results,
-                                               preserving_proto_field_name=True)
-        self._federation_statistics["federation_runtime_metadata"] = runtime_metadata_dict
-        self._federation_statistics["community_model_results"] = community_results_dict
+        statistics_pb = self._controller_client.get_statistics(
+            local_task_backtracks=-1,
+            metadata_backtracks=0,
+            community_model_backtracks=-1,
+        )
 
-    def get_statistics(self) -> dict:
-        return self._federation_statistics
+        def msg_to_dict_fn(x): return MessageToDict(
+            x, preserving_proto_field_name=True)
+
+        statistics = {}
+        statistics["learners"] = msg_to_dict_fn(statistics_pb.learners)
+        statistics["metadata"] = msg_to_dict_fn(statistics_pb.metadata)
+        statistics["learners_task"] = msg_to_dict_fn(
+            statistics_pb.learners_task)
+        statistics["community_evaluation"] = msg_to_dict_fn(
+            statistics_pb.community_model_lineage)
+
+        self._statistics = statistics

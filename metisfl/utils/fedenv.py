@@ -1,348 +1,210 @@
 import yaml
-import re
 
-import metisfl.config as config
+from dataclasses import dataclass
+from typing import List, Optional
+from metisfl.utils.formatting import DataTypeFormatter
 
-from metisfl.proto import metis_pb2, model_pb2
-from metisfl.encryption.encryption_scheme import EncryptionScheme
-from metisfl.proto import metis_pb2
-from metisfl.proto.proto_messages_factory import MetisProtoMessages
-from metisfl.utils.logger import MetisLogger
+METRICS = ["accuracy"]
+COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
+MODEL_STORES = ["InMemory", "Redis"]
+EVICTION_POLICIES = ["LineageLengthEviction",
+                     "NoEviction", "LineageLengthEviction"]
+HE_SCHEMES = ["CKKS"]
+AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "SecAgg"]
+SCALING_FACTORS = ["NumTrainingExamples",
+                   "NumCompletedBatches", "NumParticipants"]
 
 
-from .fedenv_schema import env_schema
+def file_exists(path: str) -> bool:
+    try:
+        open(path, 'r')
+        return True
+    except FileNotFoundError:
+        return False
 
 
-class FederationEnvironment(object):
-
-    def __init__(self, federation_environment_config_fp):
-        fstream = open(federation_environment_config_fp).read()
-        self._yaml = yaml.load(fstream, Loader=yaml.SafeLoader)
-        # env_schema.validate(self._yaml)
-        self.controller = RemoteHost(self._yaml.get("Controller"))
-        self.learners = [RemoteHost(learner) for learner in self._yaml.get("Learners")]
-        self._encryption_config_pb = self._setup_encryption_config()
-
-    # Communication protocol - REQUIRED.
-    def get_communication_protocol(self):
-        return self._yaml.get("CommunicationProtocol")
-
-    @property
-    def communication_protocol(self):
-        return self.get_communication_protocol().get("Name")
-
-    @property
-    def semi_sync_lambda(self):
-        return self.get_communication_protocol().get("SemiSyncLambda")
-
-    @property
-    def semi_sync_recompute(self):
-        return self.get_communication_protocol().get("SemiSyncRecompute")
-
-    # Termination signals - REQUIRED.
-    def get_termination_signals(self):
-        return self._yaml.get("TerminationSignals")
-
-    @property
-    def federation_rounds(self):
-        return self.get_termination_signals().get("FederationRounds")
-
-    @property
-    def execution_time_cutoff_mins(self):
-        return self.get_termination_signals().get("ExecutionCutoffTimeMins")
-
-    @property
-    def evaluation_metric(self):
-        return self.get_termination_signals().get("EvaluationMetric")
-
-    @property
-    def metric_cutoff_score(self):
-        return self.get_termination_signals().get("EvaluationMetricCutoffScore")
-
-    # Model store configurations - OPTIONAL.
-    def get_model_store_config(self):
-        return self._yaml.get("ModelStoreConfig")
-
-    @property
-    def model_store(self):
-        return self.get_model_store_config().get("ModelStore")
-
-    @property
-    def model_store_hostname(self):
-        return self.get_model_store_config().get("ModelStoreHostname")
-
-    @property
-    def model_store_port(self):
-        return self.get_model_store_config().get("ModelStorePort")
-
-    @property
-    def eviction_policy(self):
-        return self.get_model_store_config().get("EvictionPolicy")
-
-    @property
-    def lineage_length(self):
-        return self.get_model_store_config().get("LineageLength")
-
-    # Encryption scheme configurations - OPTIONAL. 
-    def get_encryption_scheme(self):
-        return self._yaml.get("EncryptionScheme")
-
-    @property
-    def encryption_scheme_name(self):
-        return self.get_encryption_scheme().get("Name")
-
-    @property
-    def he_batch_size(self):
-        return self.get_encryption_scheme().get("BatchSize")
-
-    @property
-    def he_scaling_factor_bits(self):
-        return self.get_encryption_scheme().get("ScalingFactorBits")
-
-    def _setup_encryption_config(self) -> metis_pb2.EncryptionConfig:        
-        if self.get_encryption_scheme() and \
-                self.encryption_scheme_name.upper() == "CKKS":
-            ckks_scheme_pb = \
-                MetisProtoMessages.construct_ckks_scheme_pb(
-                    self.he_batch_size, self.he_scaling_factor_bits)
-            fcc, fpb, fsk = config.get_crypto_resources()
-            he_scheme_config_pb = \
-                MetisProtoMessages.construct_he_scheme_config_pb(
-                as_files=True,
-                crypto_context=fcc,
-                public_key=fpb,
-                private_key=fsk)
-            # FIXME(@stripeli): If homomorphic encryption files are 
-            #  passed over the wire then fabric raises EOFError. This
-            #  is due to the size of the transmitted text, which is 
-            #  greater than the allowed stream.
-            # he_scheme_config_pb = \
-            #     MetisProtoMessages.construct_he_scheme_config_pb(
-            #     as_files=False)
-            he_scheme_pb = \
-                MetisProtoMessages.construct_he_scheme_pb(
-                    he_scheme_config_pb=he_scheme_config_pb,
-                    scheme_pb=ckks_scheme_pb)
-            encryption_config_pb = \
-                MetisProtoMessages.construct_encryption_config_pb(
-                    he_scheme_pb=he_scheme_pb)
-            # Initialize crypto parameters of encryption scheme.
-            encryption = EncryptionScheme(init_crypto_params=True) \
-                    .from_proto(encryption_config_pb)
-            encryption_scheme_pb = encryption.to_proto()
-            return encryption_scheme_pb
-        else:
-            return metis_pb2.EncryptionConfig()
-
-    def get_encryption_config_pb(self, for_aggregation=False) -> metis_pb2.EncryptionConfig:
-        encryption_config_pb = metis_pb2.EncryptionConfig()        
-        if self._encryption_config_pb.HasField("he_scheme"):
-            # We perform a deep copy of the encryption configuration 
-            # because we might need to edit the private and we do not 
-            # want to destroy the original keys.
-            encryption_config_pb.he_scheme.CopyFrom(self._encryption_config_pb.he_scheme)
-            if for_aggregation:
-                encryption_config_pb.he_scheme.he_scheme_config.private_key = ""
-        return encryption_config_pb
-
-    # Global model configurations - REQUIRED.
-    def get_global_model_config(self):
-        return self._yaml.get("GlobalModelConfig")
-
-    @property
-    def aggregation_rule(self):
-        return self.get_global_model_config().get("AggregationRule")
-
-    @property
-    def participation_ratio(self):
-        return self.get_global_model_config().get("PariticipationRatio")
-
-    @property
-    def scaling_factor(self):
-        return self.get_global_model_config().get("ScalingFactor")
-
-    @property
-    def stride_length(self):
-        return self.get_global_model_config().get("StrideLength")
-
-    # Local model configurations - REQUIRED.
-    def get_local_model_config(self):
-        return self._yaml.get("LocalModelConfig")
-
-    @property
-    def train_batch_size(self):
-        return self.get_local_model_config().get("BatchSize")
+@dataclass
+class TerminationSingals(object):
+    """Termination signals for the federated training. Controls when the training should stop."""
     
-    @property
-    def local_epochs(self):
-        return self.get_local_model_config().get("LocalEpochs")        
+    federation_rounds: int
+    federation_rounds_cutoff: int
+    execution_cutoff_time_mins: int
+    evaluation_metric: str
+    evaluation_metric_cutoff_score: float
 
-    @property
-    def validation_percentage(self):
-        return self.get_local_model_config().get("ValidationPercentage")
+    @classmethod
+    def from_yaml(cls, yaml_dict: dict) -> 'TerminationSingals':
+        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        return cls(**yaml_dict)
 
-    def get_local_model_config_pb(self) -> metis_pb2.ControllerParams.ModelHyperparams:
-        return MetisProtoMessages.construct_controller_modelhyperparams_pb(
-            batch_size=self.train_batch_size,
-            epochs=self.local_epochs,
-            optimizer_pb=self._get_optimizer_pb(),
-            percent_validation=self.validation_percentage)
+    def __post_init__(self) -> None:
+        if self.evaluation_metric not in METRICS:
+            raise ValueError(
+                f"Invalid evaluation metric: {self.evaluation_metric}")
 
-    def _get_optimizer_pb(self) -> model_pb2.OptimizerConfig:
-        optimizer_name = self.get_local_model_config().get("Optimizer")
-        params = self.get_local_model_config().get("OptimizerParams", {})
-        params = { param: str(val) for param, val in params.items() }
-        return model_pb2.OptimizerConfig(name=optimizer_name, params=params)
 
-    def get_global_model_config_pb(self) -> metis_pb2.GlobalModelSpecs:
-        aggregation_rule_pb = MetisProtoMessages.construct_aggregation_rule_pb(
-            rule_name=self.aggregation_rule,
-            scaling_factor=self.scaling_factor,
-            stride_length=self.stride_length,            
-            encryption_config_pb=self.get_encryption_config_pb(for_aggregation=True))
-        return MetisProtoMessages.construct_global_model_specs(
-            aggregation_rule_pb=aggregation_rule_pb,
-            learners_participation_ratio=self.participation_ratio)
+@dataclass
+class ModelStoreConfig(object):
+    """Configuration for the model store. Controls where the model is stored and how it is evicted."""
+    
+    model_store: str
+    eviction_policy: str
+    model_store_hostname: Optional[str] = None
+    model_store_port: Optional[int] = None
+    lineage_length: Optional[int] = None
 
-    def get_communication_protocol_pb(self) -> metis_pb2.CommunicationSpecs:    
-        protocol = self.communication_protocol        
-        # If we have the Semi-Synchronous protocol, then we need to know the
-        # SemiSync λ-value and whether the number of steps performed at every
-        # round for every learner should be recomputed at every synchronization 
-        # step or remain remain constant throughout execution based on the steps 
-        # that were configured during the cold start round.
-        # See also the algorithm here: https://dl.acm.org/doi/full/10.1145/3524885
-        semi_sync_lambda = self.semi_sync_lambda
-        semi_sync_recompute = self.semi_sync_recompute
-        return MetisProtoMessages.construct_communication_specs_pb(
-            protocol=protocol,
-            semi_sync_lambda=semi_sync_lambda,
-            semi_sync_recompute_num_updates=semi_sync_recompute)
+    @classmethod
+    def from_yaml(cls, yaml_dict: dict) -> 'ModelStoreConfig':
+        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        return cls(**yaml_dict)
 
-    def get_model_store_config_pb(self) -> metis_pb2.ModelStoreConfig:        
-        model_store_config_pb = \
-            MetisProtoMessages.construct_model_store_config_pb(
-                name=self.model_store,
-                eviction_policy=self.eviction_policy,
-                lineage_length=self.lineage_length,
-                store_hostname=self.model_store_hostname,
-                store_port=self.model_store_port)
-        return model_store_config_pb
+    def __post_init__(self):
+        if self.model_store not in MODEL_STORES:
+            raise ValueError(f"Invalid model store: {self.model_store}")
+        if self.eviction_policy not in EVICTION_POLICIES:
+            raise ValueError(
+                f"Invalid eviction policy: {self.eviction_policy}")
+        if self.model_store == "Redis":
+            if self.model_store_hostname is None:
+                raise ValueError(
+                    "Redis model store requires a hostname to be specified")
+            if self.model_store_port is None:
+                raise ValueError(
+                    "Redis model store requires a port to be specified")
+        if self.eviction_policy == "LineageLengthEviction":
+            if self.lineage_length is None:
+                raise ValueError(
+                    "LineageLengthEviction requires a lineage length to be specified")
 
-class RemoteHost(object):
-    def __init__(self, config_map):
-        self._config_map = config_map
 
-    @property
-    def identifier(self):
-        return "{}:{}".format(self.grpc_hostname, self.grpc_port)
+@dataclass
+class GlobalTrainConfig(object):
+    """Configuration for the federated training. Controls how the training is performed."""
+    
+    aggregation_rule: str
+    communication_protocol: str
+    scaling_factor: int
+    participation_ratio: float
+    stride_length: Optional[int] = None
+    encryption_scheme: Optional[str] = None
+    he_batch_size: Optional[int] = None
+    he_scaling_factor_bits: Optional[int] = None
+    semi_sync_lambda: Optional[float] = None
+    semi_sync_recompute_num_updates: Optional[int] = None
 
-    @property
-    def project_home(self):
-        return self._config_map.get("ProjectHome")
 
-    # Connection Configurations - REQUIRED.
-    def get_connection_config(self):
-        return self._config_map.get("ConnectionConfig")
+    @classmethod
+    def from_yaml(cls, yaml_dict: dict) -> 'GlobalTrainConfig':
+        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        return cls(**yaml_dict)
 
-    @property
-    def hostname(self):
-        return self.get_connection_config().get("Hostname")
+    def __post_init__(self):
+        if self.aggregation_rule not in AGGREGATION_RULES:
+            raise ValueError(
+                f"Invalid aggregation rule: {self.aggregation_rule}")
+        if self.communication_protocol not in COMMUNICATION_PROTOCOLS:
+            raise ValueError(
+                f"Invalid communication protocol: {self.protocol}")
+        if self.scaling_factor not in SCALING_FACTORS:
+            raise ValueError(f"Invalid scaling factor: {self.scaling_factor}")
+        if self.encryption_scheme not in HE_SCHEMES:
+            raise ValueError(
+                f"Invalid encryption scheme: {self.encryption_scheme}")
 
-    @property
-    def cuda_devices(self):
-        return self._config_map.get("CudaDevices")
 
-    @property
-    def port(self):
-        return self.get_connection_config().get("Port")
+@dataclass
+class LocalTrainConfig(object):
+    """Configuration for the local training. Controls how the local training is performed."""
+    
+    batch_size: int
+    local_epochs: int
 
-    @property
-    def username(self):
-        return self.get_connection_config().get("Username")
+    @classmethod
+    def from_yaml(cls, yaml_dict):
+        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        return cls(**yaml_dict)
 
-    @property
-    def password(self):
-        return self.get_connection_config().get("Password")
 
-    @property
-    def key_filename(self):
-        return self.get_connection_config().get("KeyFilename")
+@dataclass
+class ServerParams(object):
+    """Server configuration parameters."""
+    
+    hostname: str
+    port: int
+    root_certificate: Optional[str] = None
+    server_certificate: Optional[str] = None
+    private_key: Optional[str] = None
 
-    @property
-    def passphrase(self):
-        return self.get_connection_config().get("Passphrase")
+    @classmethod
+    def from_yaml(cls, yaml_dict: dict) -> 'ServerParams':
+        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        return cls(**yaml_dict)
 
-    @property
-    def on_login_command(self):
-        return self._config_map.get("OnLoginCommand", "")
+    def __post_init__(self):
+        if self.root_certificate is not None and not file_exists(self.root_certificate):
+            raise ValueError(
+                f"Root certificate file {self.root_certificate} does not exist")
+        if self.server_certificate is not None and not file_exists(self.server_certificate):
+            raise ValueError(
+                f"Server certificate file {self.server_certificate} does not exist")
+        if self.private_key is not None and not file_exists(self.private_key):
+            raise ValueError(
+                f"Private key file {self.private_key} does not exist")
 
-    # GRPC Configurations - REQUIRED.
-    def get_grpc_server(self):
-        return self._config_map.get("GRPCServer")
 
-    @property
-    def grpc_hostname(self):
-        return self.get_grpc_server().get("Hostname")
+@dataclass
+class ClientParams(object):
+    hostname: str
+    port: int
+    root_certificate: Optional[str] = None
 
-    @property
-    def grpc_port(self):
-        return self.get_grpc_server().get("Port")
+    @classmethod
+    def from_yaml(cls, yaml_dict: dict) -> 'ClientParams':
+        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        return cls(**yaml_dict)
 
-    # SSL Configurations.
-    def get_ssl_config(self):
-        return self._config_map.get("SSLConfig")
+    def __post_init__(self):
+        if self.root_certificate is not None and not file_exists(self.root_certificate):
+            raise ValueError(
+                f"Root certificate file {self.root_certificate} does not exist")
 
-    @property
-    def ssl_private_key(self):        
-        return self.get_ssl_config().get("PrivateKey") \
-            if self.get_ssl_config() else None
 
-    @property
-    def ssl_public_certificate(self):
-        return self.get_ssl_config().get("PublicCertificate") \
-            if self.get_ssl_config() else None
+KEY_TO_CLASS = {
+    "global_train_config": GlobalTrainConfig,
+    "termination_signals": TerminationSingals,
+    "model_store_config": ModelStoreConfig,
+    "local_train_config": LocalTrainConfig,
+}
 
-    def get_fabric_connection_config(self):
-        # Look for parameters values here:
-        # https://docs.paramiko.org/en/latest/api/client.html#paramiko.client.SSHClient.connect
-        # 'allow_agent' show be disabled if working with username/password.
-        connect_kwargs = {
-            "password": self.password,
-            "allow_agent": False if self.password else True,
-            "look_for_keys": True if self.key_filename else False,
-        }
-        if self.key_filename:
-            connect_kwargs["key_filename"] = self.key_filename
-            connect_kwargs["passphrase"] = self.passphrase
 
-        conn_config = {
-            "host": self.hostname,
-            "port": self.port,
-            "user": self.username,
-            "connect_kwargs": connect_kwargs
-        }
-        return conn_config
+@dataclass
+class FederationEnvironment(object):
+    """MetisFL federated training environment configuration."""
+    
+    global_train_config: GlobalTrainConfig
+    termination_signals: TerminationSingals
+    model_store_config: ModelStoreConfig
+    local_train_config: LocalTrainConfig
 
-    def get_server_entity_pb(self, gen_connection_entity=False) -> metis_pb2.ServerEntity:
-        """Generate a ServerEntity proto object for the given parameters.
+    controller: ServerParams
+    learners: List[ServerParams]
 
-        Args:
-            gen_connection_entity (bool, optional): Sets the private key to None. Defaults to False.
+    @classmethod
+    def from_yaml(cls, yaml_file: str) -> 'FederationEnvironment':
+        
+        yaml_dict = yaml.safe_load(open(yaml_file, 'r'))
+        
+        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
 
-        Returns:
-            metis_pb2.ServerEntity: The generated ServerEntity proto object.
-        """        
-        certificate = self.ssl_public_certificate
-        private_key = None if gen_connection_entity else self.ssl_private_key
-        ssl_enable = True if certificate else False
-        ssl_config_files_pb = MetisProtoMessages.construct_ssl_config_files_pb(
-            public_certificate_file=certificate,
-            private_key_file=private_key)
-        ssl_config_pb = MetisProtoMessages.construct_ssl_config_pb(
-            ssl_enable, ssl_config_files_pb)
-        server_entity_pb = metis_pb2.ServerEntity(
-            hostname=self.grpc_hostname,
-            port=self.grpc_port,
-            ssl_config=ssl_config_pb)
-        return server_entity_pb
+        for key, value in yaml_dict.items():
+            if key in KEY_TO_CLASS:
+                yaml_dict[key] = KEY_TO_CLASS[key].from_yaml(value)
+
+        yaml_dict['controller'] = ServerParams.from_yaml(
+            yaml_dict['controller'])
+        
+        yaml_dict['learners'] = [ServerParams.from_yaml(
+            learner) for learner in yaml_dict['learners']]
+        
+        return cls(**yaml_dict)

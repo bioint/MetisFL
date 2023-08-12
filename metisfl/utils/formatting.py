@@ -8,7 +8,7 @@ import pandas as pd
 class DataTypeFormatter(object):
 
     @classmethod
-    def camel_to_snake_case(cls, word):
+    def camel_to_snake(cls, word):
         """
         Function taken from: 
         https://inflection.readthedocs.io/en/latest/#inflection.underscore
@@ -26,8 +26,8 @@ class DataTypeFormatter(object):
         return word.lower()
     
     @classmethod
-    def camel_to_snake_case_dict_keys(cls, d):
-        return {cls.camel_to_snake_case(k): v for k, v in d.items()}
+    def camel_to_snake_dict_keys(cls, d):
+        return {cls.camel_to_snake(k): v for k, v in d.items()}
 
     @classmethod
     def normalize_dict(cls, d):
