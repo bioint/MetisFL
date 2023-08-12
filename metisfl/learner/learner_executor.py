@@ -6,8 +6,9 @@ from typing import Callable
 from pebble import ProcessPool
 
 from metisfl import config
-from metisfl.learner.learner_task import LearnerTask
-from metisfl.proto import metis_pb2
+
+from ..proto import metis_pb2
+from .learner_task import LearnerTask
 
 
 class LearnerExecutor(object):
@@ -72,7 +73,8 @@ class LearnerExecutor(object):
         # Get the tasks queue; the second element of the tuple.
         future_tasks_q = self.pool[task][1]
         while not future_tasks_q.empty():
-            future_tasks_q.get(block=False).cancel() if force else future_tasks_q.get().result()
+            future_tasks_q.get(block=False).cancel(
+            ) if force else future_tasks_q.get().result()
 
     def _run_task(
         self,

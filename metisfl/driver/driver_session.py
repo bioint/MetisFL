@@ -8,58 +8,34 @@ from pebble import ProcessPool
 
 from metisfl import config
 from metisfl.encryption.homomorphic import HomomorphicEncryption
-from metisfl.models.metis_model import MetisModel
 from metisfl.utils.fedenv import FederationEnvironment
 from metisfl.utils.logger import MetisASCIIArt, MetisLogger
 
 
 from .controller_client import GRPCControllerClient
 from .learner_client import GRPCLearnerClient
-from .service_initializer import ServiceInitializer
-from .service_monitor import ServiceMonitor
+from .federation_monitor import FederationMonitor
 
 
 class DriverSession(object):
-    def __init__(self,
-                 fed_env: FederationEnvironment,
-                 model: MetisModel,
-                 train_dataset_fps: List[str],
-                 train_dataset_recipe_fn: Callable,
-                 validation_dataset_fps: List[str] = None,
-                 validation_dataset_recipe_fn: Callable = None,
-                 test_dataset_fps: List[str] = None,
-                 test_dataset_recipe_fn: Callable = None):
-        """ 
-        Entry point for MetisFL Driver Session API.
-        """
-        # Print welcome message.
+    def __init__(self, fed_env: FederationEnvironment):
+        """Initializes the driver session."""
+    
         MetisASCIIArt.print()
+    
         self._federation_environment = FederationEnvironment(fed_env)
         self._num_learners = len(self._federation_environment.learners)
-        self._model = model
+
         self._homomorphic_encryption = HomomorphicEncryption(
             he_scheme_pb=self._federation_environment.get_he_scheme_pb(entity="learner"))
+        
         self._init_pool()
         self._driver_controller_grpc_client = \
             self._create_driver_controller_grpc_client()
         self._driver_learner_grpc_clients = \
             self._create_driver_learner_grpc_clients()
 
-        dataset_fps = self._gen_dataset_dict(
-            train_dataset_fps, validation_dataset_fps, test_dataset_fps)
-
-        dataset_recipe_fns = self._gen_dataset_dict(
-            train_dataset_recipe_fn, 
-            validation_dataset_recipe_fn, 
-            test_dataset_recipe_fn)
-
-        self._service_initilizer = ServiceInitializer(
-            federation_environment=self._federation_environment,
-            dataset_recipe_fns=dataset_recipe_fns,
-            dataset_fps=dataset_fps,
-            model=self._model)
-
-        self._service_monitor = ServiceMonitor(
+        self._service_monitor = FederationMonitor(
             federation_environment=self._federation_environment,
             driver_controller_grpc_client=self._driver_controller_grpc_client)
         
@@ -104,52 +80,47 @@ class DriverSession(object):
         self.shutdown_federation()
 
     def shutdown_federation(self):
-        self._service_monitor.collect_local_statistics()
 
         for grpc_client in self._driver_learner_grpc_clients.values():
             grpc_client.shutdown_learner(request_timeout=30, block=False)
-        for grpc_client in self._driver_learner_grpc_clients.values():
             grpc_client.shutdown()
 
-        self._service_monitor.collect_global_statistics()
         self._driver_controller_grpc_client.shutdown_controller(
             request_retries=2, request_timeout=30, block=True)
+        
         self._driver_controller_grpc_client.shutdown()
 
         self._executor.close()
         self._executor.join()
 
     def _create_driver_controller_grpc_client(self):
-        controller_server_entity_pb = \
-            self._federation_environment.controller.get_server_entity_pb(
-                gen_connection_entity=True)
+        """Creates a GRPC client for the controller."""
+        
+        controller = self._federation_environment.controller
+        
         return GRPCControllerClient(
-            controller_server_entity=controller_server_entity_pb,
-            max_workers=1)
+                server_hostname=controller.hostname,
+                server_port=controller.port,
+                root_certificate=controller.root_certificate,
+                max_workers=1)
+    
 
-    def _create_driver_learner_grpc_clients(self):
-        grpc_clients = {}
-        for idx in range(self._num_learners):
+    def _create_driver_learner_grpc_clients(self) -> List[GRPCLearnerClient]:
+        """Creates a dictionary of GRPC clients for the learners."""
+        
+        grpc_clients: List[GRPCLearnerClient] = [None] * self._num_learners
+        
+        for idx in range(self._num_learners):                    
+        
             learner = self._federation_environment.learners[idx]
-            learner_server_entity_pb = \
-                learner.get_server_entity_pb(gen_connection_entity=True)
-            grpc_clients[learner.identifier] = \
-                GRPCLearnerClient(
-                    learner_server_entity=learner_server_entity_pb, 
-                    max_workers=1)
+            
+            grpc_clients[idx] = GRPCLearnerClient(
+                server_hostname=learner.hostname,
+                server_port=learner.port,
+                root_certificate=learner.root_certificate,
+                max_workers=1)
+            
         return grpc_clients
-
-    def _gen_dataset_dict(self,
-                          train_val,
-                          validation_val=None,
-                          test_val=None):
-        dataset_dict = {}
-        dataset_dict[config.TRAIN] = train_val  # Always required.
-        if validation_val:
-            dataset_dict[config.VALIDATION] = validation_val
-        if test_val:
-            dataset_dict[config.TEST] = test_val
-        return dataset_dict
 
     def _init_pool(self):
         mp_ctx = mp.get_context("spawn")

@@ -1,9 +1,10 @@
+
 import abc
 from metisfl.models.types import ModelWeightsDescriptor
 
 
 class Learner(abc.ABC):
-    """Abstract class for Learner. All Learner classes should inherit from this class."""
+    """Abstract class for all MetisFL Learners. All Learners should inherit from this class."""
 
     @abc.abstractmethod
     def get_weights(self):

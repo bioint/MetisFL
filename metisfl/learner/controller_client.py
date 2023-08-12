@@ -34,7 +34,8 @@ class GRPCControllerClient(object):
         auth_token_fp : str
             The file where the auth token is stored.
         learner_cert_fp : Optional[str], (default: None)
-            The learner certificate file path. This is sent to the controller when joining the federation.
+            The learner certificate file path. This is sent to the controller when joining the federation
+            to be used by the Controller gRPC client when connecting to the Learner server.
             If None; the connection to the Learner server is insecure.
             # TODO: clarify if this is the root or the public certificate.
         root_certificate : Optional[str], (default: None)
@@ -154,7 +155,7 @@ class GRPCControllerClient(object):
         request_retries=1,
         request_timeout=None,
         block=True
-    ):
+    ) -> service_common_pb2.Ack:
         """Sends the completed task to the Controller.
 
         Parameters

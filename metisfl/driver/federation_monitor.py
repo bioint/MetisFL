@@ -1,20 +1,19 @@
 
-"""Service monitor for the federation."""
-
 import datetime
 import time
 from typing import Dict
 
 from google.protobuf.json_format import MessageToDict
 
-
 from .controller_client import GRPCControllerClient
 from ..utils.fedenv import TerminationSingals
 from ..utils.logger import MetisLogger
 
 
-class ServiceMonitor:
+class FederationMonitor:
 
+    """A monitoring service for the federation."""
+    
     def __init__(
         self,
         termination_signals: TerminationSingals,
@@ -31,8 +30,8 @@ class ServiceMonitor:
             A gRPC client used from the driver to communicate with the controller.
         is_async : bool
             Whether the communication protocol is asynchronous.
-        """       
-        
+        """
+
         self._controller_client = controller_client
         self._signals = termination_signals
         self._is_async = is_async
@@ -40,7 +39,7 @@ class ServiceMonitor:
 
     def monitor_federation(self, request_every_secs=10) -> Dict:
         """Monitors the federation. 
-        
+
         The controller and learners are terminated when any of the termination signals is reached,
         and the collected statistics are returned.
 
@@ -53,7 +52,7 @@ class ServiceMonitor:
         -------
         Dict
             The collected statistics from the federation.
-        """        
+        """
 
         st = datetime.datetime.now()
         terminate = False
@@ -65,7 +64,7 @@ class ServiceMonitor:
             terminate = self._reached_federation_rounds() or \
                 self._reached_evaluation_score() or \
                 self._reached_execution_time(st)
-        
+
         return self._statistics
 
     def _reached_federation_rounds(self) -> bool:
