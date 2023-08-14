@@ -1,26 +1,43 @@
 import concurrent.futures
-from ast import Tuple
 from pathlib import Path
-from typing import Callable, Optional, Union
+from typing import Callable
 
 import grpc
 
-from ..learner.learner_servicer import LearnerServicer
+from ..proto import learner_pb2_grpc
 from ..utils.fedenv import ServerParams
 from .common import GRPC_MAX_MESSAGE_LENGTH, get_endpoint
 
 
 def get_server(
     server_params: ServerParams,
-    servicer_and_add_fn: Tuple[LearnerServicer, Callable],
+    servicer: learner_pb2_grpc.LearnerServiceServicer,
+    add_servicer_to_server_fn: Callable,
     max_workers: int = 1000,
     max_message_length: int = GRPC_MAX_MESSAGE_LENGTH,
 ) -> grpc.Server:
-    """Creates a gRPC server, either secure or insecure."""
+    """Creates a gRPC server using the given server parameters and servicer.
 
+    Parameters
+    ----------
+    server_params : ServerParams
+        The server configuration parameters.
+    servicer: learner_pb2_grpc.LearnerServiceServicer
+        The servicer for the gRPC server.
+    add_servicer_to_server_fn: Callable
+        The function to add the servicer to the server.
+    max_workers : int, optional
+        The maximum number of clients that can be handled concurrently, by default 1000
+    max_message_length : int, optional
+        The maximum message length, by default GRPC_MAX_MESSAGE_LENGTH
+
+    Returns
+    -------
+    grpc.Server
+        The gRPC server, not started.
+    """
     server_hostname = server_params.hostname
     server_port = server_params.port
-    servicer, add_servicer_to_server_fn = servicer_and_add_fn
 
     endpoint = get_endpoint(server_hostname, server_port)
 
@@ -33,6 +50,7 @@ def get_server(
         concurrent.futures.ThreadPoolExecutor(max_workers=max_workers),
         options=options,
     )
+
     add_servicer_to_server_fn(servicer, server)
 
     if server_params.root_certificate is not None:

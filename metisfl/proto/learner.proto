@@ -7,13 +7,17 @@ import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
 service LearnerService {
-  rpc GetHealthStatus (google.protobuf.Empty) returns (GetHealthStatusResponse) {}
+  rpc GetHealthStatus (google.protobuf.Empty) returns (HealthStatusResponse) {}
+
+  rpc InitilizeWeights (google.protobuf.Empty) returns (Model) {}
+
+  rpc SetInitialWeights (Model) returns (Ack) {}
 
   rpc Train (TrainRequest) returns (TrainResponse) {}
 
   rpc Evaluate (EvaluateRequest) returns (EvaluateResponse) {}
 
-  rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
+  rpc ShutDown (google.protobuf.Empty) returns (Ack) {} // TODO: add auth
 
 }
 

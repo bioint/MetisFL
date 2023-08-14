@@ -70,7 +70,7 @@ class FederationMonitor:
     def _reached_federation_rounds(self) -> bool:
         """Checks if the federation has reached the maximum number of rounds."""
 
-        if not self._signals.federation_rounds_cutoff or self._is_async:
+        if not self._signals.federation_rounds or self._is_async:
             return False
 
         metadata = self._statistics["metadata"]
@@ -79,7 +79,7 @@ class FederationMonitor:
             current_global_iteration = max(
                 [m.global_iteration for m in metadata])
 
-            if current_global_iteration > self._signals.federation_rounds_cutoff:
+            if current_global_iteration > self._signals.federation_rounds:
                 MetisLogger.info(
                     "Exceeded federation rounds cutoff point. Exiting ...")
                 return True

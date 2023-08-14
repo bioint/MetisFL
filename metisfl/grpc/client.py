@@ -10,6 +10,8 @@ from typing import Any, Callable, Iterator, Optional, Union
 import grpc
 from pebble import ThreadPool
 
+from metisfl.utils.fedenv import ClientParams
+
 
 from ..proto import controller_pb2_grpc
 from ..utils.logger import MetisLogger
@@ -64,10 +66,8 @@ def create_channel(
 
 @contextmanager
 def get_client(
-    server_hostname: str,
-    server_port: int,
+    client_params: ClientParams,
     stub_class: Callable,
-    root_certificate: Optional[str] = None,
     max_message_length: int = GRPC_MAX_MESSAGE_LENGTH,
     max_workers=1
 ) -> Iterator[
@@ -81,14 +81,10 @@ def get_client(
 
     Parameters
     ----------
-    server_hostname : str
-         The server hostname.
-    server_port : int
-        The server port.
+    client_params : ClientParams
+        The client parameters.    
     stub_class : Callable
         The stub class to be used with the created channel to establish a connection.
-    root_certificate : Optional[str], optional
-        The file path to the root certificate, by default None. If None, the connection is insecure.
     max_message_length : int, optional
         The maximum message length, by default GRPC_MAX_MESSAGE_LENGTH
     max_workers : int, optional
@@ -99,6 +95,10 @@ def get_client(
     Iterator[ Tuple[ controller_pb2_grpc.ControllerServiceStub, Callable, Callable ] ]
         A tuple containing the stub, the schedule_request function and the shutdown function.
     """
+
+    server_hostname = client_params.hostname
+    server_port = client_params.port
+    root_certificate = client_params.root_certificate
 
     endpoint = get_endpoint(server_hostname, server_port)
 
@@ -155,7 +155,7 @@ def get_client(
 
 def request_with_timeout(
     request_fn: Callable,
-    request_timeout: float,
+    request_timeout: int,
     request_retries: int
 ) -> Any:
     """Sends a request to the controller with a timeout and retries.
@@ -164,7 +164,7 @@ def request_with_timeout(
     ----------
     request_fn : Callable
         A function that sends a request to the controller.
-    request_timeout : float
+    request_timeout : int
         The timeout in seconds.
     request_retries : int
         The number of retries.

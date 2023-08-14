@@ -7,15 +7,18 @@ from pebble import ProcessPool
 
 from metisfl import config
 
-from ..proto import metis_pb2
 from .learner_task import LearnerTask
+from ..proto import metis_pb2
 
 
-class LearnerExecutor(object):
+class TaskManager(object):
+
+    """Manages the tasks of the Learner."""
 
     def __init__(self, learner_task: LearnerTask, recreate_queue_task_worker=False):
         self._learner_task = learner_task
-        self._init_tasks_pools(recreate_queue_task_worker)
+        self._pool, self._queue = self._init_pools(
+            recreate_queue_task_worker=recreate_queue_task_worker)
 
     def run_evaluation_task(self, block=False, **kwargs):
         future = self._run_task(
@@ -24,7 +27,9 @@ class LearnerExecutor(object):
             callback=None,
             **kwargs
         )
+
         model_evaluations_pb = future.result() if block else metis_pb2.ModelEvaluations()
+
         return model_evaluations_pb
 
     def run_learning_task(self,
@@ -42,32 +47,29 @@ class LearnerExecutor(object):
         # TODO: We need to return the completed_task_pb.
         return not future.cancelled()
 
-    def shutdown(self, CANCEL_RUNNING: dict = {
+    def shutdown(self, cancel_running: dict = {
         config.LEARNING_TASK: True,
         config.EVALUATION_TASK: True,
     }):
         for task, (pool, _) in self.pool.items():
             pool.close()
             self._empty_tasks_q(config.LEARNING_TASK,
-                                force=CANCEL_RUNNING[task])
+                                force=cancel_running[task])
             pool.join()
         gc.collect()
         return True  # FIXME: We need to capture any failures.
 
-    def _init_tasks_pools(self, recreate_queue_task_worker=False):
+    def _init_pools(self, recreate_queue_task_worker=False):
         mp_ctx = mp.get_context("spawn")
         max_tasks = 1 if recreate_queue_task_worker else 0
-        self.pool = dict()
+        p, q = {}, {}
         for task in config.TASKS:
-            self.pool[task] = self._init_task_pool(max_tasks, mp_ctx)
+            p[task] = ProcessPool(
+                max_workers=1, max_tasks=max_tasks, context=mp_ctx)
+            q[task] = queue.Queue(maxsize=1)
+            
+        return p, q
 
-    def _init_task_pool(self, max_tasks, mp_ctx):
-        # The executor can execute only **one** training, **one** evaluation and **one** inference
-        # task in parallel at every point in time. To enforce that, we set the max_workers to one.
-        # For instance, if the executor is already running a training task, then if it receives a
-        # new training task the current training task will exit/killed.
-        return ProcessPool(max_workers=1, max_tasks=max_tasks, context=mp_ctx), \
-            queue.Queue(maxsize=1)
 
     def _empty_tasks_q(self, task, force=False):
         # Get the tasks queue; the second element of the tuple.
@@ -86,16 +88,19 @@ class LearnerExecutor(object):
     ):
         self._empty_tasks_q(task_name, force=cancel_running_tasks)
         tasks_pool, tasks_futures_q = self.pool[task_name]
+        
         future = tasks_pool.schedule(function=task_fn, kwargs={**kwargs})
-        future.add_done_callback(
-            self._callback_wrapper(callback)
-        ) if callback else None
+        if callback:
+            future.add_done_callback(
+                _callback_wrapper(callback)
+            )
         tasks_futures_q.put(future)
+        
         return future
 
-    def _callback_wrapper(self, callback: Callable):
-        def callback_wrapper(future):
-            if future.done() and not future.cancelled():
-                completed_task_pb = future.result()
-                callback(completed_task_pb)
-        return callback_wrapper
+def _callback_wrapper(callback: Callable):
+    def callback_wrapper(future):
+        if future.done() and not future.cancelled():
+            result = future.result()
+            callback(result)
+    return callback_wrapper

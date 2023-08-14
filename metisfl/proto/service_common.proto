@@ -9,8 +9,14 @@ message Ack {
   string message = 3;
 }
 
-message GetHealthStatusResponse {
-  map<string, bool> services_status = 1;
+enum ServingStatus {
+  UNKNOWN = 0;
+  SERVING = 1;
+  NOT_SERVING = 2;
+}
+
+message HealthStatusResponse {
+ ServingStatus status = 1;
 }
 
 message ShutDownRequest {

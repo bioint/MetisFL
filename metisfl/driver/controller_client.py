@@ -1,9 +1,9 @@
 
 """A gRPC client used from the driver to communicate with the controller."""
 
-from typing import Optional
 from metisfl.grpc.client import get_client
 from metisfl.proto import controller_pb2, controller_pb2_grpc, service_common_pb2
+from metisfl.utils.fedenv import ClientParams
 
 
 class GRPCControllerClient(object):
@@ -11,35 +11,25 @@ class GRPCControllerClient(object):
 
     def __init__(
         self,
-        server_hostname: str,
-        server_port: int,
-        root_certificate: Optional[str] = None,
+        client_params: ClientParams,
         max_workers=1
     ):
         """Initializes the client.
 
         Parameters
         ----------
-        server_hostname : str
-            The hostname of the controller. "localhost" if running locally.
-        server_port : int
-            The port of the controller.
-        root_certificate : Optional[str], optional
-            The file path to the root certificate, by default None. If None, the connection is insecure.
+        client_params : ClientParams
+            The parameters needed to connect to the Controller.
         max_workers : int, optional
             The maximum number of workers for the client ThreadPool, by default 1
         """
-        self._server_hostname = server_hostname
-        self._server_port = server_port
-        self._root_certificate = root_certificate
+        self._client_params = client_params
         self._max_workers = max_workers
 
     def _get_client(self):
         return get_client(
             stub_class=controller_pb2_grpc.ControllerServiceStub,
-            server_hostname=self._server_hostname,
-            server_port=self._server_port,
-            root_certificate=self._root_certificate,
+            client_params=self._client_params,
             max_workers=self._max_workers
         )
 
@@ -48,7 +38,7 @@ class GRPCControllerClient(object):
         request_retries=1,
         request_timeout=None,
         block=True
-    ) -> service_common_pb2.GetHealthStatusResponse:
+    ) -> service_common_pb2.HealthStatusResponse:
         """Checks the health status of the controller.
 
         Parameters
@@ -62,7 +52,7 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        service_common_pb2.GetHealthStatusResponse
+        service_common_pb2.HealthStatusResponse
             The response Proto object with the health status from the controller.
         """
 

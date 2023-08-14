@@ -8,7 +8,7 @@ import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
 service ControllerService {
-  rpc GetHealthStatus (google.protobuf.Empty) returns (GetHealthStatusResponse) {}
+  rpc GetHealthStatus (google.protobuf.Empty) returns (HealthStatusResponse) {}
 
   rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
 
@@ -16,7 +16,7 @@ service ControllerService {
 
   rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (Ack) {}
 
-  rpc ReplaceCommunityModel (ReplaceCommunityModelRequest) returns (ReplaceCommunityModelResponse) {}
+  rpc SetInitialWeights (ReplaceCommunityModelRequest) returns (Ack) {}
 
   rpc GetStatistics (GetStatisticsRequest) returns (GetStatisticsResponse) {}
   
@@ -60,9 +60,6 @@ message ReplaceCommunityModelRequest {
   FederatedModel model = 1;
 }
 
-message ReplaceCommunityModelResponse {
-  Ack ack = 1;
-}
 
 message GetStatisticsRequest {
   int32 community_evaluation_backtracks = 1;
