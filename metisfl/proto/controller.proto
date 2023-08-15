@@ -15,7 +15,7 @@ service ControllerService {
 
   rpc TrainDone (TrainDoneRequest) returns (Ack) {}
 
-  rpc SetInitialWeights (ReplaceCommunityModelRequest) returns (Ack) {}
+  rpc SetInitialModel (Model) returns (Ack) {}
 
   rpc GetStatistics (GetStatisticsRequest) returns (GetStatisticsResponse) {}
   
@@ -53,12 +53,6 @@ message LeaveFederationRequest {
   string learner_id = 1; 
   string auth_token = 2; 
 }
-
-message ReplaceCommunityModelRequest {
-  // TODO(stripeli): Require some sort of auth 
-  FederatedModel model = 1;
-}
-
 
 message GetStatisticsRequest {
   int32 community_evaluation_backtracks = 1;

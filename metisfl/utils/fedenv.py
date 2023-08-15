@@ -308,6 +308,18 @@ class FederationEnvironment(object):
 
     @classmethod
     def from_yaml(cls, yaml_file: str) -> 'FederationEnvironment':
+        """Generates a FederationEnvironment object from a yaml file.
+
+        Parameters
+        ----------
+        yaml_file : str
+            The yaml file to load the FederationEnvironment from.
+
+        Returns
+        -------
+        FederationEnvironment
+            The FederationEnvironment object.
+        """        
 
         yaml_dict = yaml.safe_load(open(yaml_file, 'r'))
 

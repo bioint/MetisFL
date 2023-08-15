@@ -12,130 +12,40 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
-from metisfl.proto import metis_pb2 as metisfl_dot_proto_dot_metis__pb2
+from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x19metisfl/proto/metis.proto\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"R\n)GetCommunityModelEvaluationLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"\x82\x01\n*GetCommunityModelEvaluationLineageResponse\x12T\n\x14\x63ommunity_evaluation\x18\x01 \x03(\x0b\x32!.metisfl.CommunityModelEvaluationR\x13\x63ommunityEvaluation\"H\n\x1fGetCommunityModelLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"f\n GetCommunityModelLineageResponse\x12\x42\n\x10\x66\x65\x64\x65rated_models\x18\x01 \x03(\x0b\x32\x17.metisfl.FederatedModelR\x0f\x66\x65\x64\x65ratedModels\"d\n\x1aGetLocalTaskLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\x12\x1f\n\x0blearner_ids\x18\x02 \x03(\tR\nlearnerIds\"\xd4\x01\n\x1bGetLocalTaskLineageResponse\x12X\n\x0clearner_task\x18\x01 \x03(\x0b\x32\x35.metisfl.GetLocalTaskLineageResponse.LearnerTaskEntryR\x0blearnerTask\x1a[\n\x10LearnerTaskEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x31\n\x05value\x18\x02 \x01(\x0b\x32\x1b.metisfl.LocalTasksMetadataR\x05value:\x02\x38\x01\"\x87\x01\n\"GetLearnerLocalModelLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\x12:\n\rserver_entity\x18\x02 \x03(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\"y\n#GetLearnerLocalModelLineageResponse\x12R\n\x13learner_local_model\x18\x01 \x03(\x0b\x32\".metisfl.LearnerLocalModelResponseR\x11learnerLocalModel\"I\n GetRuntimeMetadataLineageRequest\x12%\n\x0enum_backtracks\x18\x01 \x01(\x05R\rnumBacktracks\"\x8b\x01\n!GetRuntimeMetadataLineageResponse\x12\x41\n\x08metadata\x18\x01 \x03(\x0b\x32%.metisfl.FederatedTaskRuntimeMetadataR\x08metadata\x12#\n\rjson_metadata\x18\x02 \x01(\tR\x0cjsonMetadata\"!\n\x1fGetParticipatingLearnersRequest\"X\n GetParticipatingLearnersResponse\x12\x34\n\x07learner\x18\x01 \x03(\x0b\x32\x1a.metisfl.LearnerDescriptorR\x07learner\"\x97\x01\n\x15JoinFederationRequest\x12:\n\rserver_entity\x18\x01 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\x12\x42\n\x12local_dataset_spec\x18\x02 \x01(\x0b\x32\x14.metisfl.DatasetSpecR\x10localDatasetSpec\"v\n\x16JoinFederationResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k\x12\x1d\n\nlearner_id\x18\x02 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x03 \x01(\tR\tauthToken\"}\n\x19LearnerLocalModelResponse\x12:\n\rserver_entity\x18\x01 \x01(\x0b\x32\x15.metisfl.ServerEntityR\x0cserverEntity\x12$\n\x05model\x18\x02 \x03(\x0b\x32\x0e.metisfl.ModelR\x05model\"\x8c\x01\n\x18MarkTaskCompletedRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12\x32\n\x04task\x18\x03 \x01(\x0b\x32\x1e.metisfl.CompletedLearningTaskR\x04task\"B\n\x1bLearnerExecutionAuxMetadata\x12#\n\rjson_response\x18\x01 \x01(\tR\x0cjsonResponse\";\n\x19MarkTaskCompletedResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k\"V\n\x16LeaveFederationRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\"9\n\x17LeaveFederationResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k\"M\n\x1cReplaceCommunityModelRequest\x12-\n\x05model\x18\x01 \x01(\x0b\x32\x17.metisfl.FederatedModelR\x05model\"?\n\x1dReplaceCommunityModelResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k2\x89\n\n\x11\x43ontrollerService\x12\x8f\x01\n\"GetCommunityModelEvaluationLineage\x12\x32.metisfl.GetCommunityModelEvaluationLineageRequest\x1a\x33.metisfl.GetCommunityModelEvaluationLineageResponse\"\x00\x12q\n\x18GetCommunityModelLineage\x12(.metisfl.GetCommunityModelLineageRequest\x1a).metisfl.GetCommunityModelLineageResponse\"\x00\x12z\n\x1bGetLearnerLocalModelLineage\x12+.metisfl.GetLearnerLocalModelLineageRequest\x1a,.metisfl.GetLearnerLocalModelLineageResponse\"\x00\x12\x62\n\x13GetLocalTaskLineage\x12#.metisfl.GetLocalTaskLineageRequest\x1a$.metisfl.GetLocalTaskLineageResponse\"\x00\x12t\n\x19GetRuntimeMetadataLineage\x12).metisfl.GetRuntimeMetadataLineageRequest\x1a*.metisfl.GetRuntimeMetadataLineageResponse\"\x00\x12q\n\x18GetParticipatingLearners\x12(.metisfl.GetParticipatingLearnersRequest\x1a).metisfl.GetParticipatingLearnersResponse\"\x00\x12n\n\x17GetServicesHealthStatus\x12\'.metisfl.GetServicesHealthStatusRequest\x1a(.metisfl.GetServicesHealthStatusResponse\"\x00\x12S\n\x0eJoinFederation\x12\x1e.metisfl.JoinFederationRequest\x1a\x1f.metisfl.JoinFederationResponse\"\x00\x12V\n\x0fLeaveFederation\x12\x1f.metisfl.LeaveFederationRequest\x1a .metisfl.LeaveFederationResponse\"\x00\x12\\\n\x11MarkTaskCompleted\x12!.metisfl.MarkTaskCompletedRequest\x1a\".metisfl.MarkTaskCompletedResponse\"\x00\x12h\n\x15ReplaceCommunityModel\x12%.metisfl.ReplaceCommunityModelRequest\x1a&.metisfl.ReplaceCommunityModelResponse\"\x00\x12\x41\n\x08ShutDown\x12\x18.metisfl.ShutDownRequest\x1a\x19.metisfl.ShutDownResponse\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"\xb3\x01\n\x15JoinFederationRequest\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x38\n\x18public_certificate_bytes\x18\x03 \x01(\tR\x16publicCertificateBytes\x12\x30\n\x14num_traning_examples\x18\x04 \x01(\rR\x12numTraningExamples\"v\n\x16JoinFederationResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k\x12\x1d\n\nlearner_id\x18\x02 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x03 \x01(\tR\tauthToken\"\xbe\x01\n\x0f\x45pochEvaluation\x12\x19\n\x08\x65poch_id\x18\x01 \x01(\rR\x07\x65pochId\x12O\n\rmetric_values\x18\x02 \x03(\x0b\x32*.metisfl.EpochEvaluation.MetricValuesEntryR\x0cmetricValues\x1a?\n\x11MetricValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xe2\x02\n\x10TrainDoneRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\x12$\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12\x43\n\x08metadata\x18\x04 \x03(\x0b\x32\'.metisfl.TrainDoneRequest.MetadataEntryR\x08metadata\x12\x45\n\x11\x65poch_evaluations\x18\x05 \x03(\x0b\x32\x18.metisfl.EpochEvaluationR\x10\x65pochEvaluations\x12!\n\x0c\x61ux_metadata\x18\x06 \x01(\tR\x0b\x61uxMetadata\x1a;\n\rMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"V\n\x16LeaveFederationRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x1d\n\nauth_token\x18\x02 \x01(\tR\tauthToken\"\xc3\x01\n\x14GetStatisticsRequest\x12\x46\n\x1f\x63ommunity_evaluation_backtracks\x18\x01 \x01(\x05R\x1d\x63ommunityEvaluationBacktracks\x12\x32\n\x15local_task_backtracks\x18\x02 \x01(\x05R\x13localTaskBacktracks\x12/\n\x13metadata_backtracks\x18\x03 \x01(\x05R\x12metadataBacktracks\"\xc2\x03\n\x15GetStatisticsResponse\x12\x36\n\x08learners\x18\x01 \x03(\x0b\x32\x1a.metisfl.LearnerDescriptorR\x08learners\x12T\n\x14\x63ommunity_evaluation\x18\x02 \x03(\x0b\x32!.metisfl.CommunityModelEvaluationR\x13\x63ommunityEvaluation\x12U\n\rlearners_task\x18\x03 \x03(\x0b\x32\x30.metisfl.GetStatisticsResponse.LearnersTaskEntryR\x0clearnersTask\x12\x41\n\x08metadata\x18\x04 \x03(\x0b\x32%.metisfl.FederatedTaskRuntimeMetadataR\x08metadata\x12#\n\rjson_metadata\x18\x05 \x01(\tR\x0cjsonMetadata\x1a\\\n\x11LearnersTaskEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x31\n\x05value\x18\x02 \x01(\x0b\x32\x1b.metisfl.LocalTasksMetadataR\x05value:\x02\x38\x01\"r\n\x11LearnerDescriptor\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n\x08hostname\x18\x02 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x03 \x01(\rR\x04port\x12\x1d\n\nauth_token\x18\x04 \x01(\tR\tauthToken\"Y\n\x12LocalTasksMetadata\x12\x43\n\rtask_metadata\x18\x01 \x03(\x0b\x32\x1e.metisfl.TaskExecutionMetadataR\x0ctaskMetadata\"\x9e\x01\n\x15TaskExecutionMetadata\x12H\n\x08metadata\x18\x01 \x03(\x0b\x32,.metisfl.TaskExecutionMetadata.MetadataEntryR\x08metadata\x1a;\n\rMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xf6\x01\n\x18\x43ommunityModelEvaluation\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12T\n\x0b\x65valuations\x18\x02 \x03(\x0b\x32\x32.metisfl.CommunityModelEvaluation.EvaluationsEntryR\x0b\x65valuations\x1aY\n\x10\x45valuationsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12/\n\x05value\x18\x02 \x01(\x0b\x32\x19.metisfl.ModelEvaluationsR\x05value:\x02\x38\x01\"\xa5\x01\n\x10ModelEvaluations\x12P\n\rmetric_values\x18\x01 \x03(\x0b\x32+.metisfl.ModelEvaluations.MetricValuesEntryR\x0cmetricValues\x1a?\n\x11MetricValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\xf1\x10\n\x1c\x46\x65\x64\x65ratedTaskRuntimeMetadata\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x39\n\nstarted_at\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n\x0c\x63ompleted_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x0b\x63ompletedAt\x12\x33\n\x16\x61ssigned_to_learner_id\x18\x04 \x03(\tR\x13\x61ssignedToLearnerId\x12\x35\n\x17\x63ompleted_by_learner_id\x18\x05 \x03(\tR\x14\x63ompletedByLearnerId\x12v\n\x17train_task_submitted_at\x18\x06 \x03(\x0b\x32?.metisfl.FederatedTaskRuntimeMetadata.TrainTaskSubmittedAtEntryR\x14trainTaskSubmittedAt\x12s\n\x16train_task_received_at\x18\x07 \x03(\x0b\x32>.metisfl.FederatedTaskRuntimeMetadata.TrainTaskReceivedAtEntryR\x13trainTaskReceivedAt\x12s\n\x16\x65val_task_submitted_at\x18\x08 \x03(\x0b\x32>.metisfl.FederatedTaskRuntimeMetadata.EvalTaskSubmittedAtEntryR\x13\x65valTaskSubmittedAt\x12p\n\x15\x65val_task_received_at\x18\t \x03(\x0b\x32=.metisfl.FederatedTaskRuntimeMetadata.EvalTaskReceivedAtEntryR\x12\x65valTaskReceivedAt\x12\x82\x01\n\x1bmodel_insertion_duration_ms\x18\n \x03(\x0b\x32\x43.metisfl.FederatedTaskRuntimeMetadata.ModelInsertionDurationMsEntryR\x18modelInsertionDurationMs\x12\x82\x01\n\x1bmodel_selection_duration_ms\x18\x0b \x03(\x0b\x32\x43.metisfl.FederatedTaskRuntimeMetadata.ModelSelectionDurationMsEntryR\x18modelSelectionDurationMs\x12[\n\x1cmodel_aggregation_started_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x19modelAggregationStartedAt\x12_\n\x1emodel_aggregation_completed_at\x18\r \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x1bmodelAggregationCompletedAt\x12L\n#model_aggregation_total_duration_ms\x18\x0e \x01(\x01R\x1fmodelAggregationTotalDurationMs\x12?\n\x1cmodel_aggregation_block_size\x18\x0f \x03(\x01R\x19modelAggregationBlockSize\x12H\n!model_aggregation_block_memory_kb\x18\x10 \x03(\x01R\x1dmodelAggregationBlockMemoryKb\x12L\n#model_aggregation_block_duration_ms\x18\x11 \x03(\x01R\x1fmodelAggregationBlockDurationMs\x12S\n\x18model_tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifierR\x16modelTensorQuantifiers\x1a\x63\n\x19TrainTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18TrainTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x62\n\x18\x45valTaskSubmittedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1a\x61\n\x17\x45valTaskReceivedAtEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x05value:\x02\x38\x01\x1aK\n\x1dModelInsertionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x1aK\n\x1dModelSelectionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x32\xd9\x03\n\x11\x43ontrollerService\x12\x42\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x1d.metisfl.HealthStatusResponse\"\x00\x12S\n\x0eJoinFederation\x12\x1e.metisfl.JoinFederationRequest\x1a\x1f.metisfl.JoinFederationResponse\"\x00\x12\x42\n\x0fLeaveFederation\x12\x1f.metisfl.LeaveFederationRequest\x1a\x0c.metisfl.Ack\"\x00\x12\x36\n\tTrainDone\x12\x19.metisfl.TrainDoneRequest\x1a\x0c.metisfl.Ack\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12P\n\rGetStatistics\x12\x1d.metisfl.GetStatisticsRequest\x1a\x1e.metisfl.GetStatisticsResponse\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
 
 
 
-_GETCOMMUNITYMODELEVALUATIONLINEAGEREQUEST = DESCRIPTOR.message_types_by_name['GetCommunityModelEvaluationLineageRequest']
-_GETCOMMUNITYMODELEVALUATIONLINEAGERESPONSE = DESCRIPTOR.message_types_by_name['GetCommunityModelEvaluationLineageResponse']
-_GETCOMMUNITYMODELLINEAGEREQUEST = DESCRIPTOR.message_types_by_name['GetCommunityModelLineageRequest']
-_GETCOMMUNITYMODELLINEAGERESPONSE = DESCRIPTOR.message_types_by_name['GetCommunityModelLineageResponse']
-_GETLOCALTASKLINEAGEREQUEST = DESCRIPTOR.message_types_by_name['GetLocalTaskLineageRequest']
-_GETLOCALTASKLINEAGERESPONSE = DESCRIPTOR.message_types_by_name['GetLocalTaskLineageResponse']
-_GETLOCALTASKLINEAGERESPONSE_LEARNERTASKENTRY = _GETLOCALTASKLINEAGERESPONSE.nested_types_by_name['LearnerTaskEntry']
-_GETLEARNERLOCALMODELLINEAGEREQUEST = DESCRIPTOR.message_types_by_name['GetLearnerLocalModelLineageRequest']
-_GETLEARNERLOCALMODELLINEAGERESPONSE = DESCRIPTOR.message_types_by_name['GetLearnerLocalModelLineageResponse']
-_GETRUNTIMEMETADATALINEAGEREQUEST = DESCRIPTOR.message_types_by_name['GetRuntimeMetadataLineageRequest']
-_GETRUNTIMEMETADATALINEAGERESPONSE = DESCRIPTOR.message_types_by_name['GetRuntimeMetadataLineageResponse']
-_GETPARTICIPATINGLEARNERSREQUEST = DESCRIPTOR.message_types_by_name['GetParticipatingLearnersRequest']
-_GETPARTICIPATINGLEARNERSRESPONSE = DESCRIPTOR.message_types_by_name['GetParticipatingLearnersResponse']
 _JOINFEDERATIONREQUEST = DESCRIPTOR.message_types_by_name['JoinFederationRequest']
 _JOINFEDERATIONRESPONSE = DESCRIPTOR.message_types_by_name['JoinFederationResponse']
-_LEARNERLOCALMODELRESPONSE = DESCRIPTOR.message_types_by_name['LearnerLocalModelResponse']
-_MARKTASKCOMPLETEDREQUEST = DESCRIPTOR.message_types_by_name['MarkTaskCompletedRequest']
-_LEARNEREXECUTIONAUXMETADATA = DESCRIPTOR.message_types_by_name['LearnerExecutionAuxMetadata']
-_MARKTASKCOMPLETEDRESPONSE = DESCRIPTOR.message_types_by_name['MarkTaskCompletedResponse']
+_EPOCHEVALUATION = DESCRIPTOR.message_types_by_name['EpochEvaluation']
+_EPOCHEVALUATION_METRICVALUESENTRY = _EPOCHEVALUATION.nested_types_by_name['MetricValuesEntry']
+_TRAINDONEREQUEST = DESCRIPTOR.message_types_by_name['TrainDoneRequest']
+_TRAINDONEREQUEST_METADATAENTRY = _TRAINDONEREQUEST.nested_types_by_name['MetadataEntry']
 _LEAVEFEDERATIONREQUEST = DESCRIPTOR.message_types_by_name['LeaveFederationRequest']
-_LEAVEFEDERATIONRESPONSE = DESCRIPTOR.message_types_by_name['LeaveFederationResponse']
-_REPLACECOMMUNITYMODELREQUEST = DESCRIPTOR.message_types_by_name['ReplaceCommunityModelRequest']
-_REPLACECOMMUNITYMODELRESPONSE = DESCRIPTOR.message_types_by_name['ReplaceCommunityModelResponse']
-GetCommunityModelEvaluationLineageRequest = _reflection.GeneratedProtocolMessageType('GetCommunityModelEvaluationLineageRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETCOMMUNITYMODELEVALUATIONLINEAGEREQUEST,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetCommunityModelEvaluationLineageRequest)
-  })
-_sym_db.RegisterMessage(GetCommunityModelEvaluationLineageRequest)
-
-GetCommunityModelEvaluationLineageResponse = _reflection.GeneratedProtocolMessageType('GetCommunityModelEvaluationLineageResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETCOMMUNITYMODELEVALUATIONLINEAGERESPONSE,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetCommunityModelEvaluationLineageResponse)
-  })
-_sym_db.RegisterMessage(GetCommunityModelEvaluationLineageResponse)
-
-GetCommunityModelLineageRequest = _reflection.GeneratedProtocolMessageType('GetCommunityModelLineageRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETCOMMUNITYMODELLINEAGEREQUEST,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetCommunityModelLineageRequest)
-  })
-_sym_db.RegisterMessage(GetCommunityModelLineageRequest)
-
-GetCommunityModelLineageResponse = _reflection.GeneratedProtocolMessageType('GetCommunityModelLineageResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETCOMMUNITYMODELLINEAGERESPONSE,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetCommunityModelLineageResponse)
-  })
-_sym_db.RegisterMessage(GetCommunityModelLineageResponse)
-
-GetLocalTaskLineageRequest = _reflection.GeneratedProtocolMessageType('GetLocalTaskLineageRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETLOCALTASKLINEAGEREQUEST,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetLocalTaskLineageRequest)
-  })
-_sym_db.RegisterMessage(GetLocalTaskLineageRequest)
-
-GetLocalTaskLineageResponse = _reflection.GeneratedProtocolMessageType('GetLocalTaskLineageResponse', (_message.Message,), {
-
-  'LearnerTaskEntry' : _reflection.GeneratedProtocolMessageType('LearnerTaskEntry', (_message.Message,), {
-    'DESCRIPTOR' : _GETLOCALTASKLINEAGERESPONSE_LEARNERTASKENTRY,
-    '__module__' : 'metisfl.proto.controller_pb2'
-    # @@protoc_insertion_point(class_scope:metisfl.GetLocalTaskLineageResponse.LearnerTaskEntry)
-    })
-  ,
-  'DESCRIPTOR' : _GETLOCALTASKLINEAGERESPONSE,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetLocalTaskLineageResponse)
-  })
-_sym_db.RegisterMessage(GetLocalTaskLineageResponse)
-_sym_db.RegisterMessage(GetLocalTaskLineageResponse.LearnerTaskEntry)
-
-GetLearnerLocalModelLineageRequest = _reflection.GeneratedProtocolMessageType('GetLearnerLocalModelLineageRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETLEARNERLOCALMODELLINEAGEREQUEST,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetLearnerLocalModelLineageRequest)
-  })
-_sym_db.RegisterMessage(GetLearnerLocalModelLineageRequest)
-
-GetLearnerLocalModelLineageResponse = _reflection.GeneratedProtocolMessageType('GetLearnerLocalModelLineageResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETLEARNERLOCALMODELLINEAGERESPONSE,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetLearnerLocalModelLineageResponse)
-  })
-_sym_db.RegisterMessage(GetLearnerLocalModelLineageResponse)
-
-GetRuntimeMetadataLineageRequest = _reflection.GeneratedProtocolMessageType('GetRuntimeMetadataLineageRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETRUNTIMEMETADATALINEAGEREQUEST,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetRuntimeMetadataLineageRequest)
-  })
-_sym_db.RegisterMessage(GetRuntimeMetadataLineageRequest)
-
-GetRuntimeMetadataLineageResponse = _reflection.GeneratedProtocolMessageType('GetRuntimeMetadataLineageResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETRUNTIMEMETADATALINEAGERESPONSE,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetRuntimeMetadataLineageResponse)
-  })
-_sym_db.RegisterMessage(GetRuntimeMetadataLineageResponse)
-
-GetParticipatingLearnersRequest = _reflection.GeneratedProtocolMessageType('GetParticipatingLearnersRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETPARTICIPATINGLEARNERSREQUEST,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetParticipatingLearnersRequest)
-  })
-_sym_db.RegisterMessage(GetParticipatingLearnersRequest)
-
-GetParticipatingLearnersResponse = _reflection.GeneratedProtocolMessageType('GetParticipatingLearnersResponse', (_message.Message,), {
-  'DESCRIPTOR' : _GETPARTICIPATINGLEARNERSRESPONSE,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.GetParticipatingLearnersResponse)
-  })
-_sym_db.RegisterMessage(GetParticipatingLearnersResponse)
-
+_GETSTATISTICSREQUEST = DESCRIPTOR.message_types_by_name['GetStatisticsRequest']
+_GETSTATISTICSRESPONSE = DESCRIPTOR.message_types_by_name['GetStatisticsResponse']
+_GETSTATISTICSRESPONSE_LEARNERSTASKENTRY = _GETSTATISTICSRESPONSE.nested_types_by_name['LearnersTaskEntry']
+_LEARNERDESCRIPTOR = DESCRIPTOR.message_types_by_name['LearnerDescriptor']
+_LOCALTASKSMETADATA = DESCRIPTOR.message_types_by_name['LocalTasksMetadata']
+_TASKEXECUTIONMETADATA = DESCRIPTOR.message_types_by_name['TaskExecutionMetadata']
+_TASKEXECUTIONMETADATA_METADATAENTRY = _TASKEXECUTIONMETADATA.nested_types_by_name['MetadataEntry']
+_COMMUNITYMODELEVALUATION = DESCRIPTOR.message_types_by_name['CommunityModelEvaluation']
+_COMMUNITYMODELEVALUATION_EVALUATIONSENTRY = _COMMUNITYMODELEVALUATION.nested_types_by_name['EvaluationsEntry']
+_MODELEVALUATIONS = DESCRIPTOR.message_types_by_name['ModelEvaluations']
+_MODELEVALUATIONS_METRICVALUESENTRY = _MODELEVALUATIONS.nested_types_by_name['MetricValuesEntry']
+_FEDERATEDTASKRUNTIMEMETADATA = DESCRIPTOR.message_types_by_name['FederatedTaskRuntimeMetadata']
+_FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY = _FEDERATEDTASKRUNTIMEMETADATA.nested_types_by_name['TrainTaskSubmittedAtEntry']
+_FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY = _FEDERATEDTASKRUNTIMEMETADATA.nested_types_by_name['TrainTaskReceivedAtEntry']
+_FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY = _FEDERATEDTASKRUNTIMEMETADATA.nested_types_by_name['EvalTaskSubmittedAtEntry']
+_FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY = _FEDERATEDTASKRUNTIMEMETADATA.nested_types_by_name['EvalTaskReceivedAtEntry']
+_FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY = _FEDERATEDTASKRUNTIMEMETADATA.nested_types_by_name['ModelInsertionDurationMsEntry']
+_FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY = _FEDERATEDTASKRUNTIMEMETADATA.nested_types_by_name['ModelSelectionDurationMsEntry']
 JoinFederationRequest = _reflection.GeneratedProtocolMessageType('JoinFederationRequest', (_message.Message,), {
   'DESCRIPTOR' : _JOINFEDERATIONREQUEST,
   '__module__' : 'metisfl.proto.controller_pb2'
@@ -150,33 +60,35 @@ JoinFederationResponse = _reflection.GeneratedProtocolMessageType('JoinFederatio
   })
 _sym_db.RegisterMessage(JoinFederationResponse)
 
-LearnerLocalModelResponse = _reflection.GeneratedProtocolMessageType('LearnerLocalModelResponse', (_message.Message,), {
-  'DESCRIPTOR' : _LEARNERLOCALMODELRESPONSE,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.LearnerLocalModelResponse)
-  })
-_sym_db.RegisterMessage(LearnerLocalModelResponse)
+EpochEvaluation = _reflection.GeneratedProtocolMessageType('EpochEvaluation', (_message.Message,), {
 
-MarkTaskCompletedRequest = _reflection.GeneratedProtocolMessageType('MarkTaskCompletedRequest', (_message.Message,), {
-  'DESCRIPTOR' : _MARKTASKCOMPLETEDREQUEST,
+  'MetricValuesEntry' : _reflection.GeneratedProtocolMessageType('MetricValuesEntry', (_message.Message,), {
+    'DESCRIPTOR' : _EPOCHEVALUATION_METRICVALUESENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.EpochEvaluation.MetricValuesEntry)
+    })
+  ,
+  'DESCRIPTOR' : _EPOCHEVALUATION,
   '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.MarkTaskCompletedRequest)
+  # @@protoc_insertion_point(class_scope:metisfl.EpochEvaluation)
   })
-_sym_db.RegisterMessage(MarkTaskCompletedRequest)
+_sym_db.RegisterMessage(EpochEvaluation)
+_sym_db.RegisterMessage(EpochEvaluation.MetricValuesEntry)
 
-LearnerExecutionAuxMetadata = _reflection.GeneratedProtocolMessageType('LearnerExecutionAuxMetadata', (_message.Message,), {
-  'DESCRIPTOR' : _LEARNEREXECUTIONAUXMETADATA,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.LearnerExecutionAuxMetadata)
-  })
-_sym_db.RegisterMessage(LearnerExecutionAuxMetadata)
+TrainDoneRequest = _reflection.GeneratedProtocolMessageType('TrainDoneRequest', (_message.Message,), {
 
-MarkTaskCompletedResponse = _reflection.GeneratedProtocolMessageType('MarkTaskCompletedResponse', (_message.Message,), {
-  'DESCRIPTOR' : _MARKTASKCOMPLETEDRESPONSE,
+  'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
+    'DESCRIPTOR' : _TRAINDONEREQUEST_METADATAENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.TrainDoneRequest.MetadataEntry)
+    })
+  ,
+  'DESCRIPTOR' : _TRAINDONEREQUEST,
   '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.MarkTaskCompletedResponse)
+  # @@protoc_insertion_point(class_scope:metisfl.TrainDoneRequest)
   })
-_sym_db.RegisterMessage(MarkTaskCompletedResponse)
+_sym_db.RegisterMessage(TrainDoneRequest)
+_sym_db.RegisterMessage(TrainDoneRequest.MetadataEntry)
 
 LeaveFederationRequest = _reflection.GeneratedProtocolMessageType('LeaveFederationRequest', (_message.Message,), {
   'DESCRIPTOR' : _LEAVEFEDERATIONREQUEST,
@@ -185,79 +97,220 @@ LeaveFederationRequest = _reflection.GeneratedProtocolMessageType('LeaveFederati
   })
 _sym_db.RegisterMessage(LeaveFederationRequest)
 
-LeaveFederationResponse = _reflection.GeneratedProtocolMessageType('LeaveFederationResponse', (_message.Message,), {
-  'DESCRIPTOR' : _LEAVEFEDERATIONRESPONSE,
+GetStatisticsRequest = _reflection.GeneratedProtocolMessageType('GetStatisticsRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETSTATISTICSREQUEST,
   '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.LeaveFederationResponse)
+  # @@protoc_insertion_point(class_scope:metisfl.GetStatisticsRequest)
   })
-_sym_db.RegisterMessage(LeaveFederationResponse)
+_sym_db.RegisterMessage(GetStatisticsRequest)
 
-ReplaceCommunityModelRequest = _reflection.GeneratedProtocolMessageType('ReplaceCommunityModelRequest', (_message.Message,), {
-  'DESCRIPTOR' : _REPLACECOMMUNITYMODELREQUEST,
-  '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.ReplaceCommunityModelRequest)
-  })
-_sym_db.RegisterMessage(ReplaceCommunityModelRequest)
+GetStatisticsResponse = _reflection.GeneratedProtocolMessageType('GetStatisticsResponse', (_message.Message,), {
 
-ReplaceCommunityModelResponse = _reflection.GeneratedProtocolMessageType('ReplaceCommunityModelResponse', (_message.Message,), {
-  'DESCRIPTOR' : _REPLACECOMMUNITYMODELRESPONSE,
+  'LearnersTaskEntry' : _reflection.GeneratedProtocolMessageType('LearnersTaskEntry', (_message.Message,), {
+    'DESCRIPTOR' : _GETSTATISTICSRESPONSE_LEARNERSTASKENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.GetStatisticsResponse.LearnersTaskEntry)
+    })
+  ,
+  'DESCRIPTOR' : _GETSTATISTICSRESPONSE,
   '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.ReplaceCommunityModelResponse)
+  # @@protoc_insertion_point(class_scope:metisfl.GetStatisticsResponse)
   })
-_sym_db.RegisterMessage(ReplaceCommunityModelResponse)
+_sym_db.RegisterMessage(GetStatisticsResponse)
+_sym_db.RegisterMessage(GetStatisticsResponse.LearnersTaskEntry)
+
+LearnerDescriptor = _reflection.GeneratedProtocolMessageType('LearnerDescriptor', (_message.Message,), {
+  'DESCRIPTOR' : _LEARNERDESCRIPTOR,
+  '__module__' : 'metisfl.proto.controller_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.LearnerDescriptor)
+  })
+_sym_db.RegisterMessage(LearnerDescriptor)
+
+LocalTasksMetadata = _reflection.GeneratedProtocolMessageType('LocalTasksMetadata', (_message.Message,), {
+  'DESCRIPTOR' : _LOCALTASKSMETADATA,
+  '__module__' : 'metisfl.proto.controller_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.LocalTasksMetadata)
+  })
+_sym_db.RegisterMessage(LocalTasksMetadata)
+
+TaskExecutionMetadata = _reflection.GeneratedProtocolMessageType('TaskExecutionMetadata', (_message.Message,), {
+
+  'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
+    'DESCRIPTOR' : _TASKEXECUTIONMETADATA_METADATAENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.TaskExecutionMetadata.MetadataEntry)
+    })
+  ,
+  'DESCRIPTOR' : _TASKEXECUTIONMETADATA,
+  '__module__' : 'metisfl.proto.controller_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.TaskExecutionMetadata)
+  })
+_sym_db.RegisterMessage(TaskExecutionMetadata)
+_sym_db.RegisterMessage(TaskExecutionMetadata.MetadataEntry)
+
+CommunityModelEvaluation = _reflection.GeneratedProtocolMessageType('CommunityModelEvaluation', (_message.Message,), {
+
+  'EvaluationsEntry' : _reflection.GeneratedProtocolMessageType('EvaluationsEntry', (_message.Message,), {
+    'DESCRIPTOR' : _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.CommunityModelEvaluation.EvaluationsEntry)
+    })
+  ,
+  'DESCRIPTOR' : _COMMUNITYMODELEVALUATION,
+  '__module__' : 'metisfl.proto.controller_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.CommunityModelEvaluation)
+  })
+_sym_db.RegisterMessage(CommunityModelEvaluation)
+_sym_db.RegisterMessage(CommunityModelEvaluation.EvaluationsEntry)
+
+ModelEvaluations = _reflection.GeneratedProtocolMessageType('ModelEvaluations', (_message.Message,), {
+
+  'MetricValuesEntry' : _reflection.GeneratedProtocolMessageType('MetricValuesEntry', (_message.Message,), {
+    'DESCRIPTOR' : _MODELEVALUATIONS_METRICVALUESENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.ModelEvaluations.MetricValuesEntry)
+    })
+  ,
+  'DESCRIPTOR' : _MODELEVALUATIONS,
+  '__module__' : 'metisfl.proto.controller_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.ModelEvaluations)
+  })
+_sym_db.RegisterMessage(ModelEvaluations)
+_sym_db.RegisterMessage(ModelEvaluations.MetricValuesEntry)
+
+FederatedTaskRuntimeMetadata = _reflection.GeneratedProtocolMessageType('FederatedTaskRuntimeMetadata', (_message.Message,), {
+
+  'TrainTaskSubmittedAtEntry' : _reflection.GeneratedProtocolMessageType('TrainTaskSubmittedAtEntry', (_message.Message,), {
+    'DESCRIPTOR' : _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.FederatedTaskRuntimeMetadata.TrainTaskSubmittedAtEntry)
+    })
+  ,
+
+  'TrainTaskReceivedAtEntry' : _reflection.GeneratedProtocolMessageType('TrainTaskReceivedAtEntry', (_message.Message,), {
+    'DESCRIPTOR' : _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.FederatedTaskRuntimeMetadata.TrainTaskReceivedAtEntry)
+    })
+  ,
+
+  'EvalTaskSubmittedAtEntry' : _reflection.GeneratedProtocolMessageType('EvalTaskSubmittedAtEntry', (_message.Message,), {
+    'DESCRIPTOR' : _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.FederatedTaskRuntimeMetadata.EvalTaskSubmittedAtEntry)
+    })
+  ,
+
+  'EvalTaskReceivedAtEntry' : _reflection.GeneratedProtocolMessageType('EvalTaskReceivedAtEntry', (_message.Message,), {
+    'DESCRIPTOR' : _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.FederatedTaskRuntimeMetadata.EvalTaskReceivedAtEntry)
+    })
+  ,
+
+  'ModelInsertionDurationMsEntry' : _reflection.GeneratedProtocolMessageType('ModelInsertionDurationMsEntry', (_message.Message,), {
+    'DESCRIPTOR' : _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.FederatedTaskRuntimeMetadata.ModelInsertionDurationMsEntry)
+    })
+  ,
+
+  'ModelSelectionDurationMsEntry' : _reflection.GeneratedProtocolMessageType('ModelSelectionDurationMsEntry', (_message.Message,), {
+    'DESCRIPTOR' : _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY,
+    '__module__' : 'metisfl.proto.controller_pb2'
+    # @@protoc_insertion_point(class_scope:metisfl.FederatedTaskRuntimeMetadata.ModelSelectionDurationMsEntry)
+    })
+  ,
+  'DESCRIPTOR' : _FEDERATEDTASKRUNTIMEMETADATA,
+  '__module__' : 'metisfl.proto.controller_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.FederatedTaskRuntimeMetadata)
+  })
+_sym_db.RegisterMessage(FederatedTaskRuntimeMetadata)
+_sym_db.RegisterMessage(FederatedTaskRuntimeMetadata.TrainTaskSubmittedAtEntry)
+_sym_db.RegisterMessage(FederatedTaskRuntimeMetadata.TrainTaskReceivedAtEntry)
+_sym_db.RegisterMessage(FederatedTaskRuntimeMetadata.EvalTaskSubmittedAtEntry)
+_sym_db.RegisterMessage(FederatedTaskRuntimeMetadata.EvalTaskReceivedAtEntry)
+_sym_db.RegisterMessage(FederatedTaskRuntimeMetadata.ModelInsertionDurationMsEntry)
+_sym_db.RegisterMessage(FederatedTaskRuntimeMetadata.ModelSelectionDurationMsEntry)
 
 _CONTROLLERSERVICE = DESCRIPTOR.services_by_name['ControllerService']
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _GETLOCALTASKLINEAGERESPONSE_LEARNERTASKENTRY._options = None
-  _GETLOCALTASKLINEAGERESPONSE_LEARNERTASKENTRY._serialized_options = b'8\001'
-  _GETCOMMUNITYMODELEVALUATIONLINEAGEREQUEST._serialized_start=133
-  _GETCOMMUNITYMODELEVALUATIONLINEAGEREQUEST._serialized_end=215
-  _GETCOMMUNITYMODELEVALUATIONLINEAGERESPONSE._serialized_start=218
-  _GETCOMMUNITYMODELEVALUATIONLINEAGERESPONSE._serialized_end=348
-  _GETCOMMUNITYMODELLINEAGEREQUEST._serialized_start=350
-  _GETCOMMUNITYMODELLINEAGEREQUEST._serialized_end=422
-  _GETCOMMUNITYMODELLINEAGERESPONSE._serialized_start=424
-  _GETCOMMUNITYMODELLINEAGERESPONSE._serialized_end=526
-  _GETLOCALTASKLINEAGEREQUEST._serialized_start=528
-  _GETLOCALTASKLINEAGEREQUEST._serialized_end=628
-  _GETLOCALTASKLINEAGERESPONSE._serialized_start=631
-  _GETLOCALTASKLINEAGERESPONSE._serialized_end=843
-  _GETLOCALTASKLINEAGERESPONSE_LEARNERTASKENTRY._serialized_start=752
-  _GETLOCALTASKLINEAGERESPONSE_LEARNERTASKENTRY._serialized_end=843
-  _GETLEARNERLOCALMODELLINEAGEREQUEST._serialized_start=846
-  _GETLEARNERLOCALMODELLINEAGEREQUEST._serialized_end=981
-  _GETLEARNERLOCALMODELLINEAGERESPONSE._serialized_start=983
-  _GETLEARNERLOCALMODELLINEAGERESPONSE._serialized_end=1104
-  _GETRUNTIMEMETADATALINEAGEREQUEST._serialized_start=1106
-  _GETRUNTIMEMETADATALINEAGEREQUEST._serialized_end=1179
-  _GETRUNTIMEMETADATALINEAGERESPONSE._serialized_start=1182
-  _GETRUNTIMEMETADATALINEAGERESPONSE._serialized_end=1321
-  _GETPARTICIPATINGLEARNERSREQUEST._serialized_start=1323
-  _GETPARTICIPATINGLEARNERSREQUEST._serialized_end=1356
-  _GETPARTICIPATINGLEARNERSRESPONSE._serialized_start=1358
-  _GETPARTICIPATINGLEARNERSRESPONSE._serialized_end=1446
-  _JOINFEDERATIONREQUEST._serialized_start=1449
-  _JOINFEDERATIONREQUEST._serialized_end=1600
-  _JOINFEDERATIONRESPONSE._serialized_start=1602
-  _JOINFEDERATIONRESPONSE._serialized_end=1720
-  _LEARNERLOCALMODELRESPONSE._serialized_start=1722
-  _LEARNERLOCALMODELRESPONSE._serialized_end=1847
-  _MARKTASKCOMPLETEDREQUEST._serialized_start=1850
-  _MARKTASKCOMPLETEDREQUEST._serialized_end=1990
-  _LEARNEREXECUTIONAUXMETADATA._serialized_start=1992
-  _LEARNEREXECUTIONAUXMETADATA._serialized_end=2058
-  _MARKTASKCOMPLETEDRESPONSE._serialized_start=2060
-  _MARKTASKCOMPLETEDRESPONSE._serialized_end=2119
-  _LEAVEFEDERATIONREQUEST._serialized_start=2121
-  _LEAVEFEDERATIONREQUEST._serialized_end=2207
-  _LEAVEFEDERATIONRESPONSE._serialized_start=2209
-  _LEAVEFEDERATIONRESPONSE._serialized_end=2266
-  _REPLACECOMMUNITYMODELREQUEST._serialized_start=2268
-  _REPLACECOMMUNITYMODELREQUEST._serialized_end=2345
-  _REPLACECOMMUNITYMODELRESPONSE._serialized_start=2347
-  _REPLACECOMMUNITYMODELRESPONSE._serialized_end=2410
-  _CONTROLLERSERVICE._serialized_start=2413
-  _CONTROLLERSERVICE._serialized_end=3702
+  _EPOCHEVALUATION_METRICVALUESENTRY._options = None
+  _EPOCHEVALUATION_METRICVALUESENTRY._serialized_options = b'8\001'
+  _TRAINDONEREQUEST_METADATAENTRY._options = None
+  _TRAINDONEREQUEST_METADATAENTRY._serialized_options = b'8\001'
+  _GETSTATISTICSRESPONSE_LEARNERSTASKENTRY._options = None
+  _GETSTATISTICSRESPONSE_LEARNERSTASKENTRY._serialized_options = b'8\001'
+  _TASKEXECUTIONMETADATA_METADATAENTRY._options = None
+  _TASKEXECUTIONMETADATA_METADATAENTRY._serialized_options = b'8\001'
+  _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY._options = None
+  _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY._serialized_options = b'8\001'
+  _MODELEVALUATIONS_METRICVALUESENTRY._options = None
+  _MODELEVALUATIONS_METRICVALUESENTRY._serialized_options = b'8\001'
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY._options = None
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY._serialized_options = b'8\001'
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY._options = None
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY._serialized_options = b'8\001'
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY._options = None
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY._serialized_options = b'8\001'
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY._options = None
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY._serialized_options = b'8\001'
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY._options = None
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_options = b'8\001'
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._options = None
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_options = b'8\001'
+  _JOINFEDERATIONREQUEST._serialized_start=140
+  _JOINFEDERATIONREQUEST._serialized_end=319
+  _JOINFEDERATIONRESPONSE._serialized_start=321
+  _JOINFEDERATIONRESPONSE._serialized_end=439
+  _EPOCHEVALUATION._serialized_start=442
+  _EPOCHEVALUATION._serialized_end=632
+  _EPOCHEVALUATION_METRICVALUESENTRY._serialized_start=569
+  _EPOCHEVALUATION_METRICVALUESENTRY._serialized_end=632
+  _TRAINDONEREQUEST._serialized_start=635
+  _TRAINDONEREQUEST._serialized_end=989
+  _TRAINDONEREQUEST_METADATAENTRY._serialized_start=930
+  _TRAINDONEREQUEST_METADATAENTRY._serialized_end=989
+  _LEAVEFEDERATIONREQUEST._serialized_start=991
+  _LEAVEFEDERATIONREQUEST._serialized_end=1077
+  _GETSTATISTICSREQUEST._serialized_start=1080
+  _GETSTATISTICSREQUEST._serialized_end=1275
+  _GETSTATISTICSRESPONSE._serialized_start=1278
+  _GETSTATISTICSRESPONSE._serialized_end=1728
+  _GETSTATISTICSRESPONSE_LEARNERSTASKENTRY._serialized_start=1636
+  _GETSTATISTICSRESPONSE_LEARNERSTASKENTRY._serialized_end=1728
+  _LEARNERDESCRIPTOR._serialized_start=1730
+  _LEARNERDESCRIPTOR._serialized_end=1844
+  _LOCALTASKSMETADATA._serialized_start=1846
+  _LOCALTASKSMETADATA._serialized_end=1935
+  _TASKEXECUTIONMETADATA._serialized_start=1938
+  _TASKEXECUTIONMETADATA._serialized_end=2096
+  _TASKEXECUTIONMETADATA_METADATAENTRY._serialized_start=930
+  _TASKEXECUTIONMETADATA_METADATAENTRY._serialized_end=989
+  _COMMUNITYMODELEVALUATION._serialized_start=2099
+  _COMMUNITYMODELEVALUATION._serialized_end=2345
+  _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY._serialized_start=2256
+  _COMMUNITYMODELEVALUATION_EVALUATIONSENTRY._serialized_end=2345
+  _MODELEVALUATIONS._serialized_start=2348
+  _MODELEVALUATIONS._serialized_end=2513
+  _MODELEVALUATIONS_METRICVALUESENTRY._serialized_start=569
+  _MODELEVALUATIONS_METRICVALUESENTRY._serialized_end=632
+  _FEDERATEDTASKRUNTIMEMETADATA._serialized_start=2516
+  _FEDERATEDTASKRUNTIMEMETADATA._serialized_end=4677
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY._serialized_start=4125
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKSUBMITTEDATENTRY._serialized_end=4224
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY._serialized_start=4226
+  _FEDERATEDTASKRUNTIMEMETADATA_TRAINTASKRECEIVEDATENTRY._serialized_end=4324
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY._serialized_start=4326
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKSUBMITTEDATENTRY._serialized_end=4424
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY._serialized_start=4426
+  _FEDERATEDTASKRUNTIMEMETADATA_EVALTASKRECEIVEDATENTRY._serialized_end=4523
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_start=4525
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_end=4600
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_start=4602
+  _FEDERATEDTASKRUNTIMEMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_end=4677
+  _CONTROLLERSERVICE._serialized_start=4680
+  _CONTROLLERSERVICE._serialized_end=5153
 # @@protoc_insertion_point(module_scope)

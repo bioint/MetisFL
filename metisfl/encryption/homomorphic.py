@@ -16,7 +16,8 @@ class HomomorphicEncryption(object):
     """Homomorphic Encryption class using Palisade. Wraps the C++ implementation of Palisade."""
 
     def __init__(
-        self, batch_size: int,
+        self, 
+        batch_size: int,
         scaling_factor_bits: int
     ):
         """Initializes the HomomorphicEncryption object. 

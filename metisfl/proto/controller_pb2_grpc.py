@@ -3,6 +3,7 @@
 import grpc
 
 from metisfl.proto import controller_pb2 as metisfl_dot_proto_dot_controller__pb2
+from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
@@ -15,40 +16,10 @@ class ControllerServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetCommunityModelEvaluationLineage = channel.unary_unary(
-                '/metisfl.ControllerService/GetCommunityModelEvaluationLineage',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageResponse.FromString,
-                )
-        self.GetCommunityModelLineage = channel.unary_unary(
-                '/metisfl.ControllerService/GetCommunityModelLineage',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageResponse.FromString,
-                )
-        self.GetLearnerLocalModelLineage = channel.unary_unary(
-                '/metisfl.ControllerService/GetLearnerLocalModelLineage',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageResponse.FromString,
-                )
-        self.GetLocalTaskLineage = channel.unary_unary(
-                '/metisfl.ControllerService/GetLocalTaskLineage',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageResponse.FromString,
-                )
-        self.GetRuntimeMetadataLineage = channel.unary_unary(
-                '/metisfl.ControllerService/GetRuntimeMetadataLineage',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageResponse.FromString,
-                )
-        self.GetParticipatingLearners = channel.unary_unary(
-                '/metisfl.ControllerService/GetParticipatingLearners',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersResponse.FromString,
-                )
-        self.GetServicesHealthStatus = channel.unary_unary(
-                '/metisfl.ControllerService/GetServicesHealthStatus',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
+        self.GetHealthStatus = channel.unary_unary(
+                '/metisfl.ControllerService/GetHealthStatus',
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
                 )
         self.JoinFederation = channel.unary_unary(
                 '/metisfl.ControllerService/JoinFederation',
@@ -58,65 +29,34 @@ class ControllerServiceStub(object):
         self.LeaveFederation = channel.unary_unary(
                 '/metisfl.ControllerService/LeaveFederation',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.FromString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
                 )
-        self.MarkTaskCompleted = channel.unary_unary(
-                '/metisfl.ControllerService/MarkTaskCompleted',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedResponse.FromString,
+        self.TrainDone = channel.unary_unary(
+                '/metisfl.ControllerService/TrainDone',
+                request_serializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
                 )
-        self.ReplaceCommunityModel = channel.unary_unary(
-                '/metisfl.ControllerService/ReplaceCommunityModel',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelResponse.FromString,
+        self.SetInitialModel = channel.unary_unary(
+                '/metisfl.ControllerService/SetInitialModel',
+                request_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                )
+        self.GetStatistics = channel.unary_unary(
+                '/metisfl.ControllerService/GetStatistics',
+                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsResponse.FromString,
                 )
         self.ShutDown = channel.unary_unary(
                 '/metisfl.ControllerService/ShutDown',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
                 )
 
 
 class ControllerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetCommunityModelEvaluationLineage(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetCommunityModelLineage(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetLearnerLocalModelLineage(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetLocalTaskLineage(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetRuntimeMetadataLineage(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetParticipatingLearners(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def GetServicesHealthStatus(self, request, context):
+    def GetHealthStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -134,13 +74,19 @@ class ControllerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def MarkTaskCompleted(self, request, context):
+    def TrainDone(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ReplaceCommunityModel(self, request, context):
+    def SetInitialModel(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetStatistics(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -155,40 +101,10 @@ class ControllerServiceServicer(object):
 
 def add_ControllerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetCommunityModelEvaluationLineage': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetCommunityModelEvaluationLineage,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageResponse.SerializeToString,
-            ),
-            'GetCommunityModelLineage': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetCommunityModelLineage,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageResponse.SerializeToString,
-            ),
-            'GetLearnerLocalModelLineage': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetLearnerLocalModelLineage,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageResponse.SerializeToString,
-            ),
-            'GetLocalTaskLineage': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetLocalTaskLineage,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageResponse.SerializeToString,
-            ),
-            'GetRuntimeMetadataLineage': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetRuntimeMetadataLineage,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageResponse.SerializeToString,
-            ),
-            'GetParticipatingLearners': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetParticipatingLearners,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersResponse.SerializeToString,
-            ),
-            'GetServicesHealthStatus': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetServicesHealthStatus,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.SerializeToString,
+            'GetHealthStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetHealthStatus,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.SerializeToString,
             ),
             'JoinFederation': grpc.unary_unary_rpc_method_handler(
                     servicer.JoinFederation,
@@ -198,22 +114,27 @@ def add_ControllerServiceServicer_to_server(servicer, server):
             'LeaveFederation': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaveFederation,
                     request_deserializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.SerializeToString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
             ),
-            'MarkTaskCompleted': grpc.unary_unary_rpc_method_handler(
-                    servicer.MarkTaskCompleted,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedResponse.SerializeToString,
+            'TrainDone': grpc.unary_unary_rpc_method_handler(
+                    servicer.TrainDone,
+                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
             ),
-            'ReplaceCommunityModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.ReplaceCommunityModel,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelResponse.SerializeToString,
+            'SetInitialModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetInitialModel,
+                    request_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+            ),
+            'GetStatistics': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetStatistics,
+                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsResponse.SerializeToString,
             ),
             'ShutDown': grpc.unary_unary_rpc_method_handler(
                     servicer.ShutDown,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -226,7 +147,7 @@ class ControllerService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetCommunityModelEvaluationLineage(request,
+    def GetHealthStatus(request,
             target,
             options=(),
             channel_credentials=None,
@@ -236,111 +157,9 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetCommunityModelEvaluationLineage',
-            metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetCommunityModelEvaluationLineageResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetCommunityModelLineage(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetCommunityModelLineage',
-            metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetCommunityModelLineageResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetLearnerLocalModelLineage(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetLearnerLocalModelLineage',
-            metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetLearnerLocalModelLineageResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetLocalTaskLineage(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetLocalTaskLineage',
-            metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetLocalTaskLineageResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetRuntimeMetadataLineage(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetRuntimeMetadataLineage',
-            metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetRuntimeMetadataLineageResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetParticipatingLearners(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetParticipatingLearners',
-            metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetParticipatingLearnersResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def GetServicesHealthStatus(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetServicesHealthStatus',
-            metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetHealthStatus',
+            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -374,12 +193,12 @@ class ControllerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/LeaveFederation',
             metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.FromString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def MarkTaskCompleted(request,
+    def TrainDone(request,
             target,
             options=(),
             channel_credentials=None,
@@ -389,14 +208,14 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/MarkTaskCompleted',
-            metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.MarkTaskCompletedResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/TrainDone',
+            metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ReplaceCommunityModel(request,
+    def SetInitialModel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -406,9 +225,26 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/ReplaceCommunityModel',
-            metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.ReplaceCommunityModelResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/SetInitialModel',
+            metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetStatistics(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetStatistics',
+            metisfl_dot_proto_dot_controller__pb2.GetStatisticsRequest.SerializeToString,
+            metisfl_dot_proto_dot_controller__pb2.GetStatisticsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -424,7 +260,7 @@ class ControllerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/ShutDown',
-            metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
+            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

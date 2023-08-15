@@ -7,7 +7,7 @@ import "metisfl/proto/service_common.proto";
 service LearnerService {
   rpc GetHealthStatus (Empty) returns (HealthStatusResponse) {}
 
-  rpc InitilizeWeights (Empty) returns (Model) {}
+  rpc GetModel (Empty) returns (Model) {}
 
   rpc SetInitialWeights (Model) returns (Ack) {}
 

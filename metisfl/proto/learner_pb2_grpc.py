@@ -3,6 +3,7 @@
 import grpc
 
 from metisfl.proto import learner_pb2 as metisfl_dot_proto_dot_learner__pb2
+from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
@@ -15,44 +16,66 @@ class LearnerServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.EvaluateModel = channel.unary_unary(
-                '/metisfl.LearnerService/EvaluateModel',
-                request_serializer=metisfl_dot_proto_dot_learner__pb2.EvaluateModelRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_learner__pb2.EvaluateModelResponse.FromString,
+        self.GetHealthStatus = channel.unary_unary(
+                '/metisfl.LearnerService/GetHealthStatus',
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
                 )
-        self.GetServicesHealthStatus = channel.unary_unary(
-                '/metisfl.LearnerService/GetServicesHealthStatus',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
+        self.GetModel = channel.unary_unary(
+                '/metisfl.LearnerService/GetModel',
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
                 )
-        self.RunTask = channel.unary_unary(
-                '/metisfl.LearnerService/RunTask',
-                request_serializer=metisfl_dot_proto_dot_learner__pb2.RunTaskRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_learner__pb2.RunTaskResponse.FromString,
+        self.SetInitialWeights = channel.unary_unary(
+                '/metisfl.LearnerService/SetInitialWeights',
+                request_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                )
+        self.Train = channel.unary_unary(
+                '/metisfl.LearnerService/Train',
+                request_serializer=metisfl_dot_proto_dot_learner__pb2.TrainRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                )
+        self.Evaluate = channel.unary_unary(
+                '/metisfl.LearnerService/Evaluate',
+                request_serializer=metisfl_dot_proto_dot_learner__pb2.EvaluateRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_learner__pb2.EvaluateResponse.FromString,
                 )
         self.ShutDown = channel.unary_unary(
                 '/metisfl.LearnerService/ShutDown',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
                 )
 
 
 class LearnerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def EvaluateModel(self, request, context):
+    def GetHealthStatus(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetServicesHealthStatus(self, request, context):
+    def GetModel(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def RunTask(self, request, context):
+    def SetInitialWeights(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Train(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Evaluate(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -67,25 +90,35 @@ class LearnerServiceServicer(object):
 
 def add_LearnerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'EvaluateModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.EvaluateModel,
-                    request_deserializer=metisfl_dot_proto_dot_learner__pb2.EvaluateModelRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_learner__pb2.EvaluateModelResponse.SerializeToString,
+            'GetHealthStatus': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetHealthStatus,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.SerializeToString,
             ),
-            'GetServicesHealthStatus': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetServicesHealthStatus,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.SerializeToString,
+            'GetModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetModel,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
+                    response_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
             ),
-            'RunTask': grpc.unary_unary_rpc_method_handler(
-                    servicer.RunTask,
-                    request_deserializer=metisfl_dot_proto_dot_learner__pb2.RunTaskRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_learner__pb2.RunTaskResponse.SerializeToString,
+            'SetInitialWeights': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetInitialWeights,
+                    request_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+            ),
+            'Train': grpc.unary_unary_rpc_method_handler(
+                    servicer.Train,
+                    request_deserializer=metisfl_dot_proto_dot_learner__pb2.TrainRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+            ),
+            'Evaluate': grpc.unary_unary_rpc_method_handler(
+                    servicer.Evaluate,
+                    request_deserializer=metisfl_dot_proto_dot_learner__pb2.EvaluateRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_learner__pb2.EvaluateResponse.SerializeToString,
             ),
             'ShutDown': grpc.unary_unary_rpc_method_handler(
                     servicer.ShutDown,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -98,7 +131,7 @@ class LearnerService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def EvaluateModel(request,
+    def GetHealthStatus(request,
             target,
             options=(),
             channel_credentials=None,
@@ -108,14 +141,14 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/EvaluateModel',
-            metisfl_dot_proto_dot_learner__pb2.EvaluateModelRequest.SerializeToString,
-            metisfl_dot_proto_dot_learner__pb2.EvaluateModelResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/GetHealthStatus',
+            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetServicesHealthStatus(request,
+    def GetModel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -125,14 +158,14 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/GetServicesHealthStatus',
-            metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusRequest.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.GetServicesHealthStatusResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/GetModel',
+            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+            metisfl_dot_proto_dot_model__pb2.Model.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def RunTask(request,
+    def SetInitialWeights(request,
             target,
             options=(),
             channel_credentials=None,
@@ -142,9 +175,43 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/RunTask',
-            metisfl_dot_proto_dot_learner__pb2.RunTaskRequest.SerializeToString,
-            metisfl_dot_proto_dot_learner__pb2.RunTaskResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/SetInitialWeights',
+            metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Train(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/Train',
+            metisfl_dot_proto_dot_learner__pb2.TrainRequest.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Evaluate(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/Evaluate',
+            metisfl_dot_proto_dot_learner__pb2.EvaluateRequest.SerializeToString,
+            metisfl_dot_proto_dot_learner__pb2.EvaluateResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -160,7 +227,7 @@ class LearnerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/ShutDown',
-            metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
+            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

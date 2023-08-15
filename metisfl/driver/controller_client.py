@@ -1,9 +1,9 @@
 
 """A gRPC client used from the driver to communicate with the controller."""
 
-from metisfl.grpc.client import get_client
-from metisfl.proto import controller_pb2, controller_pb2_grpc, service_common_pb2
-from metisfl.utils.fedenv import ClientParams
+from ..grpc.client import get_client
+from ..proto import controller_pb2, controller_pb2_grpc, model_pb2, service_common_pb2
+from ..utils.fedenv import ClientParams
 
 
 class GRPCControllerClient(object):
@@ -62,6 +62,39 @@ class GRPCControllerClient(object):
             return schedule(stub.GetHealthStatus,
                             request_retries, request_timeout, block)
 
+    def set_initial_model(
+        self,
+        model: model_pb2.Model,
+        request_retries=1,
+        request_timeout=None,
+        block=True
+    ) -> service_common_pb2.Ack:
+        """Sends an initial model to the Controller.
+
+        Parameters
+        ----------
+        model : model_pb2.Model
+            The initial model.
+        request_retries : int, optional
+            The number of retries, by default 1
+        request_timeout : int, optional
+            The timeout in seconds, by default None
+        block : bool, optional
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            An ack from the Controller.
+        """        
+        with self._get_client() as client:
+            stub, schedule, _ = client
+
+            def _request():
+                return stub.SetInitialModel(model)
+
+            return schedule(_request, request_retries, request_timeout, block)
+
     def get_statistics(
         self,
         community_evaluation_backtracks: int,
@@ -106,7 +139,7 @@ class GRPCControllerClient(object):
 
             return schedule(_request, request_retries, request_timeout, block)
 
-    def shutdown_controller(
+    def shutdown(
         self,
         request_retries=1,
         request_timeout=None,

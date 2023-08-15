@@ -85,9 +85,9 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return None
 
-        # TODO:
-
-        return model
+        return try_call_get_weights(
+            learner=self._learner,
+        )
 
     def SetInitialWeights(
         self,
@@ -106,7 +106,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         Returns
         -------
         service_common_pb2.Ack
-            The acknoledgement contain the status, i.e. True if the weights were set successfully, False otherwise.
+            The acknoledgement containing the status, i.e. True if the weights were set successfully, False otherwise.
         """
         
         if not self._is_serving(context):
@@ -161,7 +161,9 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         request: learner_pb2.TrainRequest,
         context: Any
     ) -> service_common_pb2.Ack:
-        """Training endpoint.
+        """Training endpoint. Training happens asynchronously in a seperate process. 
+            The Learner server responds with an acknoledgement after receiving the request.
+            When training is done, the client calls the TrainDone Controller endpoint.
 
         Parameters
         ----------
