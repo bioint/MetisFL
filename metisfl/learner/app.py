@@ -1,13 +1,12 @@
 
 from typing import Optional
 
-import config
-
+from ..config import get_auth_token_fp, get_learner_id_fp
 from ..utils.fedenv import ClientParams, ServerParams
 from .controller_client import GRPCControllerClient
 from .learner import Learner
 from .learner_server import LearnerServer
-
+from .task_manager import TaskManager
 
 def app(
     learner: Learner,
@@ -31,23 +30,33 @@ def app(
         If None, the aggregation strategies that need this parameter will not run. By default None
     """    
     
+    client_params = ClientParams(
+        hostname=controller_params.hostname,
+        port=controller_params.port,
+        root_certificate=controller_params.root_certificate,
+    )        
+    
+    port = learner_params.port
+    
+    # Create the gRPC client to communicate with the Controller
     client = GRPCControllerClient(
-        client_params=ClientParams(
-            hostname=controller_params.hostname,
-            port=controller_params.port,
-            root_certificate=controller_params.root_certificate,
-        ),
-        learner_id_fp=config.get_auth_token_fp(learner_params.port),
-        auth_token_fp=config.get_auth_token_fp(learner_params.port),
+        client_params=client_params,
+        learner_id_fp=get_auth_token_fp(port),
+        auth_token_fp=get_learner_id_fp(port),
     )
 
-    server = LearnerServer(
-        learner=learner,
-        controller_params=controller_params,
-    )
-
-    server.start()
-
+    # Register with the Controller
     client.join_federation(
         num_training_examples=num_training_examples,
     )
+    
+    # Create the gRPC server for the Controller to communicate with the Learner
+    server = LearnerServer(
+        learner=learner,
+        controller_params=controller_params,
+        task_manager=TaskManager(),
+        client=client,
+    )
+
+    # Blocking until Shutdown endpoint is called
+    server.start()

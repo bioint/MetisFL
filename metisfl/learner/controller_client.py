@@ -134,7 +134,7 @@ class GRPCControllerClient(object):
 
             return schedule(_request, request_retries, request_timeout, block)
 
-    def mark_task_completed(
+    def train_done(
         self,
         model: model_pb2.Model,
         metadata: Dict[str, str],
@@ -173,7 +173,7 @@ class GRPCControllerClient(object):
 
             def _request(_timeout=None):
 
-                request = controller_pb2.MarkTaskCompletedRequest(
+                request = controller_pb2.TrainDoneRequest(
                     learner_id=self._learner_id,
                     auth_token=self._auth_token,
                     model=model,

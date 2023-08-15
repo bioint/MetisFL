@@ -13,13 +13,13 @@ service ControllerService {
 
   rpc LeaveFederation (LeaveFederationRequest) returns (Ack) {}
 
-  rpc MarkTaskCompleted (MarkTaskCompletedRequest) returns (Ack) {}
+  rpc TrainDone (TrainDoneRequest) returns (Ack) {}
 
   rpc SetInitialWeights (ReplaceCommunityModelRequest) returns (Ack) {}
 
   rpc GetStatistics (GetStatisticsRequest) returns (GetStatisticsResponse) {}
   
-  rpc ShutDown (ShutDownRequest) returns (Ack) {}
+  rpc ShutDown (Empty) returns (Ack) {}
 }
 
 message JoinFederationRequest {
@@ -40,7 +40,7 @@ message EpochEvaluation {
   map<string, string> metric_values = 2;
 }
 
-message MarkTaskCompletedRequest {
+message TrainDoneRequest {
   string learner_id = 1;
   string auth_token = 2; 
   Model model = 3;

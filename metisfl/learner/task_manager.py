@@ -35,6 +35,8 @@ class TaskManager(object):
     def run_task(
         self,
         task_fn: Callable,
+        task_args: Optional[tuple] = None,
+        task_kwargs: Optional[dict] = None,
         callback: Optional[Callable] = None,
         cancel_running: Optional[bool] = False
     ) -> None:
@@ -44,6 +46,10 @@ class TaskManager(object):
         ----------
         task_fn : Callable
             A Callable object that represents the task to be run.
+        task_args : Optional[tuple], (default=None)
+            The arguments to be passed to the task function, by default None
+        task_kwargs : Optional[dict], (default=None)
+            The keyword arguments to be passed to the task function, by default None
         callback : Optional[Callable], (default=None)
             A Callable object that represents the callback function to be run after the task is completed, by default None
         cancel_running : Optional[bool], (default=False)
@@ -51,15 +57,16 @@ class TaskManager(object):
 
         """
         self._empty_tasks_q(force=cancel_running)
-        future = self._worker_pool.schedule(function=task_fn)
         
+        future = self._worker_pool.schedule(function=task_fn,
+                                            args=task_args,
+                                            kwargs={**task_kwargs})
         if callback:
             future.add_done_callback(
                 self._callback_wrapper(callback)
             )
-        
-        self._future_queue.put(future)
 
+        self._future_queue.put(future)
 
     def _callback_wrapper(self, callback: Callable) -> Callable:
 
