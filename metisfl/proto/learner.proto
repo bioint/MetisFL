@@ -1,24 +1,26 @@
 syntax = "proto3";
 package metisfl;
 
-import "google/protobuf/empty.proto";
-
 import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
 service LearnerService {
-  rpc GetHealthStatus (google.protobuf.Empty) returns (HealthStatusResponse) {}
+  rpc GetHealthStatus (Empty) returns (HealthStatusResponse) {}
 
-  rpc InitilizeWeights (google.protobuf.Empty) returns (Model) {}
+  rpc InitilizeWeights (Empty) returns (Model) {}
 
   rpc SetInitialWeights (Model) returns (Ack) {}
 
-  rpc Train (TrainRequest) returns (TrainResponse) {}
+  rpc Train (TrainRequest) returns (Ack) {}
 
   rpc Evaluate (EvaluateRequest) returns (EvaluateResponse) {}
 
-  rpc ShutDown (google.protobuf.Empty) returns (Ack) {} // TODO: add auth
+  rpc ShutDown (Empty) returns (Ack) {}
+}
 
+message TrainRequest {
+  Model model = 1;
+  TrainParams params = 2;
 }
 
 message TrainParams {
@@ -28,19 +30,14 @@ message TrainParams {
   repeated string metrics = 4;
 }
 
-message TrainRequest {
-  FederatedModel federated_model = 1;
-  TrainParams params = 2;
-}
-
-message TrainResponse {
-  Ack ack = 1;
-}
-
 message EvaluateRequest {
   Model model = 1;
-  uint32 batch_size = 2;
-  repeated string metrics = 4;
+  EvalParams params = 2;  
+}
+
+message EvalParams {
+  uint32 batch_size = 1;
+  repeated string metrics = 2;
 }
 
 message EvaluateResponse {

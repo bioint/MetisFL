@@ -1,23 +1,72 @@
 
-import abc
-from metisfl.models.types import ModelWeightsDescriptor
+"""This module contains the abstract class for all MetisFL Learners."""
+
+from abc import ABC, abstractmethod
+from typing import Dict
+from ..proto import model_pb2
 
 
-class Learner(abc.ABC):
+class Learner(ABC):
     """Abstract class for all MetisFL Learners. All Learners should inherit from this class."""
 
-    @abc.abstractmethod
-    def get_weights(self):
+    @abstractmethod
+    def get_weights(self) -> model_pb2.Model:
         pass
 
-    @abc.abstractmethod
-    def set_weights(self, model_weights_descriptor: ModelWeightsDescriptor):
+    @abstractmethod
+    def set_weights(self, model: model_pb2.Model) -> bool:
         pass
 
-    @abc.abstractmethod
-    def train(self, learning_task_pb, hyperparameters_pb):
+    @abstractmethod
+    def train(self, model: model_pb2.Model, params: model_pb2.TrainParams) -> bool:
         pass
 
-    @abc.abstractmethod
-    def evaluate(self, learning_task_pb, hyperparameters_pb):
+    @abstractmethod
+    def evaluate(self, model: model_pb2.Model, params: model_pb2.EvalParams) -> Dict[float]:
         pass
+
+
+def has_get_weights(learner: Learner) -> bool:
+    """Returns True if the given learner has a get_weights method, False otherwise."""
+    return hasattr(learner, 'get_weights')
+
+def has_set_weights(learner: Learner) -> bool:
+    """Returns True if the given learner has a set_weights method, False otherwise."""
+    return hasattr(learner, 'set_weights')
+
+def has_train(learner: Learner) -> bool:
+    """Returns True if the given learner has a train method, False otherwise."""
+    return hasattr(learner, 'train')
+
+def has_evaluate(learner: Learner) -> bool:
+    """Returns True if the given learner has an evaluate method, False otherwise."""
+    return hasattr(learner, 'evaluate')
+
+def has_all(learner: Learner) -> bool:
+    """Returns True if the given learner has all methods, False otherwise."""
+    return has_get_weights(learner) and has_set_weights(learner) and \
+        has_train(learner) and has_evaluate(learner)
+        
+def try_call_get_weights(learner: Learner) -> model_pb2.Model:
+    """Calls the get_weights method of the given learner if it exists, otherwise returns None."""
+    if has_get_weights(learner):
+        return learner.get_weights()
+    return None
+
+def try_call_set_weights(learner: Learner, model: model_pb2.Model) -> bool:
+    """Calls the set_weights method of the given learner if it exists, otherwise returns False."""
+    if has_set_weights(learner):
+        return learner.set_weights(model)
+    return False
+
+def try_call_train(learner: Learner, model: model_pb2.Model, params: model_pb2.TrainParams) -> bool:
+    """Calls the train method of the given learner if it exists, otherwise returns False."""
+    if has_train(learner):
+        return learner.train(model, params)
+    return False
+
+def try_call_evaluate(learner: Learner, model: model_pb2.Model, params: model_pb2.EvalParams) -> Dict[float]:
+    """Calls the evaluate method of the given learner if it exists, otherwise returns None."""
+    if has_evaluate(learner):
+        return learner.evaluate(model, params)
+    return None

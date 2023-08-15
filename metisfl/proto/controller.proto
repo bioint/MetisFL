@@ -1,14 +1,13 @@
 syntax = "proto3";
 package metisfl;
 
-import "google/protobuf/empty.proto";
 import "google/protobuf/timestamp.proto";
 
 import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
 service ControllerService {
-  rpc GetHealthStatus (google.protobuf.Empty) returns (HealthStatusResponse) {}
+  rpc GetHealthStatus (Empty) returns (HealthStatusResponse) {}
 
   rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
 

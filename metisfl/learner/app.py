@@ -1,19 +1,36 @@
 
+from typing import Optional
+
 import config
 
-from ..driver.controller_client import GRPCControllerClient
-from ..grpc.server import get_server
-from ..proto import learner_pb2_grpc
 from ..utils.fedenv import ClientParams, ServerParams
+from .controller_client import GRPCControllerClient
 from .learner import Learner
-from .learner_servicer import LearnerServicer
+from .learner_server import LearnerServer
 
 
 def app(
     learner: Learner,
     controller_params: ServerParams,
     learner_params: ServerParams,
+    num_training_examples: Optional[int] = None,
 ):
+    """Entry point for the MetisFL Learner application.
+
+    Parameters
+    ----------
+    learner : Learner
+        The Learner object. Must impliment the Learner interface.
+    controller_params : ServerParams
+        The server parameters of the Controller server. Used by the Learner to connect to the Controller.
+    learner_params : ServerParams
+        The server parameters of the Learner server.
+    num_training_examples : Optional[int], (default=None)
+        TODO: complete this docstring
+        The number of training examples. Used in certain aggregaction strategies by the Controller.
+        If None, the aggregation strategies that need this parameter will not run. By default None
+    """    
+    
     client = GRPCControllerClient(
         client_params=ClientParams(
             hostname=controller_params.hostname,
@@ -24,12 +41,13 @@ def app(
         auth_token_fp=config.get_auth_token_fp(learner_params.port),
     )
 
-    servicer = LearnerServicer(
+    server = LearnerServer(
         learner=learner,
+        controller_params=controller_params,
     )
 
-    server = get_server(
-        server_params=learner_params,
-        servicer=servicer,
-        add_servicer_to_server_fn=learner_pb2_grpc.add_LearnerServiceServicer_to_server,
+    server.start()
+
+    client.join_federation(
+        num_training_examples=num_training_examples,
     )

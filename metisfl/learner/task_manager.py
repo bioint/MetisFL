@@ -1,106 +1,97 @@
-import gc
 import multiprocessing as mp
 import queue
-from typing import Callable
+from typing import Callable, Optional
 
-from pebble import ProcessPool
-
-from metisfl import config
-
-from .learner_task import LearnerTask
-from ..proto import metis_pb2
+from pebble import ProcessFuture, ProcessPool
 
 
 class TaskManager(object):
 
-    """Manages the tasks of the Learner."""
+    """Manages the execution of tasks in a pool of workers."""
 
-    def __init__(self, learner_task: LearnerTask, recreate_queue_task_worker=False):
-        self._learner_task = learner_task
-        self._pool, self._queue = self._init_pools(
-            recreate_queue_task_worker=recreate_queue_task_worker)
-
-    def run_evaluation_task(self, block=False, **kwargs):
-        future = self._run_task(
-            task_name=config.EVALUATION_TASK,
-            task_fn=self._learner_task.evaluate,
-            callback=None,
-            **kwargs
-        )
-
-        model_evaluations_pb = future.result() if block else metis_pb2.ModelEvaluations()
-
-        return model_evaluations_pb
-
-    def run_learning_task(self,
-                          callback: Callable = None,
-                          block=False, **kwargs):
-        future = self._run_task(
-            task_name=config.LEARNING_TASK,
-            task_fn=self._learner_task.train_model,
-            callback=callback,
-            **kwargs
-        )
-        # This will return the completed_task_pb.
-        _ = future.result() if block else None
-        # Which is not used as we're alway return the acknowledgement.
-        # TODO: We need to return the completed_task_pb.
-        return not future.cancelled()
-
-    def shutdown(self, cancel_running: dict = {
-        config.LEARNING_TASK: True,
-        config.EVALUATION_TASK: True,
-    }):
-        for task, (pool, _) in self.pool.items():
-            pool.close()
-            self._empty_tasks_q(config.LEARNING_TASK,
-                                force=cancel_running[task])
-            pool.join()
-        gc.collect()
-        return True  # FIXME: We need to capture any failures.
-
-    def _init_pools(self, recreate_queue_task_worker=False):
-        mp_ctx = mp.get_context("spawn")
-        max_tasks = 1 if recreate_queue_task_worker else 0
-        p, q = {}, {}
-        for task in config.TASKS:
-            p[task] = ProcessPool(
-                max_workers=1, max_tasks=max_tasks, context=mp_ctx)
-            q[task] = queue.Queue(maxsize=1)
-            
-        return p, q
-
-
-    def _empty_tasks_q(self, task, force=False):
-        # Get the tasks queue; the second element of the tuple.
-        future_tasks_q = self.pool[task][1]
-        while not future_tasks_q.empty():
-            future_tasks_q.get(block=False).cancel(
-            ) if force else future_tasks_q.get().result()
-
-    def _run_task(
+    def __init__(
         self,
-        task_name: str,
-        task_fn: Callable,
-        callback: Callable = None,
-        cancel_running_tasks=False,
-        **kwargs
+        max_workers: Optional[int] = 1,
+        max_tasks: Optional[int] = 1,
+        max_queue_size: Optional[int] = 1
     ):
-        self._empty_tasks_q(task_name, force=cancel_running_tasks)
-        tasks_pool, tasks_futures_q = self.pool[task_name]
+        """Initializes a TaskManager object.
+
+        Parameters
+        ----------
+        max_workers : Optional[int], (default=1)
+            The maximum number of workers in the pool, by default 1
+        max_tasks : Optional[int], (default=1)
+            The maximum number of tasks that can be scheduled in each worker before it is restarted, by default 1
+        max_queue_size : Optional[int], (default=1)
+            The maximum size of the future queue, by default 1
+        """
+        mp_ctx = mp.get_context("spawn")
+        self._worker_pool = ProcessPool(max_workers=max_workers,
+                                        max_tasks=max_tasks,
+                                        context=mp_ctx)
+        self._future_queue = queue.Queue(maxsize=max_queue_size)
+
+    def run_task(
+        self,
+        task_fn: Callable,
+        callback: Optional[Callable] = None,
+        cancel_running: Optional[bool] = False
+    ) -> None:
+        """Runs a task in the pool of workers.
+
+        Parameters
+        ----------
+        task_fn : Callable
+            A Callable object that represents the task to be run.
+        callback : Optional[Callable], (default=None)
+            A Callable object that represents the callback function to be run after the task is completed, by default None
+        cancel_running : Optional[bool], (default=False)
+            Whether to cancel the running task before running the new one, by default False
+
+        """
+        self._empty_tasks_q(force=cancel_running)
+        future = self._worker_pool.schedule(function=task_fn)
         
-        future = tasks_pool.schedule(function=task_fn, kwargs={**kwargs})
         if callback:
             future.add_done_callback(
-                _callback_wrapper(callback)
+                self._callback_wrapper(callback)
             )
-        tasks_futures_q.put(future)
         
-        return future
+        self._future_queue.put(future)
 
-def _callback_wrapper(callback: Callable):
-    def callback_wrapper(future):
-        if future.done() and not future.cancelled():
-            result = future.result()
-            callback(result)
-    return callback_wrapper
+
+    def _callback_wrapper(self, callback: Callable) -> Callable:
+
+        def callback_wrapper(future: ProcessFuture) -> None:
+            if future.done() and not future.cancelled():
+                callback(future.result())
+
+        return callback_wrapper
+
+    def shutdown(self, force: Optional[bool] = False) -> None:
+        """Shuts down the pool of workers and empties the task queues.
+
+        Parameters
+        ----------
+        force : Optional[bool], (default=False)
+            Whether to force shutdown the pool of workers and empty the task queues.
+
+        """
+        self._worker_pool.close()
+        self._empty_tasks_q(force=force)
+        self._worker_pool.join()
+
+    def _empty_tasks_q(self, force: Optional[bool] = False) -> None:
+        """Empties the task queue.
+
+        Parameters
+        ----------
+        force : Optional[bool], (default=False)
+            Whether to force empty the task queue.
+        """
+        while not self._future_queue.empty():
+            if force:
+                self._future_queue.get(block=False).cancel()
+            else:
+                self._future_queue.get().result()

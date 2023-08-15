@@ -3,6 +3,8 @@ package metisfl;
 
 import "google/protobuf/timestamp.proto";
 
+message Empty {}
+
 message Ack {
   bool status = 1;
   google.protobuf.Timestamp timestamp = 2;
@@ -17,8 +19,4 @@ enum ServingStatus {
 
 message HealthStatusResponse {
  ServingStatus status = 1;
-}
-
-message ShutDownRequest {
-  //TODO(stripeli): require some sort of auth key here?
 }
