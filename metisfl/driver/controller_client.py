@@ -36,19 +36,19 @@ class GRPCControllerClient(object):
 
     def check_health_status(
         self,
-        request_retries=1,
-        request_timeout=None,
-        block=True
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
     ) -> service_common_pb2.HealthStatusResponse:
         """Checks the health status of the controller.
 
         Parameters
         ----------
-        request_retries : int, optional
+        request_retries : Optional[int], (default=1)
             The number of retries, by default 1
-        request_timeout : None, optional
+        request_timeout : Optional[int], (default=None)
             The timeout in seconds, by default None
-        block : bool, optional
+        block : Optional[bool], (default=True)
             Whether to block until the request is completed, by default True
 
         Returns
@@ -66,9 +66,9 @@ class GRPCControllerClient(object):
     def set_initial_model(
         self,
         model: model_pb2.Model,
-        request_retries=1,
-        request_timeout=None,
-        block=True
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
     ) -> service_common_pb2.Ack:
         """Sends an initial model to the Controller.
 
@@ -76,11 +76,11 @@ class GRPCControllerClient(object):
         ----------
         model : model_pb2.Model
             The initial model.
-        request_retries : int, optional
+        request_retries : Optional[int], (default=1)
             The number of retries, by default 1
-        request_timeout : int, optional
+        request_timeout : Optional[int], (default=None)
             The timeout in seconds, by default None
-        block : bool, optional
+        block : Optional[bool], (default=True)
             Whether to block until the request is completed, by default True
 
         Returns
@@ -101,9 +101,9 @@ class GRPCControllerClient(object):
         community_evaluation_backtracks: int,
         local_task_backtracks: int,
         metadata_backtracks: int,
-        request_retries=1,
-        request_timeout=None,
-        block=True
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
     ) -> controller_pb2.GetStatisticsResponse:
         """Gets statistics from the controller.
 
@@ -115,11 +115,11 @@ class GRPCControllerClient(object):
             The number of local task backtracks.
         metadata_backtracks : int
             The number of metadata backtracks.
-        request_retries : int, optional
+        request_retries : Optional[int], (default=1)
             The number of retries, by default 1
-        request_timeout : int, optional
+        request_timeout : Optional[int], (default=None)
             The timeout in seconds, by default None
-        block : bool, optional
+        block : Optional[bool], (default=True)
             Whether to block until the request is completed, by default True
 
         Returns
@@ -150,11 +150,11 @@ class GRPCControllerClient(object):
 
         Parameters
         ----------
-        request_retries : int, optional
+        request_retries : Optional[int], (default=1)
             The number of retries, by default 1
-        request_timeout : 
+        request_timeout : Optional[int], (default=None)
             The timeout in seconds, by default None
-        block : bool, optional
+        block : Optional[bool], (default=True)
             Whether to block until the request is completed, by default True
 
         Returns

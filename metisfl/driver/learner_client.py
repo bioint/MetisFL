@@ -50,8 +50,8 @@ class GRPCLearnerClient(object):
             The number of retries for the request, by default 1
         request_timeout : Optional[int], (default: None)
             The timeout for the request, by default None
-        block : bool, optional
-            Whether to block until the request is completed, by default False
+        block : Optional[bool], (default: True)
+            Whether to block until the request is completed, by default True
 
         Returns
         -------
@@ -63,7 +63,7 @@ class GRPCLearnerClient(object):
             stub, schedule, _ = client
 
             def _request(_timeout=None):
-                return  stub.GetModel(service_common_pb2.Empty(), timeout=_timeout)
+                return stub.GetModel(service_common_pb2.Empty(), timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -72,7 +72,7 @@ class GRPCLearnerClient(object):
         model: model_pb2.Model,
         request_retries: Optional[int] = 1,
         request_timeout: Optional[int] = None,
-        block=True
+        block: Optional[bool] = True
     ) -> service_common_pb2.Ack:
         """Requests the Learner to set the initial weights.
 
@@ -84,8 +84,8 @@ class GRPCLearnerClient(object):
             The number of retries for the request, by default 1
         request_timeout : Optional[int], (default: None)
             The timeout for the request, by default None
-        block : bool, optional
-            Whether to block until the request is completed, by default False
+        block : Optional[bool], (default: True)
+            Whether to block until the request is completed, by default True
 
         Returns
         -------
@@ -115,8 +115,8 @@ class GRPCLearnerClient(object):
             The number of retries for the request, by default 1
         request_timeout : Optional[int], (default: None)
             The timeout for the request, by default None
-        block : bool, optional
-            Whether to block until the request is completed, by default False
+        block : Optional[bool], (default: True)
+            Whether to block until the request is completed, by default True
 
         Returns
         -------
