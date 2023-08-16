@@ -9,13 +9,13 @@ import "metisfl/proto/service_common.proto";
 service ControllerService {
   rpc GetHealthStatus (Empty) returns (HealthStatusResponse) {}
 
+  rpc SetInitialModel (Model) returns (Ack) {}
+
   rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
 
   rpc LeaveFederation (LeaveFederationRequest) returns (Ack) {}
 
   rpc TrainDone (TrainDoneRequest) returns (Ack) {}
-
-  rpc SetInitialModel (Model) returns (Ack) {}
 
   rpc GetStatistics (GetStatisticsRequest) returns (GetStatisticsResponse) {}
   
@@ -30,7 +30,6 @@ message JoinFederationRequest {
 }
 
 message JoinFederationResponse {
-  Ack ack = 1;
   string learner_id = 2; 
   string auth_token = 3; 
 }

@@ -10,10 +10,8 @@ from typing import Any, Callable, Iterator, Optional, Union
 import grpc
 from pebble import ThreadPool
 
-from metisfl.utils.fedenv import ClientParams
-
-
 from ..proto import controller_pb2_grpc
+from ..utils.fedenv import ClientParams
 from ..utils.logger import MetisLogger
 from .common import GRPC_MAX_MESSAGE_LENGTH, get_endpoint
 
@@ -21,7 +19,7 @@ from .common import GRPC_MAX_MESSAGE_LENGTH, get_endpoint
 def create_channel(
     server_address: str,
     root_certificate: Optional[Union[str, bytes]] = None,
-    max_message_length: int = GRPC_MAX_MESSAGE_LENGTH,
+    max_message_length: Optional[int] = GRPC_MAX_MESSAGE_LENGTH
 ) -> grpc.Channel:
     """Creates a gRPC channel to the given server address using the given root certificate.
 
@@ -31,7 +29,7 @@ def create_channel(
         The server address in the form of "hostname:port".
     root_certificate : Optional[Union[str, bytes]], optional
         The root certificate, either as a string or bytes, by default None. If None, the connection is insecure.
-    max_message_length : int, optional
+    max_message_length : Optional[int], optional
         The maximum message length, by default GRPC_MAX_MESSAGE_LENGTH
 
     Returns
@@ -126,7 +124,7 @@ def get_client(
             The request to be scheduled.
         request_retries : int, optional
             The number of retries, by default 1 
-        request_timeout : _type_, optional
+        request_timeout : int, optional
             The timeout in seconds, by default None
         block : bool, optional
             Whether to block until the request is completed, by default True
@@ -136,7 +134,7 @@ def get_client(
         Union[Any, None]
             If the request is blocking, the response is returned. 
             If the request is non-blocking, None is returned.
-        """    
+        """
         future = executor.schedule(function=request_with_timeout,
                                    args=(request, request_timeout, request_retries))
 

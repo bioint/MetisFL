@@ -77,12 +77,12 @@ class TaskManager(object):
         return callback_wrapper
 
     def shutdown(self, force: Optional[bool] = False) -> None:
-        """Shuts down the pool of workers and empties the task queues.
+        """Shuts down the pool of workers and empties the task queue.
 
         Parameters
         ----------
         force : Optional[bool], (default=False)
-            Whether to force shutdown the pool of workers and empty the task queues.
+            Whether to force shutdown the running tasks.
 
         """
         self._worker_pool.close()

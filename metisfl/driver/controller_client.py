@@ -1,6 +1,7 @@
 
 """A gRPC client used from the driver to communicate with the controller."""
 
+from typing import Optional
 from ..grpc.client import get_client
 from ..proto import controller_pb2, controller_pb2_grpc, model_pb2, service_common_pb2
 from ..utils.fedenv import ClientParams
@@ -45,7 +46,7 @@ class GRPCControllerClient(object):
         ----------
         request_retries : int, optional
             The number of retries, by default 1
-        request_timeout : _type_, optional
+        request_timeout : None, optional
             The timeout in seconds, by default None
         block : bool, optional
             Whether to block until the request is completed, by default True
@@ -86,12 +87,12 @@ class GRPCControllerClient(object):
         -------
         service_common_pb2.Ack
             An ack from the Controller.
-        """        
+        """
         with self._get_client() as client:
             stub, schedule, _ = client
 
-            def _request():
-                return stub.SetInitialModel(model)
+            def _request(_timeout=None):
+                return stub.SetInitialModel(model, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -129,21 +130,21 @@ class GRPCControllerClient(object):
         with self._get_client() as client:
             stub, schedule, _ = client
 
-            def _request():
+            def _request(_timeout=None):
                 request = controller_pb2.GetStatisticsRequest(
                     community_evaluation_backtracks=community_evaluation_backtracks,
                     local_task_backtracks=local_task_backtracks,
                     metadata_backtracks=metadata_backtracks
                 )
-                return stub.GetStatistics(request)
+                return stub.GetStatistics(request, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 
-    def shutdown(
+    def shutdown_server(
         self,
-        request_retries=1,
-        request_timeout=None,
-        block=True
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
     ) -> service_common_pb2.Ack:
         """Sends a shutdown request to the controller.
 
@@ -151,7 +152,7 @@ class GRPCControllerClient(object):
         ----------
         request_retries : int, optional
             The number of retries, by default 1
-        request_timeout : _type_, optional
+        request_timeout : 
             The timeout in seconds, by default None
         block : bool, optional
             Whether to block until the request is completed, by default True
@@ -164,7 +165,7 @@ class GRPCControllerClient(object):
         with self._get_client() as client:
             stub, schedule, _ = client
 
-            def _request():
-                return stub.ShutDown(service_common_pb2.ShutDownRequest())
+            def _request(_timeout=None):
+                return stub.ShutDown(service_common_pb2.ShutDownRequest(), timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)

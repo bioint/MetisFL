@@ -200,7 +200,8 @@ class LocalTrainConfig(object):
 
 @dataclass
 class ServerParams(object):
-    """Server parameters for the Controller and Learners servers. If the certificates and the private key are specified, the connection is secure. 
+    """Server parameters for starting the Controller and Learners servers. 
+        If the certificates and the private key are specified, the connection is secure. 
 
     Parameters
     ----------
