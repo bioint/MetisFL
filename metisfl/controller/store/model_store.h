@@ -60,7 +60,7 @@ class ModelStore {
   virtual int GetLearnerLineageLength(std::string learner_id) = 0;
 
  protected:
-  ModelStoreSpecs m_model_store_specs; 
+  int m_lineage_length;
 
   // Keep track of the models that have been part of the model_store.
   std::map<std::string, std::vector<Model>> m_model_store_cache;

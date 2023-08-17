@@ -7,7 +7,7 @@ import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
 service ControllerService {
-  rpc GetHealthStatus (Empty) returns (HealthStatusResponse) {}
+  rpc GetHealthStatus (Empty) returns (Ack) {}
 
   rpc SetInitialModel (Model) returns (Ack) {}
 
@@ -60,7 +60,7 @@ message GetStatisticsRequest {
 }
 
 message GetStatisticsResponse {
-  repeated LearnerDescriptor learners = 1; // only lerner_id and dataset_spec are populated
+  repeated string learner_id = 1;
   repeated CommunityModelEvaluation community_evaluation = 2;
   map<string, LocalTasksMetadata> learners_task = 3;
   repeated FederatedTaskRuntimeMetadata metadata = 4;
@@ -72,6 +72,7 @@ message LearnerDescriptor {
   string hostname = 2;
   uint32 port = 3;
   string auth_token = 4;
+  string public_certificate_bytes = 5;
 }
 
 message LocalTasksMetadata {

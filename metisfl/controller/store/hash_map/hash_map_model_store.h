@@ -10,7 +10,7 @@ namespace metisfl::controller {
 class HashMapModelStore : public ModelStore {
  public:
   // Cannot be initialized without an external store referenced by ref_learners. 
-  explicit HashMapModelStore(const InMemoryStore &config);
+  explicit HashMapModelStore(const int lineage_length);
   ~HashMapModelStore() = default;
   void Expunge() override;
   void EraseModels(const std::vector<std::string> &learner_ids) override;

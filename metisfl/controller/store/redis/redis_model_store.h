@@ -13,7 +13,7 @@ namespace metisfl::controller {
 class RedisModelStore : public ModelStore {
 
  public:
-  explicit RedisModelStore(const RedisDBStore &config);
+  explicit RedisModelStore(const std::string &hostname, int port, const int lineage_length);
   ~RedisModelStore() override;
   void Expunge() override;
   void ResetState() override;

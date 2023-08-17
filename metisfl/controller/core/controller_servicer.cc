@@ -13,7 +13,6 @@
 #include "metisfl/controller/core/controller_utils.h"
 #include "metisfl/controller/common/bs_thread_pool.h"
 #include "metisfl/proto/controller.grpc.pb.h"
-#include "metisfl/proto/metis.pb.h"
 
 namespace metisfl::controller
 {
@@ -29,9 +28,13 @@ namespace metisfl::controller
     {
     public:
       template <class Service>
-      void Start(const ServerEntity &server_entity, Service *service)
+      void Start(const std::string &hostname,
+                 const int port,
+                 const std::string &public_certifcate_file,
+                 const std::string &private_key_file,
+                 Service *service)
       {
-        const auto server_address = absl::StrCat(server_entity.hostname(), ":", server_entity.port());
+        const auto server_address = absl::StrCat(hostname, ":", port); // TODO: make sure int is ok
 
         grpc::EnableDefaultHealthCheckService(true);
         grpc::reflection::InitProtoReflectionServerBuilderPlugin();
@@ -39,46 +42,25 @@ namespace metisfl::controller
         ServerBuilder builder;
         std::shared_ptr<grpc::ServerCredentials> creds;
 
-        auto ssl_enable = server_entity.ssl_config().enable();
+        auto ssl_enable = !public_certifcate_file.empty() && !private_key_file.empty();
 
         if (ssl_enable)
         {
-
           std::string server_cert_loaded;
           std::string server_key_loaded;
-          if (server_entity.ssl_config().has_ssl_config_files())
-          {
-            auto cert_path = server_entity.ssl_config().ssl_config_files().public_certificate_file();
-            auto key_path = server_entity.ssl_config().ssl_config_files().private_key_file();
 
-            if (ReadParseFile(server_cert_loaded, cert_path) == -1)
-            {
-              // Logs and terminates the program if public certificate filepath is invalid.
-              PLOG(FATAL) << "Error reading controller certificate: " << cert_path;
-            }
+          if (ReadParseFile(server_cert_loaded, public_certifcate_file) == -1)
+            PLOG(FATAL) << "Error reading controller certificate: " << cert_path;
 
-            if (ReadParseFile(server_key_loaded, key_path) == -1)
-            {
-              // Logs and terminates the program if private key filepath is invalid.
-              PLOG(FATAL) << "Error reading controller key: " << key_path;
-            }
-          }
-          else if (server_entity.ssl_config().has_ssl_config_stream())
-          {
-            server_cert_loaded = server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
-            server_key_loaded = server_entity.ssl_config().ssl_config_stream().private_key_stream();
-          }
-          else
-          {
-            PLOG(FATAL) << "Even though SSL was enabled the (private, public) key pair was not provided.";
-          }
+          if (ReadParseFile(server_key_loaded, private_key_file) == -1)
+            PLOG(FATAL) << "Error reading controller key: " << key_path;
 
           PLOG(INFO) << "SSL enabled.";
 
           grpc::SslServerCredentialsOptions::PemKeyCertPair pkcp =
               {server_key_loaded, server_cert_loaded};
           grpc::SslServerCredentialsOptions ssl_opts;
-          ssl_opts.pem_root_certs = "";
+          ssl_opts.pem_root_certs = ""; // FIXME: what about root certs?
           ssl_opts.pem_key_cert_pairs.push_back(pkcp);
           creds = grpc::SslServerCredentials(ssl_opts);
         }
@@ -88,27 +70,19 @@ namespace metisfl::controller
           creds = grpc::InsecureServerCredentials();
         }
 
-        // Listens on the given address without any authentication mechanism.
         builder.AddListeningPort(server_address, creds);
-
-        // Registers "service" as the instance through which we'll communicate with
-        // clients. In this case it corresponds to an *synchronous* service.
         builder.RegisterService(service);
-
-        // Override default grpc max received message size.
         builder.SetMaxReceiveMessageSize(INT_MAX);
-
-        // Finally assemble the server.
         server_ = builder.BuildAndStart();
+
         PLOG(INFO) << "Controller listening on " << server_address;
       }
 
       void Stop()
       {
         if (server_ == nullptr)
-        {
           return;
-        }
+
         server_->Shutdown();
         PLOG(INFO) << "Controller shut down.";
       }
@@ -116,9 +90,8 @@ namespace metisfl::controller
       void Wait()
       {
         if (server_ == nullptr)
-        {
           return;
-        }
+
         server_->Wait();
       }
 
@@ -163,127 +136,50 @@ namespace metisfl::controller
         return shutdown_;
       }
 
-      Status GetCommunityModelEvaluationLineage(
+      Status GetStatistics(
           ServerContext *context,
-          const GetCommunityModelEvaluationLineageRequest *request,
-          GetCommunityModelEvaluationLineageResponse *response) override
+          const GetStatisticsRequest *request,
+          GetStatisticsResponse *response) override
       {
 
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
+        // Learner ids
+        for (const auto &learner : controller_->GetLearners())
+          *response->add_learner_id() = learner.id();
 
-        const auto lineage = controller_->GetEvaluationLineage(
-            request->num_backtracks());
-
-        for (const auto &evaluation : lineage)
-        {
+        // Evaluation lineage
+        const auto eval_lineage = controller_->GetEvaluationLineage(
+            request->community_evaluation_backtracks());
+        for (const auto &evaluation : eval_lineage)
           *response->add_community_evaluation() = evaluation;
-        }
 
-        return Status::OK;
-      }
-
-      Status GetLocalTaskLineage(
-          ServerContext *context,
-          const GetLocalTaskLineageRequest *request,
-          GetLocalTaskLineageResponse *response) override
-      {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
-
+        // Task lineage
         for (const auto &learner_id : request->learner_ids())
         {
           const auto lineage = controller_->GetLocalTaskLineage(
-              learner_id, request->num_backtracks());
+              learner_id, request->local_task_backtracks());
 
           LocalTasksMetadata learner_tasks_metadata;
           for (const auto &task_meta : lineage)
-          {
             *learner_tasks_metadata.add_task_metadata() = task_meta;
-          }
+
           (*response->mutable_learner_task())[learner_id] = learner_tasks_metadata;
         }
 
-        return Status::OK;
-      }
-
-      Status GetRuntimeMetadataLineage(
-          ServerContext *context,
-          const GetRuntimeMetadataLineageRequest *request,
-          GetRuntimeMetadataLineageResponse *response) override
-      {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
-
-        const auto lineage = controller_->GetRuntimeMetadataLineage(
-            request->num_backtracks());
-
-        for (const auto &metadata : lineage)
-        {
+        // Runtime metadata
+        const auto task_lineage = controller_->GetRuntimeMetadataLineage(
+            request->metadata_backtracks());
+        for (const auto &metadata : task_lineage)
           *response->add_metadata() = metadata;
-        }
 
         return Status::OK;
       }
 
-      Status GetParticipatingLearners(
-          ServerContext *context, const GetParticipatingLearnersRequest *request,
-          GetParticipatingLearnersResponse *response) override
+      Status GetHealthStatus(
+          ServerContext *context,
+          const Empty *request,
+          Ack *response) override
       {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
-
-        // Creates LearnerDescriptor response collection that only
-        // contains the learner's id and dataset specifications.
-        for (const auto &learner : controller_->GetLearners())
-        {
-          LearnerDescriptor learner_descriptor;
-          *learner_descriptor.mutable_id() = learner.id();
-          *learner_descriptor.mutable_dataset_spec() = learner.dataset_spec();
-          *response->add_learner() = learner_descriptor;
-        }
-
-        return Status::OK;
-      }
-
-      Status GetServicesHealthStatus(
-          ServerContext *context, const GetServicesHealthStatusRequest *request,
-          GetServicesHealthStatusResponse *response) override
-      {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
-        // TODO(stripeli): We need to capture the heartbeat of all the
-        //  underlying controller services. Controller being null is one thing
-        //  but if any of its services is not available (e.g., model store, aggregation)
-        //  then we need to return a corresponding health check.
-        if (controller_ != nullptr)
-        {
-          (*response->mutable_services_status())["controller"] = true;
-        }
-        else
-        {
-          (*response->mutable_services_status())["controller"] = false;
-        }
+        response->set_status(true);
         return Status::OK;
       }
 
@@ -291,17 +187,7 @@ namespace metisfl::controller
                             const JoinFederationRequest *request,
                             JoinFederationResponse *response) override
       {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
-
-        // Validates that the incoming request has the required fields populated.
-        // FIXME:(@stripeli) if either but not both are not set, it'll crash in line 257
-        // switch to if (!request->has_server_entity() || !request->has_local_dataset_spec())
-        if (!request->has_server_entity() || !request->has_local_dataset_spec())
+        if (request->hostname().empty() || request->port() <= 0)
         {
           response->mutable_ack()->set_status(false);
           return {StatusCode::INVALID_ARGUMENT,
@@ -309,7 +195,7 @@ namespace metisfl::controller
         }
 
         const auto learner_or = controller_->AddLearner(
-            request->server_entity(), request->local_dataset_spec());
+            request->hostname(), request->port(), request->public_certificate_bytes(), request->num_traning_examples());
 
         if (!learner_or.ok())
         {
@@ -326,8 +212,6 @@ namespace metisfl::controller
         }
         else
         {
-          response->mutable_ack()->set_status(true);
-
           const auto &learner_state = learner_or.value();
           response->set_learner_id(learner_state.id());
           response->set_auth_token(learner_state.auth_token());
@@ -339,16 +223,9 @@ namespace metisfl::controller
 
       Status LeaveFederation(ServerContext *context,
                              const LeaveFederationRequest *request,
-                             LeaveFederationResponse *response) override
+                             Ack *response) override
       {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
 
-        // Validates that the incoming request has the required fields populated.
         if (request->learner_id().empty() || request->auth_token().empty())
         {
           response->mutable_ack()->set_status(false);
@@ -363,27 +240,20 @@ namespace metisfl::controller
 
         if (del_status.ok())
         {
-          response->mutable_ack()->set_status(true);
+          response->set_status(true);
           return Status::OK;
         }
         else
         {
-          response->mutable_ack()->set_status(false);
+          response->set_status(false);
           return {StatusCode::CANCELLED, std::string(del_status.message())};
         }
       }
 
-      Status MarkTaskCompleted(ServerContext *context,
-                               const MarkTaskCompletedRequest *request,
-                               MarkTaskCompletedResponse *response) override
+      Status TrainDone(ServerContext *context,
+                       const TrainDoneRequest *request,
+                       Ack *response) override
       {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
-
         PLOG(INFO) << "Received Completed Task By " << request->learner_id();
         const auto status = controller_->LearnerCompletedTask(
             request->learner_id(), request->auth_token(), request->task());
@@ -405,25 +275,19 @@ namespace metisfl::controller
             return {StatusCode::INTERNAL, std::string(status.message())};
           }
         }
-        response->mutable_ack()->set_status(true);
+        response->set_status(true);
         return Status::OK;
       }
 
       Status
-      ReplaceCommunityModel(ServerContext *context,
-                            const ReplaceCommunityModelRequest *request,
-                            ReplaceCommunityModelResponse *response) override
+      SetInitialModel(ServerContext *context,
+                      const Model *model,
+                      Ack *response) override
       {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
-        auto status = controller_->ReplaceCommunityModel(request->model());
+        auto status = controller_->SetInitialModel(model);
         if (status.ok())
         {
-          response->mutable_ack()->set_status(true);
+          response->set_status(true);
           PLOG(INFO) << "Replaced Community Model.";
           return Status::OK;
         }
@@ -432,15 +296,10 @@ namespace metisfl::controller
         return {StatusCode::UNAUTHENTICATED, std::string(status.message())};
       }
 
-      Status ShutDown(ServerContext *context, const ShutDownRequest *request,
-                      ShutDownResponse *response) override
+      Status ShutDown(ServerContext *context,
+                      const Empty *request,
+                      Ack *response) override
       {
-        // Captures unexpected behavior.
-        if (request == nullptr || response == nullptr)
-        {
-          return {StatusCode::INVALID_ARGUMENT,
-                  "Request and response cannot be empty."};
-        }
         shutdown_ = true;
         response->mutable_ack()->set_status(true);
         this->StopService();
@@ -448,7 +307,6 @@ namespace metisfl::controller
       }
 
     private:
-      // Thread pool for async tasks.
       BS::thread_pool pool_;
       Controller *controller_;
       bool shutdown_ = false;

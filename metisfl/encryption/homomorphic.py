@@ -29,7 +29,6 @@ class HomomorphicEncryption(object):
         scaling_factor_bits : int
             The number of bits to use for the scaling factor.
         """
-        self._he_scheme = None
         self._he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
         self._setup_fhe()
 
@@ -44,8 +43,18 @@ class HomomorphicEncryption(object):
         else:
             fhe_dir = config.get_fhe_dir()
             self._he_scheme.gen_crypto_context_and_keys(fhe_dir)
+            
 
     def decrypt(self, model: model_pb2.Model) -> model_pb2.Model:
+        
+        for var in model.variables:
+            if var.encryped:
+                decoded_value = self._he_scheme.decrypt(var.tensor.value, var.tensor.length, 1)
+                var.tensor.value = decoded_value
+                var.encrypted = False
+                
+                
+        
         variables = model.variables
         var_names, var_trainables, var_nps = list(), list(), list()
         for var in variables:

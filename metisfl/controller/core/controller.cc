@@ -35,13 +35,22 @@ namespace metisfl::controller
                             std::unique_ptr<Scheduler> scheduler,
                             std::unique_ptr<Selector> selector,
                             std::unique_ptr<ModelStore> model_store)
-          : params_(std::move(params)), global_iteration_(0), learners_(),
-            learners_stub_(), learners_task_template_(), learners_mutex_(),
-            scaler_(std::move(scaler)), aggregator_(std::move(aggregator)),
-            scheduler_(std::move(scheduler)), selector_(std::move(selector)),
-            community_model_(), scheduling_pool_(2),
-            model_store_(std::move(model_store)), model_store_mutex_(),
-            run_tasks_cq_(), eval_tasks_cq_()
+          : params_(std::move(params)),
+            global_iteration_(0),
+            learners_(),
+            learners_stub_(),
+            learners_task_template_(),
+            learners_mutex_(),
+            scaler_(std::move(scaler)),
+            aggregator_(std::move(aggregator)),
+            scheduler_(std::move(scheduler)),
+            selector_(std::move(selector)),
+            community_model_(),
+            scheduling_pool_(2),
+            model_store_(std::move(model_store)),
+            model_store_mutex_(),
+            run_tasks_cq_(),
+            eval_tasks_cq_()
       {
 
         // We perform the following detachment because we want to have only
@@ -87,69 +96,51 @@ namespace metisfl::controller
       }
 
       // TODO(stripeli): add admin auth token support for replacing model.
+      // TODO: do we need the number of contributors? this is at init only
       absl::Status
-      ReplaceCommunityModel(const FederatedModel &model) override
+      SetInitialModel(const Model &model) override
       {
 
         // When replacing the federation model we only set the number of learners
         // contributed to this model and the actual model. We do not replace the
         // global iteration since it is updated exclusively by the controller.
         PLOG(INFO) << "Replacing community model.";
-        community_model_.set_num_contributors(model.num_contributors());
-        *community_model_.mutable_model() = model.model();
+        *community_model_.mutable_model() = model;
         return absl::OkStatus();
       }
 
       absl::StatusOr<LearnerDescriptor>
-      AddLearner(const ServerEntity &server_entity,
-                 const DatasetSpec &dataset_spec) override
+      AddLearner(const std::string &hostname,
+                 const int port,
+                 const std::string &public_certificate,
+                 const int num_training_examples) override
       {
-
-        // Acquires a lock to avoid having multiple threads overwriting the learners'
-        // data structures. The guard releases the mutex as soon as it goes out of
-        // scope so no need to manually release it in the code.
         std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
-        // Validates non-empty hostname and non-negative port.
-        if (server_entity.hostname().empty() || server_entity.port() < 0)
-        {
+        if (hostname().empty() || port < 0)
           return absl::InvalidArgumentError("Hostname and port must be provided.");
-        }
 
-        // Validates number of train, validation and test examples. Train examples
-        // must always be positive, while validation and test can be non-negative.
-        if (dataset_spec.num_training_examples() <= 0)
-        {
+        if (num_training_examples <= 0)
           return absl::InvalidArgumentError("Learner training examples <= 0.");
-        }
 
         // TODO(stripeli): Condition to ping the connected learner (hostname:port).
-
-        // Generates learner id.
-        const std::string learner_id = GenerateLearnerId(server_entity);
+        const std::string learner_id = GenerateLearnerId(hostname, port);
 
         if (learners_.contains(learner_id))
-        {
-          // Learner was already registered with the controller.
           return absl::AlreadyExistsError("Learner has already joined.");
-        }
 
-        // Generates an auth token for the learner.
-        // TODO(stripeli) We need a better authorization token generator.
+        // TODO:(stripeli) We need a better authorization token generator.
         const std::string auth_token = std::to_string(learners_.size() + 1);
 
-        // Initializes learner state with an empty model.
         LearnerDescriptor learner;
         learner.set_id(learner_id);
         learner.set_auth_token(auth_token);
-        *learner.mutable_server_entity() = server_entity;
-        *learner.mutable_dataset_spec() = dataset_spec;
+        learner.set_hostname(hostname);
+        learner.set_port(port);
+        learner.set_public_certificate(public_certificate);
 
-        LearnerState learner_state;
-        *learner_state.mutable_learner() = learner;
-
-        // Creates default task template.
         LearningTaskTemplate task_template;
+
         // Make sure steps per epoch is always positive. For instance if
         // the dataset size is less than the batch size, then the steps will
         // be equal to 0; hence the ceiling operation and float conversion.
@@ -161,14 +152,10 @@ namespace metisfl::controller
         task_template.set_num_local_updates(
             params_.model_hyperparams().epochs() * steps_per_epoch);
 
-        // Registers learner.
-        learners_[learner_id] = learner_state;
+        learners_[learner_id] = learner;
         learners_task_template_[learner_id] = task_template;
-
-        // Opens gRPC connection with the learner.
         learners_stub_[learner_id] = CreateLearnerStub(learner_id);
 
-        // Triggers the initial task.
         scheduling_pool_.push_task(
             [this, learner_id]
             { ScheduleInitialTask(learner_id); });
@@ -180,17 +167,12 @@ namespace metisfl::controller
       RemoveLearner(const std::string &learner_id,
                     const std::string &token) override
       {
-
         RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
-        // Acquires a lock to avoid having multiple threads overwriting the learners
-        // data structures. The guard releases the mutex as soon as it goes out of
-        // scope so no need to manually release it in the code.
         std::lock_guard<std::mutex> learners_guard(learners_mutex_);
         std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
         auto it = learners_.find(learner_id);
-        // Checks requesting learner existence inside the state map.
         if (it != learners_.end())
         {
           if (it->second.learner().auth_token() == token)
@@ -203,21 +185,17 @@ namespace metisfl::controller
             return absl::OkStatus();
           }
           else
-          {
             return absl::UnauthenticatedError("Learner token is wrong.");
-          }
         }
         else
-        {
           return absl::NotFoundError("Learner is not part of the federation.");
-        }
       }
 
       absl::Status
-      LearnerCompletedTask(const std::string &learner_id, const std::string &token,
+      LearnerCompletedTask(const std::string &learner_id,
+                           const std::string &token,
                            const CompletedLearningTask &task) override
       {
-
         RETURN_IF_ERROR(ValidateLearner(learner_id, token));
 
         // We need to lock the model store when receiving a new local model.
@@ -375,53 +353,36 @@ namespace metisfl::controller
 
       LearnerStub CreateLearnerStub(const std::string &learner_id)
       {
+        // FIXME: Figure out root certificate.
+        auto hostname = learners_[learner_id].hostname();
+        auto port = learners_[learner_id].port();
+        auto target = absl::StrCat(hostname, ":", port);
+        auto public_certificate = learners_[learner_id].public_certificate_bytes();
 
-        auto server_entity = learners_[learner_id].learner().server_entity();
-        auto target =
-            absl::StrCat(server_entity.hostname(), ":", server_entity.port());
-
-        auto creds = grpc::InsecureChannelCredentials();
-        if (server_entity.has_ssl_config())
+        if (public_certificate.empty())
         {
-          grpc::SslCredentialsOptions ssl_opts;
-          if (server_entity.ssl_config().enable())
-          {
-            if (server_entity.ssl_config().has_ssl_config_stream())
-            {
-              ssl_opts.pem_root_certs =
-                  server_entity.ssl_config().ssl_config_stream().public_certificate_stream();
-              creds = grpc::SslCredentials(ssl_opts);
-            }
-            else
-            {
-              PLOG(WARNING) << "Even though learner: " << learner_id << "has requested TLS/SSL connection, it has not sent a public "
-                                                                        "certificate (as a stream) to establish connection.";
-            }
-          }
+          auto creds = grpc::InsecureChannelCredentials();
+          auto channel = grpc::CreateChannel(target, creds);
+          return LearnerService::NewStub(channel);
         }
-        auto channel = grpc::CreateChannel(target, creds);
+
+        grpc::SslCredentialsOptions ssl_opts;
+        ssl_opts.pem_root_certs = public_certificate;
+        auto channel = grpc::CreateChannel(target, grpc::SslCredentials(ssl_opts));
         return LearnerService::NewStub(channel);
       }
 
       absl::Status ValidateLearner(const std::string &learner_id,
                                    const std::string &token) const
       {
-
-        // Validates non-empty learner_id and authentication token.
         if (learner_id.empty() || token.empty())
-        {
           return absl::InvalidArgumentError("Learner id and token cannot be empty");
-        }
 
         const auto &learner = learners_.find(learner_id);
         if (learner == learners_.end())
-        {
           return absl::NotFoundError("Learner does not exist.");
-        }
         else if (learner->second.learner().auth_token() != token)
-        {
           return absl::PermissionDeniedError("Invalid token provided.");
-        }
 
         return absl::OkStatus();
       }
@@ -1123,7 +1084,7 @@ namespace metisfl::controller
       // randomly access positions in the structure. Hence, the vector container.
       std::vector<FederatedTaskRuntimeMetadata> metadata_;
       // Stores learners' execution state inside a lookup map.
-      absl::flat_hash_map<std::string, LearnerState> learners_;
+      absl::flat_hash_map<std::string, LearnerDescriptor> learners_;
       // Stores learners' connection stub.
       absl::flat_hash_map<std::string, LearnerStub> learners_stub_;
       absl::flat_hash_map<std::string, LearningTaskTemplate>

@@ -15,7 +15,7 @@ class SecAgg : public AggregationFunction {
   std::unique_ptr<EncryptionScheme> encryption_scheme_;
 
  public:
-  explicit SecAgg(const EncryptionConfig &encryption_config);
+  explicit SecAgg(const int batch_size, const int scaling_factor_bits, const std::string& crypto_context);
 
   FederatedModel Aggregate(std::vector<std::vector<std::pair<const Model*, double>>>& pairs) override;
 

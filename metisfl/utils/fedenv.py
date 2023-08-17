@@ -8,7 +8,6 @@ from metisfl.utils.formatting import DataTypeFormatter
 METRICS = ["accuracy"]
 COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
 MODEL_STORES = ["InMemory", "Redis"]
-EVICTION_POLICIES = ["LineageLengthEviction", "NoEviction"]
 HE_SCHEMES = ["CKKS"]
 AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "SecAgg"]
 SCALING_FACTORS = ["NumTrainingExamples",
@@ -60,13 +59,12 @@ class ModelStoreConfig(object):
     ----------
     model_store : str
         The model store to use. Must be one of the following: ["InMemory", "Redis"].
-    eviction_policy : str
-        The eviction policy to use. Must be one of the following: ["LineageLengthEviction", "NoEviction", "LineageLengthEviction"].
+    lineage_length : int
+        The max number of models to store before start evicting models. If 0, no eviction is performed.
     model_store_hostname : Optional[str], (default=None)
         The hostname of the model store. Required if the model store is Redis.
     model_store_port : Optional[int], (default=None)
         The port of the model store. Required if the model store is Redis.
-    lineage_length : Optional[int], (default=None)
 
 
     Raises
@@ -74,16 +72,13 @@ class ModelStoreConfig(object):
     ValueError
         Value error is raised in the following cases:
         - If the model store is not one of the following: ["InMemory", "Redis"].
-        - If the eviction policy is not one of the following: ["LineageLengthEviction", "NoEviction", "LineageLengthEviction"].
         - If the model store is Redis and the hostname or port are not specified.
-        - If the eviction policy is LineageLengthEviction and the lineage length is not specified.
     """
 
     model_store: str
-    eviction_policy: str
+    lineage_length: int
     model_store_hostname: Optional[str] = None
     model_store_port: Optional[int] = None
-    lineage_length: Optional[int] = None
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'ModelStoreConfig':
@@ -93,9 +88,6 @@ class ModelStoreConfig(object):
     def __post_init__(self):
         if self.model_store not in MODEL_STORES:
             raise ValueError(f"Invalid model store: {self.model_store}")
-        if self.eviction_policy not in EVICTION_POLICIES:
-            raise ValueError(
-                f"Invalid eviction policy: {self.eviction_policy}")
         if self.model_store == "Redis":
             if self.model_store_hostname is None:
                 raise ValueError(

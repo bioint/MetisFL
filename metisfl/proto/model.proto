@@ -38,6 +38,7 @@ message DType {
 
 }
 
+// FIXME: This is not used anywhere
 message TensorQuantifier {
   optional uint32 tensor_non_zeros = 1; // We set the field as optional because we want to print/record the zero values.
   optional uint32 tensor_zeros = 2; // We set the field as optional because we want to print/record the zero values.
@@ -55,10 +56,8 @@ message Model {
   message Variable {
     string name = 1;
     bool trainable = 2;
-    oneof tensor {
-      TensorSpec plaintext_tensor = 3;
-      TensorSpec ciphertext_tensor = 4;
-    }
+    bool encrypted = 3;
+    TensorSpec tensor = 4;
   }
   repeated Variable variables = 1;
 }
