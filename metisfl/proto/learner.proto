@@ -5,17 +5,31 @@ import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
 service LearnerService {
-  rpc GetHealthStatus (Empty) returns (HealthStatusResponse) {}
+  rpc GetHealthStatus (GetHealthStatusRequest) returns (GetHealthStatusResponse) {}
 
-  rpc GetModel (Empty) returns (Model) {}
+  rpc GetModel (GetModelRequest) returns (GetModelResponse) {}
 
-  rpc SetInitialWeights (Model) returns (Ack) {}
+  rpc SetInitialWeights (SetInitialWeightsRequest) returns (SetInitialWeightsResponse) {}
 
-  rpc Train (TrainRequest) returns (Ack) {}
+  rpc Train (TrainRequest) returns (TrainResponse) {}
 
   rpc Evaluate (EvaluateRequest) returns (EvaluateResponse) {}
 
-  rpc ShutDown (Empty) returns (Ack) {}
+  rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
+}
+
+message GetModelRequest {}
+
+message GetModelResponse {
+  Model model = 1;
+}
+
+message SetInitialWeightsRequest {
+  Model model = 1;
+}
+
+message SetInitialWeightsResponse {
+  Model model = 1;
 }
 
 message TrainRequest {
@@ -29,6 +43,8 @@ message TrainParams {
   uint32 epochs = 3;
   repeated string metrics = 4;
 }
+
+message TrainResponse {}
 
 message EvaluateRequest {
   Model model = 1;

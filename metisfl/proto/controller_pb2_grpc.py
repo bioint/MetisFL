@@ -3,7 +3,6 @@
 import grpc
 
 from metisfl.proto import controller_pb2 as metisfl_dot_proto_dot_controller__pb2
-from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
@@ -18,8 +17,13 @@ class ControllerServiceStub(object):
         """
         self.GetHealthStatus = channel.unary_unary(
                 '/metisfl.ControllerService/GetHealthStatus',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusResponse.FromString,
+                )
+        self.SetInitialModel = channel.unary_unary(
+                '/metisfl.ControllerService/SetInitialModel',
+                request_serializer=metisfl_dot_proto_dot_controller__pb2.SetInitialModelRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_controller__pb2.SetInitialModelResponse.FromString,
                 )
         self.JoinFederation = channel.unary_unary(
                 '/metisfl.ControllerService/JoinFederation',
@@ -29,17 +33,12 @@ class ControllerServiceStub(object):
         self.LeaveFederation = channel.unary_unary(
                 '/metisfl.ControllerService/LeaveFederation',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                response_deserializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.FromString,
                 )
         self.TrainDone = channel.unary_unary(
                 '/metisfl.ControllerService/TrainDone',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
-                )
-        self.SetInitialModel = channel.unary_unary(
-                '/metisfl.ControllerService/SetInitialModel',
-                request_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                response_deserializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneResponse.FromString,
                 )
         self.GetStatistics = channel.unary_unary(
                 '/metisfl.ControllerService/GetStatistics',
@@ -48,8 +47,8 @@ class ControllerServiceStub(object):
                 )
         self.ShutDown = channel.unary_unary(
                 '/metisfl.ControllerService/ShutDown',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
                 )
 
 
@@ -57,6 +56,12 @@ class ControllerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetHealthStatus(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetInitialModel(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -80,12 +85,6 @@ class ControllerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SetInitialModel(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def GetStatistics(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -103,8 +102,13 @@ def add_ControllerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetHealthStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.GetHealthStatus,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusResponse.SerializeToString,
+            ),
+            'SetInitialModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetInitialModel,
+                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.SetInitialModelRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_controller__pb2.SetInitialModelResponse.SerializeToString,
             ),
             'JoinFederation': grpc.unary_unary_rpc_method_handler(
                     servicer.JoinFederation,
@@ -114,17 +118,12 @@ def add_ControllerServiceServicer_to_server(servicer, server):
             'LeaveFederation': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaveFederation,
                     request_deserializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+                    response_serializer=metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.SerializeToString,
             ),
             'TrainDone': grpc.unary_unary_rpc_method_handler(
                     servicer.TrainDone,
                     request_deserializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
-            ),
-            'SetInitialModel': grpc.unary_unary_rpc_method_handler(
-                    servicer.SetInitialModel,
-                    request_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+                    response_serializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneResponse.SerializeToString,
             ),
             'GetStatistics': grpc.unary_unary_rpc_method_handler(
                     servicer.GetStatistics,
@@ -133,8 +132,8 @@ def add_ControllerServiceServicer_to_server(servicer, server):
             ),
             'ShutDown': grpc.unary_unary_rpc_method_handler(
                     servicer.ShutDown,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -158,8 +157,25 @@ class ControllerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetHealthStatus',
-            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
+            metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusRequest.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SetInitialModel(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/SetInitialModel',
+            metisfl_dot_proto_dot_controller__pb2.SetInitialModelRequest.SerializeToString,
+            metisfl_dot_proto_dot_controller__pb2.SetInitialModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -193,7 +209,7 @@ class ControllerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/LeaveFederation',
             metisfl_dot_proto_dot_controller__pb2.LeaveFederationRequest.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            metisfl_dot_proto_dot_controller__pb2.LeaveFederationResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -210,24 +226,7 @@ class ControllerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/TrainDone',
             metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def SetInitialModel(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/SetInitialModel',
-            metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            metisfl_dot_proto_dot_controller__pb2.TrainDoneResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -260,7 +259,7 @@ class ControllerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/ShutDown',
-            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

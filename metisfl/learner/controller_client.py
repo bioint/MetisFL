@@ -102,7 +102,7 @@ class GRPCControllerClient(object):
         request_retries=1,
         request_timeout=None,
         block=True
-    ) -> service_common_pb2.Ack:
+    ) -> controller_pb2.LeaveFederationResponse:
         """Sends a request to the Controller to leave the federation.
 
         Parameters
@@ -116,8 +116,8 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        service_common_pb2.Ack
-            The response Proto object with the Ack from the Controller.
+        controller_pb2.LeaveFederationResponse
+            The response Proto object with the Ack.
         """
         with self._get_client() as client:
             stub, schedule, _ = client
@@ -137,25 +137,22 @@ class GRPCControllerClient(object):
     def train_done(
         self,
         model: model_pb2.Model,
+        metrics: Dict[str, Any],
         metadata: Dict[str, str],
-        epoch_evaluations: Dict[str, Any],
-        aux_metadata: str = None,
         request_retries=1,
         request_timeout=None,
         block=True
-    ) -> service_common_pb2.Ack:
+    ) -> controller_pb2.TrainDoneResponse:
         """Sends the completed task to the Controller.
 
         Parameters
         ----------
         model : model_pb2.Model
             The model to be sent.
+        metrics : Dict[str, Any]
+            The metrics produced during training.
         metadata : Dict[str, str]
             The metadata to be sent.
-        epoch_evaluations : Dict[str, Any]
-            The epoch evaluations to be sent.
-        aux_metadata : str, optional
-            The auxiliary metadata to be sent, by default None
         request_retries : int, optional
             The number of retries, by default 1
         request_timeout : int, optional
@@ -165,8 +162,8 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        service_common_pb2.Ack
-            The response Proto object with the Ack from the Controller.
+        controller_pb2.TrainDoneResponse
+            The response Proto object with the Ack.
         """
         with self._get_client() as client:
             stub, schedule, _ = client
@@ -177,9 +174,8 @@ class GRPCControllerClient(object):
                     learner_id=self._learner_id,
                     auth_token=self._auth_token,
                     model=model,
-                    metadata=metadata,
-                    epoch_evaluations=epoch_evaluations,
-                    aux_metadata=aux_metadata
+                    metrics=metrics,
+                    metadata=metadata
                 )
 
                 return stub.MarkTaskCompleted(request, timeout=_timeout)
@@ -205,6 +201,7 @@ class GRPCControllerClient(object):
                 status = True
             else:
                 MetisLogger.fatal("Unhandled grpc error: {}".format(rpc_error))
+            # FIXME: this is going to crash in the else case
         self._learner_id = learner_id
         self._auth_token = auth_token
         return learner_id, auth_token, status

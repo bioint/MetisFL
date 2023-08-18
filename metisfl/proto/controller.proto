@@ -7,19 +7,28 @@ import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
 service ControllerService {
-  rpc GetHealthStatus (Empty) returns (Ack) {}
+  rpc GetHealthStatus (GetHealthStatusRequest) returns (GetHealthStatusResponse) {}
 
-  rpc SetInitialModel (Model) returns (Ack) {}
+  rpc SetInitialModel (SetInitialModelRequest) returns (SetInitialModelResponse) {}
 
   rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
 
-  rpc LeaveFederation (LeaveFederationRequest) returns (Ack) {}
+  rpc LeaveFederation (LeaveFederationRequest) returns (LeaveFederationResponse) {}
 
-  rpc TrainDone (TrainDoneRequest) returns (Ack) {}
+  rpc TrainDone (TrainDoneRequest) returns (TrainDoneResponse) {}
 
   rpc GetStatistics (GetStatisticsRequest) returns (GetStatisticsResponse) {}
   
-  rpc ShutDown (Empty) returns (Ack) {}
+  rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
+}
+
+
+message SetInitialModelRequest {
+  Model model = 1;
+}
+
+message SetInitialModelResponse {
+  Ack ack = 1;
 }
 
 message JoinFederationRequest {
@@ -34,23 +43,25 @@ message JoinFederationResponse {
   string auth_token = 3; 
 }
 
-message EpochEvaluation {
-  uint32 epoch_id = 1; // why the epoch id?
-  map<string, string> metric_values = 2;
-}
-
 message TrainDoneRequest {
   string learner_id = 1;
   string auth_token = 2; 
   Model model = 3;
-  map<string, string> metadata = 4;
-  repeated EpochEvaluation epoch_evaluations = 5;
-  string aux_metadata = 6; // @stripeli: This is a json string with additional metadata. 
+  map<string, string> metrics = 4;
+  map<string, string> metadata = 5;
+}
+
+message TrainDoneResponse {
+  Ack ack = 1;
 }
 
 message LeaveFederationRequest {
   string learner_id = 1; 
   string auth_token = 2; 
+}
+
+message LeaveFederationResponse {
+  Ack ack = 1;
 }
 
 message GetStatisticsRequest {

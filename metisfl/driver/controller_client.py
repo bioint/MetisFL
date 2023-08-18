@@ -69,7 +69,7 @@ class GRPCControllerClient(object):
         request_retries: Optional[int] = 1,
         request_timeout: Optional[int] = None,
         block: Optional[bool] = True
-    ) -> service_common_pb2.Ack:
+    ) -> controller_pb2.SetInitialModelResponse:
         """Sends an initial model to the Controller.
 
         Parameters
@@ -85,8 +85,8 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        service_common_pb2.Ack
-            An ack from the Controller.
+        controller_pb2.SetInitialModelResponse
+            The response Proto object with the ack from the controller.
         """
         with self._get_client() as client:
             stub, schedule, _ = client
@@ -145,7 +145,7 @@ class GRPCControllerClient(object):
         request_retries: Optional[int] = 1,
         request_timeout: Optional[int] = None,
         block: Optional[bool] = True
-    ) -> service_common_pb2.Ack:
+    ) -> controller_pb2.ShutDownResponse:
         """Sends a shutdown request to the controller.
 
         Parameters
@@ -159,7 +159,7 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        service_common_pb2.Ack
+        controller_pb2.ShutDownResponse
             The response Proto object with the ack from the controller.
         """
         with self._get_client() as client:
@@ -169,3 +169,10 @@ class GRPCControllerClient(object):
                 return stub.ShutDown(service_common_pb2.ShutDownRequest(), timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
+
+    def shutdown_client(self):
+        """Shuts down the client."""
+
+        with self._get_client() as client:
+            _, _, shutdown = client
+            shutdown()

@@ -16,16 +16,49 @@ from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bmetisfl/proto/learner.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"b\n\x0cTrainRequest\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12,\n\x06params\x18\x02 \x01(\x0b\x32\x14.metisfl.TrainParamsR\x06params\"\x9d\x01\n\x0bTrainParams\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x1d\n\nbatch_size\x18\x02 \x01(\rR\tbatchSize\x12*\n\x11num_local_updates\x18\x03 \x01(\rR\x0fnumLocalUpdates\x12\x18\n\x07metrics\x18\x04 \x03(\tR\x07metrics\"d\n\x0f\x45valuateRequest\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12+\n\x06params\x18\x02 \x01(\x0b\x32\x13.metisfl.EvalParamsR\x06params\"E\n\nEvalParams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x18\n\x07metrics\x18\x02 \x03(\tR\x07metrics\"\xa9\x01\n\x10\x45valuateResponse\x12S\n\x0emetrics_values\x18\x01 \x03(\x0b\x32,.metisfl.EvaluateResponse.MetricsValuesEntryR\rmetricsValues\x1a@\n\x12MetricsValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x02R\x05value:\x02\x38\x01\x32\xd6\x02\n\x0eLearnerService\x12\x42\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x1d.metisfl.HealthStatusResponse\"\x00\x12,\n\x08GetModel\x12\x0e.metisfl.Empty\x1a\x0e.metisfl.Model\"\x00\x12\x33\n\x11SetInitialWeights\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12.\n\x05Train\x12\x15.metisfl.TrainRequest\x1a\x0c.metisfl.Ack\"\x00\x12\x41\n\x08\x45valuate\x12\x18.metisfl.EvaluateRequest\x1a\x19.metisfl.EvaluateResponse\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bmetisfl/proto/learner.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"\x11\n\x0fGetModelRequest\"8\n\x10GetModelResponse\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\"@\n\x18SetInitialWeightsRequest\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\"A\n\x19SetInitialWeightsResponse\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\"b\n\x0cTrainRequest\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12,\n\x06params\x18\x02 \x01(\x0b\x32\x14.metisfl.TrainParamsR\x06params\"\x89\x01\n\x0bTrainParams\x12)\n\x10global_iteration\x18\x01 \x01(\rR\x0fglobalIteration\x12\x1d\n\nbatch_size\x18\x02 \x01(\rR\tbatchSize\x12\x16\n\x06\x65pochs\x18\x03 \x01(\rR\x06\x65pochs\x12\x18\n\x07metrics\x18\x04 \x03(\tR\x07metrics\"\x0f\n\rTrainResponse\"d\n\x0f\x45valuateRequest\x12$\n\x05model\x18\x01 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12+\n\x06params\x18\x02 \x01(\x0b\x32\x13.metisfl.EvalParamsR\x06params\"E\n\nEvalParams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x18\n\x07metrics\x18\x02 \x03(\tR\x07metrics\"\xa9\x01\n\x10\x45valuateResponse\x12S\n\x0emetrics_values\x18\x01 \x03(\x0b\x32,.metisfl.EvaluateResponse.MetricsValuesEntryR\rmetricsValues\x1a@\n\x12MetricsValuesEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x02R\x05value:\x02\x38\x01\x32\xc9\x03\n\x0eLearnerService\x12V\n\x0fGetHealthStatus\x12\x1f.metisfl.GetHealthStatusRequest\x1a .metisfl.GetHealthStatusResponse\"\x00\x12\x41\n\x08GetModel\x12\x18.metisfl.GetModelRequest\x1a\x19.metisfl.GetModelResponse\"\x00\x12\\\n\x11SetInitialWeights\x12!.metisfl.SetInitialWeightsRequest\x1a\".metisfl.SetInitialWeightsResponse\"\x00\x12\x38\n\x05Train\x12\x15.metisfl.TrainRequest\x1a\x16.metisfl.TrainResponse\"\x00\x12\x41\n\x08\x45valuate\x12\x18.metisfl.EvaluateRequest\x1a\x19.metisfl.EvaluateResponse\"\x00\x12\x41\n\x08ShutDown\x12\x18.metisfl.ShutDownRequest\x1a\x19.metisfl.ShutDownResponse\"\x00\x62\x06proto3')
 
 
 
+_GETMODELREQUEST = DESCRIPTOR.message_types_by_name['GetModelRequest']
+_GETMODELRESPONSE = DESCRIPTOR.message_types_by_name['GetModelResponse']
+_SETINITIALWEIGHTSREQUEST = DESCRIPTOR.message_types_by_name['SetInitialWeightsRequest']
+_SETINITIALWEIGHTSRESPONSE = DESCRIPTOR.message_types_by_name['SetInitialWeightsResponse']
 _TRAINREQUEST = DESCRIPTOR.message_types_by_name['TrainRequest']
 _TRAINPARAMS = DESCRIPTOR.message_types_by_name['TrainParams']
+_TRAINRESPONSE = DESCRIPTOR.message_types_by_name['TrainResponse']
 _EVALUATEREQUEST = DESCRIPTOR.message_types_by_name['EvaluateRequest']
 _EVALPARAMS = DESCRIPTOR.message_types_by_name['EvalParams']
 _EVALUATERESPONSE = DESCRIPTOR.message_types_by_name['EvaluateResponse']
 _EVALUATERESPONSE_METRICSVALUESENTRY = _EVALUATERESPONSE.nested_types_by_name['MetricsValuesEntry']
+GetModelRequest = _reflection.GeneratedProtocolMessageType('GetModelRequest', (_message.Message,), {
+  'DESCRIPTOR' : _GETMODELREQUEST,
+  '__module__' : 'metisfl.proto.learner_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.GetModelRequest)
+  })
+_sym_db.RegisterMessage(GetModelRequest)
+
+GetModelResponse = _reflection.GeneratedProtocolMessageType('GetModelResponse', (_message.Message,), {
+  'DESCRIPTOR' : _GETMODELRESPONSE,
+  '__module__' : 'metisfl.proto.learner_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.GetModelResponse)
+  })
+_sym_db.RegisterMessage(GetModelResponse)
+
+SetInitialWeightsRequest = _reflection.GeneratedProtocolMessageType('SetInitialWeightsRequest', (_message.Message,), {
+  'DESCRIPTOR' : _SETINITIALWEIGHTSREQUEST,
+  '__module__' : 'metisfl.proto.learner_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.SetInitialWeightsRequest)
+  })
+_sym_db.RegisterMessage(SetInitialWeightsRequest)
+
+SetInitialWeightsResponse = _reflection.GeneratedProtocolMessageType('SetInitialWeightsResponse', (_message.Message,), {
+  'DESCRIPTOR' : _SETINITIALWEIGHTSRESPONSE,
+  '__module__' : 'metisfl.proto.learner_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.SetInitialWeightsResponse)
+  })
+_sym_db.RegisterMessage(SetInitialWeightsResponse)
+
 TrainRequest = _reflection.GeneratedProtocolMessageType('TrainRequest', (_message.Message,), {
   'DESCRIPTOR' : _TRAINREQUEST,
   '__module__' : 'metisfl.proto.learner_pb2'
@@ -39,6 +72,13 @@ TrainParams = _reflection.GeneratedProtocolMessageType('TrainParams', (_message.
   # @@protoc_insertion_point(class_scope:metisfl.TrainParams)
   })
 _sym_db.RegisterMessage(TrainParams)
+
+TrainResponse = _reflection.GeneratedProtocolMessageType('TrainResponse', (_message.Message,), {
+  'DESCRIPTOR' : _TRAINRESPONSE,
+  '__module__' : 'metisfl.proto.learner_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.TrainResponse)
+  })
+_sym_db.RegisterMessage(TrainResponse)
 
 EvaluateRequest = _reflection.GeneratedProtocolMessageType('EvaluateRequest', (_message.Message,), {
   'DESCRIPTOR' : _EVALUATEREQUEST,
@@ -75,18 +115,28 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
   _EVALUATERESPONSE_METRICSVALUESENTRY._options = None
   _EVALUATERESPONSE_METRICSVALUESENTRY._serialized_options = b'8\001'
-  _TRAINREQUEST._serialized_start=103
-  _TRAINREQUEST._serialized_end=201
-  _TRAINPARAMS._serialized_start=204
-  _TRAINPARAMS._serialized_end=361
-  _EVALUATEREQUEST._serialized_start=363
-  _EVALUATEREQUEST._serialized_end=463
-  _EVALPARAMS._serialized_start=465
-  _EVALPARAMS._serialized_end=534
-  _EVALUATERESPONSE._serialized_start=537
-  _EVALUATERESPONSE._serialized_end=706
-  _EVALUATERESPONSE_METRICSVALUESENTRY._serialized_start=642
-  _EVALUATERESPONSE_METRICSVALUESENTRY._serialized_end=706
-  _LEARNERSERVICE._serialized_start=709
-  _LEARNERSERVICE._serialized_end=1051
+  _GETMODELREQUEST._serialized_start=103
+  _GETMODELREQUEST._serialized_end=120
+  _GETMODELRESPONSE._serialized_start=122
+  _GETMODELRESPONSE._serialized_end=178
+  _SETINITIALWEIGHTSREQUEST._serialized_start=180
+  _SETINITIALWEIGHTSREQUEST._serialized_end=244
+  _SETINITIALWEIGHTSRESPONSE._serialized_start=246
+  _SETINITIALWEIGHTSRESPONSE._serialized_end=311
+  _TRAINREQUEST._serialized_start=313
+  _TRAINREQUEST._serialized_end=411
+  _TRAINPARAMS._serialized_start=414
+  _TRAINPARAMS._serialized_end=551
+  _TRAINRESPONSE._serialized_start=553
+  _TRAINRESPONSE._serialized_end=568
+  _EVALUATEREQUEST._serialized_start=570
+  _EVALUATEREQUEST._serialized_end=670
+  _EVALPARAMS._serialized_start=672
+  _EVALPARAMS._serialized_end=741
+  _EVALUATERESPONSE._serialized_start=744
+  _EVALUATERESPONSE._serialized_end=913
+  _EVALUATERESPONSE_METRICSVALUESENTRY._serialized_start=849
+  _EVALUATERESPONSE_METRICSVALUESENTRY._serialized_end=913
+  _LEARNERSERVICE._serialized_start=916
+  _LEARNERSERVICE._serialized_end=1373
 # @@protoc_insertion_point(module_scope)

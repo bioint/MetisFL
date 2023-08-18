@@ -18,7 +18,7 @@ class DriverSession(object):
         ----------
         fedenv : Union[str, FederationEnvironment]
             The path to the YAML file containing the federation environment or a FederationEnvironment object.
-        """        
+        """
         MetisASCIIArt.print()
 
         if isinstance(fedenv, str):
@@ -78,15 +78,15 @@ class DriverSession(object):
 
     def shutdown_federation(self):
         """Shuts down the Controller and all Learners."""
-            
+
         for grpc_client in self._learner_clients:
             grpc_client.shutdown_server(request_timeout=30, block=False)
             grpc_client.shutdown()
 
-        self._controller_client.shutdown_controller(
+        # FIXME:
+        self._controller_client.shutdown_server(
             request_retries=2, request_timeout=30, block=True)
-        self._controller_client.shutdown_server()
-
+        self._controller_client.shutdown_client()
 
     def _create_controller_client(self):
         """Creates a GRPC client for the controller."""

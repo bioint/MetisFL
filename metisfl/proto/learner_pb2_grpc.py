@@ -3,7 +3,6 @@
 import grpc
 
 from metisfl.proto import learner_pb2 as metisfl_dot_proto_dot_learner__pb2
-from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
@@ -18,23 +17,23 @@ class LearnerServiceStub(object):
         """
         self.GetHealthStatus = channel.unary_unary(
                 '/metisfl.LearnerService/GetHealthStatus',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusResponse.FromString,
                 )
         self.GetModel = channel.unary_unary(
                 '/metisfl.LearnerService/GetModel',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
+                request_serializer=metisfl_dot_proto_dot_learner__pb2.GetModelRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_learner__pb2.GetModelResponse.FromString,
                 )
         self.SetInitialWeights = channel.unary_unary(
                 '/metisfl.LearnerService/SetInitialWeights',
-                request_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                request_serializer=metisfl_dot_proto_dot_learner__pb2.SetInitialWeightsRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_learner__pb2.SetInitialWeightsResponse.FromString,
                 )
         self.Train = channel.unary_unary(
                 '/metisfl.LearnerService/Train',
                 request_serializer=metisfl_dot_proto_dot_learner__pb2.TrainRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                response_deserializer=metisfl_dot_proto_dot_learner__pb2.TrainResponse.FromString,
                 )
         self.Evaluate = channel.unary_unary(
                 '/metisfl.LearnerService/Evaluate',
@@ -43,8 +42,8 @@ class LearnerServiceStub(object):
                 )
         self.ShutDown = channel.unary_unary(
                 '/metisfl.LearnerService/ShutDown',
-                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
                 )
 
 
@@ -92,23 +91,23 @@ def add_LearnerServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetHealthStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.GetHealthStatus,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusResponse.SerializeToString,
             ),
             'GetModel': grpc.unary_unary_rpc_method_handler(
                     servicer.GetModel,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
-                    response_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_learner__pb2.GetModelRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_learner__pb2.GetModelResponse.SerializeToString,
             ),
             'SetInitialWeights': grpc.unary_unary_rpc_method_handler(
                     servicer.SetInitialWeights,
-                    request_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_learner__pb2.SetInitialWeightsRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_learner__pb2.SetInitialWeightsResponse.SerializeToString,
             ),
             'Train': grpc.unary_unary_rpc_method_handler(
                     servicer.Train,
                     request_deserializer=metisfl_dot_proto_dot_learner__pb2.TrainRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+                    response_serializer=metisfl_dot_proto_dot_learner__pb2.TrainResponse.SerializeToString,
             ),
             'Evaluate': grpc.unary_unary_rpc_method_handler(
                     servicer.Evaluate,
@@ -117,8 +116,8 @@ def add_LearnerServiceServicer_to_server(servicer, server):
             ),
             'ShutDown': grpc.unary_unary_rpc_method_handler(
                     servicer.ShutDown,
-                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
-                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -142,8 +141,8 @@ class LearnerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/GetHealthStatus',
-            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.HealthStatusResponse.FromString,
+            metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusRequest.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.GetHealthStatusResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -159,8 +158,8 @@ class LearnerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/GetModel',
-            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-            metisfl_dot_proto_dot_model__pb2.Model.FromString,
+            metisfl_dot_proto_dot_learner__pb2.GetModelRequest.SerializeToString,
+            metisfl_dot_proto_dot_learner__pb2.GetModelResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -176,8 +175,8 @@ class LearnerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/SetInitialWeights',
-            metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            metisfl_dot_proto_dot_learner__pb2.SetInitialWeightsRequest.SerializeToString,
+            metisfl_dot_proto_dot_learner__pb2.SetInitialWeightsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -194,7 +193,7 @@ class LearnerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/Train',
             metisfl_dot_proto_dot_learner__pb2.TrainRequest.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            metisfl_dot_proto_dot_learner__pb2.TrainResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -227,7 +226,7 @@ class LearnerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/ShutDown',
-            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            metisfl_dot_proto_dot_service__common__pb2.ShutDownRequest.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.ShutDownResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

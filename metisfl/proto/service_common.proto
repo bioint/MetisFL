@@ -3,8 +3,6 @@ package metisfl;
 
 import "google/protobuf/timestamp.proto";
 
-message Empty {}
-
 message Ack {
   bool status = 1;
   google.protobuf.Timestamp timestamp = 2;
@@ -19,4 +17,16 @@ enum ServingStatus {
 
 message HealthStatusResponse {
  ServingStatus status = 1;
+}
+
+message GetHealthStatusRequest {}
+
+message GetHealthStatusResponse {
+  Ack ack = 1;
+}
+
+message ShutDownRequest {}
+
+message ShutDownResponse {
+  Ack ack = 1;
 }

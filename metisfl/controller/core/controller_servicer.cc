@@ -176,10 +176,11 @@ namespace metisfl::controller
 
       Status GetHealthStatus(
           ServerContext *context,
-          const Empty *request,
-          Ack *response) override
+          const GetHealthStatusRequest *request,
+          GetHealthStatusResponse *response) override
       {
-        response->set_status(true);
+        bool status = controller_ != nullptr;
+        *response->mutable_ack().set_status(status);
         return Status::OK;
       }
 
@@ -223,7 +224,7 @@ namespace metisfl::controller
 
       Status LeaveFederation(ServerContext *context,
                              const LeaveFederationRequest *request,
-                             Ack *response) override
+                             LeaveFederationResponse *response) override
       {
 
         if (request->learner_id().empty() || request->auth_token().empty())
@@ -240,19 +241,19 @@ namespace metisfl::controller
 
         if (del_status.ok())
         {
-          response->set_status(true);
+          *response->mutable_ack().set_status(true);
           return Status::OK;
         }
         else
         {
-          response->set_status(false);
+          *response->mutable_ack().set_status(false);
           return {StatusCode::CANCELLED, std::string(del_status.message())};
         }
       }
 
       Status TrainDone(ServerContext *context,
                        const TrainDoneRequest *request,
-                       Ack *response) override
+                       TrainDoneResponse *response) override
       {
         PLOG(INFO) << "Received Completed Task By " << request->learner_id();
         const auto status = controller_->LearnerCompletedTask(
@@ -275,20 +276,20 @@ namespace metisfl::controller
             return {StatusCode::INTERNAL, std::string(status.message())};
           }
         }
-        response->set_status(true);
+        *response->mutable_ack()->set_status(true);
         return Status::OK;
       }
 
       Status
       SetInitialModel(ServerContext *context,
-                      const Model *model,
-                      Ack *response) override
+                      const SetInitialModelRequest *request,
+                      SetInitialModelResponse *response) override
       {
         auto status = controller_->SetInitialModel(model);
         if (status.ok())
         {
-          response->set_status(true);
           PLOG(INFO) << "Replaced Community Model.";
+          *response->mutable_ack()->set_status(true);
           return Status::OK;
         }
 
@@ -297,11 +298,11 @@ namespace metisfl::controller
       }
 
       Status ShutDown(ServerContext *context,
-                      const Empty *request,
-                      Ack *response) override
+                      const ShutDownRequest *request,
+                      ShutdDownResponse *response) override
       {
         shutdown_ = true;
-        response->mutable_ack()->set_status(true);
+        *response->mutable_ack()->set_status(true);
         this->StopService();
         return Status::OK;
       }
