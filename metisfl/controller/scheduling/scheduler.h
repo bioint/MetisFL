@@ -2,14 +2,13 @@
 #ifndef METISFL_METISFL_CONTROLLER_SCHEDULING_SCHEDULER_H_
 #define METISFL_METISFL_CONTROLLER_SCHEDULING_SCHEDULER_H_
 
-#include <vector>
 #include <string>
-
-#include "metisfl/proto/metis.pb.h"
+#include <vector>
 
 namespace metisfl::controller {
 
-// A scheduler implements the synchronization and coordination policy of learners.
+// A scheduler implements the synchronization and coordination policy of
+// learners.
 class Scheduler {
  public:
   virtual ~Scheduler() = default;
@@ -18,12 +17,11 @@ class Scheduler {
   // learner `learner_id` has just completed its task.
   virtual std::vector<std::string> ScheduleNext(
       const std::string &learner_id,
-      const CompletedLearningTask &task,
-      const std::vector<LearnerDescriptor> &active_learners) = 0;
+      const std::vector<std::string> &active_learners) = 0;
 
   virtual std::string name() = 0;
 };
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller
 
-#endif //METISFL_METISFL_CONTROLLER_SCHEDULING_SCHEDULER_H_
+#endif  // METISFL_METISFL_CONTROLLER_SCHEDULING_SCHEDULER_H_

@@ -28,12 +28,7 @@ namespace metisfl::controller
 
   int RedisModelStore::GetConfiguredLineageLength()
   {
-    int lineage_length = -1;
-    if (m_model_store_specs.has_lineage_length_eviction())
-    {
-      lineage_length = (int)m_model_store_specs.lineage_length_eviction().lineage_length();
-    }
-    return lineage_length;
+    return m_lineage_length;
   }
 
   int RedisModelStore::GetLearnerLineageLength(std::string learner_id)
@@ -77,15 +72,14 @@ namespace metisfl::controller
       Model model = learner_pair.second;
 
       // This is only applicable on the k-Recent-Models policy.
-      if (m_model_store_specs.has_lineage_length_eviction())
+      if (m_lineage_length > 0)
       {
         // Check to see is learner_id is present in collection
         if ((learner_lineage_.find(learner_id) != learner_lineage_.end()))
         {
           // Yes, learner_id is present in collection.
           // Check if the model being inserted is greater than max length.
-          if (learner_lineage_[learner_id].size() >=
-              m_model_store_specs.lineage_length_eviction().lineage_length())
+          if (learner_lineage_[learner_id].size() >= m_lineage_length)
           {
             auto itr_first_elem = learner_lineage_[learner_id].begin();
             PLOG(INFO) << "Reached max limit.";

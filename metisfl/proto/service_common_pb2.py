@@ -16,7 +16,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"metisfl/proto/service_common.proto\x12\x07metisfl\x1a\x1fgoogle/protobuf/timestamp.proto\"q\n\x03\x41\x63k\x12\x16\n\x06status\x18\x01 \x01(\x08R\x06status\x12\x38\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x18\n\x07message\x18\x03 \x01(\tR\x07message\"F\n\x14HealthStatusResponse\x12.\n\x06status\x18\x01 \x01(\x0e\x32\x16.metisfl.ServingStatusR\x06status\"\x18\n\x16GetHealthStatusRequest\"9\n\x17GetHealthStatusResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k\"\x11\n\x0fShutDownRequest\"2\n\x10ShutDownResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k*:\n\rServingStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07SERVING\x10\x01\x12\x0f\n\x0bNOT_SERVING\x10\x02\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\"metisfl/proto/service_common.proto\x12\x07metisfl\x1a\x1fgoogle/protobuf/timestamp.proto\"q\n\x03\x41\x63k\x12\x16\n\x06status\x18\x01 \x01(\x08R\x06status\x12\x38\n\ttimestamp\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.TimestampR\ttimestamp\x12\x18\n\x07message\x18\x03 \x01(\tR\x07message\"F\n\x14HealthStatusResponse\x12.\n\x06status\x18\x01 \x01(\x0e\x32\x16.metisfl.ServingStatusR\x06status\"\x18\n\x16GetHealthStatusRequest\"9\n\x17GetHealthStatusResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k\"\x07\n\x05\x45mpty\"2\n\x10ShutDownResponse\x12\x1e\n\x03\x61\x63k\x18\x01 \x01(\x0b\x32\x0c.metisfl.AckR\x03\x61\x63k*:\n\rServingStatus\x12\x0b\n\x07UNKNOWN\x10\x00\x12\x0b\n\x07SERVING\x10\x01\x12\x0f\n\x0bNOT_SERVING\x10\x02\x62\x06proto3')
 
 _SERVINGSTATUS = DESCRIPTOR.enum_types_by_name['ServingStatus']
 ServingStatus = enum_type_wrapper.EnumTypeWrapper(_SERVINGSTATUS)
@@ -29,7 +29,7 @@ _ACK = DESCRIPTOR.message_types_by_name['Ack']
 _HEALTHSTATUSRESPONSE = DESCRIPTOR.message_types_by_name['HealthStatusResponse']
 _GETHEALTHSTATUSREQUEST = DESCRIPTOR.message_types_by_name['GetHealthStatusRequest']
 _GETHEALTHSTATUSRESPONSE = DESCRIPTOR.message_types_by_name['GetHealthStatusResponse']
-_SHUTDOWNREQUEST = DESCRIPTOR.message_types_by_name['ShutDownRequest']
+_EMPTY = DESCRIPTOR.message_types_by_name['Empty']
 _SHUTDOWNRESPONSE = DESCRIPTOR.message_types_by_name['ShutDownResponse']
 Ack = _reflection.GeneratedProtocolMessageType('Ack', (_message.Message,), {
   'DESCRIPTOR' : _ACK,
@@ -59,12 +59,12 @@ GetHealthStatusResponse = _reflection.GeneratedProtocolMessageType('GetHealthSta
   })
 _sym_db.RegisterMessage(GetHealthStatusResponse)
 
-ShutDownRequest = _reflection.GeneratedProtocolMessageType('ShutDownRequest', (_message.Message,), {
-  'DESCRIPTOR' : _SHUTDOWNREQUEST,
+Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), {
+  'DESCRIPTOR' : _EMPTY,
   '__module__' : 'metisfl.proto.service_common_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.ShutDownRequest)
+  # @@protoc_insertion_point(class_scope:metisfl.Empty)
   })
-_sym_db.RegisterMessage(ShutDownRequest)
+_sym_db.RegisterMessage(Empty)
 
 ShutDownResponse = _reflection.GeneratedProtocolMessageType('ShutDownResponse', (_message.Message,), {
   'DESCRIPTOR' : _SHUTDOWNRESPONSE,
@@ -76,8 +76,8 @@ _sym_db.RegisterMessage(ShutDownResponse)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _SERVINGSTATUS._serialized_start=423
-  _SERVINGSTATUS._serialized_end=481
+  _SERVINGSTATUS._serialized_start=413
+  _SERVINGSTATUS._serialized_end=471
   _ACK._serialized_start=80
   _ACK._serialized_end=193
   _HEALTHSTATUSRESPONSE._serialized_start=195
@@ -86,8 +86,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _GETHEALTHSTATUSREQUEST._serialized_end=291
   _GETHEALTHSTATUSRESPONSE._serialized_start=293
   _GETHEALTHSTATUSRESPONSE._serialized_end=350
-  _SHUTDOWNREQUEST._serialized_start=352
-  _SHUTDOWNREQUEST._serialized_end=369
-  _SHUTDOWNRESPONSE._serialized_start=371
-  _SHUTDOWNRESPONSE._serialized_end=421
+  _EMPTY._serialized_start=352
+  _EMPTY._serialized_end=359
+  _SHUTDOWNRESPONSE._serialized_start=361
+  _SHUTDOWNRESPONSE._serialized_end=411
 # @@protoc_insertion_point(module_scope)

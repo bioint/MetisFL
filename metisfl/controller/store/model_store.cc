@@ -1,6 +1,6 @@
 
 #include "metisfl/controller/store/model_store.h"
-#include "metisfl/proto/metis.pb.h"
+
 #include "metisfl/proto/model.pb.h"
 
 namespace metisfl::controller

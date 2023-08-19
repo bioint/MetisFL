@@ -5,42 +5,34 @@ import "google/protobuf/timestamp.proto";
 
 import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
+import "metisfl/proto/learner.proto";
 
 service ControllerService {
-  rpc GetHealthStatus (GetHealthStatusRequest) returns (GetHealthStatusResponse) {}
+  rpc GetHealthStatus (Empty) returns (Ack) {}
 
-  rpc SetInitialModel (SetInitialModelRequest) returns (SetInitialModelResponse) {}
+  rpc SetInitialModel (Model) returns (Ack) {}
 
-  rpc JoinFederation (JoinFederationRequest) returns (JoinFederationResponse) {}
+  rpc JoinFederation (LearnerDescriptor) returns (LearnerId) {}
 
-  rpc LeaveFederation (LeaveFederationRequest) returns (LeaveFederationResponse) {}
+  rpc LeaveFederation (LearnerId) returns (Ack) {}
 
-  rpc TrainDone (TrainDoneRequest) returns (TrainDoneResponse) {}
+  rpc TrainDone (TrainDoneRequest) returns (Ack) {}
 
   rpc GetStatistics (GetStatisticsRequest) returns (GetStatisticsResponse) {}
   
-  rpc ShutDown (ShutDownRequest) returns (ShutDownResponse) {}
+  rpc ShutDown (Empty) returns (Ack) {}
 }
 
-
-message SetInitialModelRequest {
-  Model model = 1;
-}
-
-message SetInitialModelResponse {
-  Ack ack = 1;
-}
-
-message JoinFederationRequest {
+message LearnerDescriptor {
   string hostname = 1;
   uint32 port = 2;
-  string public_certificate_bytes = 3;
-  uint32 num_traning_examples = 4;
+  string root_certificate_bytes = 3;
+  string public_certificate_bytes = 4;
+  uint32 num_training_examples = 5;
 }
 
-message JoinFederationResponse {
-  string learner_id = 2; 
-  string auth_token = 3; 
+message LearnerId {
+  string id = 1;
 }
 
 message TrainDoneRequest {
@@ -48,21 +40,9 @@ message TrainDoneRequest {
   string auth_token = 2; 
   Model model = 3;
   map<string, string> metrics = 4;
-  map<string, string> metadata = 5;
+  TaskExecutionMetadata metadata = 5;
 }
 
-message TrainDoneResponse {
-  Ack ack = 1;
-}
-
-message LeaveFederationRequest {
-  string learner_id = 1; 
-  string auth_token = 2; 
-}
-
-message LeaveFederationResponse {
-  Ack ack = 1;
-}
 
 message GetStatisticsRequest {
   int32 community_evaluation_backtracks = 1;
@@ -78,30 +58,24 @@ message GetStatisticsResponse {
   string json_metadata = 5;
 }
 
-message LearnerDescriptor {
-  string id = 1;
-  string hostname = 2;
-  uint32 port = 3;
-  string auth_token = 4;
-  string public_certificate_bytes = 5;
-}
-
 message LocalTasksMetadata {
   repeated TaskExecutionMetadata task_metadata = 1;
 }
 
 message TaskExecutionMetadata {
-  map <string, string> metadata = 1;
+  uint32 global_iteration = 1;
+  float completed_epochs = 3;
+  uint32 completed_batches = 4;
+  uint32 batch_size = 5;
+  float processing_ms_per_epoch = 6;
+  float processing_ms_per_batch = 7;
 }
 
 message CommunityModelEvaluation {
   uint32 global_iteration = 1;
-  map<string, ModelEvaluations> evaluations = 2;
+  map<string, EvaluateResponse> evaluations = 2;
 }
 
-message ModelEvaluations {
-  map<string, string> metric_values = 1;
-}
 
 message FederatedTaskRuntimeMetadata {
   uint32 global_iteration = 1;

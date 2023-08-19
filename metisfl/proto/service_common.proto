@@ -25,7 +25,7 @@ message GetHealthStatusResponse {
   Ack ack = 1;
 }
 
-message ShutDownRequest {}
+message Empty {}
 
 message ShutDownResponse {
   Ack ack = 1;

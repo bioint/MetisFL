@@ -10,9 +10,9 @@ namespace metisfl::controller {
 // Implements the synchronous task scheduling policy.
 class SynchronousScheduler : public Scheduler {
  public:
-  std::vector<std::string> ScheduleNext(const std::string &learner_id,
-                                        const CompletedLearningTask &task,
-                                        const std::vector<LearnerDescriptor> &active_learners) override {
+  std::vector<std::string> ScheduleNext(
+      const std::string &learner_id,
+      const std::vector<std::string> &active_learners) override {
     // First, it adds the learner id to the set.
     learner_ids_.insert(learner_id);
 
@@ -24,8 +24,8 @@ class SynchronousScheduler : public Scheduler {
     }
 
     // Otherwise, schedule all learners for the next task.
-    std::vector<std::string>
-        to_schedule(learner_ids_.begin(), learner_ids_.end());
+    std::vector<std::string> to_schedule(learner_ids_.begin(),
+                                         learner_ids_.end());
 
     // Clean the state.
     learner_ids_.clear();
@@ -33,15 +33,13 @@ class SynchronousScheduler : public Scheduler {
     return to_schedule;
   }
 
-  inline std::string name() override {
-    return "SynchronousScheduler";
-  }
+  inline std::string name() override { return "SynchronousScheduler"; }
 
  private:
   // Keeps track of the learners.
   ::absl::flat_hash_set<std::string> learner_ids_;
 };
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller
 
-#endif //METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
+#endif  // METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_

@@ -16,7 +16,7 @@
 #include "metisfl/controller/store/store.h"
 #include "metisfl/controller/core/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
-#include "metisfl/proto/metis.pb.h"
+
 #include "metisfl/controller/core/controller.h"
 
 namespace metisfl::controller {

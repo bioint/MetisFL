@@ -7,7 +7,6 @@
 #include "metisfl/controller/common/proto_matchers.h"
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
-#include "metisfl/proto/metis.pb.h"
 
 namespace metisfl::controller {
 namespace {

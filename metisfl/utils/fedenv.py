@@ -95,10 +95,6 @@ class ModelStoreConfig(object):
             if self.model_store_port is None:
                 raise ValueError(
                     "Redis model store requires a port to be specified")
-        if self.eviction_policy == "LineageLengthEviction":
-            if self.lineage_length is None:
-                raise ValueError(
-                    "LineageLengthEviction requires a lineage length to be specified")
 
 
 @dataclass
@@ -113,14 +109,14 @@ class GlobalTrainConfig(object):
         The communication protocol to use. Must be one of the following: ["Synchronous", "Asynchronous", "SemiSynchronous"].
     scaling_factor : str
         The scaling factor to use. Must be one of the following: ["NumTrainingExamples", "NumCompletedBatches", "NumParticipants"].
+    participation_ratio : Optional[float], (default=1.0)
+        The participation ratio to use. Defaults to 1.0.
     stride_length : Optional[int], (default=None)
         The stride length to use. Required if the aggregation rule is FedStride.
-    encryption_scheme : Optional[str], (default=None)
-        The encryption scheme to use. Must be one of the following: ["CKKS"].
     he_batch_size : Optional[int], (default=None)
-        The HE batch size to use. Required if the encryption scheme is CKKS.
+        The HE batch size to use. Required if the aggregation rule is SecAgg.
     he_scaling_factor_bits : Optional[int], (default=None)
-        The HE scaling factor bits to use. Required if the encryption scheme is CKKS.
+        The HE scaling factor bits to use. Required if the aggregation rule is SecAgg.
     semi_sync_lambda : Optional[float], (default=None)
         The semi-sync lambda to use. Required if the communication protocol is SemiSynchronous.
     semi_sync_recompute_num_updates : Optional[int], (default=None)
@@ -133,19 +129,18 @@ class GlobalTrainConfig(object):
         - If the aggregation rule is not one of the following: ["FedAvg", "FedRec", "FedStride", "SecAgg"].
         - If the communication protocol is not one of the following: ["Synchronous", "Asynchronous", "SemiSynchronous"].
         - If the scaling factor is not one of the following: ["NumTrainingExamples", "NumCompletedBatches", "NumParticipants"].
-        - If the encryption scheme is not one of the following: ["CKKS"].
         - If the communication protocol is SemiSynchronous and the semi_sync_lambda or semi_sync_recompute_num_updates are not specified.
 
     """
 
     aggregation_rule: str
     communication_protocol: str
-    scaling_factor: int
-    participation_ratio: float
+    scaling_factor: str
+    participation_ratio: Optional[float] = 1.0
     stride_length: Optional[int] = None
-    encryption_scheme: Optional[str] = None
     he_batch_size: Optional[int] = None
     he_scaling_factor_bits: Optional[int] = None
+    he_crypto_context_file: Optional[str] = None
     semi_sync_lambda: Optional[float] = None
     semi_sync_recompute_num_updates: Optional[int] = None
 
@@ -163,9 +158,9 @@ class GlobalTrainConfig(object):
                 f"Invalid communication protocol: {self.protocol}")
         if self.scaling_factor not in SCALING_FACTORS:
             raise ValueError(f"Invalid scaling factor: {self.scaling_factor}")
-        if self.encryption_scheme not in HE_SCHEMES:
+        if self.he_crypto_context_file is not None and not os.path.isfile(self.he_crypto_context_file):
             raise ValueError(
-                f"Invalid encryption scheme: {self.encryption_scheme}")
+                f"HE crypto context file {self.he_crypto_context_file} does not exist")
 
 
 @dataclass
@@ -218,6 +213,7 @@ class ServerParams(object):
 
     hostname: str
     port: int
+    # TODO: verify that the certificates and the private key are valid
     root_certificate: Optional[str] = None
     server_certificate: Optional[str] = None
     private_key: Optional[str] = None
@@ -312,7 +308,7 @@ class FederationEnvironment(object):
         -------
         FederationEnvironment
             The FederationEnvironment object.
-        """        
+        """
 
         yaml_dict = yaml.safe_load(open(yaml_file, 'r'))
 

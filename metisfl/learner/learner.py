@@ -3,6 +3,8 @@
 
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple
+
+from ..proto import learner_pb2
 from ..proto import model_pb2
 
 
@@ -23,7 +25,7 @@ class Learner(ABC):
     def train(
         self,
         model: model_pb2.Model,
-        params: model_pb2.TrainParams
+        params: learner_pb2.TrainParams
     ) -> Tuple[model_pb2.Model, Dict[str]]:
         """Trains the given model using the given training parameters."""
         pass
@@ -32,7 +34,7 @@ class Learner(ABC):
     def evaluate(
         self,
         model: model_pb2.Model,
-        params: model_pb2.EvalParams
+        params: learner_pb2.EvalParams
     ) -> Dict[str]:
         """Evaluates the given model using the given evaluation parameters."""
         pass

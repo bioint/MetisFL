@@ -9,7 +9,7 @@
 #include "metisfl/controller/core/macros.h"
 #include "metisfl/controller/core/proto_matchers.h"
 #include "metisfl/proto/controller.grpc.pb.h"
-#include "metisfl/proto/metis.pb.h"
+
 
 namespace metisfl::controller {
 namespace {

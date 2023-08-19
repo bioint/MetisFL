@@ -1,6 +1,7 @@
 
-#include <iostream>
 #include <pybind11/pybind11.h>
+
+#include <iostream>
 #include <string>
 
 #include "metisfl/controller/core/controller.h"
@@ -14,14 +15,54 @@ using metisfl::controller::Controller;
 using metisfl::controller::ControllerServicer;
 
 class ControllerWrapper {
-
  public:
   ~ControllerWrapper() = default;
 
-  void Start(std::string params_serialized) {
-    metisfl::ControllerParams params;
-    params.ParseFromString(params_serialized);
-    controller_ = Controller::New(params);
+  void StartWrapper(const py::kwargs& params) {
+    ServerParams server_params = {};
+    server_params.hostname = params["hostname"].cast<std::string>();
+    server_params.port = params["port"].cast<int>();
+    server_params.root_certificate =
+        params["root_certificate"].cast<std::string>();
+    server_params.public_certificate =
+        params["server_certificate"].cast<std::string>();
+    server_params.private_key = params["private_key"].cast<std::string>();
+
+    GlobalTrainParams global_train_params = {};
+    global_train_params.aggregation_rule =
+        params["aggregation_rule"].cast<std::string>();
+    global_train_params.communication_protocol =
+        params["communication_protocol"].cast<std::string>();
+    global_train_params.scaling_factor =
+        params["scaling_factor"].cast<std::string>();
+    global_train_params.participation_ratio =
+        params["participation_ratio"].cast<float>();
+    global_train_params.stride_length = params["stride_length"].cast<int>();
+    global_train_params.he_batch_size = params["he_batch_size"].cast<int>();
+    global_train_params.he_scaling_factor_bits =
+        params["he_scaling_factor_bits"].cast<int>();
+    global_train_params.he_crypto_context_file =
+        params["he_crypto_context_file"].cast<std::string>();
+    global_train_params.semi_sync_lambda =
+        params["semi_sync_lambda"].cast<float>();
+    global_train_params.semi_sync_recompute_num_updates =
+        params["semi_sync_recompute_num_updates"].cast<int>();
+
+    ModelStoreParams model_store_params = {};
+    model_store_params.model_store = params["model_store"].cast<std::string>();
+    model_store_params.lineage_length = params["lineage_length"].cast<int>();
+    model_store_params.hostname =
+        params["model_store_hostname"].cast<std::string>();
+    model_store_params.port = params["model_store_port"].cast<int>();
+
+    Start(server_params, global_train_params, model_store_params);
+  }
+
+  void Start(const ServerParams& params,
+             const GlobalTrainParams& global_train_params,
+             const ModelStoreParams& model_store_params) {
+    controller_ =
+        Controller::New(params, global_train_params, model_store_params);
     servicer_ = ControllerServicer::New(controller_.get());
     servicer_->StartService();
   }
@@ -36,33 +77,27 @@ class ControllerWrapper {
     return servicer_->ShutdownRequestReceived();
   }
 
-  void Wait() {
-    servicer_->WaitService();
-  }
+  void Wait() { servicer_->WaitService(); }
 
  private:
   std::unique_ptr<Controller> controller_;
   std::unique_ptr<ControllerServicer> servicer_;
-
 };
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller
 
 PYBIND11_MODULE(controller, m) {
   m.doc() = "Federation controller python soft wrapper.";
 
   py::class_<metisfl::controller::ControllerWrapper>(m, "ControllerWrapper")
-    .def(py::init<>())
-    .def("start",
-        &metisfl::controller::ControllerWrapper::Start,
-        "Initializes and starts the controller.")
-    .def("shutdown",
-        &metisfl::controller::ControllerWrapper::Shutdown,
-        "Shuts down the controller.")
-    .def("shutdown_request_received",
-        &metisfl::controller::ControllerWrapper::ShutdownRequestReceived,
-        "Check if controller has already received a shutdown request.")
-    .def("wait",
-        &metisfl::controller::ControllerWrapper::Wait,
-        "Wait for controller main thread.");
+      .def(py::init<>())
+      .def("start", &metisfl::controller::ControllerWrapper::StartWrapper,
+           "Initializes and starts the controller.")
+      .def("shutdown", &metisfl::controller::ControllerWrapper::Shutdown,
+           "Shuts down the controller.")
+      .def("shutdown_request_received",
+           &metisfl::controller::ControllerWrapper::ShutdownRequestReceived,
+           "Check if controller has already received a shutdown request.")
+      .def("wait", &metisfl::controller::ControllerWrapper::Wait,
+           "Wait for controller main thread.");
 }

@@ -1,12 +1,12 @@
 
 #include "metisfl/controller/store/hash_map/hash_map_model_store.h"
-#include "metisfl/proto/metis.pb.h"
+
 #include "metisfl/proto/model.pb.h"
 
 namespace metisfl::controller
 {
 
-  HashMapModelStore::HashMapModelStore(const std::string &eviction_policy) : ModelStore(eviction_policy)
+  HashMapModelStore::HashMapModelStore(const int lineage_length) : ModelStore(lineage_length)
   {
     PLOG(INFO) << "Using InMemoryStore (HashMapStore) as model store backend.";
   }
@@ -28,12 +28,10 @@ namespace metisfl::controller
 
   int HashMapModelStore::GetConfiguredLineageLength()
   {
-    int lineage_length = -1;
-    if (m_model_store_specs.has_lineage_length_eviction())
-    {
-      lineage_length = (int)m_model_store_specs.lineage_length_eviction().lineage_length();
-    }
-    return lineage_length;
+    if (m_lineage_length > 0)
+      return m_lineage_length;
+
+    return -1;
   }
 
   int HashMapModelStore::GetLearnerLineageLength(std::string learner_id)

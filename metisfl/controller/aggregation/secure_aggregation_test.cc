@@ -7,7 +7,7 @@
 #include "metisfl/controller/common/macros.h"
 #include "metisfl/controller/common/proto_matchers.h"
 #include "metisfl/encryption/palisade/ckks_scheme.h"
-#include "metisfl/proto/metis.pb.h"
+
 #include "metisfl/proto/model.pb.h"
 
 

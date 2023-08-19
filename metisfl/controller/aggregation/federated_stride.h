@@ -4,7 +4,7 @@
 
 #include "metisfl/controller/aggregation/aggregation_function.h"
 #include "metisfl/controller/aggregation/federated_rolling_average_base.h"
-#include "metisfl/proto/metis.pb.h"
+
 
 namespace metisfl::controller {
 
