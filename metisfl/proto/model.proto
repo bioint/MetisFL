@@ -52,13 +52,24 @@ message TensorSpec {
   bytes value = 4;
 }
 
+message PlaintextTensor {
+  TensorSpec tensor_spec = 1;
+}
+
+message CiphertextTensor {
+  TensorSpec tensor_spec = 1;
+}
+
 message Model {
   message Variable {
     string name = 1;
     bool trainable = 2;
     bool encrypted = 3;
-    TensorSpec tensor = 4;
-  }
+    oneof tensor {
+      PlaintextTensor plaintext_tensor = 4;
+      CiphertextTensor ciphertext_tensor = 5;
+    }
+}
   repeated Variable variables = 1;
 }
 
@@ -67,3 +78,4 @@ message FederatedModel {
   uint32 global_iteration = 2;
   Model model = 3;
 }
+

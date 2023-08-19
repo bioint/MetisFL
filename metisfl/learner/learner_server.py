@@ -62,29 +62,27 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         """Returns the health status of the server."""
 
         return service_common_pb2.HealthStatusResponse(
-            ack=service_common_pb2.Ack(
-                status=self._status == service_common_pb2.ServingStatus.SERVING,
-            )
+            status=self._status,
         )
 
     def GetModel(
         self,
-        request: learner_pb2.GetModelRequest,
+        _: service_common_pb2.Empty,
         context: Any
-    ) -> learner_pb2.GetModelResponse:
+    ) -> model_pb2.Model:
         """Initializes the weights of the model.
 
         Parameters
         ----------
-        request : learner_pb2.GetModelRequest
+        _ : service_common_pb2.Empty
             An empty request. No parameters are needed.
         context : Any
             The gRPC context of the request.
 
         Returns
         -------
-        learner_pb2.GetModelResponse
-            The response containing the model.
+        model_pb2.Model
+            The ProtoBuf object containing the model.
 
         """
         if not self._is_serving(context):
@@ -94,21 +92,19 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             learner=self._learner,
         )
 
-        return learner_pb2.GetModelResponse(
-            model=model,
-        )
+        return model
 
     def SetInitialWeights(
         self,
-        request: learner_pb2.SetInitialWeightsRequest,
+        model: model_pb2.Model,
         context: Any
-    ) -> learner_pb2.SetInitialWeightsResponse:
+    ) -> service_common_pb2.Ack:
         """Sets the initial weights of the model.
 
         Parameters
         ----------
-        request : learner_pb2.SetInitialWeightsRequest
-            The request containing the model.
+        request : model_pb2.Model
+            The ProtoBuf object containing the model.
         context : Any
             The gRPC context of the request.
 
@@ -123,14 +119,12 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         status = try_call_set_weights(
             learner=self._learner,
-            model=request.model,
+            model=model,
         )
 
-        return learner_pb2.SetInitialWeightsResponse(
-            ack=service_common_pb2.Ack(
-                status=status,
-                timestamp=Timestamp().GetCurrentTime(),
-            )
+        return service_common_pb2.Ack(
+            status=status,
+            timestamp=Timestamp().GetCurrentTime()
         )
 
     def Evaluate(
@@ -171,7 +165,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         self,
         request: learner_pb2.TrainRequest,
         context: Any
-    ) -> learner_pb2.TrainResponse:
+    ) -> service_common_pb2.Ack:
         """Training endpoint. Training happens asynchronously in a seperate process. 
             The Learner server responds with an acknoledgement after receiving the request.
             When training is done, the client calls the TrainDone Controller endpoint.
@@ -185,8 +179,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         Returns
         -------
-        learner_pb2.TrainResponse
-            The response containing the acknoledgement. Always returns an acknoledgement with status True.  
+        service_common_pb2.Ack
+            The response containing the acknoledgement. The acknoledgement contains the status, i.e. True if the training was started, False otherwise.
 
         """
         if not self._is_serving(context):
@@ -203,26 +197,20 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             callback=self._client.train_done,
         )
 
-        ack = service_common_pb2.Ack(
+        return service_common_pb2.Ack(
             status=True,
             timestamp=Timestamp().GetCurrentTime(),
         )
 
-        return learner_pb2.TrainResponse(
-            ack=ack,
-        )
-
-    def ShutDown(self) -> learner_pb2.ShutDownResponse:
+    def ShutDown(self) -> service_common_pb2.Ack:
         """Shuts down the server."""
 
         self._status = service_common_pb2.ServingStatus.NOT_SERVING
         self._shutdown_event.set()
 
-        return learner_pb2.ShutDownResponse(
-            ack=service_common_pb2.Ack(
-                status=True,
-                timestamp=Timestamp().GetCurrentTime(),
-            )
+        return service_common_pb2.Ack(
+            status=True,
+            timestamp=Timestamp().GetCurrentTime(),
         )
 
     def _is_serving(self, context) -> bool:

@@ -60,7 +60,7 @@ class GRPCControllerClient(object):
         request_retries=1,
         request_timeout=None,
         block: bool = True
-    ) -> controller_pb2.JoinFederationResponse:
+    ) -> service_common_pb2.Ack:
         """Sends a request to the controller to join the federation.
 
         Parameters
@@ -76,8 +76,8 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        controller_pb2.JoinFederationResponse
-            The response Proto object with the Ack, the assigned learner id and the auth token.
+        service_common_pb2.Ack  
+            The response Proto object with the Ack.
         """
         with self._get_client() as client:
             stub, schedule, _ = client
@@ -102,7 +102,7 @@ class GRPCControllerClient(object):
         request_retries=1,
         request_timeout=None,
         block=True
-    ) -> controller_pb2.LeaveFederationResponse:
+    ) -> service_common_pb2.Ack:
         """Sends a request to the Controller to leave the federation.
 
         Parameters
@@ -116,7 +116,7 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        controller_pb2.LeaveFederationResponse
+        service_common_pb2.Ack
             The response Proto object with the Ack.
         """
         with self._get_client() as client:
@@ -142,7 +142,7 @@ class GRPCControllerClient(object):
         request_retries=1,
         request_timeout=None,
         block=True
-    ) -> controller_pb2.TrainDoneResponse:
+    ) -> service_common_pb2.Ack:
         """Sends the completed task to the Controller.
 
         Parameters
@@ -162,7 +162,7 @@ class GRPCControllerClient(object):
 
         Returns
         -------
-        controller_pb2.TrainDoneResponse
+        service_common_pb2.Ack
             The response Proto object with the Ack.
         """
         with self._get_client() as client:
