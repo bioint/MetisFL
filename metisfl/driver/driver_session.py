@@ -1,9 +1,10 @@
 import random
+from time import sleep
 from typing import Dict, List, Union
 
 from ..encryption.homomorphic import HomomorphicEncryption
 from ..proto import model_pb2
-from ..utils.fedenv import FederationEnvironment
+from ..utils.fedenv import ClientParams, FederationEnvironment
 from ..utils.logger import MetisASCIIArt
 from .controller_client import GRPCControllerClient
 from .federation_monitor import FederationMonitor
@@ -22,21 +23,19 @@ class DriverSession(object):
         MetisASCIIArt.print()
 
         if isinstance(fedenv, str):
-            fed_env = FederationEnvironment.from_yaml(fedenv)
-        self._federation_environment = fed_env
+            fedenv = FederationEnvironment.from_yaml(fedenv)
+        self._federation_environment = fedenv
         self._num_learners = len(self._federation_environment.learners)
 
         global_config = self._federation_environment.global_train_config
-        self._homomorphic_encryption = HomomorphicEncryption(
-            batch_size=global_config.batch_size,
-            scaling_factor_bits=global_config.scaling_factor_bits,
-        )
 
         self._controller_client = self._create_controller_client()
         self._learner_clients = self._create_learner_clients()
         self._service_monitor = FederationMonitor(
-            federation_environment=self._federation_environment,
-            driver_controller_grpc_client=self._controller_client)
+            controller_client=self._controller_client,
+            termination_signals=self._federation_environment.termination_signals,
+            is_async=global_config.communication_protocol == "Asynchronous",
+        )
 
     def run(self) -> Dict:
         """Runs the federated training session.
@@ -60,11 +59,17 @@ class DriverSession(object):
         """
 
         learner_index = random.randint(0, self._num_learners - 1)
+        sleep(2)
         model = self._learner_clients[learner_index].get_model(
-            request_timeout=30)
+            request_timeout=30, request_retries=2, block=True)
 
         self._ship_model_to_learners(model=model, skip_learner=learner_index)
         self._ship_model_to_controller(model=model)
+
+    def start_training(self) -> None:
+        """Starts the federated training."""
+        # TODO: Ping controller and learners to check if they are alive.
+        self._controller_client.start_training()
 
     def monitor_federation(self) -> Dict:
         """Monitors the federation and returns the statistics. This is a blocking call.
@@ -94,10 +99,11 @@ class DriverSession(object):
         controller = self._federation_environment.controller
 
         return GRPCControllerClient(
-            server_hostname=controller.hostname,
-            server_port=controller.port,
-            root_certificate=controller.root_certificate,
-            max_workers=1
+            client_params=ClientParams(
+                hostname=controller.hostname,
+                port=controller.port,
+                root_certificate=controller.root_certificate,
+            )
         )
 
     def _create_learner_clients(self) -> List[GRPCLearnerClient]:
@@ -110,10 +116,12 @@ class DriverSession(object):
             learner = self._federation_environment.learners[idx]
 
             grpc_clients[idx] = GRPCLearnerClient(
-                server_hostname=learner.hostname,
-                server_port=learner.port,
-                root_certificate=learner.root_certificate,
-                max_workers=1)
+                client_params=ClientParams(
+                    hostname=learner.hostname,
+                    port=learner.port,
+                    root_certificate=learner.root_certificate,
+                ),
+            )
 
         return grpc_clients
 
@@ -125,7 +133,6 @@ class DriverSession(object):
         model : model_pb2.Model
             The Protobuf object containing the model to be shipped.
         """
-        model = self._homomorphic_encryption.encrypt(model=model)
 
         self._controller_client.set_initial_model(
             model=model,
@@ -141,12 +148,11 @@ class DriverSession(object):
         skip_learner : Optional[int], (default=None)
             The index of the learner to skip.
         """
-        model = self._homomorphic_encryption.encrypt(model=model)
 
         for idx in range(self._num_learners):
             if idx == skip_learner:
                 continue
 
-            self._learner_client[idx].set_initial_model(
+            self._learner_clients[idx].set_initial_model(
                 model=model,
             )

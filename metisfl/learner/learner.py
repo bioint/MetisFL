@@ -2,7 +2,9 @@
 """This module contains the abstract class for all MetisFL Learners."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple
+from typing import Any, Dict, Tuple
+
+from metisfl.utils.logger import MetisLogger
 
 from ..proto import learner_pb2
 from ..proto import model_pb2
@@ -14,30 +16,30 @@ class Learner(ABC):
     @abstractmethod
     def get_weights(self) -> model_pb2.Model:
         """Returns the weights of the model."""
-        pass
+        return model_pb2.Model()
 
     @abstractmethod
     def set_weights(self, model: model_pb2.Model) -> bool:
         """Sets the weights of the given model."""
-        pass
+        return False
 
     @abstractmethod
     def train(
         self,
         model: model_pb2.Model,
         params: learner_pb2.TrainParams
-    ) -> Tuple[model_pb2.Model, Dict[str]]:
+    ) -> Tuple[model_pb2.Model, Dict[str, Any]]:
         """Trains the given model using the given training parameters."""
-        pass
+        return model_pb2.Model(), {}
 
     @abstractmethod
     def evaluate(
         self,
         model: model_pb2.Model,
         params: learner_pb2.EvalParams
-    ) -> Dict[str]:
+    ) -> Dict[str, Any]:
         """Evaluates the given model using the given evaluation parameters."""
-        pass
+        return {}
 
 
 def has_get_weights(learner: Learner) -> bool:
@@ -79,15 +81,20 @@ def try_call_set_weights(
 ) -> bool:
     """Calls the set_weights method of the given learner if it exists, otherwise returns False."""
     if has_set_weights(learner):
-        return learner.set_weights(model)
+        status = learner.set_weights(model)
+        if status:
+            MetisLogger.info("Applied incoming weights")
+        else:
+            MetisLogger.info("Failed to apply incoming weights")
+        return status
     return False
 
 
 def try_call_train(
     learner: Learner,
     model: model_pb2.Model,
-    params: model_pb2.TrainParams
-) -> Tuple[model_pb2.Model, Dict[str]]:
+    params: learner_pb2.TrainParams
+) -> Tuple[model_pb2.Model, Dict[str, Any]]:
     """Calls the train method of the given learner if it exists, otherwise returns False."""
     if has_train(learner):
         return learner.train(model, params)
@@ -97,8 +104,8 @@ def try_call_train(
 def try_call_evaluate(
     learner: Learner,
     model: model_pb2.Model,
-    params: model_pb2.EvalParams
-) -> Dict[str]:
+    params: learner_pb2.EvalParams
+) -> Dict[str, Any]:
     """Calls the evaluate method of the given learner if it exists, otherwise returns None."""
     if has_evaluate(learner):
         return learner.evaluate(model, params)

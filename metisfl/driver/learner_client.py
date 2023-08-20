@@ -67,7 +67,7 @@ class GRPCLearnerClient(object):
 
             return schedule(_request, request_retries, request_timeout, block)
 
-    def set_initial_weights(
+    def set_initial_model(
         self,
         model: model_pb2.Model,
         request_retries: Optional[int] = 1,
@@ -96,8 +96,8 @@ class GRPCLearnerClient(object):
         with self._get_client() as client:
             stub, schedule, _ = client
 
-            def _request(_timeout=None):     
-                return stub.SetInitialWeights(model=model, timeout=_timeout)
+            def _request(_timeout=None):
+                return stub.SetInitialWeights(model, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 

@@ -48,6 +48,8 @@ class Controller {
   virtual absl::StatusOr<std::string> AddLearner(
       const LearnerDescriptor &learner) = 0;
 
+  virtual absl::Status StartTraining() = 0;
+
   virtual absl::Status RemoveLearner(const std::string &learner_id) = 0;
 
   virtual absl::Status TrainDone(const TrainDoneRequest &task) = 0;

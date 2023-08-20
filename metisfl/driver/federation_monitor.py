@@ -13,7 +13,7 @@ from ..utils.logger import MetisLogger
 class FederationMonitor:
 
     """A monitoring service for the federation."""
-    
+
     def __init__(
         self,
         termination_signals: TerminationSingals,
@@ -133,13 +133,14 @@ class FederationMonitor:
         statistics_pb = self._controller_client.get_statistics(
             local_task_backtracks=-1,
             metadata_backtracks=0,
-            community_model_backtracks=-1,
+            community_evaluation_backtracks=-1,
         )
 
         def msg_to_dict_fn(x): return MessageToDict(
             x, preserving_proto_field_name=True)
 
         statistics = {}
+        # FIXME:
         statistics["learners"] = msg_to_dict_fn(statistics_pb.learners)
         statistics["metadata"] = msg_to_dict_fn(statistics_pb.metadata)
         statistics["learners_task"] = msg_to_dict_fn(

@@ -16,6 +16,8 @@ service ControllerService {
 
   rpc LeaveFederation (LearnerId) returns (Ack) {}
 
+  rpc StartTraining (Empty) returns (Ack) {}
+
   rpc TrainDone (TrainDoneRequest) returns (Ack) {}
 
   rpc GetStatistics (GetStatisticsRequest) returns (GetStatisticsResponse) {}

@@ -16,9 +16,9 @@ class HomomorphicEncryption(object):
     """Homomorphic Encryption class using Palisade. Wraps the C++ implementation of Palisade."""
 
     def __init__(
-        self, 
+        self,
         batch_size: int,
-        scaling_factor_bits: int
+        scaling_factor_bits: int,
     ):
         """Initializes the HomomorphicEncryption object. 
 
@@ -28,6 +28,9 @@ class HomomorphicEncryption(object):
             The batch size of the encryption scheme.
         scaling_factor_bits : int
             The number of bits to use for the scaling factor.
+        crypto_context_path : str, optional
+            The path to the crypto context file, by default None
+
         """
         self._he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
         self._setup_fhe()
@@ -43,18 +46,16 @@ class HomomorphicEncryption(object):
         else:
             fhe_dir = config.get_fhe_dir()
             self._he_scheme.gen_crypto_context_and_keys(fhe_dir)
-            
 
     def decrypt(self, model: model_pb2.Model) -> model_pb2.Model:
-        
+
         for var in model.variables:
             if var.encryped:
-                decoded_value = self._he_scheme.decrypt(var.tensor.value, var.tensor.length, 1)
+                decoded_value = self._he_scheme.decrypt(
+                    var.tensor.value, var.tensor.length, 1)
                 var.tensor.value = decoded_value
                 var.encrypted = False
-                
-                
-        
+
         variables = model.variables
         var_names, var_trainables, var_nps = list(), list(), list()
         for var in variables:
@@ -85,7 +86,7 @@ class HomomorphicEncryption(object):
                                       weights_values=var_nps)
 
     def encrypt(self, model: model_pb2.Model) -> model_pb2.Model:
-        # FIXME: 
+        # FIXME:
         weights_names = weights_descriptor.weights_names
         weights_trainable = weights_descriptor.weights_trainable
         weights_values = weights_descriptor.weights_values

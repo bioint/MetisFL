@@ -52,10 +52,8 @@ class ControllerDefaultImpl : public Controller {
     return community_model_;
   }
 
-  // TODO(stripeli): add admin auth token support for replacing model.
-  // TODO: do we need the number of contributors? this is at init only
   absl::Status SetInitialModel(const Model &model) override {
-    PLOG(INFO) << "Replacing community model.";
+    PLOG(INFO) << "Received initial model from admin.";
     *community_model_.mutable_model() = model;
     return absl::OkStatus();
   }
@@ -64,24 +62,16 @@ class ControllerDefaultImpl : public Controller {
       const LearnerDescriptor &learner) override {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
-    if (learner.hostname().empty() || learner.port() <= 0)
-      return absl::InvalidArgumentError("Hostname and port must be provided.");
-
-    if (learner.num_training_examples() <= 0)
-      return absl::InvalidArgumentError("Learner training examples <= 0.");
-
-    // TODO(stripeli): Condition to ping the connected learner (hostname:port).
     const std::string learner_id =
         GenerateLearnerId(learner.hostname(), learner.port());
 
-    if (learners_.contains(learner_id))
+    if (learners_.contains(learner_id)) {
+      PLOG(INFO) << "Learner " << learner_id << " re-joined Federation.";
       return absl::AlreadyExistsError("Learner has already joined.");
+    }
 
     learners_[learner_id] = learner;
     learners_stub_[learner_id] = CreateLearnerStub(learner_id);
-
-    scheduling_pool_.push_task(
-        [this, learner_id] { ScheduleInitialTask(learner_id); });
 
     return learner_id;
   }
@@ -102,6 +92,18 @@ class ControllerDefaultImpl : public Controller {
       return absl::OkStatus();
     } else
       return absl::NotFoundError("Learner is not part of the federation.");
+  }
+
+  absl::Status StartTraining() override {
+    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
+
+    // Schedule initial tasks for all learners.
+    for (const auto &[learner_id, learner] : learners_) {
+      scheduling_pool_.push_task(
+          [this, learner_id] { ScheduleInitialTask(learner_id); });
+    }
+
+    return absl::OkStatus();
   }
 
   absl::Status TrainDone(const TrainDoneRequest &task) override {
@@ -527,11 +529,6 @@ class ControllerDefaultImpl : public Controller {
   void SendRunTasks(std::vector<std::string> &learners,
                     const FederatedModel &model,
                     FederatedTaskRuntimeMetadata &meta) {
-    // Our goal is to send the RunTask request to each learner in parallel.
-    // We use a single thread to asynchronously send all run task requests
-    // and add every submitted RunTask request inside a grpc::CompletionQueue.
-    // The implementation follows the (recommended) async grpc client:
-    // https://github.com/grpc/grpc/blob/master/examples/cpp/helloworld/greeter_async_client2.cc
     for (const auto &learner_id : learners) {
       (*meta.mutable_train_task_submitted_at())[learner_id] =
           TimeUtil::GetCurrentTime();

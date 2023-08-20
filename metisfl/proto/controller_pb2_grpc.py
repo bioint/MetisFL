@@ -36,6 +36,11 @@ class ControllerServiceStub(object):
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.LearnerId.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
                 )
+        self.StartTraining = channel.unary_unary(
+                '/metisfl.ControllerService/StartTraining',
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+                )
         self.TrainDone = channel.unary_unary(
                 '/metisfl.ControllerService/TrainDone',
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.SerializeToString,
@@ -80,6 +85,12 @@ class ControllerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def StartTraining(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def TrainDone(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -119,6 +130,11 @@ def add_ControllerServiceServicer_to_server(servicer, server):
             'LeaveFederation': grpc.unary_unary_rpc_method_handler(
                     servicer.LeaveFederation,
                     request_deserializer=metisfl_dot_proto_dot_controller__pb2.LearnerId.FromString,
+                    response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
+            ),
+            'StartTraining': grpc.unary_unary_rpc_method_handler(
+                    servicer.StartTraining,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
                     response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
             ),
             'TrainDone': grpc.unary_unary_rpc_method_handler(
@@ -210,6 +226,23 @@ class ControllerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/LeaveFederation',
             metisfl_dot_proto_dot_controller__pb2.LearnerId.SerializeToString,
+            metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def StartTraining(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/StartTraining',
+            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
             metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

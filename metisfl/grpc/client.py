@@ -2,15 +2,13 @@
 
 import queue
 import time
-from ast import Tuple
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Callable, Iterator, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 import grpc
 from pebble import ThreadPool
 
-from ..proto import controller_pb2_grpc
 from ..utils.fedenv import ClientParams
 from ..utils.logger import MetisLogger
 from .common import GRPC_MAX_MESSAGE_LENGTH, get_endpoint
@@ -28,7 +26,8 @@ def create_channel(
     server_address : str
         The server address in the form of "hostname:port".
     root_certificate : Optional[Union[str, bytes]], optional
-        The root certificate, either as a string or bytes, by default None. If None, the connection is insecure.
+        The root certificate, either as a string or bytes, by default None. 
+        If None, the connection is insecure.
     max_message_length : Optional[int], optional
         The maximum message length, by default GRPC_MAX_MESSAGE_LENGTH
 
@@ -48,16 +47,13 @@ def create_channel(
 
     if root_certificate is not None:
         ssl_channel_credentials = grpc.ssl_channel_credentials(
-            root_certificate)
+            root_certificates=root_certificate,
+        )
         channel = grpc.secure_channel(
             server_address, ssl_channel_credentials, options=options
         )
-        MetisLogger.info(
-            "Opened secure gRPC connection using given certificates")
     else:
         channel = grpc.insecure_channel(server_address, options=options)
-        MetisLogger.info(
-            "Opened insecure gRPC connection (no certificates given)")
 
     return channel
 
@@ -68,13 +64,7 @@ def get_client(
     stub_class: Callable,
     max_message_length: int = GRPC_MAX_MESSAGE_LENGTH,
     max_workers=1
-) -> Iterator[
-    Tuple[
-        controller_pb2_grpc.ControllerServiceStub,
-        Callable,
-        Callable
-    ]
-]:
+):
     """Gets a gRPC client for the given server hostname/port and stub class.
 
     Parameters

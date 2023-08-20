@@ -96,6 +96,37 @@ class GRPCControllerClient(object):
 
             return schedule(_request, request_retries, request_timeout, block)
 
+    def start_training(
+        self,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
+    ) -> service_common_pb2.Ack:
+        """Starts the federated training.
+
+        Parameters
+        ----------
+        request_retries : Optional[int], optional
+            The number of retries, by default 1
+        request_timeout : Optional[int], optional
+            The timeout in seconds, by default None
+        block : Optional[bool], optional
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            The response Proto object with the ack from the controller.
+        """
+
+        with self._get_client() as client:
+            stub, schedule, _ = client
+
+            def _request(_timeout=None):
+                return stub.StartTraining(service_common_pb2.StartTrainingRequest(), timeout=_timeout)
+
+            return schedule(_request, request_retries, request_timeout, block)
+
     def get_statistics(
         self,
         community_evaluation_backtracks: int,

@@ -138,12 +138,18 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
     return Status::OK;
   }
 
+  Status StartTraining(ServerContext *context, const Empty *request,
+                       Ack *ack) override {
+    const auto status = controller_->StartTraining();
+    ack->set_status(true);
+    return Status::OK;
+  }
+
   Status LeaveFederation(ServerContext *context, const LearnerId *learnerId,
                          Ack *ack) override {
     if (learnerId->id().empty()) {
       ack->set_status(false);
-      return {StatusCode::INVALID_ARGUMENT,
-              "Learner id and authentication token cannot be empty."};
+      return {StatusCode::INVALID_ARGUMENT, "Learner id  cannot be empty."};
     }
 
     const auto del_status = controller_->RemoveLearner(learnerId->id());

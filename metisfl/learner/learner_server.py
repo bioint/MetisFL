@@ -10,7 +10,8 @@ from ..grpc.server import get_server
 from ..proto import (learner_pb2, learner_pb2_grpc, model_pb2,
                      service_common_pb2)
 from ..utils.fedenv import ServerParams
-from .controller_client import GRPCControllerClient
+from ..utils.logger import MetisLogger
+from .controller_client import GRPCClient
 from .learner import (Learner, try_call_evaluate, try_call_get_weights,
                       try_call_set_weights, try_call_train)
 from .task_manager import TaskManager
@@ -21,9 +22,9 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
     def __init__(
         self,
         learner: Learner,
-        client: GRPCControllerClient,
+        client: GRPCClient,
         task_manager: TaskManager,
-        learner_params: ServerParams,
+        server_params: ServerParams,
     ):
         """The Learner server. Impliments the LearnerServiceServicer endponits.
 
@@ -31,7 +32,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         ----------
         learner : Learner
             The Learner object. Must impliment the Learner interface.
-        learner_params : ServerParams
+        server_params : ServerParams
             The server parameters of the Learner server.
         task_manager : TaskManager
             The task manager object. Udse to run tasks in a pool of workers.
@@ -45,18 +46,28 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         self._status = service_common_pb2.ServingStatus.UNKNOWN
         self._shutdown_event = threading.Event()
+        self._server_params = server_params
 
         self._server = get_server(
-            server_params=learner_params,
+            server_params=server_params,
             servicer=self,
             add_servicer_to_server_fn=learner_pb2_grpc.add_LearnerServiceServicer_to_server,
         )
 
     def start(self):
-        """Starts the server."""
+        """Starts the server. This is a blocking call and will block until the server is shutdown."""
+
         self._server.start()
-        self._status = service_common_pb2.ServingStatus.SERVING
-        self._shutdown_event.wait()
+
+        if self._server:
+            self._status = service_common_pb2.ServingStatus.SERVING
+            MetisLogger.info("Learner server started. Listening on: {}:{}".format(
+                self._server_params.hostname,
+                self._server_params.port,
+            ))
+            self._shutdown_event.wait()
+        else:
+            MetisLogger.error("Learner server failed to start.")
 
     def GetHealthStatus(self) -> service_common_pb2.HealthStatusResponse:
         """Returns the health status of the server."""
@@ -216,7 +227,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
     def _is_serving(self, context) -> bool:
         """Returns True if the server is serving, False otherwise."""
 
-        if self._not_serving_event.is_set():
+        if self._status != service_common_pb2.ServingStatus.SERVING:
             context.set_code(grpc.StatusCode.UNAVAILABLE)
             return False
         return True

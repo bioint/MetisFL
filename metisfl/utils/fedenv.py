@@ -25,7 +25,8 @@ class TerminationSingals(object):
     execution_cutoff_time_mins : Optional[int], (default=None)
         Maximum execution time in minutes. 
     evaluation_metric : Optional[str], (default=None)
-        The evaluation metric to use for early stopping. The metric must be one of the following: ["accuracy"].
+        The evaluation metric to use for early stopping. 
+        The metric must be one returned by the Learner train() method.
     evaluation_metric_cutoff_score : Optional[float], (default=None)
         The evaluation metric cutoff score for early stopping.
 
@@ -35,20 +36,17 @@ class TerminationSingals(object):
         If the evaluation metric is not one of the following: ["accuracy"].
     """
 
-    federation_rounds: int
-    execution_cutoff_time_mins: int
-    evaluation_metric: str
-    evaluation_metric_cutoff_score: float
+    federation_rounds:  Optional[int] = None
+    execution_cutoff_time_mins: Optional[int] = None
+    evaluation_metric: Optional[str] = None
+    evaluation_metric_cutoff_score: Optional[float] = None
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'TerminationSingals':
         yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
-    def __post_init__(self) -> None:
-        if self.evaluation_metric not in METRICS:
-            raise ValueError(
-                f"Invalid evaluation metric: {self.evaluation_metric}")
+        # FIXME make sure one is defined
 
 
 @dataclass
@@ -171,13 +169,13 @@ class LocalTrainConfig(object):
     ----------
     batch_size : int
         The batch size te be used by the Leareners
-    local_epochs : int
+    epochs : int
         The number of local epochs to be used by the Leareners.
 
     """
 
     batch_size: int
-    local_epochs: int
+    epochs: int
 
     @classmethod
     def from_yaml(cls, yaml_dict):

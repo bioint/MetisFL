@@ -5,18 +5,23 @@ import grpc
 from ..grpc.client import get_client
 from ..proto import (controller_pb2, controller_pb2_grpc, model_pb2,
                      service_common_pb2)
-from ..utils.fedenv import ClientParams
+from ..utils.fedenv import ClientParams, ServerParams
 from ..utils.logger import MetisLogger
 
 
-class GRPCControllerClient(object):
+def read_certificate(fp: str) -> bytes:
+    if fp is None:
+        return None
+    with open(fp, "rb") as f:
+        return f.read()
+
+
+class GRPCClient(object):
 
     def __init__(
         self,
         client_params: ClientParams,
         learner_id_fp: str,
-        auth_token_fp: str,
-        learner_cert_fp: Optional[str] = None,
         max_workers: Optional[int] = 1
     ):
         """A gRPC client used from the Learner to communicate with the Controller.
@@ -24,23 +29,16 @@ class GRPCControllerClient(object):
         Parameters
         ----------
         client_params : ClientParams
-            The client parameters. 
+            The client parameters. Used by the learner to connect to the Controller.
         learner_id_fp : str
             The file where the learner id is stored. 
         auth_token_fp : str
             The file where the auth token is stored.
-        learner_cert_fp : Optional[str], (default: None)
-            The learner certificate file path. This is sent to the controller when joining the federation
-            to be used by the Controller gRPC client when connecting to the Learner server.
-            If None; the connection to the Learner server is insecure.
-            # TODO: clarify if this is the root or the public certificate.
         max_workers : Optional[int], (default: 1)
             The maximum number of workers for the client ThreadPool, by default 1
         """
         self._client_params = client_params
         self._learner_id_fp = learner_id_fp
-        self._auth_token_fp = auth_token_fp
-        self._learner_cert_fp = learner_cert_fp
         self._max_workers = max_workers
 
         # Must be initialized after joining the federation
@@ -57,9 +55,10 @@ class GRPCControllerClient(object):
     def join_federation(
         self,
         num_training_examples: int,
-        request_retries=1,
-        request_timeout=None,
-        block: bool = True
+        server_params: ServerParams,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
     ) -> service_common_pb2.Ack:
         """Sends a request to the controller to join the federation.
 
@@ -67,6 +66,9 @@ class GRPCControllerClient(object):
         ----------
         num_training_examples : int
             The number of training examples of the local dataset.
+        server_params : ServerParams
+            The server parameters of the Learner server. They are sent to the Controller 
+            when joining the federation so that the Controller can connect to the Learner Server.
         request_retries : int, optional
             The number of retries, by default 1
         request_timeout : int, optional
@@ -83,13 +85,14 @@ class GRPCControllerClient(object):
             stub, schedule, _ = client
 
             def _request(_timeout=None):
-                cert_bytes = open(
-                    self._learner_cert_fp, "rb").read()
 
-                request = controller_pb2.JoinFederationRequest(
-                    hostname=self._server_params.hostname,
-                    port=self._server_params.port,
-                    public_certificate_bytes=cert_bytes,
+                request = controller_pb2.LearnerDescriptor(
+                    hostname=server_params.hostname,
+                    port=server_params.port,
+                    root_certificate_bytes=read_certificate(
+                        server_params.root_certificate),
+                    public_certificate_bytes=read_certificate(
+                        server_params.server_certificate),
                     num_training_examples=num_training_examples
                 )
 
@@ -185,23 +188,40 @@ class GRPCControllerClient(object):
     def _join_federation(
         self,
         stub: controller_pb2_grpc.ControllerServiceStub,
-        request: controller_pb2.JoinFederationRequest,
-        timeout=None
-    ):
+        request: controller_pb2.LearnerDescriptor,
+        timeout: Optional[int] = None
+    ) -> None:
+        """Sends a request to the Controller to join the federation.
+
+        Parameters
+        ----------
+        stub : controller_pb2_grpc.ControllerServiceStub
+            The gRPC stub.
+        request : controller_pb2.LearnerDescriptor
+            The request Proto object with the LearnerDescriptor.
+        timeout : Optional[int], optional
+            The timeout in seconds, by default None
+
+        """
         try:
             response = stub.JoinFederation(request, timeout=timeout)
-            learner_id, auth_token, status = \
-                response.learner_id, response.auth_token, response.ack.status
+            learner_id = response.id
+
             open(self._learner_id_fp, "w+").write(learner_id.strip())
-            open(self._auth_token_fp, "w+").write(auth_token.strip())
+            self._learner_id = learner_id
+
+            MetisLogger.info(
+                "Joined federation with learner id: {}".format(learner_id))
         except grpc.RpcError as rpc_error:
+
             if rpc_error.code() == grpc.StatusCode.ALREADY_EXISTS:
+
                 learner_id = open(self._learner_id_fp, "r").read().strip()
-                auth_token = open(self._auth_token_fp, "r").read().strip()
-                status = True
+                self._learner_id = learner_id
+                MetisLogger.info(
+                    "Rejoined federation with learner id: {}".format(learner_id))
+
             else:
                 MetisLogger.fatal("Unhandled grpc error: {}".format(rpc_error))
-            # FIXME: this is going to crash in the else case
         self._learner_id = learner_id
-        self._auth_token = auth_token
-        return learner_id, auth_token, status
+        return learner_id
