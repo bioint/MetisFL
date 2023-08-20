@@ -137,15 +137,13 @@ FederatedModel FederatedAverage::Aggregate(
     } else {
       PLOG(FATAL) << "Unsupported tensor data type.";
     }
-    // Convert the char vector representing the aggregated result to string and
-    // assign to tensor.
+
     std::string serialized_tensor_str(serialized_tensor.begin(),
                                       serialized_tensor.end());
     *global_model.mutable_model()->mutable_tensors(var_idx)->mutable_value() =
         serialized_tensor_str;
   }
 
-  // Sets the number of contributors to the number of input models.
   global_model.set_num_contributors(pairs.size());
   return global_model;
 }

@@ -798,46 +798,18 @@ class ControllerDefaultImpl : public Controller {
 
   void RecordCommunityModelSize(const FederatedModel &model,
                                 const uint32_t &metadata_ref_idx) {
-    /*
-     * Here, we record all tensor metadat associated with its size, non-zero and
-     * zero values.
-     */
     for (auto &tensor : model.model().tensors()) {
       if (!tensor.encrypted()) {
-        auto data_type = tensor.type().type();
-        TensorQuantifier tensor_quantifier;
-        if (data_type == DType_Type_UINT8) {
-          tensor_quantifier = ::proto::QuantifyTensor<unsigned char>(tensor);
-        } else if (data_type == DType_Type_UINT16) {
-          tensor_quantifier = ::proto::QuantifyTensor<unsigned short>(tensor);
-        } else if (data_type == DType_Type_UINT32) {
-          tensor_quantifier = ::proto::QuantifyTensor<unsigned int>(tensor);
-        } else if (data_type == DType_Type_UINT64) {
-          tensor_quantifier = ::proto::QuantifyTensor<unsigned long>(tensor);
-        } else if (data_type == DType_Type_INT8) {
-          tensor_quantifier = ::proto::QuantifyTensor<signed char>(tensor);
-        } else if (data_type == DType_Type_INT16) {
-          tensor_quantifier = ::proto::QuantifyTensor<signed short>(tensor);
-        } else if (data_type == DType_Type_INT32) {
-          tensor_quantifier = ::proto::QuantifyTensor<signed int>(tensor);
-        } else if (data_type == DType_Type_INT64) {
-          tensor_quantifier = ::proto::QuantifyTensor<signed long>(tensor);
-        } else if (data_type == DType_Type_FLOAT32) {
-          tensor_quantifier = ::proto::QuantifyTensor<float>(tensor);
-        } else if (data_type == DType_Type_FLOAT64) {
-          tensor_quantifier = ::proto::QuantifyTensor<double>(tensor);
-        } else {
-          throw std::runtime_error("Unsupported tensor data type.");
-        }
+        metisfl::proto::ProtoSerde<> proto_serde =
+            metisfl::proto::GetProtoSerde(tensor.type().type());
+
+        TensorQuantifier tensor_quantifier = proto_serde.QuantifyTensor(tensor);
 
         *metadata_.at(metadata_ref_idx)
              .mutable_model_tensor_quantifiers()
              ->Add() = tensor_quantifier;
       } else {
         auto tensor_quantifier = metisfl::TensorQuantifier();
-        // Since the controller performs the aggregation in an encrypted space,
-        // it does not have access to the plaintext model and therefore we
-        // cannot find the number of zero and non-zero elements.
         tensor_quantifier.set_tensor_size_bytes(tensor.ByteSizeLong());
         *metadata_.at(metadata_ref_idx)
              .mutable_model_tensor_quantifiers()

@@ -58,52 +58,9 @@ std::string MergeTensors(const Tensor &tensor_spec_left,
    * MergeTensors function by first casting it to the given data type. Then
    * returns the aggregated tensor.
    */
-  auto num_values_left = tensor_spec_left.length();
-  auto num_values_right = tensor_spec_right.length();
 
-  auto data_type_left = tensor_spec_left.type().type();
-  auto data_type_right = tensor_spec_right.type().type();
-
-  if (num_values_left != num_values_right)
-    throw std::runtime_error("Left and right tensors have different sizes");
-  if (data_type_left != data_type_right)
-    throw std::runtime_error(
-        "Left and right tensors have different data types");
-
-  std::string aggregated_result;
-  if (data_type_left == DType_Type_UINT8) {
-    aggregated_result = MergeTensors<unsigned char>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_UINT16) {
-    aggregated_result = MergeTensors<unsigned short>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_UINT32) {
-    aggregated_result = MergeTensors<unsigned int>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_UINT64) {
-    aggregated_result = MergeTensors<unsigned long>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_INT8) {
-    aggregated_result = MergeTensors<signed char>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_INT16) {
-    aggregated_result = MergeTensors<signed short>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_INT32) {
-    aggregated_result = MergeTensors<signed int>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_INT64) {
-    aggregated_result = MergeTensors<signed long>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_FLOAT32) {
-    aggregated_result = MergeTensors<float>(tensor_spec_left, tensor_spec_right,
-                                            scaling_factor_right, op);
-  } else if (data_type_left == DType_Type_FLOAT64) {
-    aggregated_result = MergeTensors<double>(
-        tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-  } else {
-    throw std::runtime_error("Unsupported tensor data type.");
-  }
+  std::string aggregated_result = MergeTensors(
+      tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
 
   return aggregated_result;
 }
