@@ -14,17 +14,14 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\"\xce\x02\n\x05\x44Type\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x13.metisfl.DType.TypeR\x04type\x12\x37\n\nbyte_order\x18\x02 \x01(\x0e\x32\x18.metisfl.DType.ByteOrderR\tbyteOrder\x12#\n\rfortran_order\x18\x03 \x01(\x08R\x0c\x66ortranOrder\"z\n\x04Type\x12\x08\n\x04INT8\x10\x00\x12\t\n\x05INT16\x10\x01\x12\t\n\x05INT32\x10\x02\x12\t\n\x05INT64\x10\x03\x12\t\n\x05UINT8\x10\x04\x12\n\n\x06UINT16\x10\x05\x12\n\n\x06UINT32\x10\x06\x12\n\n\x06UINT64\x10\x07\x12\x0b\n\x07\x46LOAT32\x10\x08\x12\x0b\n\x07\x46LOAT64\x10\t\"B\n\tByteOrder\x12\x06\n\x02NA\x10\x00\x12\x14\n\x10\x42IG_ENDIAN_ORDER\x10\x01\x12\x17\n\x13LITTLE_ENDIAN_ORDER\x10\x02\"\xbb\x01\n\x10TensorQuantifier\x12-\n\x10tensor_non_zeros\x18\x01 \x01(\rH\x00R\x0etensorNonZeros\x88\x01\x01\x12&\n\x0ctensor_zeros\x18\x02 \x01(\rH\x01R\x0btensorZeros\x88\x01\x01\x12*\n\x11tensor_size_bytes\x18\x03 \x01(\rR\x0ftensorSizeBytesB\x13\n\x11_tensor_non_zerosB\x0f\n\r_tensor_zeros\"~\n\nTensorSpec\x12\x16\n\x06length\x18\x01 \x01(\rR\x06length\x12\x1e\n\ndimensions\x18\x02 \x03(\x03R\ndimensions\x12\"\n\x04type\x18\x03 \x01(\x0b\x32\x0e.metisfl.DTypeR\x04type\x12\x14\n\x05value\x18\x04 \x01(\x0cR\x05value\"G\n\x0fPlaintextTensor\x12\x34\n\x0btensor_spec\x18\x01 \x01(\x0b\x32\x13.metisfl.TensorSpecR\ntensorSpec\"H\n\x10\x43iphertextTensor\x12\x34\n\x0btensor_spec\x18\x01 \x01(\x0b\x32\x13.metisfl.TensorSpecR\ntensorSpec\"\xb6\x02\n\x05Model\x12\x35\n\tvariables\x18\x01 \x03(\x0b\x32\x17.metisfl.Model.VariableR\tvariables\x1a\xf5\x01\n\x08Variable\x12\x12\n\x04name\x18\x01 \x01(\tR\x04name\x12\x1c\n\ttrainable\x18\x02 \x01(\x08R\ttrainable\x12\x1c\n\tencrypted\x18\x03 \x01(\x08R\tencrypted\x12\x45\n\x10plaintext_tensor\x18\x04 \x01(\x0b\x32\x18.metisfl.PlaintextTensorH\x00R\x0fplaintextTensor\x12H\n\x11\x63iphertext_tensor\x18\x05 \x01(\x0b\x32\x19.metisfl.CiphertextTensorH\x00R\x10\x63iphertextTensorB\x08\n\x06tensor\"\x8c\x01\n\x0e\x46\x65\x64\x65ratedModel\x12)\n\x10num_contributors\x18\x01 \x01(\rR\x0fnumContributors\x12)\n\x10global_iteration\x18\x02 \x01(\rR\x0fglobalIteration\x12$\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.ModelR\x05modelb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\"\xce\x02\n\x05\x44Type\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x13.metisfl.DType.TypeR\x04type\x12\x37\n\nbyte_order\x18\x02 \x01(\x0e\x32\x18.metisfl.DType.ByteOrderR\tbyteOrder\x12#\n\rfortran_order\x18\x03 \x01(\x08R\x0c\x66ortranOrder\"z\n\x04Type\x12\x08\n\x04INT8\x10\x00\x12\t\n\x05INT16\x10\x01\x12\t\n\x05INT32\x10\x02\x12\t\n\x05INT64\x10\x03\x12\t\n\x05UINT8\x10\x04\x12\n\n\x06UINT16\x10\x05\x12\n\n\x06UINT32\x10\x06\x12\n\n\x06UINT64\x10\x07\x12\x0b\n\x07\x46LOAT32\x10\x08\x12\x0b\n\x07\x46LOAT64\x10\t\"B\n\tByteOrder\x12\x06\n\x02NA\x10\x00\x12\x14\n\x10\x42IG_ENDIAN_ORDER\x10\x01\x12\x17\n\x13LITTLE_ENDIAN_ORDER\x10\x02\"\xbb\x01\n\x10TensorQuantifier\x12-\n\x10tensor_non_zeros\x18\x01 \x01(\rH\x00R\x0etensorNonZeros\x88\x01\x01\x12&\n\x0ctensor_zeros\x18\x02 \x01(\rH\x01R\x0btensorZeros\x88\x01\x01\x12*\n\x11tensor_size_bytes\x18\x03 \x01(\rR\x0ftensorSizeBytesB\x13\n\x11_tensor_non_zerosB\x0f\n\r_tensor_zeros\"\x98\x01\n\x06Tensor\x12\x1c\n\tencrypted\x18\x01 \x01(\x08R\tencrypted\x12\x16\n\x06length\x18\x02 \x01(\rR\x06length\x12\x1e\n\ndimensions\x18\x03 \x03(\x03R\ndimensions\x12\"\n\x04type\x18\x04 \x01(\x0b\x32\x0e.metisfl.DTypeR\x04type\x12\x14\n\x05value\x18\x05 \x01(\x0cR\x05value\"2\n\x05Model\x12)\n\x07tensors\x18\x01 \x03(\x0b\x32\x0f.metisfl.TensorR\x07tensors\"\x8c\x01\n\x0e\x46\x65\x64\x65ratedModel\x12)\n\x10num_contributors\x18\x01 \x01(\rR\x0fnumContributors\x12)\n\x10global_iteration\x18\x02 \x01(\rR\x0fglobalIteration\x12$\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.ModelR\x05modelb\x06proto3')
 
 
 
 _DTYPE = DESCRIPTOR.message_types_by_name['DType']
 _TENSORQUANTIFIER = DESCRIPTOR.message_types_by_name['TensorQuantifier']
-_TENSORSPEC = DESCRIPTOR.message_types_by_name['TensorSpec']
-_PLAINTEXTTENSOR = DESCRIPTOR.message_types_by_name['PlaintextTensor']
-_CIPHERTEXTTENSOR = DESCRIPTOR.message_types_by_name['CiphertextTensor']
+_TENSOR = DESCRIPTOR.message_types_by_name['Tensor']
 _MODEL = DESCRIPTOR.message_types_by_name['Model']
-_MODEL_VARIABLE = _MODEL.nested_types_by_name['Variable']
 _FEDERATEDMODEL = DESCRIPTOR.message_types_by_name['FederatedModel']
 _DTYPE_TYPE = _DTYPE.enum_types_by_name['Type']
 _DTYPE_BYTEORDER = _DTYPE.enum_types_by_name['ByteOrder']
@@ -42,41 +39,19 @@ TensorQuantifier = _reflection.GeneratedProtocolMessageType('TensorQuantifier', 
   })
 _sym_db.RegisterMessage(TensorQuantifier)
 
-TensorSpec = _reflection.GeneratedProtocolMessageType('TensorSpec', (_message.Message,), {
-  'DESCRIPTOR' : _TENSORSPEC,
+Tensor = _reflection.GeneratedProtocolMessageType('Tensor', (_message.Message,), {
+  'DESCRIPTOR' : _TENSOR,
   '__module__' : 'metisfl.proto.model_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.TensorSpec)
+  # @@protoc_insertion_point(class_scope:metisfl.Tensor)
   })
-_sym_db.RegisterMessage(TensorSpec)
-
-PlaintextTensor = _reflection.GeneratedProtocolMessageType('PlaintextTensor', (_message.Message,), {
-  'DESCRIPTOR' : _PLAINTEXTTENSOR,
-  '__module__' : 'metisfl.proto.model_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.PlaintextTensor)
-  })
-_sym_db.RegisterMessage(PlaintextTensor)
-
-CiphertextTensor = _reflection.GeneratedProtocolMessageType('CiphertextTensor', (_message.Message,), {
-  'DESCRIPTOR' : _CIPHERTEXTTENSOR,
-  '__module__' : 'metisfl.proto.model_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.CiphertextTensor)
-  })
-_sym_db.RegisterMessage(CiphertextTensor)
+_sym_db.RegisterMessage(Tensor)
 
 Model = _reflection.GeneratedProtocolMessageType('Model', (_message.Message,), {
-
-  'Variable' : _reflection.GeneratedProtocolMessageType('Variable', (_message.Message,), {
-    'DESCRIPTOR' : _MODEL_VARIABLE,
-    '__module__' : 'metisfl.proto.model_pb2'
-    # @@protoc_insertion_point(class_scope:metisfl.Model.Variable)
-    })
-  ,
   'DESCRIPTOR' : _MODEL,
   '__module__' : 'metisfl.proto.model_pb2'
   # @@protoc_insertion_point(class_scope:metisfl.Model)
   })
 _sym_db.RegisterMessage(Model)
-_sym_db.RegisterMessage(Model.Variable)
 
 FederatedModel = _reflection.GeneratedProtocolMessageType('FederatedModel', (_message.Message,), {
   'DESCRIPTOR' : _FEDERATEDMODEL,
@@ -96,16 +71,10 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _DTYPE_BYTEORDER._serialized_end=373
   _TENSORQUANTIFIER._serialized_start=376
   _TENSORQUANTIFIER._serialized_end=563
-  _TENSORSPEC._serialized_start=565
-  _TENSORSPEC._serialized_end=691
-  _PLAINTEXTTENSOR._serialized_start=693
-  _PLAINTEXTTENSOR._serialized_end=764
-  _CIPHERTEXTTENSOR._serialized_start=766
-  _CIPHERTEXTTENSOR._serialized_end=838
-  _MODEL._serialized_start=841
-  _MODEL._serialized_end=1151
-  _MODEL_VARIABLE._serialized_start=906
-  _MODEL_VARIABLE._serialized_end=1151
-  _FEDERATEDMODEL._serialized_start=1154
-  _FEDERATEDMODEL._serialized_end=1294
+  _TENSOR._serialized_start=566
+  _TENSOR._serialized_end=718
+  _MODEL._serialized_start=720
+  _MODEL._serialized_end=770
+  _FEDERATEDMODEL._serialized_start=773
+  _FEDERATEDMODEL._serialized_end=913
 # @@protoc_insertion_point(module_scope)

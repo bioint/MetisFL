@@ -5,17 +5,21 @@ import numpy as np
 from metisfl.proto.proto_messages_factory import ModelProtoMessages
 
 
-class TensorSpecProtoTest(unittest.TestCase):
+class tensorsProtoTest(unittest.TestCase):
 
     def _generate_and_validate_np_array(self, dtype):
         original_array = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=dtype)
         print(original_array)
-        tensor_spec = ModelProtoMessages.TensorSpecProto.numpy_array_to_proto_tensor_spec(original_array)
-        print(tensor_spec)
-        print(tensor_spec.value)
-        converted_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(tensor_spec)
-        self.assertTrue(np.array_equal(original_array, converted_array))  # tests elements and shape equality
-        self.assertTrue(original_array.dtype.byteorder == converted_array.dtype.byteorder)  # tests endian value
+        tensor = ModelProtoMessages.tensorsProto.numpy_array_to_proto_tensor_spec(
+            original_array)
+        print(tensor)
+        print(tensor.value)
+        converted_array = ModelProtoMessages.tensorsProto.proto_tensor_spec_to_numpy_array(
+            tensor)
+        # tests elements and shape equality
+        self.assertTrue(np.array_equal(original_array, converted_array))
+        self.assertTrue(original_array.dtype.byteorder ==
+                        converted_array.dtype.byteorder)  # tests endian value
 
     def test_array_dtype_i1(self):
         self._generate_and_validate_np_array("i1")

@@ -22,7 +22,7 @@ variables {
   name: "var1"
   trainable: true
   ciphertext_tensor {
-    tensor_spec {
+    tensor {
       length: 10
       dimensions: 10
       type {
@@ -82,7 +82,7 @@ TEST_F(PWATest, PrivateWeightedAggregationCKKS) /* NOLINT */ {
   auto pwa = PWA(he_scheme_config);
   auto federated_model = pwa.Aggregate(to_aggregate);
   auto aggregated_ciphertext =
-    federated_model.model().variables().at(0).ciphertext_tensor().tensor_spec().value();
+    federated_model.model().variables().at(0).ciphertext_tensor().tensor().value();
   auto aggregated_dec =
     ckks_scheme.Decrypt(aggregated_ciphertext, model_values.size());
 

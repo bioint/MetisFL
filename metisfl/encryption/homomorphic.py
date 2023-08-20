@@ -64,16 +64,16 @@ class HomomorphicEncryption(object):
 
             if var.HasField("ciphertext_tensor"):
                 assert self._he_scheme is not None, "Need encryption scheme to decrypt tensor."
-                tensor_spec = var.ciphertext_tensor.tensor_spec
+                tensor = var.ciphertext_tensor.tensor
                 decoded_value = self._he_scheme.decrypt(
-                    tensor_spec.value, tensor_spec.length, 1)
+                    tensor.value, tensor.length, 1)
                 np_array = \
-                    ModelProtoMessages.TensorSpecProto.proto_tensor_spec_with_list_values_to_numpy_array(
-                        tensor_spec, decoded_value)
+                    ModelProtoMessages.tensorsProto.proto_tensor_spec_with_list_values_to_numpy_array(
+                        tensor, decoded_value)
             elif var.HasField('plaintext_tensor'):
-                tensor_spec = var.plaintext_tensor.tensor_spec
-                np_array = ModelProtoMessages.TensorSpecProto.proto_tensor_spec_to_numpy_array(
-                    tensor_spec)
+                tensor = var.plaintext_tensor.tensor
+                np_array = ModelProtoMessages.tensorsProto.proto_tensor_spec_to_numpy_array(
+                    tensor)
             else:
                 raise RuntimeError("Not a supported tensor type.")
 

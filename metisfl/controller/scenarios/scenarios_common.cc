@@ -85,7 +85,7 @@ namespace metisfl::controller
     PLOG(INFO) << "Tensors: " << num_of_tensors;
     PLOG(INFO) << "Values per tensor: " << values_per_tensor;
     PlaintextTensor plainTextTensor;
-    TensorSpec tensor_spec;
+    Tensor tensor;
     Model_Variable modelVariable;
     Model model;
 
@@ -100,7 +100,7 @@ namespace metisfl::controller
       }
       auto serialized_tensor = proto::SerializeTensor<float>(deserialized_tensor);
       std::string serialized_tensor_str(serialized_tensor.begin(), serialized_tensor.end());
-      tensor_spec.set_value(serialized_tensor_str);
+      tensor.set_value(serialized_tensor_str);
     }
     else if (data_type == DType_Type_FLOAT64)
     {
@@ -111,21 +111,21 @@ namespace metisfl::controller
       }
       auto serialized_tensor = proto::SerializeTensor<double>(deserialized_tensor);
       std::string serialized_tensor_str(serialized_tensor.begin(), serialized_tensor.end());
-      tensor_spec.set_value(serialized_tensor_str);
+      tensor.set_value(serialized_tensor_str);
     }
     else
     {
       throw std::runtime_error("Unsupported data type.");
     }
 
-    // Assign all remaining values to the tensor_spec.
-    tensor_spec.set_length(values_per_tensor);
-    tensor_spec.add_dimensions(values_per_tensor);
-    tensor_spec.mutable_type()->set_type(DType_Type_FLOAT64);
-    tensor_spec.mutable_type()->set_byte_order(DType_ByteOrder_LITTLE_ENDIAN_ORDER);
-    tensor_spec.mutable_type()->set_fortran_order(false);
+    // Assign all remaining values to the tensor.
+    tensor.set_length(values_per_tensor);
+    tensor.add_dimensions(values_per_tensor);
+    tensor.mutable_type()->set_type(DType_Type_FLOAT64);
+    tensor.mutable_type()->set_byte_order(DType_ByteOrder_LITTLE_ENDIAN_ORDER);
+    tensor.mutable_type()->set_fortran_order(false);
 
-    (*plainTextTensor.mutable_tensor_spec()) = tensor_spec;
+    (*plainTextTensor.mutable_tensor_spec()) = tensor;
 
     /* (1) Build a Model_Variable
        (2) Assign the plaintextTensor to Model_Variable
@@ -139,7 +139,7 @@ namespace metisfl::controller
       modelVariable.set_name(name);
       modelVariable.set_trainable(true);
       (*modelVariable.mutable_plaintext_tensor()) = plainTextTensor;
-      (*model.add_variables()) = modelVariable;
+      (*model.add_tensors()) = modelVariable;
     }
 
     PLOG(INFO) << "Model generated!";

@@ -45,32 +45,17 @@ message TensorQuantifier {
   uint32 tensor_size_bytes = 3;
 }
 
-message TensorSpec {
-  uint32 length = 1;
-  repeated int64 dimensions = 2;
-  DType type = 3;
-  bytes value = 4;
-}
 
-message PlaintextTensor {
-  TensorSpec tensor_spec = 1;
-}
-
-message CiphertextTensor {
-  TensorSpec tensor_spec = 1;
+message Tensor {
+  bool encrypted = 1;
+  uint32 length = 2;
+  repeated int64 dimensions = 3;
+  DType type = 4;
+  bytes value = 5;
 }
 
 message Model {
-  message Variable {
-    string name = 1;
-    bool trainable = 2;
-    bool encrypted = 3;
-    oneof tensor {
-      PlaintextTensor plaintext_tensor = 4;
-      CiphertextTensor ciphertext_tensor = 5;
-    }
-}
-  repeated Variable variables = 1;
+  repeated Tensor tensors = 1;
 }
 
 message FederatedModel {

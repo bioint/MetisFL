@@ -19,7 +19,7 @@ variables {
   name: "var1"
   trainable: true
   plaintext_tensor {
-    tensor_spec {
+    tensor {
       length: 10
       dimensions: 10
       type {
@@ -38,7 +38,7 @@ variables {
   name: "var1"
   trainable: true
   plaintext_tensor {
-    tensor_spec {
+    tensor {
       length: 10
       dimensions: 10
       type {
@@ -57,7 +57,7 @@ variables {
   name: "var1"
   trainable: true
   plaintext_tensor {
-    tensor_spec {
+    tensor {
       length: 10
       dimensions: 10
       type {
@@ -76,7 +76,7 @@ variables {
   name: "var1"
   trainable: true
   plaintext_tensor {
-    tensor_spec {
+    tensor {
       length: 10
       dimensions: 10
       type {
@@ -121,8 +121,8 @@ TEST_F(FederatedAverageTest, CorrectAverageUINT16) /* NOLINT */ {
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);
 
-  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().value();
-  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().length();
+  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor().value();
+  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor().length();
   ::proto::PrintSerializedTensor<unsigned short>(aggregated_value_serialized, num_values);
 
   EXPECT_THAT(averaged.model(), EqualsProto(expected));
@@ -152,8 +152,8 @@ TEST_F(FederatedAverageTest, CorrectAverageINT32) /* NOLINT */ {
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);
 
-  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().value();
-  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().length();
+  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor().value();
+  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor().length();
   ::proto::PrintSerializedTensor<signed int>(aggregated_value_serialized, num_values);
 
   // The aggregated value should be equal with the half of models sum.
@@ -174,8 +174,8 @@ TEST_F(FederatedAverageTest, CorrectAverageFLOAT32) /* NOLINT */ {
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);
 
-  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().value();
-  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().length();
+  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor().value();
+  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor().length();
   ::proto::PrintSerializedTensor<float>(aggregated_value_serialized, num_values);
 
   // The aggregated value should be equal with the half of models sum.
@@ -195,8 +195,8 @@ TEST_F(FederatedAverageTest, CorrectAverageFLOAT64) /* NOLINT */ {
 
   FederatedAverage avg;
   FederatedModel averaged = avg.Aggregate(to_aggregate);
-  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().value();
-  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor_spec().length();
+  auto aggregated_value_serialized = averaged.model().variables().at(0).plaintext_tensor().tensor().value();
+  auto num_values = averaged.model().variables().at(0).plaintext_tensor().tensor().length();
   ::proto::PrintSerializedTensor<double>(aggregated_value_serialized, num_values);
 
   // The aggregated value should be equal with the half of models sum.

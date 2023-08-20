@@ -22,7 +22,7 @@ variables {
   name: "var1"
   trainable: true
   ciphertext_tensor {
-    tensor_spec {
+    tensor {
       length: 10
       dimensions: 10
       type {
@@ -90,7 +90,7 @@ TEST_F(SecAggTest, SecureAggregationCKKSwithFiles) /* NOLINT */ {
   auto sec_agg = SecAgg(encryption_config);
   auto federated_model = sec_agg.Aggregate(to_aggregate);
   auto aggregated_ciphertext =
-    federated_model.model().variables().at(0).ciphertext_tensor().tensor_spec().value();
+    federated_model.model().variables().at(0).ciphertext_tensor().tensor().value();
   auto aggregated_dec =
     ckks_.Decrypt(aggregated_ciphertext, model_values.size());
 
@@ -173,7 +173,7 @@ TEST_F(SecAggTest, SecureAggregationCKKSNoFiles) /* NOLINT */ {
   auto pwa = SecAgg(encryption_config);
   auto federated_model = pwa.Aggregate(to_aggregate);
   auto aggregated_ciphertext =
-    federated_model.model().variables().at(0).ciphertext_tensor().tensor_spec().value();
+    federated_model.model().variables().at(0).ciphertext_tensor().tensor().value();
   auto aggregated_dec =
     ckks_.Decrypt(aggregated_ciphertext, model_values.size());
 

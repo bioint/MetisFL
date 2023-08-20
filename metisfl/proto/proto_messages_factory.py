@@ -8,7 +8,7 @@ from metisfl.proto import learner_pb2, model_pb2, service_common_pb2
 
 class ModelProtoMessages(object):
 
-    class TensorSpecProto(object):
+    class tensorsProto(object):
 
         NUMPY_DATA_TYPE_TO_PROTO_LOOKUP = {
             "i1": model_pb2.DType.Type.INT8,
@@ -63,9 +63,9 @@ class ModelProtoMessages(object):
                 endian = model_pb2.DType.ByteOrder.NA  # case "|"
 
             nparray_dtype = descr[1:]
-            if nparray_dtype in ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP:
+            if nparray_dtype in ModelProtoMessages.tensorsProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP:
                 proto_data_type = \
-                    ModelProtoMessages.TensorSpecProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[
+                    ModelProtoMessages.tensorsProto.NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[
                         nparray_dtype]
             else:
                 raise RuntimeError(
@@ -75,34 +75,34 @@ class ModelProtoMessages(object):
                 type=proto_data_type, byte_order=endian, fortran_order=fortran_order)
 
             flatten_array_bytes = arr.flatten().tobytes()
-            tensor_spec = model_pb2.TensorSpec(
+            tensor = model_pb2.Tensor(
                 length=length, dimensions=dimensions, type=dtype, value=flatten_array_bytes)
-            return tensor_spec
+            return tensor
 
         @classmethod
-        def get_numpy_data_type_from_tensor_spec(cls, tensor_spec):
-            if tensor_spec.type.byte_order == model_pb2.DType.ByteOrder.BIG_ENDIAN_ORDER:
+        def get_numpy_data_type_from_tensor_spec(cls, tensor):
+            if tensor.type.byte_order == model_pb2.DType.ByteOrder.BIG_ENDIAN_ORDER:
                 endian_char = ">"
-            elif tensor_spec.type.byte_order == model_pb2.DType.ByteOrder.LITTLE_ENDIAN_ORDER:
+            elif tensor.type.byte_order == model_pb2.DType.ByteOrder.LITTLE_ENDIAN_ORDER:
                 endian_char = "<"
             else:
                 endian_char = "|"
 
-            data_type = tensor_spec.type.type
-            fortran_order = tensor_spec.type.fortran_order
+            data_type = tensor.type.type
+            fortran_order = tensor.type.fortran_order
             np_data_type = \
                 endian_char + \
-                ModelProtoMessages.TensorSpecProto.INV_NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[data_type]
+                ModelProtoMessages.tensorsProto.INV_NUMPY_DATA_TYPE_TO_PROTO_LOOKUP[data_type]
             return np_data_type
 
         @classmethod
-        def proto_tensor_spec_to_numpy_array(cls, tensor_spec):
+        def proto_tensor_spec_to_numpy_array(cls, tensor):
             np_data_type = \
-                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(
-                    tensor_spec)
-            dimensions = tensor_spec.dimensions
-            value = tensor_spec.value
-            length = tensor_spec.length
+                ModelProtoMessages.tensorsProto.get_numpy_data_type_from_tensor_spec(
+                    tensor)
+            dimensions = tensor.dimensions
+            value = tensor.value
+            length = tensor.length
 
             np_array = np.frombuffer(
                 buffer=value, dtype=np_data_type, count=length)
@@ -111,11 +111,11 @@ class ModelProtoMessages(object):
             return np_array
 
         @classmethod
-        def proto_tensor_spec_with_list_values_to_numpy_array(cls, tensor_spec, list_of_values):
+        def proto_tensor_spec_with_list_values_to_numpy_array(cls, tensor, list_of_values):
             np_data_type = \
-                ModelProtoMessages.TensorSpecProto.get_numpy_data_type_from_tensor_spec(
-                    tensor_spec)
-            dimensions = tensor_spec.dimensions
+                ModelProtoMessages.tensorsProto.get_numpy_data_type_from_tensor_spec(
+                    tensor)
+            dimensions = tensor.dimensions
 
             np_array = np.array(list_of_values, dtype=np_data_type)
             np_array = np_array.reshape(dimensions)
@@ -129,17 +129,17 @@ class ModelProtoMessages(object):
             raise TypeError(
                 "Parameter {} must be of type {}.".format(nparray, np.ndarray))
 
-        tensor_spec = \
-            ModelProtoMessages.TensorSpecProto.numpy_array_to_proto_tensor_spec(
+        tensor = \
+            ModelProtoMessages.tensorsProto.numpy_array_to_proto_tensor_spec(
                 nparray)
 
         if ciphertext is not None:
             # If the tensor is a ciphertext we need to set the bytes of the
             # ciphertext as the value of the tensor not the numpy array bytes.
-            tensor_spec.value = ciphertext
-            tensor_pb = model_pb2.CiphertextTensor(tensor_spec=tensor_spec)
+            tensor.value = ciphertext
+            tensor_pb = model_pb2.CiphertextTensor(tensor=tensor)
         else:
-            tensor_pb = model_pb2.PlaintextTensor(tensor_spec=tensor_spec)
+            tensor_pb = model_pb2.PlaintextTensor(tensor=tensor)
         return tensor_pb
 
     @classmethod

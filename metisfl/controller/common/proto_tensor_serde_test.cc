@@ -61,7 +61,7 @@ char kTensor_1to10_as_FLOAT64[] = R"pb(
 class ProtoTensorSerDe : public ::testing::Test {};
 
 TEST_F(ProtoTensorSerDe, DeSerUINT16) /* NOLINT */ {
-  auto tensor_uint16 = ParseTextOrDie<metisfl::TensorSpec>(kTensor_1to10_as_UINT16);
+  auto tensor_uint16 = ParseTextOrDie<metisfl::Tensor>(kTensor_1to10_as_UINT16);
   auto num_values = tensor_uint16.length();
   auto deserialized_tensor = DeserializeTensor<unsigned short>(tensor_uint16);
   auto serialized_tensor = SerializeTensor<unsigned short>(deserialized_tensor);
@@ -83,7 +83,7 @@ TEST_F(ProtoTensorSerDe, DeSerUINT16) /* NOLINT */ {
 }
 
 TEST_F(ProtoTensorSerDe, DeSerINT32) /* NOLINT */ {
-  auto tensor_int32 = ParseTextOrDie<metisfl::TensorSpec>(kTensor_1to10_as_INT32);
+  auto tensor_int32 = ParseTextOrDie<metisfl::Tensor>(kTensor_1to10_as_INT32);
   auto num_values = tensor_int32.length();
   auto deserialized_tensor = DeserializeTensor<signed int>(tensor_int32);
   auto serialized_tensor = SerializeTensor<signed int>(deserialized_tensor);
@@ -105,7 +105,7 @@ TEST_F(ProtoTensorSerDe, DeSerINT32) /* NOLINT */ {
 }
 
 TEST_F(ProtoTensorSerDe, DeSerFLOAT32) /* NOLINT */ {
-  auto tensor_float32 = ParseTextOrDie<metisfl::TensorSpec>(kTensor_1to10_as_FLOAT32);
+  auto tensor_float32 = ParseTextOrDie<metisfl::Tensor>(kTensor_1to10_as_FLOAT32);
   auto num_values = tensor_float32.length();
   auto deserialized_tensor = DeserializeTensor<float>(tensor_float32);
   auto serialized_tensor = SerializeTensor<float>(deserialized_tensor);
@@ -126,7 +126,7 @@ TEST_F(ProtoTensorSerDe, DeSerFLOAT32) /* NOLINT */ {
 }
 
 TEST_F(ProtoTensorSerDe, DeSerFLOAT64) /* NOLINT */ {
-  auto tensor_float64 = ParseTextOrDie<metisfl::TensorSpec>(kTensor_1to10_as_FLOAT64);
+  auto tensor_float64 = ParseTextOrDie<metisfl::Tensor>(kTensor_1to10_as_FLOAT64);
   auto num_values = tensor_float64.length();
   auto deserialized_tensor = DeserializeTensor<double>(tensor_float64);
   auto serialized_tensor = SerializeTensor<double>(deserialized_tensor);
