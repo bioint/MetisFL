@@ -28,8 +28,8 @@ def run_build(python_verion):
     os.system("{} build {}".format(BAZEL_CMD, PROTO_GRPC_TARGET))
 
     # Copy .so
-    copy_helper(CONTROLER_SO_SRC, CONTROLER_SO_DST)
-    copy_helper(FHE_SO_SRC, FHE_SO_DST)
+    # copy_helper(CONTROLER_SO_SRC, CONTROLER_SO_DST)
+    # copy_helper(FHE_SO_SRC, FHE_SO_DST)
 
     # Copy proto/grpc classes
     for file in glob.glob("{}*.py".format(PROTO_SRC_DIR)):
@@ -70,5 +70,5 @@ if __name__ == "__main__":
     lib_path = os.environ["PYTHON_LIB_PATH"]
     if not os.path.isdir(lib_path):
         raise ValueError("PYTHON_LIB_PATH {} does not exist".format(lib_path))
-    
+
     run_build(py_version)

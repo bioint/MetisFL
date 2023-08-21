@@ -5,10 +5,9 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
-using ::proto::PrintSerializedTensor;
-
 namespace metisfl::controller {
 
+template <typename T>
 class FederatedRollingAverageBase {
  protected:
   double community_score_z = 0;

@@ -4,7 +4,7 @@
 namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction> CreateAggregator(
-    const GlobalTrainParams &global_train_params) {
+    const GlobalTrainParams &global_train_params, const DType_Type dtype) {
   const auto &aggregation_rule = global_train_params.aggregation_rule;
   const auto &he_batch_size = global_train_params.he_batch_size;
   const auto &he_scaling_factor_bits =
@@ -12,14 +12,45 @@ std::unique_ptr<AggregationFunction> CreateAggregator(
   const auto &crypto_context_file = global_train_params.he_crypto_context_file;
 
   if (aggregation_rule == "FedAvg")
-    return absl::make_unique<FederatedAverage>();
+    return CreateAggregatorForDType<FederatedAverage>(dtype);
   if (aggregation_rule == "FedRec")
-    return absl::make_unique<FederatedRecency>();
+    return CreateAggregatorForDType<FederatedRecency>(dtype);
   if (aggregation_rule == "FedStride")
-    return absl::make_unique<FederatedStride>();
-  if (aggregation_rule == "SecAgg")
-    return absl::make_unique<SecAgg>(he_batch_size, he_scaling_factor_bits,
-                                     crypto_context_file);
+    return CreateAggregatorForDType<FederatedStride>(dtype);
+  if (aggregation_rule == "SecAgg") {
+    SecAgg aggr = CreateAggregatorForDType<SecAgg>(dtype);
+    aggr.InitScheme(he_batch_size, he_scaling_factor_bits, crypto_context_file);
+    return aggr;
+  }
+}
+
+template <typename C>
+std::unique_ptr<AggregationFunction> CreateAggregatorForDType(
+    DType_Type dtype) {
+  switch (dtype) {
+    case DType_Type_UINT8:
+      return absl::make_unique<C<unsigned char>>();
+    case DType_Type_UINT16:
+      return absl::make_unique<C<unsigned short>>();
+    case DType_Type_UINT32:
+      return absl::make_unique<C<unsigned int>>();
+    case DType_Type_UINT64:
+      return absl::make_unique<C<unsigned long>>();
+    case DType_Type_INT8:
+      return absl::make_unique<C<signed char>>();
+    case DType_Type_INT16:
+      return absl::make_unique<C<signed short>>();
+    case DType_Type_INT32:
+      return absl::make_unique<C<signed int>>();
+    case DType_Type_INT64:
+      return absl::make_unique<C<signed long>>();
+    case DType_Type_FLOAT32:
+      return absl::make_unique<C<float>>();
+    case DType_Type_FLOAT64:
+      return absl::make_unique<C<double>>();
+    default:
+      PLOG(FATAL) << "Unsupported tensor data type.";
+  }
 }
 
 std::unique_ptr<ModelStore> CreateModelStore(

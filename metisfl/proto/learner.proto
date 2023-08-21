@@ -19,8 +19,9 @@ service LearnerService {
 }
 
 message TrainRequest {
-  Model model = 1;
-  TrainParams params = 2;
+  string task_id = 1;
+  Model model = 2;
+  TrainParams params = 3;
 }
 
 message TrainParams {
@@ -32,16 +33,18 @@ message TrainParams {
 }
 
 message EvaluateRequest {
-  Model model = 1;
-  EvalParams params = 2;  
+  string task_id = 1;
+  Model model = 2;
+  EvaluationParams params = 3;
 }
 
-message EvalParams {
+message EvaluationParams {
   uint32 batch_size = 1;
   repeated string metrics = 2;
 }
 
 message EvaluateResponse {
-  map<string, float> metrics_values = 1;
+  string task_id = 1;
+  map<string, float> metrics_values = 2;
 }
 

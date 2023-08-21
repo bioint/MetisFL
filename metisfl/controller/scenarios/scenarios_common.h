@@ -33,7 +33,7 @@ class ScenariosCommon {
    * */
  private:
   ControllerParams params_;
-  FederatedTaskRuntimeMetadata metadata_;
+  RuntimeMetadata metadata_;
   std::unique_ptr<AggregationFunction> aggregation_function_;
   std::unique_ptr<ModelStore> model_store_;
   std::unique_ptr<ScalingFunction> scaler_;
@@ -74,7 +74,7 @@ class ScenariosCommon {
 
   void InsertModelsIntoStore(std::vector<std::pair<std::string, Model>> learner_pairs);
 
-  FederatedTaskRuntimeMetadata GetMetadata();
+  RuntimeMetadata GetMetadata();
 
   void ResetStore();
 

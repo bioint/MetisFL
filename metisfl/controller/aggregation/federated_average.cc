@@ -1,17 +1,10 @@
 
 #include "metisfl/controller/aggregation/federated_average.h"
 
-#include <glog/logging.h>
-#include <omp.h>
-
-#include "metisfl/controller/common/proto_tensor_serde.h"
-#include "metisfl/proto/model.pb.h"
+using metisfl::proto;
 
 namespace metisfl::controller {
 namespace {
-
-using ::proto::DeserializeTensor;
-using ::proto::SerializeTensor;
 
 template <typename T>
 void AddTensors(std::vector<T> &tensor_left, const Tensor &tensor_spec_right,
@@ -23,7 +16,7 @@ void AddTensors(std::vector<T> &tensor_left, const Tensor &tensor_spec_right,
    * left-hand-side tensor. Finally, it serialized the aggregated tensor and
    * returns its string representation.
    */
-  auto t2_r = DeserializeTensor<T>(tensor_spec_right);
+  auto t2_r = ProtoSerde::DeserializeTensor<T>(tensor_spec_right);
 
   // Scale the right tensor by its scaling factor.
   // Careful here: if the data type is uint or int then there are no precision
@@ -40,9 +33,8 @@ void AddTensors(std::vector<T> &tensor_left, const Tensor &tensor_spec_right,
 }
 
 template <typename T>
-std::vector<T> AggregateTensorAtIndex(
-    std::vector<std::vector<std::pair<const Model *, double>>> &pairs,
-    int var_idx, uint32_t var_num_values) {
+std::vector<T> AggregateTensorAtIndex(AggregationPairs &pairs, int var_idx,
+                                      uint32_t var_num_values) {
   auto aggregated_tensor = std::vector<T>(var_num_values);
   for (const auto &pair : pairs) {
     const auto *local_model = pair.front().first;
@@ -68,8 +60,8 @@ std::vector<T> AggregateTensorAtIndex(
  * Value(scaled)> holding the local models over which we want to compute the
  * aggregated model.
  */
-FederatedModel FederatedAverage::Aggregate(
-    std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
+template <typename T>
+FederatedModel FederatedAverage::Aggregate(AggregationPairs &pairs) {
   // With the new global model aggregation function
   // NEW API GUIDE
   // { {(*model, 0.2)}, {(*model, 0.6)}, {(*model, 0.5)}}
@@ -84,62 +76,20 @@ FederatedModel FederatedAverage::Aggregate(
   global_model.mutable_model()->mutable_tensors()->CopyFrom(
       sample_model->tensors());
 
-  // TODO(stripeli): We need to add support to aggregate only the trainable
-  //  weights. For now, we aggregate all matrices, but if we aggregate only the
-  //  trainable, then what should be the value of the non-trainable weights?
   auto total_tensors = global_model.model().tensors_size();
+
 #pragma omp parallel for
   for (int var_idx = 0; var_idx < total_tensors; ++var_idx) {
     auto var_data_type = global_model.model().tensors(var_idx).type().type();
     auto var_num_values = global_model.model().tensors(var_idx).length();
 
-    std::vector<char> serialized_tensor;
-    if (var_data_type == DType_Type_UINT8) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<unsigned char>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<unsigned char>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_UINT16) {
-      auto aggregated_tensor = AggregateTensorAtIndex<unsigned short>(
-          pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<unsigned short>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_UINT32) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<unsigned int>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<unsigned int>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_UINT64) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<unsigned long>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<unsigned long>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_INT8) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<signed char>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<signed char>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_INT16) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<signed short>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<signed short>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_INT32) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<signed int>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<signed int>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_INT64) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<signed long>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<signed long>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_FLOAT32) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<float>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<float>(aggregated_tensor);
-    } else if (var_data_type == DType_Type_FLOAT64) {
-      auto aggregated_tensor =
-          AggregateTensorAtIndex<double>(pairs, var_idx, var_num_values);
-      serialized_tensor = SerializeTensor<double>(aggregated_tensor);
-    } else {
-      PLOG(FATAL) << "Unsupported tensor data type.";
-    }
+    auto aggregated_tensor =
+        AggregateTensorAtIndex<T>(pairs, var_idx, var_num_values);
+    auto serialized_tensor = ProtoSerde::SerializeTensor<T>(aggregated_tensor);
 
     std::string serialized_tensor_str(serialized_tensor.begin(),
                                       serialized_tensor.end());
+
     *global_model.mutable_model()->mutable_tensors(var_idx)->mutable_value() =
         serialized_tensor_str;
   }
@@ -148,8 +98,6 @@ FederatedModel FederatedAverage::Aggregate(
   return global_model;
 }
 
-void FederatedAverage::Reset() {
-  // pass
-}
+void FederatedAverage::Reset() {}
 
 }  // namespace metisfl::controller

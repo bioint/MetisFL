@@ -11,19 +11,19 @@
 
 namespace metisfl::controller {
 
-class SecAgg : public AggregationFunction {
+class SecAgg : AggregationFunction {
  private:
   std::unique_ptr<EncryptionScheme> encryption_scheme_;
 
  public:
-  explicit SecAgg(const int batch_size, const int scaling_factor_bits,
+  explicit SecAgg();
+
+  void InitScheme(const int batch_size, const int scaling_factor_bits,
                   const std::string &crypto_context);
 
-  FederatedModel Aggregate(
-      std::vector<std::vector<std::pair<const Model *, double>>> &pairs)
-      override;
+  FederatedModel Aggregate(AggregationPairs &pairs) override;
 
-  [[nodiscard]] inline std::string Name() const override { return "PWA"; }
+  [[nodiscard]] inline std::string Name() const override { return "SecAgg"; }
 
   [[nodiscard]] inline int RequiredLearnerLineageLength() const override {
     return 1;

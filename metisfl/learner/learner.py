@@ -36,7 +36,7 @@ class Learner(ABC):
     def evaluate(
         self,
         model: model_pb2.Model,
-        params: learner_pb2.EvalParams
+        params: learner_pb2.EvaluationParams
     ) -> Dict[str, Any]:
         """Evaluates the given model using the given evaluation parameters."""
         return {}
@@ -104,7 +104,7 @@ def try_call_train(
 def try_call_evaluate(
     learner: Learner,
     model: model_pb2.Model,
-    params: learner_pb2.EvalParams
+    params: learner_pb2.EvaluationParams
 ) -> Dict[str, Any]:
     """Calls the evaluate method of the given learner if it exists, otherwise returns None."""
     if has_evaluate(learner):

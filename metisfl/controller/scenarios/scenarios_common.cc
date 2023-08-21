@@ -185,7 +185,7 @@ namespace metisfl::controller
     auto scaling_factors = scaler_->ComputeScalingFactors(
         community_model,
         participating_states,
-        absl::flat_hash_map<std::string, TaskExecutionMetadata *>{});
+        absl::flat_hash_map<std::string, TrainingMetadata *>{});
 
     uint32_t aggregation_stride_length = participating_states.size();
     if (params_.global_model_specs().aggregation_rule().has_fed_stride())
@@ -215,7 +215,7 @@ namespace metisfl::controller
     }
 
     std::vector<std::pair<std::string, int>> to_select_block;                      // e.g., { (learner_id, stride_length), ...}
-    std::vector<std::vector<std::pair<const Model *, double>>> to_aggregate_block; // e.g., { {m1*, 0.1}, {m2*, 0.3}, ...}
+    AggregationPairs to_aggregate_block; // e.g., { {m1*, 0.1}, {m2*, 0.3}, ...}
     std::vector<std::pair<const Model *, double>> to_aggregate_learner_models_tmp;
 
     for (auto itr = participating_states.begin(); itr != participating_states.end(); itr++)
@@ -329,7 +329,7 @@ namespace metisfl::controller
     model_store_->Expunge();
   }
 
-  FederatedTaskRuntimeMetadata ScenariosCommon::GetMetadata()
+  RuntimeMetadata ScenariosCommon::GetMetadata()
   {
     return metadata_;
   }

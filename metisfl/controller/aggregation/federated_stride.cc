@@ -3,8 +3,7 @@
 
 namespace metisfl::controller {
 
-FederatedModel FederatedStride::Aggregate(
-    std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
+FederatedModel FederatedStride::Aggregate(AggregationPairs &pairs) {
   /*
       Once for every batch cycle we need to initialize the models once.
       Once a batch-cycle is complete the community_model needs to reset back to
@@ -28,10 +27,11 @@ FederatedModel FederatedStride::Aggregate(
       community_score_z += contrib_value;
 
       // Update the scaled model.
-      UpdateScaledModel(&dummy_model, latest_model, dummy_value, contrib_value);
+      UpdateScaledModel<T>(&dummy_model, latest_model, dummy_value,
+                           contrib_value);
 
       // Update Community Model.
-      UpdateCommunityModel();
+      UpdateCommunityModel<T>();
 
       community_model.set_num_contributors(community_model.num_contributors() +
                                            1);

@@ -50,21 +50,6 @@ std::string MergeTensors(const Tensor &tensor_spec_left,
   return serialized_tensor_str;
 }
 
-std::string MergeTensors(const Tensor &tensor_spec_left,
-                         const Tensor &tensor_spec_right,
-                         double scaling_factor_right, TensorOperation op) {
-  /**
-   * This is basically a wrapper over the MergeTensors function. It calls the
-   * MergeTensors function by first casting it to the given data type. Then
-   * returns the aggregated tensor.
-   */
-
-  std::string aggregated_result = MergeTensors(
-      tensor_spec_left, tensor_spec_right, scaling_factor_right, op);
-
-  return aggregated_result;
-}
-
 template <typename T>
 std::string ScaleTensor(const Tensor &tensor, double scaling_factor,
                         TensorOperation op) {
@@ -96,48 +81,9 @@ std::string ScaleTensor(const Tensor &tensor, double scaling_factor,
   return serialized_tensor_str;
 }
 
-std::string ScaleTensors(const Tensor &tensor, double scaling_factor,
-                         TensorOperation op) {
-  /**
-   * This is basically a wrapper over the SubtractTensors function. It calls the
-   * SubtractTensors function by first casting it to the given data type. Then
-   * returns the aggregated tensor.
-   */
-  auto num_values = tensor.length();
-  auto data_type = tensor.type().type();
-
-  if (num_values <= 0) throw std::runtime_error("tensor has no values.");
-
-  std::string aggregated_result;
-  if (data_type == DType_Type_UINT8) {
-    aggregated_result = ScaleTensor<unsigned char>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_UINT16) {
-    aggregated_result = ScaleTensor<unsigned short>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_UINT32) {
-    aggregated_result = ScaleTensor<unsigned int>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_UINT64) {
-    aggregated_result = ScaleTensor<unsigned long>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_INT8) {
-    aggregated_result = ScaleTensor<signed char>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_INT16) {
-    aggregated_result = ScaleTensor<signed short>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_INT32) {
-    aggregated_result = ScaleTensor<signed int>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_INT64) {
-    aggregated_result = ScaleTensor<signed long>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_FLOAT32) {
-    aggregated_result = ScaleTensor<float>(tensor, scaling_factor, op);
-  } else if (data_type == DType_Type_FLOAT64) {
-    aggregated_result = ScaleTensor<double>(tensor, scaling_factor, op);
-  } else {
-    throw std::runtime_error("Unsupported tensor data type.");
-  }
-
-  return aggregated_result;
-}
-
 }  // namespace
 
+template <typename T>
 void FederatedRollingAverageBase::InitializeModel(const Model *init_model,
                                                   double init_contrib_value) {
   /*
@@ -164,8 +110,8 @@ void FederatedRollingAverageBase::InitializeModel(const Model *init_model,
     const auto &init_tensor = init_model->tensors(index);
     auto scaled_tensor = wc_scaled_model.mutable_tensors(index);
     if (!scaled_tensor->encrypted()) {
-      auto aggregated_result = ScaleTensors(init_tensor, init_contrib_value,
-                                            TensorOperation::MULTIPLY);
+      auto aggregated_result = ScaleTensor<T>(init_tensor, init_contrib_value,
+                                              TensorOperation::MULTIPLY);
 
       *scaled_tensor->mutable_value() = aggregated_result;
 
@@ -179,6 +125,7 @@ void FederatedRollingAverageBase::InitializeModel(const Model *init_model,
   community_model.set_num_contributors(1);
 }
 
+template <typename T>
 void FederatedRollingAverageBase::UpdateScaledModel(
     const Model *existing_model, const Model *new_model,
     double existing_contrib_value, double new_contrib_value) {
@@ -195,9 +142,9 @@ void FederatedRollingAverageBase::UpdateScaledModel(
       */
       if (existing_model->tensors_size() > 0) {
         const auto &existing_mdl_tensor = existing_model->tensors(index);
-        aggregated_result =
-            MergeTensors(*scaled_tensor, existing_mdl_tensor,
-                         existing_contrib_value, TensorOperation::SUBTRACTION);
+        aggregated_result = MergeTensors<T>(*scaled_tensor, existing_mdl_tensor,
+                                            existing_contrib_value,
+                                            TensorOperation::SUBTRACTION);
       }
 
       // (3) assign the updated scaled Tensor Value to Scaled Model Tensor
@@ -219,6 +166,7 @@ void FederatedRollingAverageBase::UpdateScaledModel(
   }  // End For
 }
 
+template <typename T>
 void FederatedRollingAverageBase::UpdateCommunityModel() {
   /*
     This function iterates through all the Model_Variables of a Model
@@ -242,8 +190,8 @@ void FederatedRollingAverageBase::UpdateCommunityModel() {
          (4) The new updated scaled values are serialize back and saved in the
          Model_Variable tensor.
       */
-      scaled_result = ScaleTensors(scaled_mdl_variable, community_score_z,
-                                   TensorOperation::DIVIDE);
+      scaled_result = ScaleTensor<T>(scaled_mdl_variable, community_score_z,
+                                     TensorOperation::DIVIDE);
       *(cm_variable->mutable_value()) = scaled_result;
 
     }  // End If

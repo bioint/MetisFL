@@ -10,7 +10,7 @@ namespace metisfl::controller
       const FederatedModel &community_model,
       const absl::flat_hash_map<std::string, LearnerDescriptor> &all_states,
       const absl::flat_hash_map<std::string, LearnerDescriptor *> &participating_states,
-      const absl::flat_hash_map<std::string, TaskExecutionMetadata *> &participating_metadata)
+      const absl::flat_hash_map<std::string, TrainingMetadata *> &participating_metadata)
   {
 
     /*

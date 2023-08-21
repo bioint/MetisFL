@@ -12,17 +12,15 @@ namespace proto {
 template <typename T>
 class ProtoSerde {
  public:
-  std::vector<T> DeserializeTensor(const metisfl::Tensor &tensor);
+  static std::vector<T> DeserializeTensor(const metisfl::Tensor &tensor);
 
-  std::vector<char> SerializeTensor(const std::vector<T> &v);
+  static std::vector<char> SerializeTensor(const std::vector<T> &v);
 
-  metisfl::TensorQuantifier QuantifyTensor(const metisfl::Tensor &tensor);
+  static metisfl::TensorQuantifier QuantifyTensor(
+      const metisfl::Tensor &tensor);
 
-  std::vector<T> GenSerializedEmptyTensor(const metisfl::Tensor &tensor);
-
-  void PrintSerializedTensor(const std::string &str, const uint32_t num_values);
-
-  static ProtoSerde<T> GetProtoSerde(DType_Type dtype);
+  static void PrintSerializedTensor(const std::string &str,
+                                    const uint32_t num_values);
 };
 
 }  // namespace proto

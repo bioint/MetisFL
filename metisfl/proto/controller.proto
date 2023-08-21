@@ -39,12 +39,18 @@ message LearnerId {
 
 message TrainDoneRequest {
   string learner_id = 1;
-  string auth_token = 2; 
+  string tasl_id = 2;
   Model model = 3;
-  map<string, string> metrics = 4;
-  TaskExecutionMetadata metadata = 5;
 }
 
+message TrainingMetadata {
+  map<string, string> metrics = 1;
+  float completed_epochs =  2;
+  uint32 completed_batches = 3;
+  uint32 batch_size = 4;
+  float processing_ms_per_epoch = 5;
+  float processing_ms_per_batch = 6;
+}
 
 message GetStatisticsRequest {
   int32 community_evaluation_backtracks = 1;
@@ -55,32 +61,16 @@ message GetStatisticsRequest {
 message GetStatisticsResponse {
   repeated string learner_id = 1;
   repeated CommunityModelEvaluation community_evaluation = 2;
-  map<string, LocalTasksMetadata> learners_task = 3;
+  map<string, TrainingMetadata> learners_task = 3;
   repeated FederatedTaskRuntimeMetadata metadata = 4;
   string json_metadata = 5;
 }
 
-message LocalTasksMetadata {
-  repeated TaskExecutionMetadata task_metadata = 1;
-}
-
-message TaskExecutionMetadata {
-  uint32 global_iteration = 1;
-  float completed_epochs = 3;
-  uint32 completed_batches = 4;
-  uint32 batch_size = 5;
-  float processing_ms_per_epoch = 6;
-  float processing_ms_per_batch = 7;
-}
-
 message CommunityModelEvaluation {
-  uint32 global_iteration = 1;
   map<string, EvaluateResponse> evaluations = 2;
 }
 
-
 message FederatedTaskRuntimeMetadata {
-  uint32 global_iteration = 1;
   google.protobuf.Timestamp started_at = 2;
   google.protobuf.Timestamp completed_at = 3;
   repeated string assigned_to_learner_id = 4;
@@ -91,8 +81,6 @@ message FederatedTaskRuntimeMetadata {
   // communication time - message exchanges roundtrip.
   map<string, google.protobuf.Timestamp> train_task_submitted_at = 6;
   map<string, google.protobuf.Timestamp> train_task_received_at = 7;
-  map<string, google.protobuf.Timestamp> eval_task_submitted_at = 8;
-  map<string, google.protobuf.Timestamp> eval_task_received_at = 9;
   map<string, double> model_insertion_duration_ms = 10;
   map<string, double> model_selection_duration_ms = 11;
   google.protobuf.Timestamp model_aggregation_started_at = 12;

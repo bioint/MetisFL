@@ -11,6 +11,7 @@
 #include "absl/memory/memory.h"
 #include "absl/strings/str_cat.h"
 #include "metisfl/controller/aggregation/aggregation.h"
+#include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/controller/scaling/scaling.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 #include "metisfl/controller/selection/selection.h"
@@ -50,6 +51,10 @@ namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction> CreateAggregator(
     const GlobalTrainParams &global_train_params);
+
+template <typename C>
+std::unique_ptr<AggregationFunction> CreateAggregatorForDType(
+    DType_Type dtype){};
 
 std::unique_ptr<ModelStore> CreateModelStore(
     const ModelStoreParams &model_store_params);
