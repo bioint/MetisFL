@@ -81,9 +81,7 @@ class Controller {
  private:
   std::unique_ptr<ModelManager> model_manager_;
 
-  ServerParams server_params_;
   GlobalTrainParams global_train_params_;
-  ModelStoreParams model_store_params_;
 
   std::mutex learners_mutex_;
   BS::thread_pool scheduling_pool_;

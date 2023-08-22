@@ -23,7 +23,6 @@
 namespace metisfl::controller {
 class ControllerServicer : public ControllerService::Service {
  public:
-  ABSL_MUST_USE_RESULT
   virtual const Controller *GetController() const = 0;
 
   virtual void StartService() = 0;
@@ -35,7 +34,15 @@ class ControllerServicer : public ControllerService::Service {
   virtual bool ShutdownRequestReceived() = 0;
 
  public:
-  static std::unique_ptr<ControllerServicer> New(Controller *controller);
+  static std::unique_ptr<ControllerServicer> New(ServerParams &server_params,
+                                                 Controller *controller);
+
+ private:
+  std::unique_ptr<Server> server_;
+  ServerParams server_params_;
+  BS::thread_pool pool_;
+  Controller *controller_;
+  bool shutdown_ = false;
 };
 
 }  // namespace metisfl::controller

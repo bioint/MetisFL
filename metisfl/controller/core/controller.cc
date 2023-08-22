@@ -10,8 +10,7 @@ class ControllerDefaultImpl : public Controller {
   ControllerDefaultImpl(const ServerParams &server_params,
                         const GlobalTrainParams &global_train_params,
                         const ModelStoreParams &model_store_params)
-      : server_params_(move(server_params)),
-        global_train_params_(move(global_train_params)),
+      : global_train_params_(move(global_train_params)),
         learners_(),
         learners_stub_(),
         learners_train_params_(),
@@ -30,10 +29,6 @@ class ControllerDefaultImpl : public Controller {
     std::thread eval_tasks_digest_t_(
         &ControllerDefaultImpl::DigestEvaluateResponses, this);
     eval_tasks_digest_t_.detach();
-  }
-
-  const ServerParams &GetServerParams() const override {
-    return server_params_;
   }
 
   std::vector<std::string> GetLearnerIds() const override {

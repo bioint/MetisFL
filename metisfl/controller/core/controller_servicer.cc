@@ -9,33 +9,36 @@ using ::grpc::ServerContext;
 using ::grpc::Status;
 using ::grpc::StatusCode;
 
-class ServicerBase {
+class ControllerServicerImpl : public ControllerServicer {
  public:
-  template <class Service>
-  void Start(const ServerParams &params, Service *service) {
-    const auto &hostname = params.hostname;
-    const auto &port = params.port;
-    const auto &root_certificate_file = params.root_certificate;
-    const auto &public_certifcate_file = params.public_certificate;
-    const auto &private_key_file = params.private_key;
+  explicit ControllerServicerImpl(ServerParams &server_params,
+                                  Controller *controller)
+      : pool_(1), controller_(controller), server_params_(params) {
+    GOOGLE_CHECK_NOTNULL(controller_);
+  }
 
+  const Controller *GetController() const override { return controller_; }
+
+  void StartService() override {
     grpc::EnableDefaultHealthCheckService(true);
     grpc::reflection::InitProtoReflectionServerBuilderPlugin();
 
     std::shared_ptr<grpc::ServerCredentials> creds;
 
-    auto ssl_enable = !public_certifcate_file.empty() &&
-                      !private_key_file.empty() &&
-                      !root_certificate_file.empty();
+    const auto &root = server_params_.root_certificate;
+    const auto &public = server_params_.public_certificate;
+    const auto &private = server_params_.private_key;
+
+    auto ssl_enable = !root.empty() && !public.empty() && !private.empty();
 
     if (ssl_enable) {
       std::string root_certificate;
       std::string server_certifcate;
       std::string private_key;
 
-      ReadParseFile(root_certificate, root_certificate_file);
-      ReadParseFile(server_certifcate, public_certifcate_file);
-      ReadParseFile(private_key, private_key_file);
+      ReadParseFile(root_certificate, root);
+      ReadParseFile(server_certifcate, public);
+      ReadParseFile(private_key, private);
 
       grpc::SslServerCredentialsOptions ssl_opts;
       ssl_opts.pem_root_certs = root_certificate;
@@ -46,11 +49,12 @@ class ServicerBase {
     } else
       creds = grpc::InsecureServerCredentials();
 
-    const auto server_address = absl::StrCat(hostname, ":", port);
+    const auto server_address =
+        absl::StrCat(server_params_.hostname, ":", server_params_.port);
 
     ServerBuilder builder;
     builder.AddListeningPort(server_address, creds);
-    builder.RegisterService(service);
+    builder.RegisterService(this);
     builder.SetMaxReceiveMessageSize(INT_MAX);
     server_ = builder.BuildAndStart();
 
@@ -61,44 +65,22 @@ class ServicerBase {
       PLOG(INFO) << "Controller listening on " << server_address << ".";
   }
 
-  void Stop() {
-    if (server_ == nullptr) return;
-
-    server_->Shutdown();
-    PLOG(INFO) << "Controller shut down.";
-  }
-
-  void Wait() {
+  void WaitService() override {
     if (server_ == nullptr) return;
 
     server_->Wait();
   }
 
- protected:
-  std::unique_ptr<Server> server_;
-};
-
-class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
- public:
-  explicit ControllerServicerImpl(Controller *controller)
-      : pool_(1), controller_(controller) {
-    GOOGLE_CHECK_NOTNULL(controller_);
-  }
-
-  ABSL_MUST_USE_RESULT
-  const Controller *GetController() const override { return controller_; }
-
-  void StartService() override {
-    const auto &params = controller_->GetServerParams();
-    Start(params, this);
-    PLOG(INFO) << "Started Controller Servicer.";
-  }
-
-  void WaitService() override { Wait(); }
-
   void StopService() override {
     pool_.push_task([this] { controller_->Shutdown(); });
     pool_.push_task([this] { this->Stop(); });
+  }
+
+  void Stop() {
+    if (server_ == nullptr) return;
+
+    server_->Shutdown();
+    PLOG(INFO) << "Controller shut down.";
   }
 
   bool ShutdownRequestReceived() override { return shutdown_; }
@@ -207,16 +189,11 @@ class ControllerServicerImpl : public ControllerServicer, private ServicerBase {
     this->StopService();
     return Status::OK;
   }
-
- private:
-  BS::thread_pool pool_;
-  Controller *controller_;
-  bool shutdown_ = false;
 };
 }  // namespace
 
 std::unique_ptr<ControllerServicer> ControllerServicer::New(
-    Controller *controller) {
+    ServerParams &params, Controller *controller) {
   return absl::make_unique<ControllerServicerImpl>(controller);
 }
 
