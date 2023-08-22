@@ -103,7 +103,6 @@ class ControllerServicerImpl : public ControllerServicer {
     }
 
     const auto &learner_id = controller_->AddLearner(*learner);
-
     if (!learner_id.ok()) {
       switch (learner_id.status().code()) {
         case absl::StatusCode::kAlreadyExists:

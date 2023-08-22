@@ -20,12 +20,11 @@ class ControllerDefaultImpl : public Controller {
         eval_tasks_cq_() {
     model_manager_ =
         std::make_unique<ModelManager>(global_train_params, model_store_params);
-    // One thread to handle learners' responses to Train requests.
+
     std::thread run_tasks_digest_t_(
         &ControllerDefaultImpl::DigestTrainResponses, this);
     run_tasks_digest_t_.detach();
 
-    // One thread to handle learners' responses to Evaluate requests.
     std::thread eval_tasks_digest_t_(
         &ControllerDefaultImpl::DigestEvaluateResponses, this);
     eval_tasks_digest_t_.detach();
@@ -62,20 +61,17 @@ class ControllerDefaultImpl : public Controller {
   absl::Status RemoveLearner(const std::string &learner_id) override {
     RETURN_IF_ERROR(ValidateLearner(learner_id));
 
+    model_manager_->EraseModels(learner_id);
+
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-
     auto it = learners_.find(learner_id);
-    if (it != learners_.end()) {
-      PLOG(INFO) << "Removing learner from controller: " << learner_id;
+    learners_.erase(it);
+    learners_stub_.erase(learner_id);
+    learners_train_params_.erase(learner_id);
 
-      model_manager_->EraseModels(learner_id);
-      learners_.erase(it);
-      learners_stub_.erase(learner_id);
-      learners_train_params_.erase(learner_id);
+    PLOG(INFO) << "Removed learner from controller: " << learner_id;
 
-      return absl::OkStatus();
-    } else
-      return absl::NotFoundError("Learner is not part of the federation.");
+    return absl::OkStatus();
   }
 
   absl::Status StartTraining() override {
@@ -235,7 +231,7 @@ class ControllerDefaultImpl : public Controller {
   void ScheduleTasks(const std::vector<std::string> &learner_ids) {
     for (const auto &learner_id : learner_ids) {
       std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-      std::stirng train_task_id = GenerateTaskId();
+      std::stirng task_id = GenerateTaskId();
 
       metadata_.[task_id] = RuntimeMetadata();
       *metadata_.[task_id].mutable_started_at() = TimeUtil::GetCurrentTime();
@@ -251,8 +247,7 @@ class ControllerDefaultImpl : public Controller {
       (*metadata_.[task_id].mutable_eval_task_submitted_at())[learner_id] =
           TimeUtil::GetCurrentTime();
 
-      auto &eval_task_id = community_evaluations_[task_id];
-      SendEvaluationTasks(learner_id, eval_task_id);
+      SendEvaluateAsync(learner_id, task_id);
 
       UpdateLearnersTaskTemplates(to_schedule);
     }
@@ -317,27 +312,11 @@ class ControllerDefaultImpl : public Controller {
     *request.mutable_task_id() = task_id;
     *request.mutable_model() = model_manager_.GetModel();
 
-    // Call object to store rpc data.
     auto *call = new AsyncLearnerEvalCall;
-
-    // Set the learner id this call will be submitted to.
     call->learner_id = learner_id;
-
-    // stub->PrepareAsyncEvaluate() creates an RPC object, returning
-    // an instance to store in "call" but does not actually start the RPC
-    // Because we are using the asynchronous API, we need to hold on to
-    // the "call" instance in order to get updates on the ongoing RPC.
-    // Opens gRPC channel with learner.
     call->response_reader =
         learner_stub->PrepareAsyncEvaluate(&call->context, request, &cq);
-
-    // Initiate the RPC call.
     call->response_reader->StartCall();
-
-    // Request that, upon completion of the RPC, "reply" be updated with the
-    // server's response; "status" with the indication of whether the operation
-    // was successful. Tag the request with the memory address of the call
-    // object.
     call->response_reader->Finish(&call->reply, &call->status, (void *)call);
   }
 
@@ -392,25 +371,12 @@ class ControllerDefaultImpl : public Controller {
     *request.mutable_model() = model_manager_.GetModel();
     *request.mutable_params() = learners_train_params_[learner_id];
 
-    // Call object to store rpc data.
     auto *call = new AsyncLearnerRunTaskCall;
 
     call->learner_id = learner_id;
-    // stub->PrepareAsyncTrain() creates an RPC object, returning
-    // an instance to store in "call" but does not actually start the RPC
-    // Because we are using the asynchronous API, we need to hold on to
-    // the "call" instance in order to get updates on the ongoing RPC.
-    // Opens gRPC channel with learner.
     call->response_reader =
         learner_stub->PrepareAsyncTrain(&call->context, request, &cq);
-
-    // Initiate the RPC call.
     call->response_reader->StartCall();
-
-    // Request that, upon completion of the RPC, "reply" be updated with the
-    // server's response; "status" with the indication of whether the operation
-    // was successful. Tag the request with the memory address of the call
-    // object.
     call->response_reader->Finish(&call->reply, &call->status, (void *)call);
   }
 
@@ -459,8 +425,7 @@ class ControllerDefaultImpl : public Controller {
     std::unique_ptr<grpc::ClientAsyncResponseReader<T>> response_reader;
   };
 
-  // Implementation of generic AsyncLearnerCall type to handle Train
-  // responses.
+  // Handles responses to Train
   struct AsyncLearnerRunTaskCall : AsyncLearnerCall<Ack> {};
 
   // Implementation of generic AsyncLearnerCall type to handle Evaluate

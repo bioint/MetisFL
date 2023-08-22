@@ -23,24 +23,8 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/controller/core/controller_utils.h"
 #include "metisfl/controller/core/model_manager.h"
-#include "metisfl/proto/controller.grpc.pb.h"
-#include "metisfl/proto/learner.grpc.pb.h"
 
 namespace metisfl::controller {
-
-// Indexed by learner_id
-typedef std::unique_ptr<LearnerService::Stub> LearnerStub;
-typedef std::unique_ptr<std::string, LearnerStub> LearnerStubMap;
-typedef absl::flat_hash_map<std::string, LearnerDescriptor *> LearnersMap;
-typedef absl::flat_hash_map<std::string, TrainParams> TrainParamsMap;
-typedef absl::flat_hash_map<std::string, EvaluationParams> EvaluationParamsMap;
-
-// Indexed by task_id
-typedef absl::flat_hash_map<std::string, CommunityModelEvaluation *>
-    CommunityModelEvaluationMap;
-typedef absl::flat_hash_map<std::string, TrainingMetadata *>
-    TrainingMetadataMap;
-typedef std::unique_ptr<std::string, RuntimeMetadata> RuntimeMetadataMap;
 
 class Controller {
  public:

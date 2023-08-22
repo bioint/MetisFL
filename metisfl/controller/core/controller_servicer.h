@@ -17,7 +17,7 @@
 #include "absl/memory/memory.h"
 #include "metisfl/controller/common/bs_thread_pool.h"
 #include "metisfl/controller/core/controller.h"
-#include "metisfl/controller/core/controller_utils.h"
+#include "metisfl/controller/core/types.h"
 #include "metisfl/proto/controller.grpc.pb.h"
 
 namespace metisfl::controller {
@@ -33,7 +33,6 @@ class ControllerServicer : public ControllerService::Service {
 
   virtual bool ShutdownRequestReceived() = 0;
 
- public:
   static std::unique_ptr<ControllerServicer> New(ServerParams &server_params,
                                                  Controller *controller);
 

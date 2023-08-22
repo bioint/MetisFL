@@ -58,12 +58,11 @@ class ControllerWrapper {
     Start(server_params, global_train_params, model_store_params);
   }
 
-  void Start(const ServerParams& params,
+  void Start(const ServerParams& server_params,
              const GlobalTrainParams& global_train_params,
              const ModelStoreParams& model_store_params) {
-    controller_ =
-        Controller::New(params, global_train_params, model_store_params);
-    servicer_ = ControllerServicer::New(controller_.get());
+    controller_ = Controller::New(global_train_params, model_store_params);
+    servicer_ = ControllerServicer::New(server_params, controller_.get());
     servicer_->StartService();
   }
 
