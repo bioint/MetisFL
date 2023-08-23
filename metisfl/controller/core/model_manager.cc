@@ -63,10 +63,6 @@ class ModelManager {
     auto scaling_factors = scaler_->ComputeScalingFactors(
         community_model_, learners_, selected_learners, selected_task_metadata);
 
-    // Defines the length of the aggregation stride, i.e., how many models
-    // to fetch from the model store and feed to the aggregation function.
-    // Only FedStride does this stride-based aggregation. All other aggregation
-    // rules use the entire list of participating models.
     uint32_t aggregation_stride_length = selected_learners.size();
     if (global_train_params_.aggregation_rule == "FedStride") {
       auto fed_stride_length = global_train_params_.stride_length;

@@ -44,12 +44,12 @@ typedef absl::flat_hash_map<std::string, TrainParams> TrainParamsMap;
 typedef absl::flat_hash_map<std::string, EvaluationParams> EvaluationParamsMap;
 
 // Indexed by task_id
-typedef absl::flat_hash_map<std::string, CommunityModelEvaluation *>
-    CommunityModelEvaluationMap;
+typedef absl::flat_hash_map<std::string, std::string>
+    TaskLearnerMap;  // task_id -> learner_id
 typedef absl::flat_hash_map<std::string, TrainingMetadata *>
     TrainingMetadataMap;
+typedef absl::flat_hash_map<std::string, EvaluationMetadata *>
+    EvaluationMetadataMap;
 typedef std::unique_ptr<std::string, RuntimeMetadata> RuntimeMetadataMap;
-typedef absl::flat_hash_map<std::string, TaskExecutionMetadata *>
-    TaskMetadataMap;
 
 #endif  // METISFL_CONTROLLER_CORE_TYPES_H_

@@ -7,8 +7,7 @@ using google::protobuf::util::TimeUtil;
 
 class ControllerDefaultImpl : public Controller {
  public:
-  ControllerDefaultImpl(const ServerParams &server_params,
-                        const GlobalTrainParams &global_train_params,
+  ControllerDefaultImpl(const GlobalTrainParams &global_train_params,
                         const ModelStoreParams &model_store_params)
       : global_train_params_(move(global_train_params)),
         learners_(),
@@ -93,17 +92,10 @@ class ControllerDefaultImpl : public Controller {
     auto learner_id = request.learner_id();
     auto task_id = request.task_id();
 
-    *metadata_[task_id].add_completed_by_learner_id() = learner_id;
-    (*metadata_[task_id].mutable_train_task_completed_at())[learner_id] =
-        TimeUtil::GetCurrentTime();
-
     // This is a blocking call.
     model_manager_.->InsertModel(learner_id, request.model());
 
-    if (!local_tasks_metadata_.contains(learner_id)) {
-      local_tasks_metadata_[learner_id] = std::list<TrainingMetadata>();
-    }
-    local_tasks_metadata_[learner_id].push_back(task.metadata());
+    training_metadata_[task_id] = request.metadata();
 
     auto to_schedule = scheduler_->ScheduleNext(learner_id, GetLearnerIds());
 
@@ -113,9 +105,9 @@ class ControllerDefaultImpl : public Controller {
     LearnersMap selected_learners;
     TaskMetadataMap selected_task_metadata;
     for (const auto &id : selected_ids) {
-      if (learners_.contains(id) && local_tasks_metadata_.contains(id)) {
+      if (learners_.contains(id) && training_metadata_.contains(id)) {
         selected_learners[id] = &learners_.at(id);
-        selected_task_metadata[id] = &local_tasks_metadata_.at(id).back();
+        selected_task_metadata[id] = &training_metadata_.at(id).back();
       }
     }
 
@@ -127,68 +119,12 @@ class ControllerDefaultImpl : public Controller {
     return absl::OkStatus();
   }
 
-  std::vector<RuntimeMetadata> GetRuntimeMetadataLineage(
-      uint32_t num_steps) override {
-    if (metadata_.empty()) {
-      return {};
-    }
-    const auto &lineage = metadata_;
-    if (num_steps <= 0) {
-      return {lineage.begin(), lineage.end()};
-    }
-
-    std::vector<RuntimeMetadata> lineage_head;
-    auto iter = lineage.begin();
-    while (lineage_head.size() < num_steps && iter != lineage.end()) {
-      lineage_head.push_back(*iter);
-      ++iter;
-    }
-
-    return lineage_head;
+  TrainingMetadataMap GetTrainingMetadata() override {
+    return training_metadata_;
   }
 
-  std::vector<CommunityModelEvaluation> GetEvaluationLineage(
-      uint32_t num_steps) override {
-    if (community_evaluations_.empty()) {
-      return {};
-    }
-
-    const auto &lineage = community_evaluations_;
-
-    if (num_steps <= 0) {
-      return {lineage.begin(), lineage.end()};
-    }
-
-    std::vector<CommunityModelEvaluation> lineage_head;
-    auto iter = lineage.begin();
-    while (lineage_head.size() < num_steps && iter != lineage.end()) {
-      lineage_head.push_back(*iter);
-      ++iter;
-    }
-
-    return lineage_head;
-  }
-
-  std::vector<TrainingMetadata> GetLocalTaskLineage(
-      const std::string &learner_id, uint32_t num_steps) override {
-    if (!local_tasks_metadata_.contains(learner_id)) {
-      return {};
-    }
-
-    const auto &lineage = local_tasks_metadata_[learner_id];
-
-    if (num_steps <= 0) {
-      return {lineage.begin(), lineage.end()};
-    }
-
-    std::vector<TrainingMetadata> lineage_head;
-    auto iter = lineage.begin();
-    while (lineage_head.size() < num_steps && iter != lineage.end()) {
-      lineage_head.push_back(*iter);
-      ++iter;
-    }
-
-    return lineage_head;
+  EvaluationMetadataMap GetEvaluationMetadata() override {
+    return evaluation_metadata_;
   }
 
   void Shutdown() override {
@@ -231,23 +167,12 @@ class ControllerDefaultImpl : public Controller {
   void ScheduleTasks(const std::vector<std::string> &learner_ids) {
     for (const auto &learner_id : learner_ids) {
       std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-      std::stirng task_id = GenerateTaskId();
 
-      metadata_.[task_id] = RuntimeMetadata();
-      *metadata_.[task_id].mutable_started_at() = TimeUtil::GetCurrentTime();
-      *metadata_.[task_id].add_assigned_to_learner_id() = learner_id;
-      (*metadata_.[task_id].mutable_train_task_submitted_at())[learner_id] =
-          TimeUtil::GetCurrentTime();
-
-      SendTrainAsync(learner_id, task_id);
+      SendTrainAsync(learner_id);
 
       // TODO: should we wait before sending the evaluation task?
-      CommunityModelEvaluation community_eval;
-      community_model_evaluations_[task_id] = community_eval;
-      (*metadata_.[task_id].mutable_eval_task_submitted_at())[learner_id] =
-          TimeUtil::GetCurrentTime();
 
-      SendEvaluateAsync(learner_id, task_id);
+      SendEvaluateAsync(learner_id);
 
       UpdateLearnersTaskTemplates(to_schedule);
     }
@@ -272,7 +197,7 @@ class ControllerDefaultImpl : public Controller {
       // float ms_per_batch_slowest = std::numeric_limits<float>::min();
       float ms_per_epoch_slowest = std::numeric_limits<float>::min();
       for (const auto &learner_id : learners) {
-        const auto &metadata = local_tasks_metadata_[learner_id].front();
+        const auto &metadata = training_metadata_[learner_id].front();
         // if (metadata.processing_ms_per_batch() > ms_per_batch_slowest) {
         //   ms_per_batch_slowest = metadata.processing_ms_per_batch();
         // }
@@ -287,7 +212,7 @@ class ControllerDefaultImpl : public Controller {
 
       // Updates the task templates based on the slowest learner.
       for (const auto &learner_id : learners) {
-        const auto &metadata = local_tasks_metadata_[learner_id].front();
+        const auto &metadata = training_metadata_[learner_id].front();
 
         auto processing_ms_per_batch = metadata.processing_ms_per_batch();
         if (processing_ms_per_batch == 0) {
@@ -303,16 +228,19 @@ class ControllerDefaultImpl : public Controller {
     }  // end-if.
   }
 
-  void SendEvaluateAsync(const std::string &learner_id,
-                         const std::string &task_id) {
-    auto learner_stub = CreateLearnerStub(learner_id);
+  void SendEvaluateAsync(const std::string &learner_id) {
+    auto task_id = GenerateTaskId();
+    EvaluationMetadataMap evaluation_metadata;
+    evaluation_metadata_[task_id] = evaluation_metadata;
 
-    auto &cq = eval_tasks_cq_;
     EvaluateRequest request;
     *request.mutable_task_id() = task_id;
     *request.mutable_model() = model_manager_.GetModel();
 
     auto *call = new AsyncLearnerEvalCall;
+    auto &cq = eval_tasks_cq_;
+    auto learner_stub = CreateLearnerStub(learner_id);
+
     call->learner_id = learner_id;
     call->response_reader =
         learner_stub->PrepareAsyncEvaluate(&call->context, request, &cq);
@@ -360,18 +288,15 @@ class ControllerDefaultImpl : public Controller {
     }  // end of loop
   }
 
-  void SendTrainAsync(const std::string &learner_id,
-                      const std::string &task_id) {
-    auto learner_stub = CreateLearnerStub(learner_id);
-
-    auto &cq = run_tasks_cq_;
-
+  void SendTrainAsync(const std::string &learner_id) {
     TrainRequest request;
-    *request.mutable_task_id() = task_id;
+    *request.mutable_task_id() = GenerateTaskId();
     *request.mutable_model() = model_manager_.GetModel();
     *request.mutable_params() = learners_train_params_[learner_id];
 
     auto *call = new AsyncLearnerRunTaskCall;
+    auto &cq = run_tasks_cq_;
+    auto learner_stub = CreateLearnerStub(learner_id);
 
     call->learner_id = learner_id;
     call->response_reader =
@@ -428,8 +353,7 @@ class ControllerDefaultImpl : public Controller {
   // Handles responses to Train
   struct AsyncLearnerRunTaskCall : AsyncLearnerCall<Ack> {};
 
-  // Implementation of generic AsyncLearnerCall type to handle Evaluate
-  // responses.
+  // Handles responses to Evaluate
   struct AsyncLearnerEvalCall : AsyncLearnerCall<EvaluateResponse> {
     // Index to the community/global model evaluation metrics vector.
     uint32_t comm_eval_ref_idx;
@@ -445,11 +369,10 @@ class ControllerDefaultImpl : public Controller {
 }  // namespace
 
 std::unique_ptr<Controller> Controller::New(
-    const ServerParams &server_params,
     const GlobalTrainParams &global_train_params,
     const ModelStoreParams &model_store_params) {
-  return absl::make_unique<ControllerDefaultImpl>(
-      server_params, global_train_params, model_store_params);
+  return absl::make_unique<ControllerDefaultImpl>(global_train_params,
+                                                  model_store_params);
 }
 
 }  // namespace metisfl::controller

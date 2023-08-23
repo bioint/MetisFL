@@ -119,6 +119,19 @@ class ControllerServicerImpl : public ControllerServicer {
     return Status::OK;
   }
 
+  Status SetInitialModel(ServerContext *context, const Model *model,
+                         Ack *ack) override {
+    auto status = controller_->SetInitialModel(*model);
+    if (status.ok()) {
+      PLOG(INFO) << "Replaced Community Model.";
+      ack->set_status(true);
+      return Status::OK;
+    }
+
+    PLOG(ERROR) << "Couldn't Replace Community Model.";
+    return {StatusCode::UNAUTHENTICATED, std::string(status.message())};
+  }
+
   Status StartTraining(ServerContext *context, const Empty *request,
                        Ack *ack) override {
     const auto status = controller_->StartTraining();
@@ -153,9 +166,6 @@ class ControllerServicerImpl : public ControllerServicer {
         case absl::StatusCode::kInvalidArgument:
           ack->set_status(false);
           return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
-        case absl::StatusCode::kPermissionDenied:
-          ack->set_status(false);
-          return {StatusCode::PERMISSION_DENIED, std::string(status.message())};
         case absl::StatusCode::kNotFound:
           ack->set_status(false);
           return {StatusCode::NOT_FOUND, std::string(status.message())};
@@ -168,17 +178,13 @@ class ControllerServicerImpl : public ControllerServicer {
     return Status::OK;
   }
 
-  Status SetInitialModel(ServerContext *context, const Model *model,
-                         Ack *ack) override {
-    auto status = controller_->SetInitialModel(*model);
-    if (status.ok()) {
-      PLOG(INFO) << "Replaced Community Model.";
-      ack->set_status(true);
-      return Status::OK;
-    }
+  Status GetLogs(ServerContext *context, const Empty *request, Logs *logs) {
+    auto training_metadata = controller_->GetTrainingMetadata();
+    auto evaluation_metadata = controller_->GetEvaluationMetadata();
+    auto runtime_metadata = controller_->GetRuntimeMetadata();
 
-    PLOG(ERROR) << "Couldn't Replace Community Model.";
-    return {StatusCode::UNAUTHENTICATED, std::string(status.message())};
+    // TODO : Implement this
+    return Status::OK;
   }
 
   Status ShutDown(ServerContext *context, const Empty *request,

@@ -45,6 +45,5 @@ message EvaluationParams {
 
 message EvaluateResponse {
   string task_id = 1;
-  map<string, float> metrics_values = 2;
+  map<string, float> metadata = 2;
 }
-

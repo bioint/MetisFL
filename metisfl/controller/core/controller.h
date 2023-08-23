@@ -49,14 +49,11 @@ class Controller {
 
   virtual absl::Status TrainDone(const TrainDoneRequest &task) = 0;
 
-  virtual std::vector<RuntimeMetadata> GetRuntimeMetadataLineage(
-      uint32_t num_steps) = 0;
+  virtual TrainingMetadataMap GetTrainingMetadata() = 0;
 
-  virtual std::vector<CommunityModelEvaluation> GetEvaluationLineage(
-      uint32_t num_steps) = 0;
+  virtual EvaluationMetadataMap GetEvaluationMetadata() = 0;
 
-  virtual std::vector<TaskExecutionMetadata> GetLocalTaskLineage(
-      const std::string &learner_id, uint32_t num_steps) = 0;
+  virtual RuntimeMetadataMap GetRuntimeMetadata() = 0;
 
   virtual std::string GenerateTaskId() = 0;
 
@@ -74,16 +71,15 @@ class Controller {
   TrainParamsMap learners_train_params_;
   EvaluationParamsMap learners_eval_params_;
 
-  TaskMetadataMap local_tasks_metadata_;
-  TrainingMetadataMap metadata_;
-  CommunityModelEvaluationMap community_model_evaluations_;
+  TaskLearnerMap task_learner_map_;
+  TrainingMetadataMap training_metadata_;
+  EvaluationMetadataMap evaluation_metadata_;
 
   grpc::CompletionQueue run_tasks_cq_;
   grpc::CompletionQueue eval_tasks_cq_;
 
  public:
   static std::unique_ptr<Controller> New(
-      const ServerParams &server_params,
       const GlobalTrainParams &global_train_params,
       const ModelStoreParams &model_store_params);
 };

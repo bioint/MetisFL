@@ -46,10 +46,10 @@ class ControllerServiceStub(object):
                 request_serializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
                 )
-        self.GetStatistics = channel.unary_unary(
-                '/metisfl.ControllerService/GetStatistics',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsRequest.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsResponse.FromString,
+        self.GetLogs = channel.unary_unary(
+                '/metisfl.ControllerService/GetLogs',
+                request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLogsResponse.FromString,
                 )
         self.ShutDown = channel.unary_unary(
                 '/metisfl.ControllerService/ShutDown',
@@ -97,7 +97,7 @@ class ControllerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetStatistics(self, request, context):
+    def GetLogs(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -142,10 +142,10 @@ def add_ControllerServiceServicer_to_server(servicer, server):
                     request_deserializer=metisfl_dot_proto_dot_controller__pb2.TrainDoneRequest.FromString,
                     response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
             ),
-            'GetStatistics': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetStatistics,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsRequest.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetStatisticsResponse.SerializeToString,
+            'GetLogs': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetLogs,
+                    request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
+                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetLogsResponse.SerializeToString,
             ),
             'ShutDown': grpc.unary_unary_rpc_method_handler(
                     servicer.ShutDown,
@@ -265,7 +265,7 @@ class ControllerService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetStatistics(request,
+    def GetLogs(request,
             target,
             options=(),
             channel_credentials=None,
@@ -275,9 +275,9 @@ class ControllerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetStatistics',
-            metisfl_dot_proto_dot_controller__pb2.GetStatisticsRequest.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetStatisticsResponse.FromString,
+        return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetLogs',
+            metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
+            metisfl_dot_proto_dot_controller__pb2.GetLogsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
