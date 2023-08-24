@@ -45,6 +45,8 @@ inline std::string GenerateLearnerId(const std::string &hostname,
   return absl::StrCat(hostname, ":", port);
 }
 
+std::string GenerateRadnomId();
+
 inline int ReadParseFile(std::string &file_content,
                          const std::string &file_name) {
   std::ifstream _file;

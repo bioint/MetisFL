@@ -59,7 +59,7 @@ class DriverSession(object):
         """
 
         learner_index = random.randint(0, self._num_learners - 1)
-        sleep(2)
+
         model = self._learner_clients[learner_index].get_model(
             request_timeout=30, request_retries=2, block=True)
 

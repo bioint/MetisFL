@@ -17,7 +17,7 @@ class Scheduler {
   // learner `learner_id` has just completed its task.
   virtual std::vector<std::string> ScheduleNext(
       const std::string &learner_id,
-      const std::vector<std::string> &active_learners) = 0;
+      const int num_active_learners) = 0;
 
   virtual std::string name() = 0;
 };

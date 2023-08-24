@@ -38,7 +38,6 @@ message DType {
 
 }
 
-// FIXME: This is not used anywhere
 message TensorQuantifier {
   optional uint32 tensor_non_zeros = 1; // We set the field as optional because we want to print/record the zero values.
   optional uint32 tensor_zeros = 2; // We set the field as optional because we want to print/record the zero values.

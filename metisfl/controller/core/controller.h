@@ -54,8 +54,6 @@ class Controller {
 
   virtual RuntimeMetadataMap GetRuntimeMetadata() = 0;
 
-  virtual std::string GenerateTaskId() = 0;
-
   virtual void Shutdown() = 0;
 
  private:
@@ -70,8 +68,8 @@ class Controller {
 
   LearnersMap learners_;
   LearnerStubMap learners_stub_;
-  TrainParamsMap learners_train_params_;
-  EvaluationParamsMap learners_eval_params_;
+  TrainParamsMap train_params_;
+  EvaluationParamsMap eval_params_;
 
   TaskLearnerMap task_learner_map_;
   TrainingMetadataMap training_metadata_;

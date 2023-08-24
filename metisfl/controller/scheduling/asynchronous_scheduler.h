@@ -11,7 +11,7 @@ class AsynchronousScheduler : public Scheduler {
  public:
   std::vector<std::string> ScheduleNext(
       const std::string &learner_id,
-      const std::vector<std::string> &active_learners) override {
+      const int num_active_learners) override {
     // Schedules current learner for its next task.
     return std::vector<std::string>{learner_id};
   }

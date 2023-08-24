@@ -11,14 +11,13 @@ namespace metisfl::controller {
 class SynchronousScheduler : public Scheduler {
  public:
   std::vector<std::string> ScheduleNext(
-      const std::string &learner_id,
-      const std::vector<std::string> &active_learners) override {
+      const std::string &learner_id, const int num_active_learners) override {
     // First, it adds the learner id to the set.
     learner_ids_.insert(learner_id);
 
     // Second, it checks if the number of learners in the set is the same as
     // `total_num_learners_`.
-    if (learner_ids_.size() != active_learners.size()) {
+    if (learner_ids_.size() != num_active_learners) {
       // If not, then return an empty list. No need to schedule any task.
       return {};
     }

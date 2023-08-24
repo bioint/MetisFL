@@ -42,6 +42,8 @@ class ModelManager {
       std::map<std::string, std::vector<const Model *>> selected_models,
       const absl::flat_hash_map<std::string, double> scaling_factors);
 
+  vodi RecordTime();
+
   bool is_initialized_;
   Model model_;
   GlobalTrainParams global_train_params_;

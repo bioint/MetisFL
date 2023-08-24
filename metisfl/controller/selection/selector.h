@@ -15,7 +15,7 @@ class Selector {
   // learners that are currently part of the federation.
   virtual std::vector<std::string> Select(
       const std::vector<std::string> &scheduled_learners,
-      const std::vector<std::string> &active_learners) = 0;
+      const int num_active_learners) = 0;
 
   virtual std::string name() = 0;
 };

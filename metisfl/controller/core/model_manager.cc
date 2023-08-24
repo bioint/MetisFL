@@ -40,77 +40,43 @@ class ModelManager {
     model_store_->EraseModels(learner_id);
   }
 
-  void UpdateModel(const std::string &task_id,
-                   const std::vector<std::string> &learner_ids,
+  void UpdateModel(const std::vector<std::string> &learner_ids,
                    const absl::flat_hash_map<std::string, double>
                        &scaling_factors) override {
     std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
+    auto update_id = metisfl::controller::GenerateRadnomId();
 
-    *metadata_.at(metadata_ref_idx).mutable_model_aggregation_started_at() =
+    metadata_[update_id] = std::make_unique<Metadata>();
+    *metadata_[update_id].mutable_model_aggregation_started_at() =
         TimeUtil::GetCurrentTime();
     auto start_time_aggregation = std::chrono::high_resolution_clock::now();
 
-    int stride_length = GetStrideLength(selected_learners.size());
+    int stride_length = GetStrideLength(learner_ids.size());
 
     /* Since absl does not support crbeing() or iterator decrement (--) we need
        to use this. method to find the itr of the last element. */
     absl::flat_hash_map<std::string, Learner *>::iterator last_elem_itr;
-    for (auto itr = selected_learners.begin(); itr != selected_learners.end();
-         itr++) {
+    for (auto itr = learner_ids.begin(); itr != learner_ids.end(); itr++) {
       last_elem_itr = itr;
     }
 
-    for (auto itr = selected_learners.begin(); itr != selected_learners.end();
-         itr++) {
-      auto const &learner_id = itr->first;
-
+    for (auto leraner_id : learner_ids) {
       std::vector<std::pair<std::string, int>> to_select_block;
-      to_select_block.emplace_back(learner_id, select_lineage_length);
+      to_select_block.emplace_back(learner_id, lineage_length);
       uint32_t block_size = to_select_block.size();
 
       if (block_size == stride_length || itr == last_elem_itr) {
-        *metadata_.at(metadata_ref_idx)
-             .mutable_model_aggregation_block_size()
-             ->Add() = block_size;
+        *metadata_[update_id].mutable_model_aggregation_block_size()->Add() =
+            block_size;
 
         auto selected_models = SelectModels(to_select_block);
 
         auto to_aggregate_block =
             GetAggregationPairs(selected_models, scaling_factors);
 
-        /* --- AGGREGATE MODELS --- */
-        // FIXME(@stripeli): When using Redis as backend and setting to
-        //  store all models (i.e., EvictionPolicy = NoEviction) then
-        //  the collection of models passed here are all models and
-        //  therefore the number of variables becomes inconsistent with the
-        //  number of variables of the original model. For instance, if a
-        //  learner has two models stored in the collection and each model
-        //  has 6 variables then the total variables of the sampled model
-        //  will be 12 not 6 (the expected)!. Try the following for testing:
-        //    auto total_sampled_vars = sample_model->variables_size();
-        //    PLOG(INFO) << "TOTAL SAMPLED VARS:" << total_sampled_vars;
+        model_ = aggregator_->Aggregate(to_aggregate_block);
 
-        auto start_time_block_aggregation =
-            std::chrono::high_resolution_clock::now();
-
-        new_community_model = aggregator_->Aggregate(to_aggregate_block);
-
-        auto end_time_block_aggregation =
-            std::chrono::high_resolution_clock::now();
-
-        std::chrono::duration<double, std::milli>
-            elapsed_time_block_aggregation =
-                end_time_block_aggregation - start_time_block_aggregation;
-
-        *metadata_.at(metadata_ref_idx)
-             .mutable_model_aggregation_block_duration_ms()
-             ->Add() = elapsed_time_block_aggregation.count();
-
-        long block_memory = GetTotalMemory();
-
-        *metadata_.at(metadata_ref_idx)
-             .mutable_model_aggregation_block_memory_kb()
-             ->Add() = (double)block_memory;
+        RecordTime();
 
         // Cleanup
         model_store_->ResetState();
@@ -125,10 +91,9 @@ class ModelManager {
     auto end_time_aggregation = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> elapsed_time_aggregation =
         end_time_aggregation - start_time_aggregation;
-    metadata_.at(metadata_ref_idx)
-        .set_model_aggregation_total_duration_ms(
-            elapsed_time_aggregation.count());
-    *metadata_.at(metadata_ref_idx).mutable_model_aggregation_completed_at() =
+    metadata_[update_id].set_model_aggregation_total_duration_ms(
+        elapsed_time_aggregation.count());
+    *metadata_[update_id].mutable_model_aggregation_completed_at() =
         TimeUtil::GetCurrentTime();
   }
 
@@ -174,7 +139,7 @@ class ModelManager {
 
     for (auto const &[selected_learner_id, selected_learner_models] :
          selected_models) {
-      (*metadata_.at(metadata_ref_idx)
+      (*metadata_[update_id]
             .mutable_model_selection_duration_ms())[selected_learner_id] =
           avg_time_selection_per_model;
     }
@@ -185,17 +150,40 @@ class ModelManager {
       std::map<std::string, std::vector<const Model *>> selected_models,
       const absl::flat_hash_map<std::string, double> scaling_factors) override {
     AggregationPairs to_aggregate_block;
+
     std::vector<std::pair<const Model *, double>>
         to_aggregate_learner_models_tmp;
+
     for (auto const &[selected_learner_id, selected_learner_models] :
          selected_models) {
       auto scaling_factor = scaling_factors[selected_learner_id];
+
       for (auto it : selected_learner_models) {
         to_aggregate_learner_models_tmp.emplace_back(it, scaling_factor);
       }
+
       to_aggregate_block.push_back(to_aggregate_learner_models_tmp);
       to_aggregate_learner_models_tmp.clear();
     }
+
     return to_aggregate_block;
+  }
+
+  void RecordTime() override {
+    auto start_time_block_aggregation =
+        std::chrono::high_resolution_clock::now();
+
+    auto end_time_block_aggregation = std::chrono::high_resolution_clock::now();
+
+    std::chrono::duration<double, std::milli> elapsed_time_block_aggregation =
+        end_time_block_aggregation - start_time_block_aggregation;
+
+    *metadata_[update_id].mutable_model_aggregation_block_duration_ms()->Add() =
+        elapsed_time_block_aggregation.count();
+
+    long block_memory = GetTotalMemory();
+
+    *metadata_[update_id].mutable_model_aggregation_block_memory_kb()->Add() =
+        (double)block_memory;
   }
 };

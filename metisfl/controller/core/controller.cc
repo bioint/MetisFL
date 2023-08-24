@@ -12,7 +12,8 @@ class ControllerDefaultImpl : public Controller {
       : global_train_params_(move(global_train_params)),
         learners_(),
         learners_stub_(),
-        learners_train_params_(),
+        train_params_(),
+        eval_params_(),
         learners_mutex_(),
         scheduling_pool_(2),
         run_tasks_cq_(),
@@ -67,7 +68,8 @@ class ControllerDefaultImpl : public Controller {
     auto it = learners_.find(learner_id);
     learners_.erase(it);
     learners_stub_.erase(learner_id);
-    learners_train_params_.erase(learner_id);
+    train_params_.erase(learner_id);
+    eval_params_.erase(learner_id);
 
     PLOG(INFO) << "Removed learner with id: " << learner_id << ".";
 
@@ -105,6 +107,7 @@ class ControllerDefaultImpl : public Controller {
       std::vector<std::string> selected_ids =
           selector_->Select(to_schedule, GetLearnerIds());
 
+      // FIXME:
       auto scaling_factors = scaler_->ComputeScalingFactors(selected_ids);
 
       model_manager_.->UpdateModel(task_id, selected_ids);
@@ -220,7 +223,7 @@ class ControllerDefaultImpl : public Controller {
         }
         int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
 
-        auto &task_template = learners_train_params_[learner_id];
+        auto &task_template = train_params_[learner_id];
         task_template.set_num_local_updates(num_local_updates);
       }
 
@@ -228,13 +231,14 @@ class ControllerDefaultImpl : public Controller {
   }
 
   void SendEvaluateAsync(const std::string &learner_id) {
-    auto task_id = GenerateTaskId();
+    auto task_id = metisfl::controller::GenerateRadnomId();
     EvaluationMetadataMap evaluation_metadata;
     evaluation_metadata_[task_id] = evaluation_metadata;
 
     EvaluateRequest request;
     *request.mutable_task_id() = task_id;
     *request.mutable_model() = model_manager_.GetModel();
+    *request.mutable_params() = eval_params_[learner_id];
 
     auto *call = new AsyncLearnerEvalCall;
     auto &cq = eval_tasks_cq_;
@@ -289,9 +293,9 @@ class ControllerDefaultImpl : public Controller {
 
   void SendTrainAsync(const std::string &learner_id) {
     TrainRequest request;
-    *request.mutable_task_id() = GenerateTaskId();
+    *request.mutable_task_id() = metisfl::controller::GenerateRadnomId();
     *request.mutable_model() = model_manager_.GetModel();
-    *request.mutable_params() = learners_train_params_[learner_id];
+    *request.mutable_params() = train_params_[learner_id];
 
     auto *call = new AsyncLearnerRunTaskCall;
     auto &cq = run_tasks_cq_;

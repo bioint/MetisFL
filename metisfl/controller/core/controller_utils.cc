@@ -89,6 +89,11 @@ std::unique_ptr<Selector> CreateSelector() {
   return absl::make_unique<ScheduledCardinality>();
 }
 
+std::string GenerateRadnomId() {
+  std::string id = absl::StrCat(absl::ToUnixMicros(absl::Now()));
+  return id;
+}
+
 long GetTotalMemory() {
   // This function records the entire process memory.
   // The memory size is ever-increasing. In other words,
