@@ -59,8 +59,6 @@ message Model {
 }
 
 message FederatedModel {
-  uint32 num_contributors = 1;
-  uint32 global_iteration = 2;
   Model model = 3;
 }
 

@@ -40,8 +40,7 @@ class Controller {
 
   virtual absl::Status SetInitialModel(const Model &model) = 0;
 
-  virtual absl::StatusOr<std::string> AddLearner(
-      const LearnerDescriptor &learner) = 0;
+  virtual absl::StatusOr<std::string> AddLearner(const Learner &learner) = 0;
 
   virtual absl::Status StartTraining() = 0;
 
@@ -60,12 +59,15 @@ class Controller {
   virtual void Shutdown() = 0;
 
  private:
-  std::unique_ptr<ModelManager> model_manager_;
+  virtual absl::flat_hash_map<std::string, double> ComputeScalingFactors(
+      const std::vector<std::string> &selected_learners) = 0;
 
+  std::unique_ptr<ModelManager> model_manager_;
   GlobalTrainParams global_train_params_;
 
   std::mutex learners_mutex_;
   BS::thread_pool scheduling_pool_;
+
   LearnersMap learners_;
   LearnerStubMap learners_stub_;
   TrainParamsMap learners_train_params_;

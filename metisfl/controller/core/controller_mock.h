@@ -11,12 +11,12 @@ namespace metisfl::controller {
 class MockController : public Controller {
  public:
   MOCK_METHOD(ControllerParams &, GetParams, (), (const, override));
-  MOCK_METHOD(std::vector<LearnerDescriptor>,
+  MOCK_METHOD(std::vector<Learner>,
               GetLearners,
               (),
               (const, override));
   MOCK_METHOD(uint32_t, GetNumLearners, (), (const, override));
-  MOCK_METHOD(absl::StatusOr<LearnerDescriptor>,
+  MOCK_METHOD(absl::StatusOr<Learner>,
               AddLearner,
               (const ServerEntity &server_entity, const DatasetSpec &dataset_spec),
               (override));

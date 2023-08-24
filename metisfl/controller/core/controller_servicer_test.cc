@@ -52,7 +52,7 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearnersEmptyRequest) {
 
   EXPECT_CALL(controller_, GetLearners())
         .Times(Exactly(1))
-        .WillOnce(Return(std::vector<LearnerDescriptor>()));
+        .WillOnce(Return(std::vector<Learner>()));
 
   auto status = service_->GetParticipatingLearners(&ctx_, &req_, &res_);
 
@@ -63,7 +63,7 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearnersEmptyRequest) {
 TEST_F(ControllerServicerImplTest, GetParticipatingLearnersEmptyVector) {
   EXPECT_CALL(controller_, GetLearners())
       .Times(Exactly(1))
-      .WillOnce(Return(std::vector<LearnerDescriptor>()));
+      .WillOnce(Return(std::vector<Learner>()));
 
   GetParticipatingLearnersRequest req_;
   GetParticipatingLearnersResponse res_;
@@ -238,8 +238,8 @@ TEST_F(ControllerServicerImplTest, GetEvaluationLineageRequestIsNullptr){
 TEST_F(ControllerServicerImplTest, GetEvaluationLineageEvaluationLineage) {
 
   LearnerState learnerState = ParseTextOrDie<LearnerState>(kLearnerState);
-  const LearnerDescriptor &learnerDescriptor = learnerState.learner();
-  std::string learner_id = learnerDescriptor.id();
+  const Learner &Learner = learnerState.learner();
+  std::string learner_id = Learner.id();
   GetLocalModelEvaluationLineageRequest request;
   GetLocalModelEvaluationLineageResponse response;
 

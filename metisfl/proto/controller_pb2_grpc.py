@@ -49,7 +49,7 @@ class ControllerServiceStub(object):
         self.GetLogs = channel.unary_unary(
                 '/metisfl.ControllerService/GetLogs',
                 request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-                response_deserializer=metisfl_dot_proto_dot_controller__pb2.GetLogsResponse.FromString,
+                response_deserializer=metisfl_dot_proto_dot_controller__pb2.Logs.FromString,
                 )
         self.ShutDown = channel.unary_unary(
                 '/metisfl.ControllerService/ShutDown',
@@ -145,7 +145,7 @@ def add_ControllerServiceServicer_to_server(servicer, server):
             'GetLogs': grpc.unary_unary_rpc_method_handler(
                     servicer.GetLogs,
                     request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
-                    response_serializer=metisfl_dot_proto_dot_controller__pb2.GetLogsResponse.SerializeToString,
+                    response_serializer=metisfl_dot_proto_dot_controller__pb2.Logs.SerializeToString,
             ),
             'ShutDown': grpc.unary_unary_rpc_method_handler(
                     servicer.ShutDown,
@@ -277,7 +277,7 @@ class ControllerService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/GetLogs',
             metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
-            metisfl_dot_proto_dot_controller__pb2.GetLogsResponse.FromString,
+            metisfl_dot_proto_dot_controller__pb2.Logs.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

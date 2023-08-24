@@ -28,8 +28,8 @@ namespace metisfl::controller
       // The configuration for the backend.
       ModelStoreSpecs store_specs;
       ModelStoreConfig store_config;
-      std::map<std::string, LearnerDescriptor> learners_;
-      LearnerDescriptor learner_state;
+      std::map<std::string, Learner> learners_;
+      Learner learner_state;
       std::unique_ptr<ModelStore> model_store;
 
     public:

@@ -14,10 +14,10 @@ using ::testing::UnorderedElementsAre;
 using ::testing::UnorderedElementsAreArray;
 using ::testing::Return;
 
-std::vector<LearnerDescriptor> CreateLearners(int n) {
-  std::vector<LearnerDescriptor> learners;
+std::vector<Learner> CreateLearners(int n) {
+  std::vector<Learner> learners;
   for (int i = 0; i < n; ++i) {
-    LearnerDescriptor learner;
+    Learner learner;
     learner.set_id(absl::StrCat("learner", i + 1));
     learners.push_back(learner);
   }

@@ -11,7 +11,7 @@ service ControllerService {
 
   rpc SetInitialModel (Model) returns (Ack) {}
 
-  rpc JoinFederation (LearnerDescriptor) returns (LearnerId) {}
+  rpc JoinFederation (Learner) returns (LearnerId) {}
 
   rpc LeaveFederation (LearnerId) returns (Ack) {}
 
@@ -24,7 +24,7 @@ service ControllerService {
   rpc ShutDown (Empty) returns (Ack) {}
 }
 
-message LearnerDescriptor {
+message Learner {
   string hostname = 1;
   uint32 port = 2;
   string root_certificate_bytes = 3;
@@ -63,12 +63,12 @@ message Logs {
   // The following maps are indexed by task_id.
   map<string, TrainingMetadata> training_metadata = 2;
   map<string, EvaluationMetadata> evaluation_metadata = 3;
-  map<string, RuntimeMetadata> runtime_metadata = 4;
+  map<string, ModelMetadata> model_metadata = 4;
 }
 
 // TODO: record task stard/end time
 
-message RuntimeMetadata {
+message ModelMetadata {
   map<string, double> model_insertion_duration_ms = 10;
   map<string, double> model_selection_duration_ms = 11;
   google.protobuf.Timestamp model_aggregation_started_at = 12;

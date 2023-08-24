@@ -39,7 +39,7 @@ typedef std::unique_ptr<LearnerService::Stub> LearnerStub;
 
 // Indexed by learner_id
 typedef std::unique_ptr<std::string, LearnerStub> LearnerStubMap;
-typedef absl::flat_hash_map<std::string, LearnerDescriptor *> LearnersMap;
+typedef absl::flat_hash_map<std::string, Learner *> LearnersMap;
 typedef absl::flat_hash_map<std::string, TrainParams> TrainParamsMap;
 typedef absl::flat_hash_map<std::string, EvaluationParams> EvaluationParamsMap;
 
@@ -50,6 +50,6 @@ typedef absl::flat_hash_map<std::string, TrainingMetadata *>
     TrainingMetadataMap;
 typedef absl::flat_hash_map<std::string, EvaluationMetadata *>
     EvaluationMetadataMap;
-typedef std::unique_ptr<std::string, RuntimeMetadata> RuntimeMetadataMap;
+typedef std::unique_ptr<std::string, ModelMetadata> ModelMetadataMap;
 
 #endif  // METISFL_CONTROLLER_CORE_TYPES_H_

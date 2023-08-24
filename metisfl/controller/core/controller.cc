@@ -19,6 +19,7 @@ class ControllerDefaultImpl : public Controller {
         eval_tasks_cq_() {
     model_manager_ =
         std::make_unique<ModelManager>(global_train_params, model_store_params);
+    scaler_ = CreateScaler(global_train_params.scaling_factor);
 
     std::thread run_tasks_digest_t_(
         &ControllerDefaultImpl::DigestTrainResponses, this);
@@ -29,6 +30,8 @@ class ControllerDefaultImpl : public Controller {
     eval_tasks_digest_t_.detach();
   }
 
+  uint32_t GetNumLearners() const override { return learners_.size(); }
+
   std::vector<std::string> GetLearnerIds() const override {
     std::vector<std::string> learner_ids;
     for (const auto &[key, learner] : learners_) {
@@ -37,10 +40,8 @@ class ControllerDefaultImpl : public Controller {
     return learner_ids;
   }
 
-  uint32_t GetNumLearners() const override { return learners_.size(); }
-
   virtual absl::StatusOr<std::string> AddLearner(
-      const LearnerDescriptor &learner) override {
+      const Learner &learner) override {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
     const std::string learner_id =
@@ -68,14 +69,14 @@ class ControllerDefaultImpl : public Controller {
     learners_stub_.erase(learner_id);
     learners_train_params_.erase(learner_id);
 
-    PLOG(INFO) << "Removed learner from controller: " << learner_id;
+    PLOG(INFO) << "Removed learner with id: " << learner_id << ".";
 
     return absl::OkStatus();
   }
 
   absl::Status StartTraining() override {
     if (!model_manager_.->IsInitialized())
-      return absl::FailedPreconditionError("Model is is not initialized.");
+      return absl::FailedPreconditionError("Model is not initialized.");
 
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
@@ -92,29 +93,22 @@ class ControllerDefaultImpl : public Controller {
     auto learner_id = request.learner_id();
     auto task_id = request.task_id();
 
-    // This is a blocking call.
     model_manager_.->InsertModel(learner_id, request.model());
-
     training_metadata_[task_id] = request.metadata();
 
     auto to_schedule = scheduler_->ScheduleNext(learner_id, GetLearnerIds());
+    if (!to_schedule.empty()) {
+      // Doing the scheduling first so that we don't wait for the aggregation
+      scheduling_pool_.push_task(
+          [this, to_schedule] { ScheduleTasks(to_schedule); });
 
-    std::vector<std::string> selected_ids =
-        selector_->Select(to_schedule, GetLearnerIds());
+      std::vector<std::string> selected_ids =
+          selector_->Select(to_schedule, GetLearnerIds());
 
-    LearnersMap selected_learners;
-    TaskMetadataMap selected_task_metadata;
-    for (const auto &id : selected_ids) {
-      if (learners_.contains(id) && training_metadata_.contains(id)) {
-        selected_learners[id] = &learners_.at(id);
-        selected_task_metadata[id] = &training_metadata_.at(id).back();
-      }
+      auto scaling_factors = scaler_->ComputeScalingFactors(selected_ids);
+
+      model_manager_.->UpdateModel(task_id, selected_ids);
     }
-
-    model_manager_.->UpdateModel(selected_learners, selected_task_metadata);
-
-    scheduling_pool_.push_task(
-        [this, to_schedule] { ScheduleTasks(to_schedule); });
 
     return absl::OkStatus();
   }
@@ -162,6 +156,11 @@ class ControllerDefaultImpl : public Controller {
       return absl::NotFoundError("Learner does not exist.");
 
     return absl::OkStatus();
+  }
+
+  absl::flat_hash_map<std::string, double> ComputeScalingFactors(
+      const std::vector<std::string> &selected_learners) override {
+    // TODO:
   }
 
   void ScheduleTasks(const std::vector<std::string> &learner_ids) {

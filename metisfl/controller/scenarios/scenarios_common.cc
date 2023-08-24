@@ -62,7 +62,7 @@ namespace metisfl::controller
   LearnerState ScenariosCommon::CreateLearnerState(
       int num_train_examples, int num_validation_examples, int num_test_examples)
   {
-    LearnerDescriptor _learnerDescriptor;
+    Learner _Learner;
     DatasetSpec _dataSpec;
     LearnerState _learnerState;
 
@@ -70,8 +70,8 @@ namespace metisfl::controller
     _dataSpec.set_num_validation_examples(num_validation_examples);
     _dataSpec.set_num_test_examples(num_test_examples);
 
-    *_learnerDescriptor.mutable_dataset_spec() = _dataSpec;
-    *_learnerState.mutable_learner() = _learnerDescriptor;
+    *_Learner.mutable_dataset_spec() = _dataSpec;
+    *_learnerState.mutable_learner() = _Learner;
 
     return _learnerState;
   }

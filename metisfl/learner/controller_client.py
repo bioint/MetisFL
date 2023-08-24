@@ -86,7 +86,7 @@ class GRPCClient(object):
 
             def _request(_timeout=None):
 
-                request = controller_pb2.LearnerDescriptor(
+                request = controller_pb2.Learner(
                     hostname=server_params.hostname,
                     port=server_params.port,
                     root_certificate_bytes=read_certificate(
@@ -188,7 +188,7 @@ class GRPCClient(object):
     def _join_federation(
         self,
         stub: controller_pb2_grpc.ControllerServiceStub,
-        request: controller_pb2.LearnerDescriptor,
+        request: controller_pb2.Learner,
         timeout: Optional[int] = None
     ) -> None:
         """Sends a request to the Controller to join the federation.
@@ -197,8 +197,8 @@ class GRPCClient(object):
         ----------
         stub : controller_pb2_grpc.ControllerServiceStub
             The gRPC stub.
-        request : controller_pb2.LearnerDescriptor
-            The request Proto object with the LearnerDescriptor.
+        request : controller_pb2.Learner
+            The request Proto object with the Learner.
         timeout : Optional[int], optional
             The timeout in seconds, by default None
 

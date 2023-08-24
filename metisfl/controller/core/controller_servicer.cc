@@ -93,7 +93,7 @@ class ControllerServicerImpl : public ControllerServicer {
   }
 
   Status JoinFederation(ServerContext *context,
-                        const LearnerDescriptor *learner,
+                        const Learner *learner,
                         LearnerId *learnerId) override {
     if (learner->hostname().empty() || learner->port() <= 0 ||
         learner->num_training_examples() <= 0) {
