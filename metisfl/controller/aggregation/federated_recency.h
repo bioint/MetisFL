@@ -11,11 +11,11 @@ template <typename T>
 class FederatedRecency : public AggregationFunction,
                          FederatedRollingAverageBase<T> {
  public:
-  FederatedModel Aggregate(AggregationPairs &pairs) override;
+  FederatedModel Aggregate(std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
-  [[nodiscard]] inline std::string Name() const override { return "FedRec"; }
+  inline std::string Name() const override { return "FedRec"; }
 
-  [[nodiscard]] inline int RequiredLearnerLineageLength() const override {
+  inline int RequiredLearnerLineageLength() const override {
     return 2;  // The Async strategy keeps upto two models in its cache.
   }
 

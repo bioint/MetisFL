@@ -2,8 +2,6 @@
 #ifndef METISFL_METISFL_CONTROLLER_COMMON_MACROS_H_
 #define METISFL_METISFL_CONTROLLER_COMMON_MACROS_H_
 
-#include <google/protobuf/text_format.h>
-
 #include <string>
 
 #define VALIDATE(value)                                            \
@@ -24,14 +22,5 @@
     ::absl::Status _status = (expr);                                         \
     if (ABSL_PREDICT_FALSE(!_status.ok())) return _status;                   \
   } while (0)
-
-namespace proto {
-template <typename T>
-T ParseTextOrDie(const std::string &input) {
-  T result;
-  VALIDATE(google::protobuf::TextFormat::ParseFromString(input, &result));
-  return result;
-}
-}  // namespace proto
 
 #endif  // METISFL_METISFL_CONTROLLER_COMMON_MACROS_H_

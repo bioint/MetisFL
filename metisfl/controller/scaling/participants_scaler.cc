@@ -3,10 +3,11 @@
 
 namespace metisfl::controller {
 
-absl::flat_hash_map<std::string, double>
-ParticipantsScaler::ComputeScalingFactors(
+absl::flat_hash_map<std::string, double> ComputeScalingFactors(
     const absl::flat_hash_map<std::string, Learner> &all_states,
-    const absl::flat_hash_map<std::string, Learner *> &participating_states) {
+    const absl::flat_hash_map<std::string, Learner *> &participating_states,
+    const absl::flat_hash_map<std::string, TrainingMetadata *>
+        &participating_metadatas) {
   /*
    * For a single (active or participating) learner the scaling factor is the
    * identity value (=1). For multiple learners, the scaling factors are the

@@ -17,11 +17,11 @@ from metisfl.proto import model_pb2 as metisfl_dot_proto_dot_model__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"\xe7\x01\n\x11LearnerDescriptor\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x34\n\x16root_certificate_bytes\x18\x03 \x01(\tR\x14rootCertificateBytes\x12\x38\n\x18public_certificate_bytes\x18\x04 \x01(\tR\x16publicCertificateBytes\x12\x32\n\x15num_training_examples\x18\x05 \x01(\rR\x13numTrainingExamples\"\x1b\n\tLearnerId\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\xa7\x01\n\x10TrainDoneRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x17\n\x07task_id\x18\x02 \x01(\tR\x06taskId\x12$\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12\x35\n\x08metadata\x18\x04 \x01(\x0b\x32\x19.metisfl.TrainingMetadataR\x08metadata\"\xf5\x02\n\x10TrainingMetadata\x12@\n\x07metrics\x18\x01 \x03(\x0b\x32&.metisfl.TrainingMetadata.MetricsEntryR\x07metrics\x12)\n\x10\x63ompleted_epochs\x18\x02 \x01(\x02R\x0f\x63ompletedEpochs\x12+\n\x11\x63ompleted_batches\x18\x03 \x01(\rR\x10\x63ompletedBatches\x12\x1d\n\nbatch_size\x18\x04 \x01(\rR\tbatchSize\x12\x35\n\x17processing_ms_per_epoch\x18\x05 \x01(\x02R\x14processingMsPerEpoch\x12\x35\n\x17processing_ms_per_batch\x18\x06 \x01(\x02R\x14processingMsPerBatch\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\x94\x01\n\x12\x45valuationMetadata\x12\x42\n\x07metrics\x18\x01 \x03(\x0b\x32(.metisfl.EvaluationMetadata.MetricsEntryR\x07metrics\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x02R\x05value:\x02\x38\x01\"\xa7\x05\n\x04Logs\x12K\n\x10task_learner_map\x18\x01 \x03(\x0b\x32!.metisfl.Logs.TaskLearnerMapEntryR\x0etaskLearnerMap\x12P\n\x11training_metadata\x18\x02 \x03(\x0b\x32#.metisfl.Logs.TrainingMetadataEntryR\x10trainingMetadata\x12V\n\x13\x65valuation_metadata\x18\x03 \x03(\x0b\x32%.metisfl.Logs.EvaluationMetadataEntryR\x12\x65valuationMetadata\x12G\n\x0emodel_metadata\x18\x04 \x03(\x0b\x32 .metisfl.Logs.ModelMetadataEntryR\rmodelMetadata\x1a\x41\n\x13TaskLearnerMapEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1a^\n\x15TrainingMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12/\n\x05value\x18\x02 \x01(\x0b\x32\x19.metisfl.TrainingMetadataR\x05value:\x02\x38\x01\x1a\x62\n\x17\x45valuationMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x31\n\x05value\x18\x02 \x01(\x0b\x32\x1b.metisfl.EvaluationMetadataR\x05value:\x02\x38\x01\x1aX\n\x12ModelMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12,\n\x05value\x18\x02 \x01(\x0b\x32\x16.metisfl.ModelMetadataR\x05value:\x02\x38\x01\"\xcd\x07\n\rModelMetadata\x12s\n\x1bmodel_insertion_duration_ms\x18\n \x03(\x0b\x32\x34.metisfl.ModelMetadata.ModelInsertionDurationMsEntryR\x18modelInsertionDurationMs\x12s\n\x1bmodel_selection_duration_ms\x18\x0b \x03(\x0b\x32\x34.metisfl.ModelMetadata.ModelSelectionDurationMsEntryR\x18modelSelectionDurationMs\x12[\n\x1cmodel_aggregation_started_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x19modelAggregationStartedAt\x12_\n\x1emodel_aggregation_completed_at\x18\r \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x1bmodelAggregationCompletedAt\x12L\n#model_aggregation_total_duration_ms\x18\x0e \x01(\x01R\x1fmodelAggregationTotalDurationMs\x12?\n\x1cmodel_aggregation_block_size\x18\x0f \x03(\x01R\x19modelAggregationBlockSize\x12H\n!model_aggregation_block_memory_kb\x18\x10 \x03(\x01R\x1dmodelAggregationBlockMemoryKb\x12L\n#model_aggregation_block_duration_ms\x18\x11 \x03(\x01R\x1fmodelAggregationBlockDurationMs\x12S\n\x18model_tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifierR\x16modelTensorQuantifiers\x1aK\n\x1dModelInsertionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x1aK\n\x1dModelSelectionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x32\xb5\x03\n\x11\x43ontrollerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12\x42\n\x0eJoinFederation\x12\x1a.metisfl.LearnerDescriptor\x1a\x12.metisfl.LearnerId\"\x00\x12\x35\n\x0fLeaveFederation\x12\x12.metisfl.LearnerId\x1a\x0c.metisfl.Ack\"\x00\x12/\n\rStartTraining\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x36\n\tTrainDone\x12\x19.metisfl.TrainDoneRequest\x1a\x0c.metisfl.Ack\"\x00\x12*\n\x07GetLogs\x12\x0e.metisfl.Empty\x1a\r.metisfl.Logs\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"\xdd\x01\n\x07Learner\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x34\n\x16root_certificate_bytes\x18\x03 \x01(\tR\x14rootCertificateBytes\x12\x38\n\x18public_certificate_bytes\x18\x04 \x01(\tR\x16publicCertificateBytes\x12\x32\n\x15num_training_examples\x18\x05 \x01(\rR\x13numTrainingExamples\"\x1b\n\tLearnerId\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\xa7\x01\n\x10TrainDoneRequest\x12\x1d\n\nlearner_id\x18\x01 \x01(\tR\tlearnerId\x12\x17\n\x07task_id\x18\x02 \x01(\tR\x06taskId\x12$\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12\x35\n\x08metadata\x18\x04 \x01(\x0b\x32\x19.metisfl.TrainingMetadataR\x08metadata\"\xf5\x02\n\x10TrainingMetadata\x12@\n\x07metrics\x18\x01 \x03(\x0b\x32&.metisfl.TrainingMetadata.MetricsEntryR\x07metrics\x12)\n\x10\x63ompleted_epochs\x18\x02 \x01(\x02R\x0f\x63ompletedEpochs\x12+\n\x11\x63ompleted_batches\x18\x03 \x01(\rR\x10\x63ompletedBatches\x12\x1d\n\nbatch_size\x18\x04 \x01(\rR\tbatchSize\x12\x35\n\x17processing_ms_per_epoch\x18\x05 \x01(\x02R\x14processingMsPerEpoch\x12\x35\n\x17processing_ms_per_batch\x18\x06 \x01(\x02R\x14processingMsPerBatch\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\"\x94\x01\n\x12\x45valuationMetadata\x12\x42\n\x07metrics\x18\x01 \x03(\x0b\x32(.metisfl.EvaluationMetadata.MetricsEntryR\x07metrics\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x02R\x05value:\x02\x38\x01\"\xa7\x05\n\x04Logs\x12K\n\x10task_learner_map\x18\x01 \x03(\x0b\x32!.metisfl.Logs.TaskLearnerMapEntryR\x0etaskLearnerMap\x12P\n\x11training_metadata\x18\x02 \x03(\x0b\x32#.metisfl.Logs.TrainingMetadataEntryR\x10trainingMetadata\x12V\n\x13\x65valuation_metadata\x18\x03 \x03(\x0b\x32%.metisfl.Logs.EvaluationMetadataEntryR\x12\x65valuationMetadata\x12G\n\x0emodel_metadata\x18\x04 \x03(\x0b\x32 .metisfl.Logs.ModelMetadataEntryR\rmodelMetadata\x1a\x41\n\x13TaskLearnerMapEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1a^\n\x15TrainingMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12/\n\x05value\x18\x02 \x01(\x0b\x32\x19.metisfl.TrainingMetadataR\x05value:\x02\x38\x01\x1a\x62\n\x17\x45valuationMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x31\n\x05value\x18\x02 \x01(\x0b\x32\x1b.metisfl.EvaluationMetadataR\x05value:\x02\x38\x01\x1aX\n\x12ModelMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12,\n\x05value\x18\x02 \x01(\x0b\x32\x16.metisfl.ModelMetadataR\x05value:\x02\x38\x01\"\xcd\x07\n\rModelMetadata\x12s\n\x1bmodel_insertion_duration_ms\x18\n \x03(\x0b\x32\x34.metisfl.ModelMetadata.ModelInsertionDurationMsEntryR\x18modelInsertionDurationMs\x12s\n\x1bmodel_selection_duration_ms\x18\x0b \x03(\x0b\x32\x34.metisfl.ModelMetadata.ModelSelectionDurationMsEntryR\x18modelSelectionDurationMs\x12[\n\x1cmodel_aggregation_started_at\x18\x0c \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x19modelAggregationStartedAt\x12_\n\x1emodel_aggregation_completed_at\x18\r \x01(\x0b\x32\x1a.google.protobuf.TimestampR\x1bmodelAggregationCompletedAt\x12L\n#model_aggregation_total_duration_ms\x18\x0e \x01(\x01R\x1fmodelAggregationTotalDurationMs\x12?\n\x1cmodel_aggregation_block_size\x18\x0f \x03(\x01R\x19modelAggregationBlockSize\x12H\n!model_aggregation_block_memory_kb\x18\x10 \x03(\x01R\x1dmodelAggregationBlockMemoryKb\x12L\n#model_aggregation_block_duration_ms\x18\x11 \x03(\x01R\x1fmodelAggregationBlockDurationMs\x12S\n\x18model_tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifierR\x16modelTensorQuantifiers\x1aK\n\x1dModelInsertionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x1aK\n\x1dModelSelectionDurationMsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\x32\xab\x03\n\x11\x43ontrollerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12\x38\n\x0eJoinFederation\x12\x10.metisfl.Learner\x1a\x12.metisfl.LearnerId\"\x00\x12\x35\n\x0fLeaveFederation\x12\x12.metisfl.LearnerId\x1a\x0c.metisfl.Ack\"\x00\x12/\n\rStartTraining\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x36\n\tTrainDone\x12\x19.metisfl.TrainDoneRequest\x1a\x0c.metisfl.Ack\"\x00\x12*\n\x07GetLogs\x12\x0e.metisfl.Empty\x1a\r.metisfl.Logs\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
 
 
 
-_LEARNERDESCRIPTOR = DESCRIPTOR.message_types_by_name['LearnerDescriptor']
+_LEARNER = DESCRIPTOR.message_types_by_name['Learner']
 _LEARNERID = DESCRIPTOR.message_types_by_name['LearnerId']
 _TRAINDONEREQUEST = DESCRIPTOR.message_types_by_name['TrainDoneRequest']
 _TRAININGMETADATA = DESCRIPTOR.message_types_by_name['TrainingMetadata']
@@ -36,12 +36,12 @@ _LOGS_MODELMETADATAENTRY = _LOGS.nested_types_by_name['ModelMetadataEntry']
 _MODELMETADATA = DESCRIPTOR.message_types_by_name['ModelMetadata']
 _MODELMETADATA_MODELINSERTIONDURATIONMSENTRY = _MODELMETADATA.nested_types_by_name['ModelInsertionDurationMsEntry']
 _MODELMETADATA_MODELSELECTIONDURATIONMSENTRY = _MODELMETADATA.nested_types_by_name['ModelSelectionDurationMsEntry']
-LearnerDescriptor = _reflection.GeneratedProtocolMessageType('LearnerDescriptor', (_message.Message,), {
-  'DESCRIPTOR' : _LEARNERDESCRIPTOR,
+Learner = _reflection.GeneratedProtocolMessageType('Learner', (_message.Message,), {
+  'DESCRIPTOR' : _LEARNER,
   '__module__' : 'metisfl.proto.controller_pb2'
-  # @@protoc_insertion_point(class_scope:metisfl.LearnerDescriptor)
+  # @@protoc_insertion_point(class_scope:metisfl.Learner)
   })
-_sym_db.RegisterMessage(LearnerDescriptor)
+_sym_db.RegisterMessage(Learner)
 
 LearnerId = _reflection.GeneratedProtocolMessageType('LearnerId', (_message.Message,), {
   'DESCRIPTOR' : _LEARNERID,
@@ -169,36 +169,36 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _MODELMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_options = b'8\001'
   _MODELMETADATA_MODELSELECTIONDURATIONMSENTRY._options = None
   _MODELMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_options = b'8\001'
-  _LEARNERDESCRIPTOR._serialized_start=140
-  _LEARNERDESCRIPTOR._serialized_end=371
-  _LEARNERID._serialized_start=373
-  _LEARNERID._serialized_end=400
-  _TRAINDONEREQUEST._serialized_start=403
-  _TRAINDONEREQUEST._serialized_end=570
-  _TRAININGMETADATA._serialized_start=573
-  _TRAININGMETADATA._serialized_end=946
-  _TRAININGMETADATA_METRICSENTRY._serialized_start=888
-  _TRAININGMETADATA_METRICSENTRY._serialized_end=946
-  _EVALUATIONMETADATA._serialized_start=949
-  _EVALUATIONMETADATA._serialized_end=1097
-  _EVALUATIONMETADATA_METRICSENTRY._serialized_start=1039
-  _EVALUATIONMETADATA_METRICSENTRY._serialized_end=1097
-  _LOGS._serialized_start=1100
-  _LOGS._serialized_end=1779
-  _LOGS_TASKLEARNERMAPENTRY._serialized_start=1428
-  _LOGS_TASKLEARNERMAPENTRY._serialized_end=1493
-  _LOGS_TRAININGMETADATAENTRY._serialized_start=1495
-  _LOGS_TRAININGMETADATAENTRY._serialized_end=1589
-  _LOGS_EVALUATIONMETADATAENTRY._serialized_start=1591
-  _LOGS_EVALUATIONMETADATAENTRY._serialized_end=1689
-  _LOGS_MODELMETADATAENTRY._serialized_start=1691
-  _LOGS_MODELMETADATAENTRY._serialized_end=1779
-  _MODELMETADATA._serialized_start=1782
-  _MODELMETADATA._serialized_end=2755
-  _MODELMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_start=2603
-  _MODELMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_end=2678
-  _MODELMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_start=2680
-  _MODELMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_end=2755
-  _CONTROLLERSERVICE._serialized_start=2758
-  _CONTROLLERSERVICE._serialized_end=3195
+  _LEARNER._serialized_start=140
+  _LEARNER._serialized_end=361
+  _LEARNERID._serialized_start=363
+  _LEARNERID._serialized_end=390
+  _TRAINDONEREQUEST._serialized_start=393
+  _TRAINDONEREQUEST._serialized_end=560
+  _TRAININGMETADATA._serialized_start=563
+  _TRAININGMETADATA._serialized_end=936
+  _TRAININGMETADATA_METRICSENTRY._serialized_start=878
+  _TRAININGMETADATA_METRICSENTRY._serialized_end=936
+  _EVALUATIONMETADATA._serialized_start=939
+  _EVALUATIONMETADATA._serialized_end=1087
+  _EVALUATIONMETADATA_METRICSENTRY._serialized_start=1029
+  _EVALUATIONMETADATA_METRICSENTRY._serialized_end=1087
+  _LOGS._serialized_start=1090
+  _LOGS._serialized_end=1769
+  _LOGS_TASKLEARNERMAPENTRY._serialized_start=1418
+  _LOGS_TASKLEARNERMAPENTRY._serialized_end=1483
+  _LOGS_TRAININGMETADATAENTRY._serialized_start=1485
+  _LOGS_TRAININGMETADATAENTRY._serialized_end=1579
+  _LOGS_EVALUATIONMETADATAENTRY._serialized_start=1581
+  _LOGS_EVALUATIONMETADATAENTRY._serialized_end=1679
+  _LOGS_MODELMETADATAENTRY._serialized_start=1681
+  _LOGS_MODELMETADATAENTRY._serialized_end=1769
+  _MODELMETADATA._serialized_start=1772
+  _MODELMETADATA._serialized_end=2745
+  _MODELMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_start=2593
+  _MODELMETADATA_MODELINSERTIONDURATIONMSENTRY._serialized_end=2668
+  _MODELMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_start=2670
+  _MODELMETADATA_MODELSELECTIONDURATIONMSENTRY._serialized_end=2745
+  _CONTROLLERSERVICE._serialized_start=2748
+  _CONTROLLERSERVICE._serialized_end=3175
 # @@protoc_insertion_point(module_scope)

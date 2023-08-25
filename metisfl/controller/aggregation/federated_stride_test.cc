@@ -12,59 +12,41 @@
 namespace metisfl::controller {
 namespace {
 
-using ::proto::DeserializeTensor;
-using ::proto::ParseTextOrDie;
-using ::proto::PrintSerializedTensor;
-using ::proto::SerializeTensor;
+using metisfl::proto::DeserializeTensor;
+using metisfl::proto::ParseTextOrDie;
+using metisfl::proto::PrintSerializedTensor;
+using metisfl::proto::SerializeTensor;
 using ::testing::proto::EqualsProto;
 using namespace std;
 
 const char kModel1_with_tensor_values_1to10_as_INT32[] = R"pb(
-  variables {
-    name: "var1"
-    trainable: true
-    plaintext_tensor {
-      tensor {
-        length: 10
-        dimensions: 10
-        type {
-          type: INT32
-          byte_order: LITTLE_ENDIAN_ORDER
-          fortran_order: False
-        }
-        value: "\001\000\000\000\002\000\000\000\003\000\000\000\004\000\000\000\005\000\000\000\006\000\000\000\007\000\000\000\010\000\000\000\t\000\000\000\n\000\000\000"
-      }
-    }
+  tensor {
+    encrypted: false
+    length: 10
+    dimensions: 10
+    type { type: INT32 byte_order: LITTLE_ENDIAN_ORDER fortran_order: False }
+    value: "\001\000\000\000\002\000\000\000\003\000\000\000\004\000\000\000\005\000\000\000\006\000\000\000\007\000\000\000\010\000\000\000\t\000\000\000\n\000\000\000"
   }
 )pb";
 
 const char kModel1_with_tensor_values_1to10_as_FLOAT32[] = R"pb(
-  variables {
-    name: "var1"
-    trainable: true
-    plaintext_tensor {
-      tensor {
-        length: 10
-        dimensions: 10
-        type {
-          type: FLOAT32
-          byte_order: LITTLE_ENDIAN_ORDER
-          fortran_order: False
-        }
-        value: "\000\000\200?\000\000\000@\000\000@@\000\000\200@\000\000\240@\000\000\300@\000\000\340@\000\000\000A\000\000\020A\000\000 A"
-      }
-    }
+  tensor {
+    encrypted: false
+    length: 10
+    dimensions: 10
+    type { type: FLOAT32 byte_order: LITTLE_ENDIAN_ORDER fortran_order: False }
+    value: "\000\000\200?\000\000\000@\000\000@@\000\000\200@\000\000\240@\000\000\300@\000\000\340@\000\000\000A\000\000\020A\000\000 A"
   }
 )pb";
 
 class FederatedStrideTest : public ::testing::Test {
  public:
-  static FederatedModel StridedAggregation(const AggregationPairs &to_aggregate,
+  static FederatedModel StridedAggregation(const std::vector<std::vector<std::pair<Model *, double>>> &to_aggregate,
                                            const uint32_t &stride_length) {
     // Construct batch of stride_length and perform aggregation.
     FederatedModel averaged;
-    auto aggregator = FederatedStride();
-    AggregationPairs to_stride;
+    auto aggregator = FederatedStride<float>();
+    std::vector<std::vector<std::pair<Model *, double>>> to_stride;
     for (auto itr = to_aggregate.begin(); itr != to_aggregate.end(); itr++) {
       to_stride.push_back({*itr});
       if (to_stride.size() == stride_length || itr == (--to_aggregate.end())) {
@@ -84,10 +66,8 @@ TEST_F(FederatedStrideTest, ModelInt32SingleLearnerStride1) /* NOLINT */ {
   std::vector to_aggregate({seq1});
 
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<signed int>(averaged_value_serialized, num_values);
 
   auto expected =
@@ -109,10 +89,8 @@ TEST_F(FederatedStrideTest, ModelInt32TwoLearnersStride1) /* NOLINT */ {
 
   // Stride: 1
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<signed int>(averaged_value_serialized, num_values);
 
   auto expected =
@@ -126,10 +104,7 @@ TEST_F(FederatedStrideTest, ModelInt32TwoLearnersStride1) /* NOLINT */ {
   auto serialized_tensor = SerializeTensor(expected_values);
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
-  *expected.mutable_variables(0)
-       ->mutable_plaintext_tensor()
-       ->mutable_tensor_spec()
-       ->mutable_value() = serialized_tensor_str;
+  *expected.mutable_tensors(0)->mutable_value() = serialized_tensor_str;
 
   // The aggregated model proto definition should be equal to any of the
   // original models.
@@ -153,10 +128,8 @@ TEST_F(FederatedStrideTest, ModelInt32FourLearnersStride1) /* NOLINT */ {
 
   // Stride: 1
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<signed int>(averaged_value_serialized, num_values);
 
   auto expected =
@@ -170,10 +143,7 @@ TEST_F(FederatedStrideTest, ModelInt32FourLearnersStride1) /* NOLINT */ {
   auto serialized_tensor = SerializeTensor(expected_values);
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
-  *expected.mutable_variables(0)
-       ->mutable_plaintext_tensor()
-       ->mutable_tensor_spec()
-       ->mutable_value() = serialized_tensor_str;
+  *expected.mutable_tensors(0)->mutable_value() = serialized_tensor_str;
 
   // The aggregated model proto definition should be equal to any of the
   // original models.
@@ -188,10 +158,8 @@ TEST_F(FederatedStrideTest, ModelFloat32SingleLearnerStride1) /* NOLINT */ {
 
   // Stride: 1
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to the original
@@ -210,10 +178,8 @@ TEST_F(FederatedStrideTest, ModelFloat32TwoLearnersStride1V1) /* NOLINT */ {
 
   // Stride: 1
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to any of the
@@ -228,25 +194,19 @@ TEST_F(FederatedStrideTest, ModelFloat32TwoLearnersStride1V2) /* NOLINT */ {
       ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
 
   // Modify second model's variable value by multiplying by 2.
-  auto variable = DeserializeTensor<float>(
-      model2.variables().at(0).plaintext_tensor().tensor());
+  auto variable = DeserializeTensor<float>(model2.tensors().at(0));
   for (auto &val : variable) val *= 2;
   auto variable_ser = SerializeTensor<float>(variable);
   std::string variable_ser_str(variable_ser.begin(), variable_ser.end());
-  *model2.mutable_variables(0)
-       ->mutable_plaintext_tensor()
-       ->mutable_tensor_spec()
-       ->mutable_value() = variable_ser_str;
+  *model2.mutable_tensors(0)->mutable_value() = variable_ser_str;
 
   std::vector seq1({std::make_pair<const Model *, double>(&model1, 0.5)});
   std::vector seq2({std::make_pair<const Model *, double>(&model2, 0.5)});
   std::vector to_aggregate({seq1, seq2});
 
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // Stride: 1
@@ -264,10 +224,7 @@ TEST_F(FederatedStrideTest, ModelFloat32TwoLearnersStride1V2) /* NOLINT */ {
   auto serialized_tensor = SerializeTensor(expected_values);
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
-  *expected.mutable_variables(0)
-       ->mutable_plaintext_tensor()
-       ->mutable_tensor_spec()
-       ->mutable_value() = serialized_tensor_str;
+  *expected.mutable_tensors(0)->mutable_value() = serialized_tensor_str;
 
   // The aggregated model proto definition should be equal to any of the
   // original models.
@@ -291,10 +248,8 @@ TEST_F(FederatedStrideTest, ModelFloat32FourLearnersStride1) /* NOLINT */ {
 
   // Stride: 1
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to any of the
@@ -310,10 +265,8 @@ TEST_F(FederatedStrideTest, ModelFloat32SingleLearnerStride2) /* NOLINT */ {
 
   // Stride: 2
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 1);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to the original
@@ -332,10 +285,8 @@ TEST_F(FederatedStrideTest, ModelFloat32TwoLearnersStride2) /* NOLINT */ {
 
   // Stride: 2
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 2);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to any of the
@@ -360,10 +311,8 @@ TEST_F(FederatedStrideTest, ModelFloat32FourLearnersStride2) /* NOLINT */ {
 
   // Stride: 2
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 2);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to any of the
@@ -379,10 +328,8 @@ TEST_F(FederatedStrideTest, ModelFloat32SingleLearnerStride3) /* NOLINT */ {
 
   // Stride: 3
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 3);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to the original
@@ -401,10 +348,8 @@ TEST_F(FederatedStrideTest, ModelFloat32TwoLearnersStride3) /* NOLINT */ {
 
   // Stride: 3
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 3);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to any of the
@@ -429,10 +374,8 @@ TEST_F(FederatedStrideTest, ModelFloat32FourLearnersStride3V1) /* NOLINT */ {
 
   // Stride: 3
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 3);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to any of the
@@ -451,15 +394,11 @@ TEST_F(FederatedStrideTest, ModelFloat32FourLearnersStride3V2) /* NOLINT */ {
       ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
 
   // Modify fourth model's variable value by multiplying by 0.
-  auto variable = DeserializeTensor<float>(
-      model4.variables().at(0).plaintext_tensor().tensor());
+  auto variable = DeserializeTensor<float>(model4.tensors().at(0));
   for (auto &val : variable) val *= 0;
   auto variable_ser = SerializeTensor<float>(variable);
   std::string variable_ser_str(variable_ser.begin(), variable_ser.end());
-  *model4.mutable_variables(0)
-       ->mutable_plaintext_tensor()
-       ->mutable_tensor_spec()
-       ->mutable_value() = variable_ser_str;
+  *model4.mutable_tensors(0)->mutable_value() = variable_ser_str;
 
   std::vector seq1({std::make_pair<const Model *, double>(&model1, 0.25)});
   std::vector seq2({std::make_pair<const Model *, double>(&model2, 0.25)});
@@ -487,16 +426,11 @@ TEST_F(FederatedStrideTest, ModelFloat32FourLearnersStride3V2) /* NOLINT */ {
   auto serialized_tensor = SerializeTensor(expected_values);
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
-  *expected.mutable_variables(0)
-       ->mutable_plaintext_tensor()
-       ->mutable_tensor_spec()
-       ->mutable_value() = serialized_tensor_str;
+  *expected.mutable_tensors(0)->mutable_value() = serialized_tensor_str;
 
   auto averaged = FederatedStrideTest::StridedAggregation(to_aggregate, 3);
-  auto averaged_value_serialized =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().value();
-  auto num_values =
-      averaged.model().variables().at(0).plaintext_tensor().tensor().length();
+  auto averaged_value_serialized = averaged.model().tensors(0).value();
+  auto num_values = averaged.model().tensors(0).length();
   PrintSerializedTensor<float>(averaged_value_serialized, num_values);
 
   // The aggregated model proto definition should be equal to any of the

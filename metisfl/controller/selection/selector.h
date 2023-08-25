@@ -2,6 +2,8 @@
 #ifndef METISFL_METISFL_CONTROLLER_SELECTION_SELECTOR_H_
 #define METISFL_METISFL_CONTROLLER_SELECTION_SELECTOR_H_
 
+#include "metisfl/proto/controller.pb.h"
+
 namespace metisfl::controller {
 
 // A selector picks the models that need to be considered during aggregation.
@@ -15,7 +17,7 @@ class Selector {
   // learners that are currently part of the federation.
   virtual std::vector<std::string> Select(
       const std::vector<std::string> &scheduled_learners,
-      const int num_active_learners) = 0;
+      const std::vector<std::string> &active_learners) = 0;
 
   virtual std::string name() = 0;
 };

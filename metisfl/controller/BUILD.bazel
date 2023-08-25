@@ -9,7 +9,7 @@ pybind_extension(
     # also a data dependency for the py_library() rule below; therefore it needs
     # to remain UNCHANGED!
     name = "controller",
-    srcs = ["pybind/controller_pybind.cc"],
+    srcs = ["controller_pybind.cc"],
     deps = [
         "//metisfl/controller/core:controller_servicer",
     ],

@@ -28,7 +28,7 @@ class ControllerServiceStub(object):
                 )
         self.JoinFederation = channel.unary_unary(
                 '/metisfl.ControllerService/JoinFederation',
-                request_serializer=metisfl_dot_proto_dot_controller__pb2.LearnerDescriptor.SerializeToString,
+                request_serializer=metisfl_dot_proto_dot_controller__pb2.Learner.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_controller__pb2.LearnerId.FromString,
                 )
         self.LeaveFederation = channel.unary_unary(
@@ -124,7 +124,7 @@ def add_ControllerServiceServicer_to_server(servicer, server):
             ),
             'JoinFederation': grpc.unary_unary_rpc_method_handler(
                     servicer.JoinFederation,
-                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.LearnerDescriptor.FromString,
+                    request_deserializer=metisfl_dot_proto_dot_controller__pb2.Learner.FromString,
                     response_serializer=metisfl_dot_proto_dot_controller__pb2.LearnerId.SerializeToString,
             ),
             'LeaveFederation': grpc.unary_unary_rpc_method_handler(
@@ -208,7 +208,7 @@ class ControllerService(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/metisfl.ControllerService/JoinFederation',
-            metisfl_dot_proto_dot_controller__pb2.LearnerDescriptor.SerializeToString,
+            metisfl_dot_proto_dot_controller__pb2.Learner.SerializeToString,
             metisfl_dot_proto_dot_controller__pb2.LearnerId.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

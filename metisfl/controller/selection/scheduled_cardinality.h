@@ -13,15 +13,11 @@ class ScheduledCardinality : public Selector {
  public:
   std::vector<std::string> Select(
       const std::vector<std::string> &scheduled_learners,
-      const int num_active_learners) override {
+      const std::vector<std::string> &active_learners) override {
     // The given set of scheduled learners needs to contain at
     // least 2 learners else we select all active learners.
     if (scheduled_learners.size() < 2) {
-      std::vector<std::string> active_ids;
-      for (const auto &id : active_learners) {
-        active_ids.push_back(id);
-      }
-      return active_ids;
+      return active_learners;
     } else {
       return scheduled_learners;
     }

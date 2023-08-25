@@ -11,7 +11,7 @@ template <typename T>
 class FederatedStride : public AggregationFunction,
                         FederatedRollingAverageBase<T> {
  public:
-  FederatedModel Aggregate(AggregationPairs &pairs) override;
+  FederatedModel Aggregate(std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
   inline std::string Name() const override { return "FedStride"; }
 

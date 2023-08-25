@@ -7,17 +7,19 @@
 
 namespace metisfl::controller {
 
-// A scheduler implements the synchronization and coordination policy of
-// learners.
 class Scheduler {
  public:
   virtual ~Scheduler() = default;
 
-  // Returns the ids of all learners that need to be scheduled, given that
-  // learner `learner_id` has just completed its task.
+  /**
+   * @brief Schedule the next set of learners(s).
+   *
+   * @param learner_id The learner id of the learner that just finished.
+   * @param num_active_learners The number of active learners.
+   * @return std::vector<std::string> The next set of learners to schedule.
+   */
   virtual std::vector<std::string> ScheduleNext(
-      const std::string &learner_id,
-      const int num_active_learners) = 0;
+      const std::string &learner_id, const int num_active_learners) = 0;
 
   virtual std::string name() = 0;
 };

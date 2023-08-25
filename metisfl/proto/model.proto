@@ -58,6 +58,7 @@ message Model {
 }
 
 message FederatedModel {
-  Model model = 3;
+  uint32 num_contributors = 1;
+  Model model = 2;
 }
 

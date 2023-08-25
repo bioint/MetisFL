@@ -48,42 +48,27 @@ class HomomorphicEncryption(object):
             self._he_scheme.gen_crypto_context_and_keys(fhe_dir)
 
     def decrypt(self, model: model_pb2.Model) -> model_pb2.Model:
+        """Decrypts the model in place (if encrypted).
 
-        for var in model.variables:
-            if var.encryped:
-                decoded_value = self._he_scheme.decrypt(
-                    var.tensor.value, var.tensor.length, 1)
-                var.tensor.value = decoded_value
-                var.encrypted = False
+        Parameters
+        ----------
+        model : model_pb2.Model
+            The model to decrypt.
 
-        variables = model.variables
-        var_names, var_trainables, var_nps = list(), list(), list()
-        for var in variables:
-            var_name = var.name
-            var_trainable = var.trainable
+        Returns
+        -------
+        model_pb2.Model
+            The decrypted model.
+        """
 
-            if var.HasField("ciphertext_tensor"):
-                assert self._he_scheme is not None, "Need encryption scheme to decrypt tensor."
-                tensor = var.ciphertext_tensor.tensor
+        for tensor in model.tensors:
+            if tensor.encryped:
                 decoded_value = self._he_scheme.decrypt(
                     tensor.value, tensor.length, 1)
-                np_array = \
-                    ModelProtoMessages.tensorsProto.proto_tensor_spec_with_list_values_to_numpy_array(
-                        tensor, decoded_value)
-            elif var.HasField('plaintext_tensor'):
-                tensor = var.plaintext_tensor.tensor
-                np_array = ModelProtoMessages.tensorsProto.proto_tensor_spec_to_numpy_array(
-                    tensor)
-            else:
-                raise RuntimeError("Not a supported tensor type.")
+                tensor.value = decoded_value
+                tensor.encrypted = False
 
-            var_names.append(var_name)
-            var_trainables.append(var_trainable)
-            var_nps.append(np_array)
-
-        return ModelWeightsDescriptor(weights_names=var_names,
-                                      weights_trainable=var_trainables,
-                                      weights_values=var_nps)
+        return model
 
     def encrypt(self, model: model_pb2.Model) -> model_pb2.Model:
         # FIXME:

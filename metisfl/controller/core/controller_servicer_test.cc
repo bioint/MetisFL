@@ -14,7 +14,7 @@
 namespace metisfl::controller {
 namespace {
 using ::grpc::ServerContext;
-using ::proto::ParseTextOrDie;
+using metisfl::proto::ParseTextOrDie;;
 using ::testing::Exactly;
 using ::testing::Return;
 using ::testing::proto::EqualsProto;

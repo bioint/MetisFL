@@ -12,21 +12,14 @@ class SynchronousScheduler : public Scheduler {
  public:
   std::vector<std::string> ScheduleNext(
       const std::string &learner_id, const int num_active_learners) override {
-    // First, it adds the learner id to the set.
     learner_ids_.insert(learner_id);
 
-    // Second, it checks if the number of learners in the set is the same as
-    // `total_num_learners_`.
     if (learner_ids_.size() != num_active_learners) {
-      // If not, then return an empty list. No need to schedule any task.
       return {};
     }
 
-    // Otherwise, schedule all learners for the next task.
     std::vector<std::string> to_schedule(learner_ids_.begin(),
                                          learner_ids_.end());
-
-    // Clean the state.
     learner_ids_.clear();
 
     return to_schedule;
@@ -35,7 +28,6 @@ class SynchronousScheduler : public Scheduler {
   inline std::string name() override { return "SynchronousScheduler"; }
 
  private:
-  // Keeps track of the learners.
   ::absl::flat_hash_set<std::string> learner_ids_;
 };
 

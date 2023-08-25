@@ -38,7 +38,7 @@ class ModelManager {
   std::map<std::string, std::vector<const Model *>> SelectModels(
       const std::vector<std::pair<std::string, int>> &to_select_block);
 
-  AggregationPairs GetAggregationPairs(
+  std::vector<std::vector<std::pair<Model *, double>>> Getstd::vector<std::vector<std::pair<Model *, double>>>(
       std::map<std::string, std::vector<const Model *>> selected_models,
       const absl::flat_hash_map<std::string, double> scaling_factors);
 

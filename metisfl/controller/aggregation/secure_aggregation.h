@@ -12,16 +12,11 @@
 namespace metisfl::controller {
 
 class SecAgg : AggregationFunction {
- private:
-  std::unique_ptr<EncryptionScheme> encryption_scheme_;
-
  public:
-  explicit SecAgg();
+  SecAgg(const int batch_size, const int scaling_factor_bits,
+         const std::string &crypto_context);
 
-  void InitScheme(const int batch_size, const int scaling_factor_bits,
-                  const std::string &crypto_context);
-
-  FederatedModel Aggregate(AggregationPairs &pairs) override;
+  FederatedModel Aggregate(std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
   [[nodiscard]] inline std::string Name() const override { return "SecAgg"; }
 
@@ -30,6 +25,9 @@ class SecAgg : AggregationFunction {
   }
 
   void Reset() override;
+
+ private:
+  std::unique_ptr<EncryptionScheme> encryption_scheme_;
 };
 
 }  // namespace metisfl::controller

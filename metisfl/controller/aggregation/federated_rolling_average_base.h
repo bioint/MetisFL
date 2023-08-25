@@ -5,15 +5,18 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
+using metisfl::proto::DeserializeTensor;
+using metisfl::proto::SerializeTensor;
+
 namespace metisfl::controller {
+
+enum TensorOperation { MULTIPLY, DIVIDE, SUBTRACTION, ADDITION };
 
 template <typename T>
 class FederatedRollingAverageBase {
  protected:
   double community_score_z = 0;
-
   FederatedModel community_model;
-
   Model wc_scaled_model;
 
   void InitializeModel(const Model *init_model, double init_contrib_value);
@@ -23,6 +26,14 @@ class FederatedRollingAverageBase {
                          double new_contrib_value);
 
   void UpdateCommunityModel();
+
+ private:
+  std::string MergeTensors(const Tensor &tensor_spec_left,
+                           const Tensor &tensor_spec_right,
+                           double scaling_factor_right, TensorOperation op);
+
+  std::string ScaleTensor(const Tensor &tensor, double scaling_factor,
+                          TensorOperation op);
 };
 }  // namespace metisfl::controller
 

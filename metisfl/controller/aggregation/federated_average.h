@@ -6,22 +6,30 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
-typedef std::vector<std::pair<const Model*, double>> AggregationPairs;
+using metisfl::proto::DeserializeTensor;
+using metisfl::proto::SerializeTensor;
 
 namespace metisfl::controller {
 
 template <typename T>
 class FederatedAverage : public AggregationFunction {
  public:
-  FederatedModel Aggregate(AggregationPairs& pairs) override;
+  FederatedModel Aggregate(
+      std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
-  [[nodiscard]] inline std::string Name() const override { return "FedAvg"; }
+  inline std::string Name() const override { return "FedAvg"; }
 
-  [[nodiscard]] inline int RequiredLearnerLineageLength() const override {
-    return 1;
-  }
+  inline int RequiredLearnerLineageLength() const override { return 1; }
 
   void Reset() override;
+
+ private:
+  void AddTensors(std::vector<T> &tensor_left, const Tensor &tensor_spec_right,
+                  double scaling_factor_right) const;
+
+  std::vector<T> AggregateTensorAtIndex(
+      std::vector<std::vector<std::pair<Model *, double>>> &pairs, int var_idx,
+      uint32_t var_num_values) const;
 };
 
 }  // namespace metisfl::controller

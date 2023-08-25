@@ -72,7 +72,7 @@ class ModelManager {
         auto selected_models = SelectModels(to_select_block);
 
         auto to_aggregate_block =
-            GetAggregationPairs(selected_models, scaling_factors);
+            Getstd::vector<std::vector<std::pair<Model *, double>>>(selected_models, scaling_factors);
 
         model_ = aggregator_->Aggregate(to_aggregate_block);
 
@@ -146,10 +146,10 @@ class ModelManager {
     return selected_models;
   }
 
-  AggregationPairs GetAggregationPairs(
+  std::vector<std::vector<std::pair<Model *, double>>> Getstd::vector<std::vector<std::pair<Model *, double>>>(
       std::map<std::string, std::vector<const Model *>> selected_models,
       const absl::flat_hash_map<std::string, double> scaling_factors) override {
-    AggregationPairs to_aggregate_block;
+    std::vector<std::vector<std::pair<Model *, double>>> to_aggregate_block;
 
     std::vector<std::pair<const Model *, double>>
         to_aggregate_learner_models_tmp;
