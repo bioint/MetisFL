@@ -13,10 +13,13 @@ namespace metisfl::controller {
 
 class SecAgg : AggregationFunction {
  public:
-  SecAgg(const int batch_size, const int scaling_factor_bits,
-         const std::string &crypto_context);
+  SecAgg() = default;
 
-  Model Aggregate(std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
+  void InitScheme(const int batch_size, const int scaling_factor_bits,
+                  const std::string &crypto_context);
+
+  Model Aggregate(
+      std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
   [[nodiscard]] inline std::string Name() const override { return "SecAgg"; }
 

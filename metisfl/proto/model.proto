@@ -1,10 +1,6 @@
 syntax = "proto3";
 package metisfl;
 
-///////////////////////////
-// Tensor Representation //
-///////////////////////////
-
 /**
  * Aiming for a minimal representation based on the numpy.dtype Python class.
  * See https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
@@ -12,18 +8,17 @@ package metisfl;
  * https://github.com/telamonian/numpy-protobuf
  */
 message DType {
-
   enum Type {
-    INT8 = 0; // Byte (-128 to 127)
-    INT16 = 1; // Integer (-32768 to 32767)
-    INT32 = 2; // Integer (-2147483648 to 2147483647)
-    INT64 = 3; // Integer (-9223372036854775808 to 9223372036854775807)
-    UINT8 = 4; // Unsigned integer (0 to 255)
-    UINT16 = 5; // Unsigned integer (0 to 65535)
-    UINT32 = 6; // Unsigned integer (0 to 4294967295)
-    UINT64 = 7; // Unsigned integer (0 to 18446744073709551615)
-    FLOAT32 = 8; // Single precision float: sign bit, 8 bits exponent, 23 bits mantissa
-    FLOAT64 = 9; // Double precision float: sign bit, 11 bits exponent, 52 bits mantissa
+    INT8 = 0; 
+    INT16 = 1; 
+    INT32 = 2; 
+    INT64 = 3; 
+    UINT8 = 4;
+    UINT16 = 5; 
+    UINT32 = 6; 
+    UINT64 = 7; 
+    FLOAT32 = 8;
+    FLOAT64 = 9; 
   }
 
   enum ByteOrder {
@@ -35,7 +30,6 @@ message DType {
   Type type = 1;
   ByteOrder byte_order = 2;
   bool fortran_order = 3;
-
 }
 
 message TensorQuantifier {

@@ -17,7 +17,7 @@ LearnerManager::LearnerManager()
   eval_tasks_digest_t_.detach();
 }
 
-absl::StatusOr<std::string> AddLearner(const Learner &learner) override {
+absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
   std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
   const std::string learner_id =
@@ -33,7 +33,15 @@ absl::StatusOr<std::string> AddLearner(const Learner &learner) override {
   return learner_id;
 }
 
-absl::Status RemoveLearner(const std::string &learner_id) override {
+std::vector<std::string> LearnerManager::GetLearnerIds() const {
+  std::vector<std::string> learner_ids;
+  for (const auto &[key, learner] : learners_) {
+    learner_ids.push_back(key);
+  }
+  return learner_ids;
+}
+
+absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
   std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
   if (!learners_.contains(learner_id)) {
@@ -48,23 +56,23 @@ absl::Status RemoveLearner(const std::string &learner_id) override {
   return absl::OkStatus();
 }
 
-void ScheduleAll() {
+void LearnerManager::ScheduleAll() {
   scheduling_pool_.push_task([this, learner_id] { ScheduleTasks(learners_); });
 }
 
-void Schedule(const std::vector<std::string> &learner_ids) {
+void LearnerManager::Schedule(const std::vector<std::string> &learner_ids) {
   scheduling_pool_.push_task(
       [this, learner_ids] { ScheduleTasks(learner_ids); });
 }
 
-void Shutdown() {
+void LearnerManager::Shutdown() {
   run_tasks_cq_.Shutdown();
   eval_tasks_cq_.Shutdown();
   scheduling_pool_.wait_for_tasks();
   model_store_->Shutdown();
 }
 
-LearnerStub CreateLearnerStub(const std::string &learner_id) {
+LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
   auto hostname = learners_[learner_id].hostname();
   auto port = learners_[learner_id].port();
   auto target = absl::StrCat(hostname, ":", port);
@@ -84,7 +92,8 @@ LearnerStub CreateLearnerStub(const std::string &learner_id) {
   return LearnerService::NewStub(channel);
 }
 
-absl::Status ValidateLearner(const std::string &learner_id) const {
+absl::Status LearnerManager::ValidateLearner(
+    const std::string &learner_id) const {
   const auto &learner = learners_.find(learner_id);
 
   if (learner == learners_.end())
@@ -93,7 +102,8 @@ absl::Status ValidateLearner(const std::string &learner_id) const {
   return absl::OkStatus();
 }
 
-void ScheduleTasks(const std::vector<std::string> &learner_ids) {
+void LearnerManager::ScheduleTasks(
+    const std::vector<std::string> &learner_ids) {
   for (const auto &learner_id : learner_ids) {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
@@ -107,7 +117,7 @@ void ScheduleTasks(const std::vector<std::string> &learner_ids) {
   }
 }
 
-void SendEvaluateAsync(const std::string &learner_id) {
+void LearnerManager::SendEvaluateAsync(const std::string &learner_id) {
   auto task_id = metisfl::controller::GenerateRadnomId();
   EvaluationMetadataMap evaluation_metadata;
   evaluation_metadata_[task_id] = evaluation_metadata;
@@ -128,7 +138,7 @@ void SendEvaluateAsync(const std::string &learner_id) {
   call->response_reader->Finish(&call->reply, &call->status, (void *)call);
 }
 
-void DigestEvaluateResponses() {
+void LearnerManager::DigestEvaluateResponses() {
   void *got_tag;
   bool ok = false;
 
@@ -155,7 +165,7 @@ void DigestEvaluateResponses() {
   }
 }
 
-void SendTrainAsync(const std::string &learner_id) {
+void LearnerManager::SendTrainAsync(const std::string &learner_id) {
   TrainRequest request;
   *request.mutable_task_id() = metisfl::controller::GenerateRadnomId();
   *request.mutable_model() = model_manager_.GetModel();
@@ -172,7 +182,7 @@ void SendTrainAsync(const std::string &learner_id) {
   call->response_reader->Finish(&call->reply, &call->status, (void *)call);
 }
 
-void DigestTrainResponses() {
+void LearnerManager::DigestTrainResponses() {
   void *got_tag;
   bool ok = false;
 

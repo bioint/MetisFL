@@ -9,7 +9,31 @@ class LearnerManager {
   LearnerManager();
   ~LearnerManager() = default;
 
+  absl::StatusOr<std::string> AddLearner(const Learner &learner);
+
+  std::vector<std::string> GetLearnerIds() const;
+
+  absl::Status RemoveLearner(const std::string &learner_id);
+
+  void ScheduleAll();
+
+  void Schedule(const std::vector<std::string> &learner_ids);
+
  private:
+  LearnerStub CreateLearnerStub(const std::string &learner_id);
+
+  absl::StatusOr<std::string> ValidateLearner(const std::string &learner_id);
+
+  void ScheduleTasks(const std::vector<std::string> &learner_ids);
+
+  void SendEvaluateAsync(const std::string &learner_id);
+
+  void DigestEvaluateResponses();
+
+  void SendTrainAsync(const std::string &learner_id);
+
+  void DigestTrainResponses();
+
   std::mutex learners_mutex_;
   BS::thread_pool scheduling_pool_;
 

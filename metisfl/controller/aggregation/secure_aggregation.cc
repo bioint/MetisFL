@@ -3,8 +3,8 @@
 
 namespace metisfl::controller {
 
-SecAgg::SecAgg(const int batch_size, const int scaling_factor_bits,
-               const std::string &crypto_context) {
+void SecAgg::InitScheme(const int batch_size, const int scaling_factor_bits,
+                        const std::string &crypto_context) {
   encryption_scheme_.reset(new CKKS(batch_size, scaling_factor_bits));
   encryption_scheme_->LoadCryptoContextFromFile(crypto_context);
 }

@@ -14,6 +14,7 @@ class ModelManager {
 
   void InitializeAggregator(const DType_Type tensor_dtype);
 
+  //   TODO: check if ok to return a reference
   const Model &GetModel() const { return model_; }
 
   const ModelMetadataMap &GetModelMetadata() const { return metadata_; }
@@ -27,6 +28,8 @@ class ModelManager {
   void UpdateModel(std::string learner_id, Model model);
 
   void EraseModels(const std::vector<std::string> &learner_ids);
+
+  void Shutdown();
 
  private:
   std::string InitializeMetadata();

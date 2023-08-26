@@ -159,8 +159,8 @@ TEST_F(FederatedAverageTest, CorrectAverageFLOAT64) {
 
   FederatedAverage avg = FederatedAverage<double>();
   Model averaged = avg.Aggregate(to_aggregate);
-  auto aggregated_value_serialized = averaged.model().tensors().at(0).value();
-  auto num_values = averaged.model().tensors().at(0).length();
+  auto aggregated_value_serialized = averaged.tensors().at(0).value();
+  auto num_values = averaged.tensors().at(0).length();
   metisfl::proto::PrintSerializedTensor<double>(aggregated_value_serialized,
                                                 num_values);
 

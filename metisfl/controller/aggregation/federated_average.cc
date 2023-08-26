@@ -30,6 +30,7 @@ Model FederatedAverage<T>::Aggregate(
 
   return model;
 }
+
 template <typename T>
 void FederatedAverage<T>::Reset() {}
 

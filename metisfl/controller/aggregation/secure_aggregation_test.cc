@@ -58,8 +58,9 @@ TEST_F(SecAggTest, SecureAggregationCKKSwithFiles) /* NOLINT */ {
   std::vector to_aggregate({seq1, seq2});
 
   // Step 6: Call SecAgg, perform the aggregation and validate.
-  auto sec_agg = SecAgg(ckks_scheme_batch_size, ckks_scheme_scaling_factor_bits,
-                        crypto_params_files.crypto_context_file);
+  auto sec_agg = SecAgg();
+  sec_agg.InitScheme(ckks_scheme_batch_size, ckks_scheme_scaling_factor_bits,
+                     crypto_params_files.crypto_context_file);
   auto federated_model = sec_agg.Aggregate(to_aggregate);
   auto aggregated_ciphertext = federated_model.model().tensors().at(0).value();
   auto aggregated_dec =

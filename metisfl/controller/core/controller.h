@@ -25,8 +25,9 @@
 #include "metisfl/controller/core/model_manager.h"
 #include "metisfl/controller/core/types.h"
 
-namespace metisfl::controller {
+using google::protobuf::util::TimeUtil;
 
+namespace metisfl::controller {
 class Controller {
  public:
   Controller(const GlobalTrainParams &global_train_params,
@@ -46,23 +47,23 @@ class Controller {
     return model_manager_->GetModelMetadata();
   }
 
-  std::vector<std::string> GetLearnerIds() const = 0;
+  std::vector<std::string> GetLearnerIds() const;
 
-  absl::Status SetInitialModel(const Model &model) = 0;
+  absl::Status SetInitialModel(const Model &model);
 
-  absl::StatusOr<std::string> AddLearner(const Learner &learner) = 0;
+  absl::StatusOr<std::string> AddLearner(const Learner &learner);
 
-  absl::Status StartTraining() = 0;
+  absl::Status RemoveLearner(const std::string &learner_id);
 
-  absl::Status RemoveLearner(const std::string &learner_id) = 0;
+  absl::Status StartTraining();
 
-  absl::Status TrainDone(const TrainDoneRequest &task) = 0;
+  absl::Status TrainDone(const TrainDoneRequest &task);
 
   void Shutdown() = 0;
 
  private:
   absl::flat_hash_map<std::string, double> ComputeScalingFactors(
-      const std::vector<std::string> &selected_learners) = 0;
+      const std::vector<std::string> &selected_learners);
 
   GlobalTrainParams global_train_params_;
 
