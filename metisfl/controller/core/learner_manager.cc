@@ -1,6 +1,8 @@
 #include "metisfl/controller/core/learner_manager.h"
 
 namespace metisfl::controller {
+
+// Constructor
 LearnerManager::LearnerManager()
     : learners_(),
       learners_stub_(),
@@ -17,6 +19,7 @@ LearnerManager::LearnerManager()
   eval_tasks_digest_t_.detach();
 }
 
+// Public methods
 absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
   std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
@@ -72,12 +75,81 @@ void LearnerManager::Shutdown() {
   model_store_->Shutdown();
 }
 
+void LearnerManager::UpdateMetadata(const std::string &task_id,
+                                    const std::string &learner_id,
+                                    const TrainingMetadata metadata) {
+  num_completed_batches_[learner_id] = metadata.num_completed_batches();
+  training_metadata_[task_id] = metadata;
+}
+
+absl::flat_hash_map<std::string, int> LearnerManager::GetNumTrainingExamples(
+    const std::vector<std::string> &learner_ids) {
+  absl::flat_hash_map<std::string, int> num_training_examples;
+
+  for (const auto &learner_id : learner_ids) {
+    num_training_examples[learner_id] =
+        learners_[learner_id].num_training_examples();
+  }
+
+  return num_training_examples;
+}
+
+absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
+    const std::vector<std::string> &learner_ids) {
+  absl::flat_hash_map<std::string, double> num_completed_batches;
+
+  for (const auto &learner_id : learner_ids) {
+    num_completed_batches[learner_id] = num_completed_batches_[learner_id];
+  }
+
+  return num_completed_batches;
+}
+
+// FIXME:
+// void LearnerManager::UpdateLearnersTaskTemplates(
+//     std::vector<std::string> &learners) {
+//   const auto &communication_protocol =
+//       global_train_params_.communication_protocol;
+//   if (communication_protocol == "SemiSynchronous" &&
+//       (global_iteration_ == 2 ||
+//        global_train_params_.semi_sync_recompute_num_updates)) {
+//     // Finds the slowest learner.
+//     float ms_per_epoch_slowest = std::numeric_limits<float>::min();
+//     for (const auto &learner_id : learners) {
+//       const auto &metadata = training_metadata_[learner_id].front();
+//       if (metadata.processing_ms_per_epoch() > ms_per_epoch_slowest) {
+//         ms_per_epoch_slowest = metadata.processing_ms_per_epoch();
+//       }
+//     }
+
+//     // Calculates the allowed time for training.
+//     float t_max = static_cast<float>(global_train_params_.semi_sync_lambda) *
+//                   ms_per_epoch_slowest;
+
+//     // Updates the task templates based on the slowest learner.
+//     for (const auto &learner_id : learners) {
+//       const auto &metadata = training_metadata_[learner_id].front();
+
+//       auto processing_ms_per_batch = metadata.processing_ms_per_batch();
+//       if (processing_ms_per_batch == 0) {
+//         PLOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
+//         processing_ms_per_batch = 1;
+//       }
+//       int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
+
+//       auto &task_template = train_params_[learner_id];
+//       task_template.set_num_local_updates(num_local_updates);
+//     }
+//   }
+// }
+
+// Private methods
 LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
-  auto hostname = learners_[learner_id].hostname();
-  auto port = learners_[learner_id].port();
+  auto hostname = learners_[learner_id]->hostname();
+  auto port = learners_[learner_id]->port();
   auto target = absl::StrCat(hostname, ":", port);
-  auto &root_certificate = learners_[learner_id].root_certificate_bytes();
-  auto &public_certificate = learners_[learner_id].public_certificate_bytes();
+  auto &root_certificate = learners_[learner_id]->root_certificate_bytes();
+  auto &public_certificate = learners_[learner_id]->public_certificate_bytes();
 
   auto ssl_creds = grpc::InsecureChannelCredentials();
 

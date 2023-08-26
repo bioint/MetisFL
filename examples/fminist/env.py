@@ -1,8 +1,8 @@
 
-from metisfl.utils.fedenv import (ClientParams, FederationEnvironment,
-                                  GlobalTrainConfig, LocalTrainConfig,
-                                  ModelStoreConfig, ServerParams,
-                                  TerminationSingals)
+from metisfl.common.types import (ClientParams, FederationEnvironment,
+                                   GlobalTrainConfig, LocalTrainConfig,
+                                   ModelStoreConfig, ServerParams,
+                                   TerminationSingals)
 
 controller_params = ServerParams(
     hostname="localhost",

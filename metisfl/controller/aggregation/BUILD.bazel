@@ -10,6 +10,7 @@ cc_library(
         "secure_aggregation.cc",
     ],
     hdrs = [
+        "aggregation.h",
         "aggregation_function.h",
         "federated_average.h",
         "federated_recency.h",

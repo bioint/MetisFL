@@ -1,9 +1,8 @@
 
-from time import sleep
 from typing import Optional
 
 from ..config import get_auth_token_fp
-from ..utils.fedenv import ClientParams, ServerParams
+from ..common.types import ClientParams, ServerParams
 from .controller_client import GRPCClient
 from .learner import Learner
 from .learner_server import LearnerServer

@@ -24,6 +24,7 @@
 #include "metisfl/controller/core/controller_utils.h"
 #include "metisfl/controller/core/model_manager.h"
 #include "metisfl/controller/core/types.h"
+#include "metisfl/controller/scaling/scaling.h"
 
 using google::protobuf::util::TimeUtil;
 
@@ -37,21 +38,21 @@ class Controller {
 
   uint32_t GetNumLearners() const { return learners_.size(); }
 
-  TrainingMetadataMap &GetTrainingMetadata() { return training_metadata_; }
+  TrainingMetadataMap GetTrainingMetadata() {
+    return learner_manager_->GetTrainingMetadata();
+  }
 
-  EvaluationMetadataMap &GetEvaluationMetadata() {
-    return evaluation_metadata_;
+  EvaluationMetadataMap GetEvaluationMetadata() {
+    return learner_manager_->GetEvaluationMetadata();
   }
 
   ModelMetadata GetModelMetadata() {
     return model_manager_->GetModelMetadata();
   }
 
-  std::vector<std::string> GetLearnerIds() const;
+  absl::StatusOr<std::string> AddLearner(const Learner &learner);
 
   absl::Status SetInitialModel(const Model &model);
-
-  absl::StatusOr<std::string> AddLearner(const Learner &learner);
 
   absl::Status RemoveLearner(const std::string &learner_id);
 

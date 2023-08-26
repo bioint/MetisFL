@@ -9,7 +9,7 @@ import numpy as np
 
 from metisfl import config
 from metisfl.models.metis_model import MetisModel, ModelWeightsDescriptor
-from metisfl.utils.logger import MetisLogger
+from metisfl.common.logger import MetisLogger
 
 
 class MetisModelTorch(MetisModel):

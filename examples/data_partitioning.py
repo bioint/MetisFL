@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from metisfl.utils.logger import MetisLogger
+from metisfl.common.logger import MetisLogger
 
 
 class DataPartitioning(object):
@@ -28,11 +28,14 @@ class DataPartitioning(object):
         chunk_size = int(len(self.x_train) / self.partitions_num)
         x_chunks, y_chunks = [], []
         for i in range(self.partitions_num):
-            x_chunks.append(x_train_randomized[idx[i * chunk_size:(i + 1) * chunk_size]])
-            y_chunks.append(y_train_randomized[idx[i * chunk_size:(i + 1) * chunk_size]])
+            x_chunks.append(
+                x_train_randomized[idx[i * chunk_size:(i + 1) * chunk_size]])
+            y_chunks.append(
+                y_train_randomized[idx[i * chunk_size:(i + 1) * chunk_size]])
         x_chunks = np.array(x_chunks)
         y_chunks = np.array(y_chunks)
-        MetisLogger.info("Chunk size {}, {}".format(x_chunks.shape, y_chunks.shape))
+        MetisLogger.info("Chunk size {}, {}".format(
+            x_chunks.shape, y_chunks.shape))
 
         # set partition object specifications
         self.iid = True
@@ -42,7 +45,6 @@ class DataPartitioning(object):
         return x_chunks, y_chunks
 
     def non_iid_partition(self, classes_per_partition=2):
-
         """ If the y-data points contain numpy arrays, we need to convert it
         to a list of values in order for the set/hash to take effect during
         partitioning by the y-axis. """
@@ -55,17 +57,21 @@ class DataPartitioning(object):
         else:
             y_converted_values = self.y_train
 
-        sorted_data = sorted(zip(self.x_train, y_converted_values), key=lambda pair: pair[1])
+        sorted_data = sorted(
+            zip(self.x_train, y_converted_values), key=lambda pair: pair[1])
         x_train_sorted = [x for x, y in sorted_data]
         y_train_sorted = [y for x, y in sorted_data]
 
         # The number of chunks depends on the number of partitions and number of classes.
         # If we want one class per client then we split the data into #partitions == #clients
         # else, if we want k-classes per client then we need to split the data into #partitions * #k-classes
-        chunk_size = int(len(self.x_train) / (self.partitions_num * classes_per_partition))
+        chunk_size = int(len(self.x_train) /
+                         (self.partitions_num * classes_per_partition))
 
-        x_chunks = [x_train_sorted[i:i + chunk_size] for i in range(0, len(x_train_sorted), chunk_size)]
-        y_chunks = [y_train_sorted[i:i + chunk_size] for i in range(0, len(y_train_sorted), chunk_size)]
+        x_chunks = [x_train_sorted[i:i + chunk_size]
+                    for i in range(0, len(x_train_sorted), chunk_size)]
+        y_chunks = [y_train_sorted[i:i + chunk_size]
+                    for i in range(0, len(y_train_sorted), chunk_size)]
 
         x_chunks_all_clients, y_chunks_all_clients = [], []
         assigned_chunks = dict()
@@ -103,7 +109,8 @@ class DataPartitioning(object):
         MetisLogger.info("Chunk size {}. X-attribute shape: {}, Y-attribute shape: {}".format(
             chunk_size, x_chunks_final.shape, y_chunks_final.shape))
         remaining = len(y_chunks)
-        MetisLogger.info("Remaining unassigned data points: {}".format(len(y_chunks)))
+        MetisLogger.info(
+            "Remaining unassigned data points: {}".format(len(y_chunks)))
         if remaining > 0:
             MetisLogger.fatal("Not all training data have been assigned.")
 

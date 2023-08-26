@@ -43,21 +43,6 @@ cc_library(
     ],
 )
 
-cc_library(
-    name = "controller_utils",
-    srcs = ["controller_utils.cc"],
-    hdrs = ["controller_utils.h"],
-    deps = [
-        "//metisfl/controller/aggregation:aggregation",
-        "//metisfl/controller/scaling",
-        "//metisfl/controller/selection",
-        "//metisfl/controller/store:storing",
-        "//metisfl/controller/scheduling:scheduling",
-        "//metisfl/proto:cc_grpc_lib",
-        "@absl//absl/memory",
-        "@absl//absl/strings"
-    ],
-)
 
 # Tests 
 cc_library(

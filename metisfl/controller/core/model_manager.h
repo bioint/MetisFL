@@ -12,20 +12,21 @@ class ModelManager {
   ModelManager(const GlobalTrainParams &global_train_params,
                const ModelStoreParams &model_store_params);
 
-  void InitializeAggregator(const DType_Type tensor_dtype);
+  // Getters
+  Model GetModel() const { return model_; }
 
-  //   TODO: check if ok to return a reference
-  const Model &GetModel() const { return model_; }
-
-  const ModelMetadataMap &GetModelMetadata() const { return metadata_; }
+  ModelMetadataMap GetModelMetadata() const { return metadata_; }
 
   bool IsInitialized() const { return is_initialized_; }
 
+  // Public methods
+  void InitializeAggregator(const DType_Type tensor_dtype);
+
   void SetInitialModel(const Model &model);
 
-  void InsertModel(std::string learner_id, Model model);
+  void InsertModel(const std::string &learner_id, const Model &model);
 
-  void UpdateModel(std::string learner_id, Model model);
+  void UpdateModel(const std::string &learner_id, const Model &model);
 
   void EraseModels(const std::vector<std::string> &learner_ids);
 

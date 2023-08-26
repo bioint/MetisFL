@@ -3,9 +3,9 @@
 
 from typing import Optional
 
-from ..grpc.client import get_client
+from ..common.client import get_client
 from ..proto import learner_pb2_grpc, model_pb2, service_common_pb2
-from ..utils.fedenv import ClientParams
+from ..common.types import ClientParams
 
 
 class GRPCLearnerClient(object):

@@ -24,14 +24,14 @@ void ModelManager::SetInitialModel(const Model &model) {
 }
 
 void ModelManager::InsertModel(const std::vector<std::string> &learner_id,
-                               const Model model) {
+                               const Model &model) {
   std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
   model_store_->InsertModel(std::vector<std::pair<std::string, Model>>{
       std::pair<std::string, Model>(learner_id, model)});
 }
 
-const ModelManager::EraseModels(const std::vector<std::string> &learner_id) {
+void ModelManager::EraseModels(const std::vector<std::string> &learner_id) {
   std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
   model_store_->EraseModels(learner_id);
 }

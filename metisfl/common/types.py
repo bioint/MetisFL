@@ -3,7 +3,7 @@ import yaml
 
 from dataclasses import dataclass
 from typing import List, Optional
-from metisfl.utils.formatting import DataTypeFormatter
+from metisfl.common.formatting import DataTypeFormatter
 
 METRICS = ["accuracy"]
 COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]

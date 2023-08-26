@@ -3,7 +3,7 @@ import os
 import random
 
 from fhe import CKKS
-from metisfl.utils.metis_logger import MetisLogger
+from metisfl.common.logger import MetisLogger
 
 
 def encrypt(crypto_params_files, ckks_scheme, data):
@@ -57,7 +57,8 @@ def pwa(crypto_params_files, ckks_scheme, data_enc, scaling_factors):
 def test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factors, number_of_elems):
     MetisLogger.info("Generating crypto context and keys...")
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    crypto_params_dir = os.path.join(os.getcwd(), "../resources/fheparams/cryptoparams")
+    crypto_params_dir = os.path.join(
+        os.getcwd(), "../resources/fheparams/cryptoparams")
     if not os.path.exists(crypto_params_dir):
         os.makedirs(crypto_params_dir)
     ckks_scheme.gen_crypto_context_and_keys(crypto_params_dir)
@@ -67,17 +68,21 @@ def test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factor
         MetisLogger.info("\t {}:{}".format(param, file))
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    learners_data_enc = encrypt(crypto_params_files, ckks_scheme, learners_data)
+    learners_data_enc = encrypt(
+        crypto_params_files, ckks_scheme, learners_data)
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    learners_data_dec = decrypt(crypto_params_files, ckks_scheme, learners_data_enc, number_of_elems)
+    learners_data_dec = decrypt(
+        crypto_params_files, ckks_scheme, learners_data_enc, number_of_elems)
     MetisLogger.info("Learners Data Decrypted: {}".format(learners_data_dec))
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    pwa_enc = pwa(crypto_params_files, ckks_scheme, learners_data_enc, scaling_factors)
+    pwa_enc = pwa(crypto_params_files, ckks_scheme,
+                  learners_data_enc, scaling_factors)
 
     ckks_scheme = CKKS(batch_size, scaling_factor_bits)
-    pwa_dec = decrypt(crypto_params_files, ckks_scheme, pwa_enc, number_of_elems)
+    pwa_dec = decrypt(crypto_params_files, ckks_scheme,
+                      pwa_enc, number_of_elems)
     MetisLogger.info("Aggregated (Decrypted) Result: {}".format(pwa_dec))
 
 
@@ -85,12 +90,12 @@ if __name__ == "__main__":
     """
     Through this demo we test the encryption, decryption and private weighted
     aggregation functions of the CKKS scheme. 
-    
+
     To test each operation (encrypt, decrypt, pwa) in isolation and see which 
     crypto parameters are required to perform each operation, we create and 
     pass a separate CKKS scheme object at every function call. The corresponding 
     function loads the required crypto parameters through the given ckks scheme. 
-    
+
     Specifically, for each operation we need the following crypto params: 
         encryption -> (crypto_context, public)
         decryption -> (crypto_context, private)
@@ -108,15 +113,21 @@ if __name__ == "__main__":
     learners_data = [[1 for _ in range(number_of_elems)]] * number_of_learners
     scaling_factors = [0.5] * number_of_learners
     # Just print the first 100 elements per learner.
-    MetisLogger.info("Original learners data: {}".format([x[:100] for x in learners_data]))
-    MetisLogger.info("Original scaling factors: {}".format(np.array(scaling_factors[:number_of_learners])))
-    test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factors, number_of_elems)
+    MetisLogger.info("Original learners data: {}".format(
+        [x[:100] for x in learners_data]))
+    MetisLogger.info("Original scaling factors: {}".format(
+        np.array(scaling_factors[:number_of_learners])))
+    test_ckks_api(batch_size, scaling_factor_bits, learners_data,
+                  scaling_factors, number_of_elems)
 
     number_of_learners = 2
     number_of_elems = (2 * batch_size) + 1
     learners_data = [[2 for _ in range(number_of_elems)]] * number_of_learners
     scaling_factors = [0.5] * number_of_learners
     # Just print the first 100 elements per learner.
-    MetisLogger.info("Original learners data: {}".format([x[:100] for x in learners_data]))
-    MetisLogger.info("Original scaling factors: {}".format(np.array(scaling_factors[:number_of_learners])))
-    test_ckks_api(batch_size, scaling_factor_bits, learners_data, scaling_factors, number_of_elems)
+    MetisLogger.info("Original learners data: {}".format(
+        [x[:100] for x in learners_data]))
+    MetisLogger.info("Original scaling factors: {}".format(
+        np.array(scaling_factors[:number_of_learners])))
+    test_ckks_api(batch_size, scaling_factor_bits, learners_data,
+                  scaling_factors, number_of_elems)

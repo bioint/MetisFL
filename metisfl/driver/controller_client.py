@@ -2,9 +2,9 @@
 """A gRPC client used from the driver to communicate with the controller."""
 
 from typing import Optional
-from ..grpc.client import get_client
+from ..common.client import get_client
 from ..proto import controller_pb2, controller_pb2_grpc, model_pb2, service_common_pb2
-from ..utils.fedenv import ClientParams
+from ..common.types import ClientParams
 
 
 class GRPCControllerClient(object):
@@ -161,6 +161,7 @@ class GRPCControllerClient(object):
         with self._get_client() as client:
             stub, schedule, _ = client
 
+            # FIXME: convert to getLogs
             def _request(_timeout=None):
                 request = controller_pb2.GetStatisticsRequest(
                     community_evaluation_backtracks=community_evaluation_backtracks,

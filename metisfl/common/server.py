@@ -5,8 +5,10 @@ from typing import Callable
 import grpc
 
 from ..proto import learner_pb2_grpc
-from ..utils.fedenv import ServerParams
-from .common import GRPC_MAX_MESSAGE_LENGTH, get_endpoint
+from ..common.types import ServerParams
+from .common import get_endpoint
+
+GRPC_MAX_MESSAGE_LENGTH: int = 512 * 1024 * 1024
 
 
 def get_server(

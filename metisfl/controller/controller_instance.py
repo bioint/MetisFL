@@ -4,7 +4,7 @@ from typing import Optional
 
 from metisfl.controller import controller
 
-from ..utils.fedenv import GlobalTrainConfig, ModelStoreConfig, ServerParams
+from ..common.types import GlobalTrainConfig, ModelStoreConfig, ServerParams
 
 
 class Controller(object):

@@ -4,8 +4,8 @@ from typing import Dict, List, Union
 
 from ..encryption.homomorphic import HomomorphicEncryption
 from ..proto import model_pb2
-from ..utils.fedenv import ClientParams, FederationEnvironment
-from ..utils.logger import MetisASCIIArt
+from ..common.types import ClientParams, FederationEnvironment
+from ..common.logger import MetisASCIIArt
 from .controller_client import GRPCControllerClient
 from .federation_monitor import FederationMonitor
 from .learner_client import GRPCLearnerClient

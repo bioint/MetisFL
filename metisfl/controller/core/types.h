@@ -5,6 +5,8 @@
 #include "metisfl/proto/controller.grpc.pb.h"
 #include "metisfl/proto/learner.grpc.pb.h"
 
+using namespace metisfl;
+
 typedef struct ServerParams {
   std::string hostname;
   int port;
@@ -35,7 +37,7 @@ typedef struct ModelStoreParams {
   int port;
 } ModelStoreParams;
 
-typedef std::unique_ptr<LearnerService::Stub> LearnerStub;
+typedef std::unique_ptr<metisfl::LearnerService::Stub> LearnerStub;
 
 // Indexed by learner_id
 typedef std::unique_ptr<std::string, LearnerStub> LearnerStubMap;

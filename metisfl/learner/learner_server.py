@@ -9,8 +9,8 @@ from google.protobuf.timestamp_pb2 import Timestamp
 from ..grpc.server import get_server
 from ..proto import (learner_pb2, learner_pb2_grpc, model_pb2,
                      service_common_pb2)
-from ..utils.fedenv import ServerParams
-from ..utils.logger import MetisLogger
+from ..common.types import ServerParams
+from ..common.logger import MetisLogger
 from .controller_client import GRPCClient
 from .learner import (Learner, try_call_evaluate, try_call_get_weights,
                       try_call_set_weights, try_call_train)

@@ -1,33 +1,31 @@
 
-#include <vector>
+#include "metisfl/controller/core/controller_servicer.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#include "metisfl/controller/core/controller_mock.h"
-#include "metisfl/controller/core/controller_servicer.h"
-#include "metisfl/controller/core/macros.h"
-#include "metisfl/controller/core/proto_matchers.h"
-#include "metisfl/proto/controller.grpc.pb.h"
+#include <vector>
 
+#include "metisfl/controller/common/macros.h"
+#include "metisfl/controller/common/proto_matchers.h"
+#include "metisfl/controller/core/controller_mock.h"
+#include "metisfl/proto/controller.grpc.pb.h"
 
 namespace metisfl::controller {
 namespace {
 using ::grpc::ServerContext;
-using metisfl::proto::ParseTextOrDie;;
+using metisfl::proto::ParseTextOrDie;
+;
+using ::testing::_;
 using ::testing::Exactly;
 using ::testing::Return;
 using ::testing::proto::EqualsProto;
-using ::testing::_;
 
 const char kLearnerState[] = R"pb(
   learner {
     id: "localhost:1991"
     auth_token: "token"
-    service_spec {
-      hostname: "localhost"
-      port: 1991
-    }
+    service_spec { hostname: "localhost" port: 1991 }
     dataset_spec {
       num_training_examples: 1
       num_validation_examples: 1
@@ -51,8 +49,8 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearnersEmptyRequest) {
   GetParticipatingLearnersResponse res_;
 
   EXPECT_CALL(controller_, GetLearners())
-        .Times(Exactly(1))
-        .WillOnce(Return(std::vector<Learner>()));
+      .Times(Exactly(1))
+      .WillOnce(Return(std::vector<Learner>()));
 
   auto status = service_->GetParticipatingLearners(&ctx_, &req_, &res_);
 
@@ -76,7 +74,7 @@ TEST_F(ControllerServicerImplTest, GetParticipatingLearnersEmptyVector) {
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, GetParticipatingLearnersNotEmptyVector) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
-  const auto &learner = learner_state.learner();
+  const auto& learner = learner_state.learner();
 
   EXPECT_CALL(controller_, GetLearners())
       .Times(Exactly(1))
@@ -126,7 +124,8 @@ TEST_F(ControllerServicerImplTest, JoinFederationNewLearner) {
 
 // NOLINTNEXTLINE
 TEST_F(ControllerServicerImplTest, JoinFederationLearnerServiceUnreachable) {
-  // TODO(stripeli): Implement this after we have the service alive check functionality.
+  // TODO(stripeli): Implement this after we have the service alive check
+  // functionality.
   bool is_learner_reachable = true;
   EXPECT_TRUE(is_learner_reachable);
 }
@@ -136,12 +135,12 @@ TEST_F(ControllerServicerImplTest, JoinFederationLearnerCollision) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
-  EXPECT_CALL(controller_,
-              AddLearner(EqualsProto(learner.service_spec()),
-                         EqualsProto(learner.dataset_spec())))
+  EXPECT_CALL(controller_, AddLearner(EqualsProto(learner.service_spec()),
+                                      EqualsProto(learner.dataset_spec())))
       .Times(Exactly(2))
       .WillOnce(Return(learner))
-      .WillOnce(Return(absl::AlreadyExistsError("Learner has already joined.")));
+      .WillOnce(
+          Return(absl::AlreadyExistsError("Learner has already joined.")));
 
   JoinFederationRequest req_;
   JoinFederationResponse res_;
@@ -171,7 +170,7 @@ TEST_F(ControllerServicerImplTest, LeaveFederationLearnerExists) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
-  EXPECT_CALL(controller_,RemoveLearner(learner.id(), learner.auth_token()))
+  EXPECT_CALL(controller_, RemoveLearner(learner.id(), learner.auth_token()))
       .Times(Exactly(1))
       .WillOnce(Return(absl::OkStatus()));
 
@@ -190,7 +189,7 @@ TEST_F(ControllerServicerImplTest, LeaveFederationLearnerNotExists) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
-  EXPECT_CALL(controller_,RemoveLearner(learner.id(), learner.auth_token()))
+  EXPECT_CALL(controller_, RemoveLearner(learner.id(), learner.auth_token()))
       .Times(Exactly(1))
       .WillOnce(Return(absl::NotFoundError("No such learner.")));
 
@@ -209,7 +208,7 @@ TEST_F(ControllerServicerImplTest, LeaveFederationLearnerInvalidCredentials) {
   auto learner_state = ParseTextOrDie<LearnerState>(kLearnerState);
   const auto& learner = learner_state.learner();
 
-  EXPECT_CALL(controller_,RemoveLearner(learner.id(), learner.auth_token()))
+  EXPECT_CALL(controller_, RemoveLearner(learner.id(), learner.auth_token()))
       .Times(Exactly(1))
       .WillOnce(Return(absl::UnauthenticatedError("Incorrect token.")));
 
@@ -224,88 +223,95 @@ TEST_F(ControllerServicerImplTest, LeaveFederationLearnerInvalidCredentials) {
 }
 
 // NOLINTNEXTLINE
-TEST_F(ControllerServicerImplTest, GetEvaluationLineageRequestIsNullptr){
-
+TEST_F(ControllerServicerImplTest, GetEvaluationLineageRequestIsNullptr) {
   GetLocalModelEvaluationLineageRequest request;
   GetLocalModelEvaluationLineageResponse response;
 
-  auto status = service_->GetLocalModelEvaluationLineage(&ctx_, nullptr, &response);
+  auto status =
+      service_->GetLocalModelEvaluationLineage(&ctx_, nullptr, &response);
 
   EXPECT_EQ(status.error_code(), grpc::StatusCode::INVALID_ARGUMENT);
 }
 
-// TODO(stripeli): Need to make the tests more robust with respect to ModelEvaluation values.
+// TODO(stripeli): Need to make the tests more robust with respect to
+// ModelEvaluation values.
 TEST_F(ControllerServicerImplTest, GetEvaluationLineageEvaluationLineage) {
-
   LearnerState learnerState = ParseTextOrDie<LearnerState>(kLearnerState);
-  const Learner &Learner = learnerState.learner();
+  const Learner& Learner = learnerState.learner();
   std::string learner_id = Learner.id();
   GetLocalModelEvaluationLineageRequest request;
   GetLocalModelEvaluationLineageResponse response;
 
-  // We are testing without initializing the request object with wildcard values defined by ::testing::_
+  // We are testing without initializing the request object with wildcard values
+  // defined by ::testing::_
   ON_CALL(controller_, GetEvaluationLineage(learner_id, ::testing::_))
-    .WillByDefault(Return(std::vector<ModelEvaluation>()));
+      .WillByDefault(Return(std::vector<ModelEvaluation>()));
 
-  auto status = service_->GetLocalModelEvaluationLineage(&ctx_, &request, &response);
+  auto status =
+      service_->GetLocalModelEvaluationLineage(&ctx_, &request, &response);
 
-  EXPECT_EQ(status.error_code(),grpc::StatusCode::OK);
+  EXPECT_EQ(status.error_code(), grpc::StatusCode::OK);
   EXPECT_TRUE((*response.mutable_learner_evaluations()).empty());
 }
 
-// TODO(stripeli): Could make the tests more robust with respect to ModelEvaluation values.
-TEST_F(ControllerServicerImplTest, GetCommunityEvaluationLineageEvaluationLineage) {
-
+// TODO(stripeli): Could make the tests more robust with respect to
+// ModelEvaluation values.
+TEST_F(ControllerServicerImplTest,
+       GetCommunityEvaluationLineageEvaluationLineage) {
   GetCommunityModelEvaluationLineageRequest request;
   GetCommunityModelEvaluationLineageResponse response;
 
   request.set_num_backtracks(1);
-  // We are testing without initializing the request object. Passing wildcard values defined by ::testing::_
+  // We are testing without initializing the request object. Passing wildcard
+  // values defined by ::testing::_
   EXPECT_CALL(controller_, GetEvaluationLineage(::testing::_))
-        .Times(Exactly(1))
-        .WillOnce(Return(std::vector<ModelEvaluation>()));
+      .Times(Exactly(1))
+      .WillOnce(Return(std::vector<ModelEvaluation>()));
 
-  auto status = service_->GetCommunityModelEvaluationLineage(&ctx_, &request, &response);
+  auto status =
+      service_->GetCommunityModelEvaluationLineage(&ctx_, &request, &response);
 
-  EXPECT_EQ(status.error_code(),grpc::StatusCode::OK);
+  EXPECT_EQ(status.error_code(), grpc::StatusCode::OK);
   ASSERT_TRUE((*response.mutable_evaluations()).IsInitialized());
 }
 
-// TODO(stripeli): Can make the test more useful by initializing the request object.
-TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnOk){
-
+// TODO(stripeli): Can make the test more useful by initializing the request
+// object.
+TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnOk) {
   MarkTaskCompletedRequest request;
   MarkTaskCompletedResponse response;
 
-  // We are testing without initializing the request object. Passing wildcard values defined by ::testing::_
-  ON_CALL(controller_, LearnerCompletedTask(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(Return(absl::OkStatus()));
+  // We are testing without initializing the request object. Passing wildcard
+  // values defined by ::testing::_
+  ON_CALL(controller_,
+          LearnerCompletedTask(::testing::_, ::testing::_, ::testing::_))
+      .WillByDefault(Return(absl::OkStatus()));
 
   auto status = service_->MarkTaskCompleted(&ctx_, &request, &response);
 
   EXPECT_TRUE(status.ok());
-
 }
 
-// TODO(stripeli): Can make the test more useful by initializing the request object.
-TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnError){
-
+// TODO(stripeli): Can make the test more useful by initializing the request
+// object.
+TEST_F(ControllerServicerImplTest, MarkTaskCompletedReturnError) {
   MarkTaskCompletedRequest request;
   MarkTaskCompletedResponse response;
 
-  // We are testing without initializing the request object. Passing wildcard values defined by ::testing::_
-  ON_CALL(controller_, LearnerCompletedTask(::testing::_, ::testing::_, ::testing::_))
-            .WillByDefault(Return(absl::NotFoundError("Learner does not exist.")));
+  // We are testing without initializing the request object. Passing wildcard
+  // values defined by ::testing::_
+  ON_CALL(controller_,
+          LearnerCompletedTask(::testing::_, ::testing::_, ::testing::_))
+      .WillByDefault(Return(absl::NotFoundError("Learner does not exist.")));
 
   auto status = service_->MarkTaskCompleted(&ctx_, &request, &response);
 
   EXPECT_FALSE(status.ok());
-
 }
 
-TEST_F(ControllerServicerImplTest, StartServiceWithSSL){
-
-  metisfl::ControllerParams params = ParseTextOrDie<metisfl::ControllerParams>(R"pb2(
+TEST_F(ControllerServicerImplTest, StartServiceWithSSL) {
+  metisfl::ControllerParams params =
+      ParseTextOrDie<metisfl::ControllerParams>(R"pb2(
     server_entity {
       hostname: "0.0.0.0"
       port: 50051
@@ -335,18 +341,19 @@ TEST_F(ControllerServicerImplTest, StartServiceWithSSL){
     )pb2");
 
   EXPECT_CALL(controller_, GetParams)
-            .Times(Exactly(2))
-            .WillRepeatedly(::testing::ReturnRef(params));
+      .Times(Exactly(2))
+      .WillRepeatedly(::testing::ReturnRef(params));
 
   service_->StartService();
-  bool is_enabled = service_->GetController()->GetParams().server_entity().has_ssl_config();
+  bool is_enabled =
+      service_->GetController()->GetParams().server_entity().has_ssl_config();
 
   ASSERT_TRUE(is_enabled);
 }
 
-TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL){
-
-  metisfl::ControllerParams params = ParseTextOrDie<metisfl::ControllerParams>(R"pb2(
+TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL) {
+  metisfl::ControllerParams params =
+      ParseTextOrDie<metisfl::ControllerParams>(R"pb2(
     server_entity {
       hostname: "0.0.0.0"
       port: 50051
@@ -372,14 +379,15 @@ TEST_F(ControllerServicerImplTest, StartServiceWithoutSSL){
   )pb2");
 
   EXPECT_CALL(controller_, GetParams)
-            .Times(Exactly(2))
-            .WillRepeatedly(::testing::ReturnRef(params));
+      .Times(Exactly(2))
+      .WillRepeatedly(::testing::ReturnRef(params));
 
   service_->StartService();
-  bool is_enabled = service_->GetController()->GetParams().server_entity().has_ssl_config();
+  bool is_enabled =
+      service_->GetController()->GetParams().server_entity().has_ssl_config();
 
   ASSERT_FALSE(is_enabled);
 }
 
-} // namespace
-} // namespace metisfl::controller
+}  // namespace
+}  // namespace metisfl::controller

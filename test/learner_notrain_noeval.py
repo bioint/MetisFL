@@ -11,7 +11,7 @@ from metisfl.models.model_dataset import (ModelDataset,
                                           ModelDatasetClassification,
                                           ModelDatasetRegression)
 from metisfl.proto import learner_pb2, metis_pb2, model_pb2
-from metisfl.utils.logger import MetisLogger
+from metisfl.common.logger import MetisLogger
 
 
 class Learner(object):
@@ -62,8 +62,10 @@ class Learner(object):
         self.__auth_token = None
         # TODO(stripeli): if we want to be more secure, we can dump an
         #  encrypted version of auth_token and learner_id
-        self.__learner_id_fp = os.path.join(self.__learner_credentials_fp, "learner_id.txt")
-        self.__auth_token_fp = os.path.join(self.__learner_credentials_fp, "auth_token.txt")
+        self.__learner_id_fp = os.path.join(
+            self.__learner_credentials_fp, "learner_id.txt")
+        self.__auth_token_fp = os.path.join(
+            self.__learner_credentials_fp, "auth_token.txt")
 
     def __getstate__(self):
         """
@@ -79,7 +81,8 @@ class Learner(object):
 
     def _create_model_dataset_helper(self, dataset_recipe_pkl, dataset_fp, default_class=None):
         if dataset_recipe_pkl and dataset_fp:
-            dataset_recipe_fn = cloudpickle.load(open(dataset_recipe_pkl, "rb"))
+            dataset_recipe_fn = cloudpickle.load(
+                open(dataset_recipe_pkl, "rb"))
             dataset = dataset_recipe_fn(dataset_fp)
             assert isinstance(dataset, ModelDataset)
         else:
@@ -106,7 +109,8 @@ class Learner(object):
 
     def _load_datasets_metadata_subproc(self):
         _generic_tasks_pool = ProcessPool(max_workers=1, max_tasks=1)
-        datasets_specs_future = _generic_tasks_pool.schedule(function=self._load_model_datasets_size_specs_type_def)
+        datasets_specs_future = _generic_tasks_pool.schedule(
+            function=self._load_model_datasets_size_specs_type_def)
         res = datasets_specs_future.result()
         _generic_tasks_pool.close()
         _generic_tasks_pool.join()
@@ -153,7 +157,8 @@ class Learner(object):
         return status
 
     def leave_federation(self):
-        status = self._learner_controller_client.leave_federation(self.__learner_id, self.__auth_token, block=False)
+        status = self._learner_controller_client.leave_federation(
+            self.__learner_id, self.__auth_token, block=False)
         # Make sure that all pending tasks have been processed.
         self._learner_controller_client.shutdown()
         return status

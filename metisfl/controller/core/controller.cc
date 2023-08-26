@@ -11,7 +11,6 @@ Controller::Controller(const GlobalTrainParams &global_train_params,
       std::make_unique<ModelManager>(global_train_params, model_store_params);
   learner_manager_ = std::make_unique<LearnerManager>();
 
-  scaler_ = CreateScaler(global_train_params.scaling_factor);
   scheduler_ = CreateScheduler(global_train_params_.communication_protocol);
   selector_ = CreateSelector();
 }
@@ -31,8 +30,15 @@ absl::Status Controller::RemoveLearner(const std::string &learner_id) {
   return absl::OkStatus();
 }
 
+absl::Status Controller::SetInitialModel(const Model &model) {
+  if (model_manager_->IsInitialized())
+    return absl::FailedPreconditionError("Model is already initialized.");
+
+  return model_manager_->SetInitialModel(model);
+}
+
 absl::Status Controller::StartTraining() {
-  if (!model_manager_.->IsInitialized())
+  if (!model_manager_->IsInitialized())
     return absl::FailedPreconditionError("Model is not initialized.");
 
   learner_manager_->ScheduleAll();
@@ -45,7 +51,7 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) override {
   auto task_id = request.task_id();
 
   model_manager_.->InsertModel(learner_id, request.model());
-  training_metadata_[task_id] = request.metadata();
+  learner_manager_->UpdateMetadata(task_id, request.metadata());
 
   auto learner_ids = learner_manager_->GetLearnerIds();
   auto to_schedule = scheduler_->ScheduleNext(learner_id, learner_ids);
@@ -58,7 +64,7 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) override {
         selector_->Select(to_schedule, learner_ids);
 
     // FIXME:
-    auto scaling_factors = scaler_->ComputeScalingFactors(selected_ids);
+    auto scaling_factors = ComputeScalingFactors(selected_ids);
 
     model_manager_.->UpdateModel(selected_ids, scaling_factors);
   }
@@ -68,45 +74,24 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) override {
 
 void Controller::Shutdown() { learner_manager_->Shutdown(); }
 
-absl::flat_hash_map<std::string, double> Controller::ComputeScalingFactors(
-    const std::vector<std::string> &selected_learners) {
-  // TODO:
-}
+// Private methods
+void Controller::ComputeScalingFactors(
+    const std::vector<std::string> &selected_ids) {
+  auto scaling_factor = global_train_params_.scaling_factor;
 
-// FIXME:
-void UpdateLearnersTaskTemplates(std::vector<std::string> &learners) {
-  const auto &communication_protocol =
-      global_train_params_.communication_protocol;
-  if (communication_protocol == "SemiSynchronous" &&
-      (global_iteration_ == 2 ||
-       global_train_params_.semi_sync_recompute_num_updates)) {
-    // Finds the slowest learner.
-    float ms_per_epoch_slowest = std::numeric_limits<float>::min();
-    for (const auto &learner_id : learners) {
-      const auto &metadata = training_metadata_[learner_id].front();
-      if (metadata.processing_ms_per_epoch() > ms_per_epoch_slowest) {
-        ms_per_epoch_slowest = metadata.processing_ms_per_epoch();
-      }
-    }
-
-    // Calculates the allowed time for training.
-    float t_max = static_cast<float>(global_train_params_.semi_sync_lambda) *
-                  ms_per_epoch_slowest;
-
-    // Updates the task templates based on the slowest learner.
-    for (const auto &learner_id : learners) {
-      const auto &metadata = training_metadata_[learner_id].front();
-
-      auto processing_ms_per_batch = metadata.processing_ms_per_batch();
-      if (processing_ms_per_batch == 0) {
-        PLOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
-        processing_ms_per_batch = 1;
-      }
-      int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
-
-      auto &task_template = train_params_[learner_id];
-      task_template.set_num_local_updates(num_local_updates);
-    }
+  if (scaling_factor == "NumCompletedBatches") {
+    auto num_completed_batches =
+        model_manager_.->GetNumCompletedBatches(selected_ids);
+    return GetBatchesScalingFactors(num_completed_batches);
+  } else if (scaling_factor == "NumParticipants") {
+    auto num_learners = learner_manager_->GetNumLearners();
+    return GetParticipantsScalingFactors(num_learners, selected_ids);
+  } else if (scaling_factor == "NumTrainingExamples") {
+    auto num_training_examples =
+        model_manager_.->GetNumTrainingExamples(selected_ids);
+    return GetDatasetScalingFactors(num_training_examples);
+  } else {
+    PLOG(FATAL) << "Unsupported scaling factor.";
   }
 }
 }  // namespace metisfl::controller

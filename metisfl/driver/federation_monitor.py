@@ -6,8 +6,8 @@ from typing import Dict
 from google.protobuf.json_format import MessageToDict
 
 from .controller_client import GRPCControllerClient
-from ..utils.fedenv import TerminationSingals
-from ..utils.logger import MetisLogger
+from ..common.types import TerminationSingals
+from ..common.logger import MetisLogger
 
 
 class FederationMonitor:

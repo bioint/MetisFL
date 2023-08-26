@@ -9,8 +9,8 @@ from metisfl.models.keras.callbacks.step_counter import StepCounter
 from metisfl.models.keras.callbacks.performance_profiler import PerformanceProfiler
 from metisfl.models.utils import calc_mean_wall_clock, get_num_of_epochs
 from metisfl.models.types import LearningTaskStats, ModelWeightsDescriptor
-from metisfl.utils.logger import MetisLogger
-from metisfl.utils.formatting import DataTypeFormatter
+from metisfl.common.logger import MetisLogger
+from metisfl.common.formatting import DataTypeFormatter
 
 
 class KerasModelOps(ModelOps):
@@ -37,7 +37,7 @@ class KerasModelOps(ModelOps):
         dataset_size = train_dataset.get_size()
         step_counter_callback = StepCounter(total_steps=total_steps)
         performance_cb = PerformanceProfiler()
-        self._construct_optimizer(hyperparameters_pb.optimizer)        
+        self._construct_optimizer(hyperparameters_pb.optimizer)
 
         # @stripeli why is the epoch number calculated? Isn't it given in the yaml?
         # @stripeli why there are two batch sizes?
@@ -139,12 +139,12 @@ class KerasModelOps(ModelOps):
             MetisLogger.fatal(
                 "Provided `OptimizerConfig` proto message is None.")
         params = optimizer_config_pb.params
-        # We do this transformation to convert the optimizer parameters to snake case. 
+        # We do this transformation to convert the optimizer parameters to snake case.
         # For instance: `LearningRate` -> `learning_rate`
         params = DataTypeFormatter.camel_to_snake_dict_keys(params)
         # We do not pick the optimizer using `tf.keras.optimizers.get(name)`
-        # because the user might have defined an optimizer that is not part of 
-        # the standard Keras library. Therefore, we access directly the optimizer 
+        # because the user might have defined an optimizer that is not part of
+        # the standard Keras library. Therefore, we access directly the optimizer
         # of the defined model.
         optimizer = self._metis_model._backend_model.optimizer
         for param_name, param_val in params.items():
@@ -152,18 +152,19 @@ class KerasModelOps(ModelOps):
                 if param_name in attr_name:
                     attr_type = type(attr_val)
                     try:
-                        # Need to see if we can cast the given value to 
+                        # Need to see if we can cast the given value to
                         # the data type of the model's optimizer variable.
                         # If we can, then we assign the corresponding value.
-                        param_val = (attr_type) (param_val)                    
+                        param_val = (attr_type)(param_val)
                         if isinstance(optimizer, tf.keras.optimizers.legacy.Optimizer):
-                            # When using the older Optimizer versions we simply 
+                            # When using the older Optimizer versions we simply
                             # assign the new value to the optimizer's attribute.
                             setattr(optimizer, attr_name, param_val)
                             # optimizer._learning_rate = param_val
                         else:
-                            # When using the newer Optimizer versions we need to use 
+                            # When using the newer Optimizer versions we need to use
                             # the Keras Backend to set the corresponding value.
-                            K.set_value(getattr(optimizer, attr_name), param_val)                        
+                            K.set_value(
+                                getattr(optimizer, attr_name), param_val)
                     except Exception as e:
                         MetisLogger.warning(e)

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Tuple
 
 from ..proto import learner_pb2, model_pb2
-from ..utils.logger import MetisLogger
+from ..common.logger import MetisLogger
 
 
 class Learner(ABC):

@@ -2,11 +2,11 @@ from typing import Any, Dict, Optional
 
 import grpc
 
-from ..grpc.client import get_client
 from ..proto import (controller_pb2, controller_pb2_grpc, model_pb2,
                      service_common_pb2)
-from ..utils.fedenv import ClientParams, ServerParams
-from ..utils.logger import MetisLogger
+from ..common.types import ClientParams, ServerParams
+from ..common.logger import MetisLogger
+from .client import get_client
 
 
 def read_certificate(fp: str) -> bytes:
