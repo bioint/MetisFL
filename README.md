@@ -67,7 +67,7 @@ This option is ideal for someone who wants to quickly experiment with the Python
 This is the recommended way if you are planning on compiling the C++ code as it will allow you to do so without modifying or relying on your host system. Start by cloning the repository on your local machine and making sure that you have the [Dev Containers](https://code.visualstudio.com/docs/devcontainers/containers) VS Code extension installed. The extension will pick up the configuration from the `.devcontainer` folder and setup the container for you. If you use a different IDE, you can manually build the docker dev image using the Dockerfile in the `.devcontainer` folder.
 
 ## Host Machine
-If you want to develop on your host machine, you need to ensure that it satisfies the requirement and that all needed packages are installed. Currently, the development environment mentioned bellow has been tested on Ubuntu OS and for the x86_64 architecture. It should, however, work for different Linux-like OS on the same architecture. Support for different architectures is under development. The requirements for compiling and testing the code on your local machine are:
+If you want to develop on your host machine, you need to ensure that it satisfies the requirement and that all needed packages are installed. Currently, the development environment mentioned below has been tested on Ubuntu OS and for the x86_64 architecture. It should, however, work for different Linux-like OS on the same architecture. Support for different architectures is under development. The requirements for compiling and testing the code on your local machine are:
 
 * Bazel 4.2.1
 * Python 3.8 - 3.10
