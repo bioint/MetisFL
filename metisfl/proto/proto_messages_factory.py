@@ -3,7 +3,7 @@ import sys
 
 import numpy as np
 
-from metisfl.proto import learner_pb2, model_pb2, service_common_pb2
+from metisfl.proto import model_pb2
 
 
 class ModelProtoMessages(object):
@@ -164,7 +164,7 @@ class ModelProtoMessages(object):
     @classmethod
     def construct_federated_model_pb(cls, num_contributors, model_pb):
         assert isinstance(model_pb, model_pb2.Model)
-        return model_pb2.FederatedModel(num_contributors=num_contributors, model=model_pb)
+        return model_pb2.Model(num_contributors=num_contributors, model=model_pb)
 
     @classmethod
     def construct_optimizer_config_pb(cls, optimizer_name, learning_rate, kwargs):

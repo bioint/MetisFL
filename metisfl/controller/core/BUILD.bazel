@@ -3,11 +3,29 @@ load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
+    name = "controller",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.h"]),
+    deps = [
+        "//metisfl/controller/aggregation:aggregation",
+        "//metisfl/controller/scaling",
+        "//metisfl/controller/selection",
+        "//metisfl/controller/store:storing",
+        "//metisfl/controller/scheduling:scheduling",
+        "//metisfl/proto:cc_grpc_lib",
+        "//metisfl/controller/common:common",
+        "@absl//absl/status:statusor",
+        "@absl//absl/container:flat_hash_map",
+        "@absl//absl/memory",
+        "@com_github_google_glog//:glog",
+    ],
+)
+
+cc_library(
     name = "controller_interface",
     hdrs = ["controller.h"],
     deps = [
         "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/proto:service_common_cc_proto",
         "@absl//absl/status:statusor",
         "@absl//absl/container:flat_hash_map",
     ],
@@ -22,30 +40,6 @@ cc_library(
         ":controller",
         "//metisfl/proto:cc_grpc_lib",
         "@absl//absl/memory",
-    ],
-)
-
-cc_library(
-    name = "controller",
-    srcs = ["controller.cc"],
-    hdrs = ["controller.h"],
-    deps = [
-        ":controller_utils",
-        "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/controller/common:common",
-        "@absl//absl/status:statusor",
-        "@absl//absl/container:flat_hash_map",
-        "@absl//absl/memory",
-        "@com_github_google_glog//:glog",
-    ],
-)
-
-cc_library(
-    name = "controller_mock",
-    hdrs = ["controller_mock.h"],
-    deps = [
-        ":controller_interface",
-        "@gtest//:gtest",
     ],
 )
 
@@ -65,7 +59,16 @@ cc_library(
     ],
 )
 
-# Tests.
+# Tests 
+cc_library(
+    name = "controller_mock",
+    hdrs = ["controller_mock.h"],
+    deps = [
+        ":controller_interface",
+        "@gtest//:gtest",
+    ],
+)
+
 cc_test(
     name = "controller_test",
     srcs = ["controller_test.cc"],

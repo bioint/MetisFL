@@ -7,7 +7,6 @@
 
 namespace metisfl::controller {
 
-// Implements the synchronous task scheduling policy.
 class SynchronousScheduler : public Scheduler {
  public:
   std::vector<std::string> ScheduleNext(
@@ -21,6 +20,7 @@ class SynchronousScheduler : public Scheduler {
     std::vector<std::string> to_schedule(learner_ids_.begin(),
                                          learner_ids_.end());
     learner_ids_.clear();
+    ++global_iteration_;
 
     return to_schedule;
   }
@@ -28,7 +28,8 @@ class SynchronousScheduler : public Scheduler {
   inline std::string name() override { return "SynchronousScheduler"; }
 
  private:
-  ::absl::flat_hash_set<std::string> learner_ids_;
+  absl::flat_hash_set<std::string> learner_ids_;
+  int global_iteration_ = 0;
 };
 
 }  // namespace metisfl::controller

@@ -11,7 +11,8 @@ template <typename T>
 class FederatedRecency : public AggregationFunction,
                          FederatedRollingAverageBase<T> {
  public:
-  FederatedModel Aggregate(std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
+  Model Aggregate(
+      std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
   inline std::string Name() const override { return "FedRec"; }
 

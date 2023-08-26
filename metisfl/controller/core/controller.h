@@ -23,65 +23,53 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/controller/core/controller_utils.h"
 #include "metisfl/controller/core/model_manager.h"
+#include "metisfl/controller/core/types.h"
 
 namespace metisfl::controller {
 
 class Controller {
  public:
-  virtual ~Controller() = default;
+  Controller(const GlobalTrainParams &global_train_params,
+             const ModelStoreParams &model_store_params);
 
-  virtual const ServerParams &GetServerParams() const = 0;
+  ~Controller() = default;
 
-  virtual std::vector<std::string> GetLearnerIds() const = 0;
+  uint32_t GetNumLearners() const { return learners_.size(); }
 
-  virtual uint32_t GetNumLearners() const = 0;
+  TrainingMetadataMap &GetTrainingMetadata() { return training_metadata_; }
 
-  virtual const FederatedModel &CommunityModel() const = 0;
+  EvaluationMetadataMap &GetEvaluationMetadata() {
+    return evaluation_metadata_;
+  }
 
-  virtual absl::Status SetInitialModel(const Model &model) = 0;
+  ModelMetadata GetModelMetadata() {
+    return model_manager_->GetModelMetadata();
+  }
 
-  virtual absl::StatusOr<std::string> AddLearner(const Learner &learner) = 0;
+  std::vector<std::string> GetLearnerIds() const = 0;
 
-  virtual absl::Status StartTraining() = 0;
+  absl::Status SetInitialModel(const Model &model) = 0;
 
-  virtual absl::Status RemoveLearner(const std::string &learner_id) = 0;
+  absl::StatusOr<std::string> AddLearner(const Learner &learner) = 0;
 
-  virtual absl::Status TrainDone(const TrainDoneRequest &task) = 0;
+  absl::Status StartTraining() = 0;
 
-  virtual TrainingMetadataMap GetTrainingMetadata() = 0;
+  absl::Status RemoveLearner(const std::string &learner_id) = 0;
 
-  virtual EvaluationMetadataMap GetEvaluationMetadata() = 0;
+  absl::Status TrainDone(const TrainDoneRequest &task) = 0;
 
-  virtual RuntimeMetadataMap GetRuntimeMetadata() = 0;
-
-  virtual void Shutdown() = 0;
+  void Shutdown() = 0;
 
  private:
-  virtual absl::flat_hash_map<std::string, double> ComputeScalingFactors(
+  absl::flat_hash_map<std::string, double> ComputeScalingFactors(
       const std::vector<std::string> &selected_learners) = 0;
 
-  std::unique_ptr<ModelManager> model_manager_;
   GlobalTrainParams global_train_params_;
 
-  std::mutex learners_mutex_;
-  BS::thread_pool scheduling_pool_;
-
-  LearnersMap learners_;
-  LearnerStubMap learners_stub_;
-  TrainParamsMap train_params_;
-  EvaluationParamsMap eval_params_;
-
-  TaskLearnerMap task_learner_map_;
-  TrainingMetadataMap training_metadata_;
-  EvaluationMetadataMap evaluation_metadata_;
-
-  grpc::CompletionQueue run_tasks_cq_;
-  grpc::CompletionQueue eval_tasks_cq_;
-
- public:
-  static std::unique_ptr<Controller> New(
-      const GlobalTrainParams &global_train_params,
-      const ModelStoreParams &model_store_params);
+  std::unique_ptr<ModelManager> model_manager_;
+  std::unique_ptr<LearnerManager> learner_manager_;
+  std::unique_ptr<Scheduler> scheduler_;
+  std::unique_ptr<Selector> selector_;
 };
 
 }  // namespace metisfl::controller

@@ -81,7 +81,7 @@ TEST_F(FederatedAverageTest, CorrectAverageUINT16) {
   std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg = FederatedAverage<unsigned short>();
-  FederatedModel averaged = avg.Aggregate(to_aggregate);
+  Model averaged = avg.Aggregate(to_aggregate);
 
   auto aggregated_value_serialized = averaged.model().tensors().at(0).value();
   auto num_values = averaged.model().tensors().at(0).length();
@@ -115,7 +115,7 @@ TEST_F(FederatedAverageTest, CorrectAverageINT32) {
   std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg = FederatedAverage<unsigned int>();
-  FederatedModel averaged = avg.Aggregate(to_aggregate);
+  Model averaged = avg.Aggregate(to_aggregate);
 
   auto aggregated_value_serialized = averaged.model().tensors().at(0).value();
   auto num_values = averaged.model().tensors().at(0).length();
@@ -138,7 +138,7 @@ TEST_F(FederatedAverageTest, CorrectAverageFLOAT32) {
   std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg = FederatedAverage<float>();
-  FederatedModel averaged = avg.Aggregate(to_aggregate);
+  Model averaged = avg.Aggregate(to_aggregate);
 
   auto aggregated_value_serialized = averaged.model().tensors().at(0).value();
   auto num_values = averaged.model().tensors().at(0).length();
@@ -158,7 +158,7 @@ TEST_F(FederatedAverageTest, CorrectAverageFLOAT64) {
   std::vector to_aggregate({seq1, seq2});
 
   FederatedAverage avg = FederatedAverage<double>();
-  FederatedModel averaged = avg.Aggregate(to_aggregate);
+  Model averaged = avg.Aggregate(to_aggregate);
   auto aggregated_value_serialized = averaged.model().tensors().at(0).value();
   auto num_values = averaged.model().tensors().at(0).length();
   metisfl::proto::PrintSerializedTensor<double>(aggregated_value_serialized,
@@ -166,7 +166,7 @@ TEST_F(FederatedAverageTest, CorrectAverageFLOAT64) {
 
   // The aggregated value should be equal with the half of models sum.
   // Therefore, the global model must be equal to either model1 or model2.
-  EXPECT_THAT(averaged.model(), EqualsProto(model1));
+  EXPECT_THAT(averaged, EqualsProto(model1));
 }
 
 }  // namespace

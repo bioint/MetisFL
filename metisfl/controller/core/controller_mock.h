@@ -42,9 +42,9 @@ class MockController : public Controller {
               (const, override));
   MOCK_METHOD(absl::Status,
               ReplaceCommunityModel,
-              (const FederatedModel& model),
+              (const Model& model),
               (override));
-  MOCK_METHOD(FederatedModel&,
+  MOCK_METHOD(Model&,
               CommunityModel,
               (),
               (const, override));

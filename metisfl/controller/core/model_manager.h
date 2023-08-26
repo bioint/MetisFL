@@ -16,33 +16,43 @@ class ModelManager {
 
   const Model &GetModel() const { return model_; }
 
-  const TensorQuantifier &GetModelSize() const;
-
-  void SetInitialModel(const Model &model);
+  const ModelMetadataMap &GetModelMetadata() const { return metadata_; }
 
   bool IsInitialized() const { return is_initialized_; }
+
+  void SetInitialModel(const Model &model);
 
   void InsertModel(std::string learner_id, Model model);
 
   void UpdateModel(std::string learner_id, Model model);
 
-  void EraseModels(
-      const std::string &task_id, const std::vector<std::string> &learner_ids,
-      const absl::flat_hash_map<std::string, double> &scaling_factors);
+  void EraseModels(const std::vector<std::string> &learner_ids);
 
  private:
+  std::string InitializeMetadata();
+
   int GetStrideLength(const int num_learners) const;
 
   int GetLineageLength(std::string &learner_id) const;
 
   std::map<std::string, std::vector<const Model *>> SelectModels(
+      const std::string &update_id,
       const std::vector<std::pair<std::string, int>> &to_select_block);
 
-  std::vector<std::vector<std::pair<Model *, double>>> Getstd::vector<std::vector<std::pair<Model *, double>>>(
+  std::vector<std::vector<std::pair<Model *, double>>> GetAggregationPairs(
       std::map<std::string, std::vector<const Model *>> selected_models,
-      const absl::flat_hash_map<std::string, double> scaling_factors);
+      const absl::flat_hash_map<std::string, double> scaling_factors) const;
 
-  vodi RecordTime();
+  void Aggregate(
+      std::string &update_id,
+      std::vector<std::vector<std::pair<Model *, double>>> to_aggregate_block);
+
+  void RecordBlockSize(std::string &update_id, int block_size);
+
+  void RecordAggregationTime(std::string &update_id,
+                             std::chrono::time_point start);
+
+  const RecordModelSize(std::string &update_id);
 
   bool is_initialized_;
   Model model_;

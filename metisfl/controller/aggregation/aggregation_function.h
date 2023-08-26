@@ -15,7 +15,7 @@ class AggregationFunction {
  public:
   virtual ~AggregationFunction() = default;
 
-  virtual FederatedModel Aggregate(
+  virtual Model Aggregate(
       std::vector<std::vector<std::pair<Model *, double>>> &pairs) = 0;
 
   [[nodiscard]] inline virtual int RequiredLearnerLineageLength() const = 0;

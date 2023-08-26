@@ -52,4 +52,16 @@ typedef absl::flat_hash_map<std::string, EvaluationMetadata *>
     EvaluationMetadataMap;
 typedef std::unique_ptr<std::string, ModelMetadata> ModelMetadataMap;
 
+// GRPC Async Calls types
+template <typename T>
+struct AsyncLearnerCall {
+  std::string learner_id;
+  T reply;
+  grpc::ClientContext context;
+  grpc::Status status;
+  std::unique_ptr<grpc::ClientAsyncResponseReader<T>> response_reader;
+};
+struct AsyncLearnerRunTaskCall : AsyncLearnerCall<Ack> {};
+struct AsyncLearnerEvalCall : AsyncLearnerCall<EvaluateResponse> {};
+
 #endif  // METISFL_CONTROLLER_CORE_TYPES_H_

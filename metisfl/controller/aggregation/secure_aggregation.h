@@ -16,7 +16,7 @@ class SecAgg : AggregationFunction {
   SecAgg(const int batch_size, const int scaling_factor_bits,
          const std::string &crypto_context);
 
-  FederatedModel Aggregate(std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
+  Model Aggregate(std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
   [[nodiscard]] inline std::string Name() const override { return "SecAgg"; }
 

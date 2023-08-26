@@ -1,8 +1,6 @@
 syntax = "proto3";
 package metisfl;
 
-import "google/protobuf/timestamp.proto";
-
 import "metisfl/proto/model.proto";
 import "metisfl/proto/service_common.proto";
 
@@ -60,7 +58,7 @@ message Logs {
   // task_id -> learner_id
   map<string, string> task_learner_map = 1;
 
-  // The following maps are indexed by task_id.
+  // Indexed by task_id
   map<string, TrainingMetadata> training_metadata = 2;
   map<string, EvaluationMetadata> evaluation_metadata = 3;
   map<string, ModelMetadata> model_metadata = 4;
@@ -69,13 +67,11 @@ message Logs {
 // TODO: record task stard/end time
 
 message ModelMetadata {
-  map<string, double> model_insertion_duration_ms = 10;
-  map<string, double> model_selection_duration_ms = 11;
-  google.protobuf.Timestamp model_aggregation_started_at = 12;
-  google.protobuf.Timestamp model_aggregation_completed_at = 13;
-  double model_aggregation_total_duration_ms = 14;
-  repeated double model_aggregation_block_size = 15;
-  repeated double model_aggregation_block_memory_kb = 16;
-  repeated double model_aggregation_block_duration_ms = 17;
-  repeated TensorQuantifier model_tensor_quantifiers = 18;
+  double insertion_duration_ms = 1;
+  double selection_duration_ms = 2;
+  double aggregation_duration_ms = 3;
+  repeated double aggregation_block_size = 15;
+  repeated double aggregation_block_memory_kb = 16;
+  repeated double aggregation_block_duration_ms = 17;
+  repeated TensorQuantifier tensor_quantifiers = 18;
 }

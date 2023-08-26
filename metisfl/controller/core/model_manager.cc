@@ -17,88 +17,66 @@ class ModelManager {
     is_initialized_ = true;
   }
 
-  void SetInitialModel(const Model &model) override {
+  void SetInitialModel(const Model &model) {
     PLOG(INFO) << "Received initial model.";
-    *model_.mutable_model() = model;
+    model_ = model;
     InitializeAggregator(model_.model().tensors(0).type().type());
   }
 
-  const TensorQuantifier &GetModelSize() const override {
-    // TODO:
-  }
-
   void InsertModel(const std::vector<std::string> &learner_id,
-                   const Model model) override {
+                   const Model model) {
     std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
     model_store_->InsertModel(std::vector<std::pair<std::string, Model>>{
         std::pair<std::string, Model>(learner_id, model)});
   }
 
-  const EraseModels(const std::vector<std::string> &learner_id) override {
+  const EraseModels(const std::vector<std::string> &learner_id) {
     std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
     model_store_->EraseModels(learner_id);
   }
 
-  void UpdateModel(const std::vector<std::string> &learner_ids,
-                   const absl::flat_hash_map<std::string, double>
-                       &scaling_factors) override {
+  void UpdateModel(
+      const std::vector<std::string> &learner_ids,
+      const absl::flat_hash_map<std::string, double> &scaling_factors) {
     std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
-    auto update_id = metisfl::controller::GenerateRadnomId();
 
-    metadata_[update_id] = std::make_unique<Metadata>();
-    *metadata_[update_id].mutable_model_aggregation_started_at() =
-        TimeUtil::GetCurrentTime();
-    auto start_time_aggregation = std::chrono::high_resolution_clock::now();
-
+    auto update_id = ItitializeMetadata();
     int stride_length = GetStrideLength(learner_ids.size());
-
-    /* Since absl does not support crbeing() or iterator decrement (--) we need
-       to use this. method to find the itr of the last element. */
-    absl::flat_hash_map<std::string, Learner *>::iterator last_elem_itr;
-    for (auto itr = learner_ids.begin(); itr != learner_ids.end(); itr++) {
-      last_elem_itr = itr;
-    }
+    auto start_time_aggregation = std::chrono::high_resolution_clock::now();
 
     for (auto leraner_id : learner_ids) {
       std::vector<std::pair<std::string, int>> to_select_block;
       to_select_block.emplace_back(learner_id, lineage_length);
-      uint32_t block_size = to_select_block.size();
+      int block_size = to_select_block.size();
 
-      if (block_size == stride_length || itr == last_elem_itr) {
-        *metadata_[update_id].mutable_model_aggregation_block_size()->Add() =
-            block_size;
-
+      if (block_size == stride_length || learner_id == learner_ids.back()) {
         auto selected_models = SelectModels(to_select_block);
 
         auto to_aggregate_block =
-            Getstd::vector<std::vector<std::pair<Model *, double>>>(selected_models, scaling_factors);
+            GetAggregationPairs(selected_models, scaling_factors);
 
-        model_ = aggregator_->Aggregate(to_aggregate_block);
+        Aggregate(update_id, to_aggregate_block);
 
-        RecordTime();
+        RecordBlockSize(update_id, block_size);
 
-        // Cleanup
         model_store_->ResetState();
+      }
+    }
 
-      }  // end-if
-
-    }  // end for loop
-
+    RecordElapsedTime(update_id, start_time_aggregation);
+    RecordModelSize(update_id);
     aggregator_->Reset();
-
-    // Compute elapsed time for the entire aggregation
-    auto end_time_aggregation = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> elapsed_time_aggregation =
-        end_time_aggregation - start_time_aggregation;
-    metadata_[update_id].set_model_aggregation_total_duration_ms(
-        elapsed_time_aggregation.count());
-    *metadata_[update_id].mutable_model_aggregation_completed_at() =
-        TimeUtil::GetCurrentTime();
   }
 
  private:
-  int GetStrideLength(int num_learners) {
+  std::string ItitializeMetadata() {
+    auto update_id = metisfl::controller::GenerateRadnomId();
+    metadata_[update_id] = std::make_unique<Metadata>();
+    return update_id;
+  }
+
+  int GetStrideLength(const int num_learners) {
     uint32_t stride_length = num_learners;
     if (global_train_params_.aggregation_rule == "FedStride") {
       auto fed_stride_length = global_train_params_.stride_length;
@@ -109,21 +87,18 @@ class ModelManager {
     return stride_length;
   }
 
-  int GetLineageLength(std::string &learner_id) override {
+  int GetLineageLength(std::string &learner_id) {
     const auto lineage_length =
         model_store_->GetLearnerLineageLength(learner_id);
 
-    int select_lineage_length =
-        (lineage_length >= aggregator_->RequiredLearnerLineageLength())
-            ? aggregator_->RequiredLearnerLineageLength()
-            : lineage_length;
+    auto required_lineage_length = aggregator_->RequiredLearnerLineageLength();
 
-    return lineage_length;
+    return std::min(lineage_length, required_lineage_length);
   }
 
   std::map<std::string, std::vector<const Model *>> SelectModels(
-      const std::vector<std::pair<std::string, int>> &to_select_block)
-      override {
+      const std::string &update_id,
+      const std::vector<std::pair<std::string, int>> &to_select_block) {
     auto start_time_selection = std::chrono::high_resolution_clock::now();
 
     std::map<std::string, std::vector<const Model *>> selected_models =
@@ -134,21 +109,15 @@ class ModelManager {
     std::chrono::duration<double, std::milli> elapsed_time_selection =
         end_time_selection - start_time_selection;
 
-    auto avg_time_selection_per_model =
-        elapsed_time_selection.count() / block_size;
+    *metadata_[update_id].mutable_selection_duration_ms() =
+        elapsed_time_selection.count();
 
-    for (auto const &[selected_learner_id, selected_learner_models] :
-         selected_models) {
-      (*metadata_[update_id]
-            .mutable_model_selection_duration_ms())[selected_learner_id] =
-          avg_time_selection_per_model;
-    }
     return selected_models;
   }
 
-  std::vector<std::vector<std::pair<Model *, double>>> Getstd::vector<std::vector<std::pair<Model *, double>>>(
+  std::vector<std::vector<std::pair<Model *, double>>> GetAggregationPairs(
       std::map<std::string, std::vector<const Model *>> selected_models,
-      const absl::flat_hash_map<std::string, double> scaling_factors) override {
+      const absl::flat_hash_map<std::string, double> scaling_factors) {
     std::vector<std::vector<std::pair<Model *, double>>> to_aggregate_block;
 
     std::vector<std::pair<const Model *, double>>
@@ -169,21 +138,39 @@ class ModelManager {
     return to_aggregate_block;
   }
 
-  void RecordTime() override {
+  void Aggregate(
+      std::string &update_id,
+      std::vector<std::vector<std::pair<Model *, double>>> to_aggregate_block) {
     auto start_time_block_aggregation =
         std::chrono::high_resolution_clock::now();
+
+    model_ = aggregator_->Aggregate(to_aggregate_block);
 
     auto end_time_block_aggregation = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double, std::milli> elapsed_time_block_aggregation =
         end_time_block_aggregation - start_time_block_aggregation;
 
-    *metadata_[update_id].mutable_model_aggregation_block_duration_ms()->Add() =
+    *metadata_[update_id].mutable_aggregation_block_duration_ms()->Add() =
         elapsed_time_block_aggregation.count();
+  }
 
+  void RecordBlockSize(std::string &update_id, int block_size) {
+    *metadata_[update_id].mutable_aggregation_block_size()->Add() = block_size;
     long block_memory = GetTotalMemory();
-
-    *metadata_[update_id].mutable_model_aggregation_block_memory_kb()->Add() =
+    *metadata_[update_id].mutable_aggregation_block_memory_kb()->Add() =
         (double)block_memory;
   }
-};
+
+  void RecordAggregationTime(std::string &update_id,
+                             std::chrono::time_point start) {
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> elapsed = end - start;
+    metadata_[update_id].set_aggregation_duration_ms(end.count());
+  }
+
+  const RecordModelSize(std::string &update_id) {
+    // TODO:
+  }
+
+};  // namespace metisfl::controller

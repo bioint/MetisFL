@@ -7,7 +7,7 @@ template <typename T>
 void FederatedRollingAverageBase<T>::InitializeModel(
     const Model *init_model, double init_contrib_value) {
   wc_scaled_model = *init_model;
-  community_score_z = init_contrib_value;
+  score_z = init_contrib_value;
 
   for (auto index = 0; index < init_model->tensors_size(); index++) {
     const auto &init_tensor = init_model->tensors(index);
@@ -17,14 +17,12 @@ void FederatedRollingAverageBase<T>::InitializeModel(
                                            TensorOperation::MULTIPLY);
 
       *scaled_tensor->mutable_value() = aggregated_result;
+    }
 
-    }  // End If
+    // TODO(stripeli): Place logic for encrypted tensors here.
+  }
 
-    // TODO(stripeli): Place CipherText logic here.
-
-  }  // End For
-
-  community_model = wc_scaled_model;
+  model = wc_scaled_model;
 }
 
 template <typename T>
@@ -52,31 +50,26 @@ void FederatedRollingAverageBase<T>::UpdateScaledModel(
                        TensorOperation::ADDITION);
 
       *(scaled_tensor->mutable_value()) = aggregated_result;
-
-    }  // End If
-
-    // TODO(stripeli): Place CipherText logic here.
-
-  }  // End For
+    }
+    // TODO(stripeli): Place logic for encrypted tensors here.
+  }
 }
 
 template <typename T>
 void FederatedRollingAverageBase<T>::UpdateCommunityModel() {
-  community_model = Model();
+  model = Model();
   for (const auto &scaled_mdl_variable : wc_scaled_model.tensors()) {
-    auto cm_variable = community_model.mutable_model()->add_tensors();
+    auto cm_variable = model.add_tensors();
     *cm_variable = scaled_mdl_variable;
     if (!scaled_mdl_variable.encrypted()) {
       std::string scaled_result;
-      scaled_result = ScaleTensor(scaled_mdl_variable, community_score_z,
-                                  TensorOperation::DIVIDE);
+      scaled_result =
+          ScaleTensor(scaled_mdl_variable, score_z, TensorOperation::DIVIDE);
       *(cm_variable->mutable_value()) = scaled_result;
+    }
 
-    }  // End If
-
-    // TODO(stripeli): Place CipherText logic here.
-
-  }  // End For
+    // TODO(stripeli): Place logic for encrypted tensors here.
+  }
 }
 
 template <typename T>

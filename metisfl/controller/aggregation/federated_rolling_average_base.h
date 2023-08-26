@@ -15,8 +15,9 @@ enum TensorOperation { MULTIPLY, DIVIDE, SUBTRACTION, ADDITION };
 template <typename T>
 class FederatedRollingAverageBase {
  protected:
-  double community_score_z = 0;
-  FederatedModel community_model;
+  int num_contributors = 0;
+  double score_z = 0;
+  Model model;
   Model wc_scaled_model;
 
   void InitializeModel(const Model *init_model, double init_contrib_value);

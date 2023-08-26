@@ -14,7 +14,7 @@ namespace metisfl::controller {
 template <typename T>
 class FederatedAverage : public AggregationFunction {
  public:
-  FederatedModel Aggregate(
+  Model Aggregate(
       std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
 
   inline std::string Name() const override { return "FedAvg"; }

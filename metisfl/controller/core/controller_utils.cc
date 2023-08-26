@@ -18,9 +18,10 @@ std::unique_ptr<AggregationFunction> CreateAggregator(
   if (aggregation_rule == "FedStride")
     return CreateAggregatorForDType<FederatedStride>(dtype);
   if (aggregation_rule == "SecAgg") {
-    SecAgg aggr = CreateAggregatorForDType<SecAgg>(dtype);
-    aggr.InitScheme(he_batch_size, he_scaling_factor_bits, crypto_context_file);
-    return aggr;
+    SecAgg sec_aggr = CreateAggregatorForDType<SecAgg>(dtype);
+    sec_aggr.InitScheme(he_batch_size, he_scaling_factor_bits,
+                        crypto_context_file);
+    return sec_aggr;
   }
 }
 

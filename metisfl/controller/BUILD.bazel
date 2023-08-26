@@ -11,7 +11,7 @@ pybind_extension(
     name = "controller",
     srcs = ["controller_pybind.cc"],
     deps = [
-        "//metisfl/controller/core:controller_servicer",
+        "//metisfl/controller/core:controller",
     ],
     linkstatic=True
 )
@@ -31,7 +31,7 @@ cc_binary(
     name = "controller_main",
     srcs = ["controller_main.cc"],
     deps = [
-        "//metisfl/controller/core:controller_servicer",        
+        "//metisfl/controller/core:controller",        
         "@absl//absl/strings",
         "@com_github_google_glog//:glog",
     ],

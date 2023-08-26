@@ -22,6 +22,13 @@ class Scheduler {
       const std::string &learner_id, const int num_active_learners) = 0;
 
   virtual std::string name() = 0;
+
+  /**
+   * @brief Get the global iteration.
+   *
+   * @return int The global iteration.
+   */
+  inline int global_iteration() { return global_iteration_; }
 };
 
 }  // namespace metisfl::controller

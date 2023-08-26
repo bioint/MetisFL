@@ -70,7 +70,7 @@ class ScenariosCommon {
     */
   void AssignLearnerState(const std::string &learner_id, const LearnerState &learner_state);
 
-  FederatedModel ComputeCommunityModelOPT(const std::vector<std::string> &learners_ids);
+  Model ComputeCommunityModelOPT(const std::vector<std::string> &learners_ids);
 
   void InsertModelsIntoStore(std::vector<std::pair<std::string, Model>> learner_pairs);
 

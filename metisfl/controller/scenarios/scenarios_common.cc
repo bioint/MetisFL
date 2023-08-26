@@ -163,14 +163,14 @@ namespace metisfl::controller
     learners_[learner_id] = learner_state;
   }
 
-  FederatedModel ScenariosCommon::ComputeCommunityModelOPT(const std::vector<std::string> &learners_ids)
+  Model ScenariosCommon::ComputeCommunityModelOPT(const std::vector<std::string> &learners_ids)
   {
 
     // Sentinel variables to Record community model aggregation time.
     *metadata_.mutable_model_aggregation_started_at() = TimeUtil::GetCurrentTime();
     auto start_time_aggregation = std::chrono::high_resolution_clock::now();
 
-    FederatedModel community_model; // return variable.
+    Model community_model; // return variable.
     absl::flat_hash_map<std::string, LearnerState *> participating_states;
 
     // Select a sub-set of learners who are participating in the experiment.

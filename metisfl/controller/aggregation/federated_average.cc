@@ -4,20 +4,19 @@
 namespace metisfl::controller {
 
 template <typename T>
-FederatedModel FederatedAverage<T>::Aggregate(
+Model FederatedAverage<T>::Aggregate(
     std::vector<std::vector<std::pair<Model *, double>>> &pairs) {
-  FederatedModel global_model;
+  Model model;
 
   const auto &sample_model = pairs.front().front().first;
 
-  global_model.mutable_model()->mutable_tensors()->CopyFrom(
-      sample_model->tensors());
+  model.mutable_tensors()->CopyFrom(sample_model->tensors());
 
-  auto total_tensors = global_model.model().tensors_size();
+  auto total_tensors = model.tensors_size();
 
 #pragma omp parallel for
   for (int var_idx = 0; var_idx < total_tensors; ++var_idx) {
-    auto var_num_values = global_model.model().tensors(var_idx).length();
+    auto var_num_values = model.tensors(var_idx).length();
 
     auto aggregated_tensor =
         AggregateTensorAtIndex(pairs, var_idx, var_num_values);
@@ -26,11 +25,10 @@ FederatedModel FederatedAverage<T>::Aggregate(
     std::string serialized_tensor_str(serialized_tensor.begin(),
                                       serialized_tensor.end());
 
-    *global_model.mutable_model()->mutable_tensors(var_idx)->mutable_value() =
-        serialized_tensor_str;
+    *model.mutable_tensors(var_idx)->mutable_value() = serialized_tensor_str;
   }
 
-  return global_model;
+  return model;
 }
 template <typename T>
 void FederatedAverage<T>::Reset() {}

@@ -56,9 +56,3 @@ message Tensor {
 message Model {
   repeated Tensor tensors = 1;
 }
-
-message FederatedModel {
-  uint32 num_contributors = 1;
-  Model model = 2;
-}
-
