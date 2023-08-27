@@ -3,8 +3,7 @@
 
 namespace metisfl::controller {
 
-template <typename T>
-Model FederatedAverage<T>::Aggregate(
+Model FederatedAverage::Aggregate(
     std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   Model model;
 
@@ -20,7 +19,7 @@ Model FederatedAverage<T>::Aggregate(
 
     auto aggregated_tensor =
         AggregateTensorAtIndex(pairs, var_idx, var_num_values);
-    auto serialized_tensor = SerializeTensor<T>(aggregated_tensor);
+    auto serialized_tensor = TensorOps::SerializeTensor(aggregated_tensor);
 
     std::string serialized_tensor_str(serialized_tensor.begin(),
                                       serialized_tensor.end());
@@ -31,28 +30,25 @@ Model FederatedAverage<T>::Aggregate(
   return model;
 }
 
-template <typename T>
-void FederatedAverage<T>::Reset() {}
+void FederatedAverage::Reset() {}
 
-template <typename T>
-void FederatedAverage<T>::AddTensors(std::vector<T> &tensor_left,
-                                     const Tensor &tensor_spec_right,
-                                     double scaling_factor_right) const {
-  auto t2_r = DeserializeTensor<T>(tensor_spec_right);
+void FederatedAverage::AddTensors(std::vector<double> &tensor_left,
+                                  const Tensor &tensor_spec_right,
+                                  double scaling_factor_right) const {
+  auto t2_r = TensorOps::DeserializeTensor(tensor_spec_right);
 
   transform(t2_r.begin(), t2_r.end(), t2_r.begin(),
             std::bind(std::multiplies<double>(), std::placeholders::_1,
                       scaling_factor_right));
 
   transform(tensor_left.begin(), tensor_left.end(), t2_r.begin(),
-            tensor_left.begin(), std::plus<T>());
+            tensor_left.begin(), std::plus<double>());
 }
 
-template <typename T>
-std::vector<T> FederatedAverage<T>::AggregateTensorAtIndex(
-    std::vector<std::vector<std::pair<const Model *, double>>> &pairs, int var_idx,
-    uint32_t var_num_values) const {
-  auto aggregated_tensor = std::vector<T>(var_num_values);
+std::vector<double> FederatedAverage::AggregateTensorAtIndex(
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs,
+    int var_idx, uint32_t var_num_values) const {
+  auto aggregated_tensor = std::vector<double>(var_num_values);
   for (const auto &pair : pairs) {
     const auto *local_model = pair.front().first;
     const auto &local_tensor = local_model->tensors(var_idx);

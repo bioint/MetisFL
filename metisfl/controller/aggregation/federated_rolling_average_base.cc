@@ -3,9 +3,8 @@
 
 namespace metisfl::controller {
 
-template <typename T>
-void FederatedRollingAverageBase<T>::InitializeModel(
-    const Model *init_model, double init_contrib_value) {
+void FederatedRollingAverageBase::InitializeModel(const Model *init_model,
+                                                  double init_contrib_value) {
   wc_scaled_model = *init_model;
   score_z = init_contrib_value;
 
@@ -25,8 +24,7 @@ void FederatedRollingAverageBase<T>::InitializeModel(
   model = wc_scaled_model;
 }
 
-template <typename T>
-void FederatedRollingAverageBase<T>::UpdateScaledModel(
+void FederatedRollingAverageBase::UpdateScaledModel(
     const Model *existing_model, const Model *new_model,
     double existing_contrib_value, double new_contrib_value) {
   for (int index = 0; index < wc_scaled_model.tensors_size(); index++) {
@@ -55,8 +53,7 @@ void FederatedRollingAverageBase<T>::UpdateScaledModel(
   }
 }
 
-template <typename T>
-void FederatedRollingAverageBase<T>::UpdateCommunityModel() {
+void FederatedRollingAverageBase::UpdateCommunityModel() {
   model = Model();
   for (const auto &scaled_mdl_variable : wc_scaled_model.tensors()) {
     auto cm_variable = model.add_tensors();
@@ -72,36 +69,34 @@ void FederatedRollingAverageBase<T>::UpdateCommunityModel() {
   }
 }
 
-template <typename T>
-std::string FederatedRollingAverageBase<T>::MergeTensors(
+std::string FederatedRollingAverageBase::MergeTensors(
     const Tensor &tensor_spec_left, const Tensor &tensor_spec_right,
     double scaling_factor_right, TensorOperation op) {
-  auto t1_l = DeserializeTensor<T>(tensor_spec_left);
-  auto t2_r = DeserializeTensor<T>(tensor_spec_right);
+  auto t1_l = TensorOps::DeserializeTensor(tensor_spec_left);
+  auto t2_r = TensorOps::DeserializeTensor(tensor_spec_right);
 
   transform(t2_r.begin(), t2_r.end(), t2_r.begin(),
             std::bind(std::multiplies<double>(), std::placeholders::_1,
                       scaling_factor_right));
   if (op == TensorOperation::SUBTRACTION) {
     transform(t1_l.begin(), t1_l.end(), t2_r.begin(), t1_l.begin(),
-              std::minus<T>());
+              std::minus<double>());
   } else if (op == TensorOperation::ADDITION) {
     transform(t1_l.begin(), t1_l.end(), t2_r.begin(), t1_l.begin(),
-              std::plus<T>());
+              std::plus<double>());
   }
 
-  auto serialized_tensor = SerializeTensor<T>(t1_l);
+  auto serialized_tensor = TensorOps::SerializeTensor(t1_l);
 
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
   return serialized_tensor_str;
 }
 
-template <typename T>
-std::string FederatedRollingAverageBase<T>::ScaleTensor(const Tensor &tensor,
-                                                        double scaling_factor,
-                                                        TensorOperation op) {
-  auto ts = DeserializeTensor<T>(tensor);
+std::string FederatedRollingAverageBase::ScaleTensor(const Tensor &tensor,
+                                                     double scaling_factor,
+                                                     TensorOperation op) {
+  auto ts = TensorOps::DeserializeTensor(tensor);
 
   if (op == TensorOperation::DIVIDE) {
     transform(ts.begin(), ts.end(), ts.begin(),
@@ -113,7 +108,7 @@ std::string FederatedRollingAverageBase<T>::ScaleTensor(const Tensor &tensor,
                         scaling_factor));
   }
 
-  auto serialized_tensor = SerializeTensor<T>(ts);
+  auto serialized_tensor = TensorOps::SerializeTensor(ts);
 
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());

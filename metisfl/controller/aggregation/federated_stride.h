@@ -7,11 +7,11 @@
 
 namespace metisfl::controller {
 
-template <typename T>
 class FederatedStride : public AggregationFunction,
-                        FederatedRollingAverageBase<T> {
+                        FederatedRollingAverageBase {
  public:
-  Model Aggregate(std::vector<std::vector<std::pair<const Model *, double>>> &pairs) override;
+  Model Aggregate(std::vector<std::vector<std::pair<const Model *, double>>>
+                      &pairs) override;
 
   inline std::string Name() const override { return "FedStride"; }
 

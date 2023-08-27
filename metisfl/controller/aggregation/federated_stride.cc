@@ -3,39 +3,36 @@
 
 namespace metisfl::controller {
 
-template <typename T>
-Model FederatedStride<T>::Aggregate(
+Model FederatedStride::Aggregate(
     std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   for (auto pair : pairs) {
     const Model *latest_model = pair.front().first;
     double contrib_value = pair.front().second;
 
-    if (this.num_contributors == 0) {
-      this.InitializeModel(latest_model, contrib_value);
+    if (num_contributors == 0) {
+      InitializeModel(latest_model, contrib_value);
     } else {
       Model dummy_model;
       double dummy_value = 0;
 
-      this.score_z += contrib_value;
+      score_z += contrib_value;
 
-      this.UpdateScaledModel(&dummy_model, latest_model, dummy_value,
-                             contrib_value);
+      UpdateScaledModel(&dummy_model, latest_model, dummy_value, contrib_value);
 
-      this.UpdateCommunityModel();
+      UpdateCommunityModel();
 
-      this.num_contributors++;
+      num_contributors++;
     }
   }
 
-  return this.model;
+  return model;
 }
 
-template <typename T>
-void FederatedStride<T>::Reset() {
-  this.score_z = 0;
-  this.num_contributors = 0;
-  this.model = Model();
-  this.wc_scaled_model = Model();
+void FederatedStride::Reset() {
+  score_z = 0;
+  num_contributors = 0;
+  model = Model();
+  wc_scaled_model = Model();
 }
 
 }  // namespace metisfl::controller

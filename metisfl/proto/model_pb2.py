@@ -3,7 +3,6 @@
 # source: metisfl/proto/model.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
-from google.protobuf import descriptor_pool as _descriptor_pool
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
@@ -14,16 +13,326 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\"\xce\x02\n\x05\x44Type\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x13.metisfl.DType.TypeR\x04type\x12\x37\n\nbyte_order\x18\x02 \x01(\x0e\x32\x18.metisfl.DType.ByteOrderR\tbyteOrder\x12#\n\rfortran_order\x18\x03 \x01(\x08R\x0c\x66ortranOrder\"z\n\x04Type\x12\x08\n\x04INT8\x10\x00\x12\t\n\x05INT16\x10\x01\x12\t\n\x05INT32\x10\x02\x12\t\n\x05INT64\x10\x03\x12\t\n\x05UINT8\x10\x04\x12\n\n\x06UINT16\x10\x05\x12\n\n\x06UINT32\x10\x06\x12\n\n\x06UINT64\x10\x07\x12\x0b\n\x07\x46LOAT32\x10\x08\x12\x0b\n\x07\x46LOAT64\x10\t\"B\n\tByteOrder\x12\x06\n\x02NA\x10\x00\x12\x14\n\x10\x42IG_ENDIAN_ORDER\x10\x01\x12\x17\n\x13LITTLE_ENDIAN_ORDER\x10\x02\"\xbb\x01\n\x10TensorQuantifier\x12-\n\x10tensor_non_zeros\x18\x01 \x01(\rH\x00R\x0etensorNonZeros\x88\x01\x01\x12&\n\x0ctensor_zeros\x18\x02 \x01(\rH\x01R\x0btensorZeros\x88\x01\x01\x12*\n\x11tensor_size_bytes\x18\x03 \x01(\rR\x0ftensorSizeBytesB\x13\n\x11_tensor_non_zerosB\x0f\n\r_tensor_zeros\"\x98\x01\n\x06Tensor\x12\x1c\n\tencrypted\x18\x01 \x01(\x08R\tencrypted\x12\x16\n\x06length\x18\x02 \x01(\rR\x06length\x12\x1e\n\ndimensions\x18\x03 \x03(\x03R\ndimensions\x12\"\n\x04type\x18\x04 \x01(\x0b\x32\x0e.metisfl.DTypeR\x04type\x12\x14\n\x05value\x18\x05 \x01(\x0cR\x05value\"2\n\x05Model\x12)\n\x07tensors\x18\x01 \x03(\x0b\x32\x0f.metisfl.TensorR\x07tensorsb\x06proto3')
+DESCRIPTOR = _descriptor.FileDescriptor(
+  name='metisfl/proto/model.proto',
+  package='metisfl',
+  syntax='proto3',
+  serialized_options=None,
+  create_key=_descriptor._internal_create_key,
+  serialized_pb=b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\"\xce\x02\n\x05\x44Type\x12\'\n\x04type\x18\x01 \x01(\x0e\x32\x13.metisfl.DType.TypeR\x04type\x12\x37\n\nbyte_order\x18\x02 \x01(\x0e\x32\x18.metisfl.DType.ByteOrderR\tbyteOrder\x12#\n\rfortran_order\x18\x03 \x01(\x08R\x0c\x66ortranOrder\"z\n\x04Type\x12\x08\n\x04INT8\x10\x00\x12\t\n\x05INT16\x10\x01\x12\t\n\x05INT32\x10\x02\x12\t\n\x05INT64\x10\x03\x12\t\n\x05UINT8\x10\x04\x12\n\n\x06UINT16\x10\x05\x12\n\n\x06UINT32\x10\x06\x12\n\n\x06UINT64\x10\x07\x12\x0b\n\x07\x46LOAT32\x10\x08\x12\x0b\n\x07\x46LOAT64\x10\t\"B\n\tByteOrder\x12\x06\n\x02NA\x10\x00\x12\x14\n\x10\x42IG_ENDIAN_ORDER\x10\x01\x12\x17\n\x13LITTLE_ENDIAN_ORDER\x10\x02\"\xbb\x01\n\x10TensorQuantifier\x12-\n\x10tensor_non_zeros\x18\x01 \x01(\rH\x00R\x0etensorNonZeros\x88\x01\x01\x12&\n\x0ctensor_zeros\x18\x02 \x01(\rH\x01R\x0btensorZeros\x88\x01\x01\x12*\n\x11tensor_size_bytes\x18\x03 \x01(\rR\x0ftensorSizeBytesB\x13\n\x11_tensor_non_zerosB\x0f\n\r_tensor_zeros\"\x98\x01\n\x06Tensor\x12\x1c\n\tencrypted\x18\x01 \x01(\x08R\tencrypted\x12\x16\n\x06length\x18\x02 \x01(\rR\x06length\x12\x1e\n\ndimensions\x18\x03 \x03(\x03R\ndimensions\x12\"\n\x04type\x18\x04 \x01(\x0b\x32\x0e.metisfl.DTypeR\x04type\x12\x14\n\x05value\x18\x05 \x01(\x0cR\x05value\"2\n\x05Model\x12)\n\x07tensors\x18\x01 \x03(\x0b\x32\x0f.metisfl.TensorR\x07tensorsb\x06proto3'
+)
 
 
 
-_DTYPE = DESCRIPTOR.message_types_by_name['DType']
-_TENSORQUANTIFIER = DESCRIPTOR.message_types_by_name['TensorQuantifier']
-_TENSOR = DESCRIPTOR.message_types_by_name['Tensor']
-_MODEL = DESCRIPTOR.message_types_by_name['Model']
-_DTYPE_TYPE = _DTYPE.enum_types_by_name['Type']
-_DTYPE_BYTEORDER = _DTYPE.enum_types_by_name['ByteOrder']
+_DTYPE_TYPE = _descriptor.EnumDescriptor(
+  name='Type',
+  full_name='metisfl.DType.Type',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='INT8', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='INT16', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='INT32', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='INT64', index=3, number=3,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='UINT8', index=4, number=4,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='UINT16', index=5, number=5,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='UINT32', index=6, number=6,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='UINT64', index=7, number=7,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='FLOAT32', index=8, number=8,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='FLOAT64', index=9, number=9,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=183,
+  serialized_end=305,
+)
+_sym_db.RegisterEnumDescriptor(_DTYPE_TYPE)
+
+_DTYPE_BYTEORDER = _descriptor.EnumDescriptor(
+  name='ByteOrder',
+  full_name='metisfl.DType.ByteOrder',
+  filename=None,
+  file=DESCRIPTOR,
+  create_key=_descriptor._internal_create_key,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='NA', index=0, number=0,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='BIG_ENDIAN_ORDER', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='LITTLE_ENDIAN_ORDER', index=2, number=2,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=307,
+  serialized_end=373,
+)
+_sym_db.RegisterEnumDescriptor(_DTYPE_BYTEORDER)
+
+
+_DTYPE = _descriptor.Descriptor(
+  name='DType',
+  full_name='metisfl.DType',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='type', full_name='metisfl.DType.type', index=0,
+      number=1, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='type', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='byte_order', full_name='metisfl.DType.byte_order', index=1,
+      number=2, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='byteOrder', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='fortran_order', full_name='metisfl.DType.fortran_order', index=2,
+      number=3, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='fortranOrder', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+    _DTYPE_TYPE,
+    _DTYPE_BYTEORDER,
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=39,
+  serialized_end=373,
+)
+
+
+_TENSORQUANTIFIER = _descriptor.Descriptor(
+  name='TensorQuantifier',
+  full_name='metisfl.TensorQuantifier',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='tensor_non_zeros', full_name='metisfl.TensorQuantifier.tensor_non_zeros', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='tensorNonZeros', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tensor_zeros', full_name='metisfl.TensorQuantifier.tensor_zeros', index=1,
+      number=2, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='tensorZeros', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tensor_size_bytes', full_name='metisfl.TensorQuantifier.tensor_size_bytes', index=2,
+      number=3, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='tensorSizeBytes', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+    _descriptor.OneofDescriptor(
+      name='_tensor_non_zeros', full_name='metisfl.TensorQuantifier._tensor_non_zeros',
+      index=0, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+    _descriptor.OneofDescriptor(
+      name='_tensor_zeros', full_name='metisfl.TensorQuantifier._tensor_zeros',
+      index=1, containing_type=None,
+      create_key=_descriptor._internal_create_key,
+    fields=[]),
+  ],
+  serialized_start=376,
+  serialized_end=563,
+)
+
+
+_TENSOR = _descriptor.Descriptor(
+  name='Tensor',
+  full_name='metisfl.Tensor',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='encrypted', full_name='metisfl.Tensor.encrypted', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='encrypted', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='length', full_name='metisfl.Tensor.length', index=1,
+      number=2, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='length', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='dimensions', full_name='metisfl.Tensor.dimensions', index=2,
+      number=3, type=3, cpp_type=2, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='dimensions', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='type', full_name='metisfl.Tensor.type', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='type', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='metisfl.Tensor.value', index=4,
+      number=5, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=566,
+  serialized_end=718,
+)
+
+
+_MODEL = _descriptor.Descriptor(
+  name='Model',
+  full_name='metisfl.Model',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='tensors', full_name='metisfl.Model.tensors', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, json_name='tensors', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=720,
+  serialized_end=770,
+)
+
+_DTYPE.fields_by_name['type'].enum_type = _DTYPE_TYPE
+_DTYPE.fields_by_name['byte_order'].enum_type = _DTYPE_BYTEORDER
+_DTYPE_TYPE.containing_type = _DTYPE
+_DTYPE_BYTEORDER.containing_type = _DTYPE
+_TENSORQUANTIFIER.oneofs_by_name['_tensor_non_zeros'].fields.append(
+  _TENSORQUANTIFIER.fields_by_name['tensor_non_zeros'])
+_TENSORQUANTIFIER.fields_by_name['tensor_non_zeros'].containing_oneof = _TENSORQUANTIFIER.oneofs_by_name['_tensor_non_zeros']
+_TENSORQUANTIFIER.oneofs_by_name['_tensor_zeros'].fields.append(
+  _TENSORQUANTIFIER.fields_by_name['tensor_zeros'])
+_TENSORQUANTIFIER.fields_by_name['tensor_zeros'].containing_oneof = _TENSORQUANTIFIER.oneofs_by_name['_tensor_zeros']
+_TENSOR.fields_by_name['type'].message_type = _DTYPE
+_MODEL.fields_by_name['tensors'].message_type = _TENSOR
+DESCRIPTOR.message_types_by_name['DType'] = _DTYPE
+DESCRIPTOR.message_types_by_name['TensorQuantifier'] = _TENSORQUANTIFIER
+DESCRIPTOR.message_types_by_name['Tensor'] = _TENSOR
+DESCRIPTOR.message_types_by_name['Model'] = _MODEL
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
 DType = _reflection.GeneratedProtocolMessageType('DType', (_message.Message,), {
   'DESCRIPTOR' : _DTYPE,
   '__module__' : 'metisfl.proto.model_pb2'
@@ -52,19 +361,5 @@ Model = _reflection.GeneratedProtocolMessageType('Model', (_message.Message,), {
   })
 _sym_db.RegisterMessage(Model)
 
-if _descriptor._USE_C_DESCRIPTORS == False:
 
-  DESCRIPTOR._options = None
-  _DTYPE._serialized_start=39
-  _DTYPE._serialized_end=373
-  _DTYPE_TYPE._serialized_start=183
-  _DTYPE_TYPE._serialized_end=305
-  _DTYPE_BYTEORDER._serialized_start=307
-  _DTYPE_BYTEORDER._serialized_end=373
-  _TENSORQUANTIFIER._serialized_start=376
-  _TENSORQUANTIFIER._serialized_end=563
-  _TENSOR._serialized_start=566
-  _TENSOR._serialized_end=718
-  _MODEL._serialized_start=720
-  _MODEL._serialized_end=770
 # @@protoc_insertion_point(module_scope)

@@ -6,7 +6,7 @@ from ..proto import (controller_pb2, controller_pb2_grpc, model_pb2,
                      service_common_pb2)
 from ..common.types import ClientParams, ServerParams
 from ..common.logger import MetisLogger
-from .client import get_client
+from ..common.client import get_client
 
 
 def read_certificate(fp: str) -> bytes:

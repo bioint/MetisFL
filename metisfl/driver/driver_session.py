@@ -2,7 +2,6 @@ import random
 from time import sleep
 from typing import Dict, List, Union
 
-from ..encryption.homomorphic import HomomorphicEncryption
 from ..proto import model_pb2
 from ..common.types import ClientParams, FederationEnvironment
 from ..common.logger import MetisASCIIArt

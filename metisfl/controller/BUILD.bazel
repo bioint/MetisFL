@@ -20,7 +20,6 @@ py_library(
     name = "controller_lib",
     srcs = [
         "controller_instance.py",
-        "__main__.py",
     ],
     data = ["controller.so"],
     srcs_version = "PY3",

@@ -5,7 +5,7 @@ import tensorflow as tf
 
 from typing import List, Tuple
 
-from metisfl.common.data_partitioning import DataPartitioning
+from data_partitioning import DataPartitioning
 
 
 def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:

@@ -11,12 +11,6 @@ SecAgg::SecAgg(int batch_size, int scaling_factor_bits,
 
 Model SecAgg::Aggregate(
     std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
-  // Throughout this implementation, we use the first model provided in the
-  // pair. If only one learner is given for the aggregation step, then we set
-  // its scaling factor value to 1, else we use the precomputed scaling factors.
-  // We create scaling factors / local models contribution values as floats
-  // because the signature of the computeWeightedAverage() function in the
-  // FHE_Helper API is expecting a vector of floats.
   std::vector<float> local_models_contrib_value;
   if (pairs.size() == 1) {
     local_models_contrib_value.emplace_back(1.0f);
@@ -38,8 +32,6 @@ Model SecAgg::Aggregate(
       const auto *model = pair.front().first;
       local_tensor_ciphertexts.emplace_back(model->tensors(var_idx).value());
     }
-    // The `Aggregate` function assumes that each learner's contribution value,
-    // scaling factor is already normalized / scaled.
     auto pwa_result = encryption_scheme_->Aggregate(local_tensor_ciphertexts,
                                                     local_models_contrib_value);
     *global_model.mutable_tensors(var_idx)->mutable_value() = pwa_result;

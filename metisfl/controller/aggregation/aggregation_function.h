@@ -20,7 +20,7 @@ class AggregationFunction {
 
   inline virtual int RequiredLearnerLineageLength() const = 0;
 
-  inline virtual std::string Name() const;
+  inline virtual std::string Name() const = 0;
 
   virtual void Reset() = 0;
 };

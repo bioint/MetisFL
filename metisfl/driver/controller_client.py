@@ -129,23 +129,14 @@ class GRPCControllerClient(object):
 
     def get_statistics(
         self,
-        community_evaluation_backtracks: int,
-        local_task_backtracks: int,
-        metadata_backtracks: int,
         request_retries: Optional[int] = 1,
         request_timeout: Optional[int] = None,
         block: Optional[bool] = True
-    ) -> controller_pb2.GetStatisticsResponse:
-        """Gets statistics from the controller.
+    ) -> controller_pb2.GetLogs:
+        """Gets logs from the controller.
 
         Parameters
         ----------
-        community_evaluation_backtracks : int
-            The number of community evaluation backtracks.
-        local_task_backtracks : int
-            The number of local task backtracks.
-        metadata_backtracks : int
-            The number of metadata backtracks.
         request_retries : Optional[int], (default=1)
             The number of retries, by default 1
         request_timeout : Optional[int], (default=None)
@@ -163,11 +154,7 @@ class GRPCControllerClient(object):
 
             # FIXME: convert to getLogs
             def _request(_timeout=None):
-                request = controller_pb2.GetStatisticsRequest(
-                    community_evaluation_backtracks=community_evaluation_backtracks,
-                    local_task_backtracks=local_task_backtracks,
-                    metadata_backtracks=metadata_backtracks
-                )
+                request = service_common_pb2.Empty()
                 return stub.GetStatistics(request, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)

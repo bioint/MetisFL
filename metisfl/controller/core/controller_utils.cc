@@ -8,44 +8,15 @@ std::unique_ptr<AggregationFunction> CreateAggregator(
   const auto &aggregation_rule = params.aggregation_rule;
 
   if (aggregation_rule == "FedAvg")
-    return CreateAggregatorForDType<FederatedAverage>(dtype);
+    return absl::make_unique<FederatedAverage>();
   if (aggregation_rule == "FedRec")
-    return CreateAggregatorForDType<FederatedRecency>(dtype);
+    return absl::make_unique<FederatedRecency>();
   if (aggregation_rule == "FedStride")
-    return CreateAggregatorForDType<FederatedStride>(dtype);
+    return absl::make_unique<FederatedStride>();
   if (aggregation_rule == "SecAgg") {
     return absl::make_unique<SecAgg>(params.he_batch_size,
                                      params.he_scaling_factor_bits,
                                      params.he_crypto_context_file);
-  }
-}
-
-template <template <typename T> class C>
-std::unique_ptr<AggregationFunction> CreateAggregatorForDType(
-    DType_Type dtype) {
-  switch (dtype) {
-    case DType_Type_UINT8:
-      return absl::make_unique<C<unsigned char>>();
-    case DType_Type_UINT16:
-      return absl::make_unique<C<unsigned short>>();
-    case DType_Type_UINT32:
-      return absl::make_unique<C<unsigned int>>();
-    case DType_Type_UINT64:
-      return absl::make_unique<C<unsigned long>>();
-    case DType_Type_INT8:
-      return absl::make_unique<C<signed char>>();
-    case DType_Type_INT16:
-      return absl::make_unique<C<signed short>>();
-    case DType_Type_INT32:
-      return absl::make_unique<C<signed int>>();
-    case DType_Type_INT64:
-      return absl::make_unique<C<signed long>>();
-    case DType_Type_FLOAT32:
-      return absl::make_unique<C<float>>();
-    case DType_Type_FLOAT64:
-      return absl::make_unique<C<double>>();
-    default:
-      PLOG(FATAL) << "Unsupported tensor data type.";
   }
 }
 

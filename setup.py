@@ -28,8 +28,8 @@ def run_build(python_verion):
     os.system("{} build {}".format(BAZEL_CMD, PROTO_GRPC_TARGET))
 
     # Copy .so
-    # copy_helper(CONTROLER_SO_SRC, CONTROLER_SO_DST)
-    # copy_helper(FHE_SO_SRC, FHE_SO_DST)
+    copy_helper(CONTROLER_SO_SRC, CONTROLER_SO_DST)
+    copy_helper(FHE_SO_SRC, FHE_SO_DST)
 
     # Copy proto/grpc classes
     for file in glob.glob("{}*.py".format(PROTO_SRC_DIR)):

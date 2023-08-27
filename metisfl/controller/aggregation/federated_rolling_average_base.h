@@ -5,14 +5,12 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
-using metisfl::proto::DeserializeTensor;
-using metisfl::proto::SerializeTensor;
+using metisfl::proto::TensorOps;
 
 namespace metisfl::controller {
 
 enum TensorOperation { MULTIPLY, DIVIDE, SUBTRACTION, ADDITION };
 
-template <typename T>
 class FederatedRollingAverageBase {
  protected:
   int num_contributors = 0;

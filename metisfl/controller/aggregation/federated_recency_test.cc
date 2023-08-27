@@ -9,10 +9,8 @@
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/proto/model.pb.h"
 
-using metisfl::proto::DeserializeTensor;
-using metisfl::proto::ParseTextOrDie;
-using metisfl::proto::PrintSerializedTensor;
-using metisfl::proto::SerializeTensor;
+using metisfl::proto::TensorOps;
+using TensorOps::PrintSerializedTensor;
 using ::testing::proto::EqualsProto;
 using namespace std;
 
@@ -42,7 +40,8 @@ const char kModel1_with_tensor_values_1to10_as_FLOAT32[] = R"pb(
 class FederatedRecencyTest : public ::testing::Test {
  public:
   static Model RecencyAggregation(
-      const std::vector<std::vector<std::pair<const Model *, double>>> &to_aggregate) {
+      const std::vector<std::vector<std::pair<const Model *, double>>>
+          &to_aggregate) {
     auto aggregator_ = FederatedRecency<double>();
     Model averaged_;
     for (auto &itr : to_aggregate) {
@@ -55,8 +54,8 @@ class FederatedRecencyTest : public ::testing::Test {
 };
 
 TEST_F(FederatedRecencyTest, ValidateLearnerLineageLength) /* NOLINT */ {
-  auto model1 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_INT32);
+  auto model1 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_INT32);
   std::vector seq1({std::make_pair<const Model *, double>(&model1, 1),
                     std::make_pair<const Model *, double>(&model1, 1),
                     std::make_pair<const Model *, double>(&model1, 1)});
@@ -65,36 +64,36 @@ TEST_F(FederatedRecencyTest, ValidateLearnerLineageLength) /* NOLINT */ {
   auto averaged = FederatedRecencyTest::RecencyAggregation(to_aggregate);
 
   // The returned Federated Model proto message has no model proto message.
-  EXPECT_FALSE(averaged.has_model());
+  EXPECT_FALSE(averaged != nullptr);
 }
 
 TEST_F(FederatedRecencyTest, ModelFloat32SingleLearnerOneModel) /* NOLINT */ {
-  auto model1 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_INT32);
+  auto model1 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_INT32);
   std::vector seq1({std::make_pair<const Model *, double>(&model1, 1)});
   std::vector to_aggregate({seq1});
 
   auto averaged = FederatedRecencyTest::RecencyAggregation(to_aggregate);
-  auto averaged_value_serialized = averaged.model().tensors().at(0).value();
-  auto num_values = averaged.model().tensors().at(0).length();
-  metisfl::proto::PrintSerializedTensor<float>(averaged_value_serialized,
-                                               num_values);
+  auto averaged_value_serialized = averaged.tensors().at(0).value();
+  auto num_values = averaged.tensors().at(0).length();
+  TensorOps::PrintSerializedTensor<float>(averaged_value_serialized,
+                                          num_values);
 
   // The aggregated model proto definition should be equal to the original
   // model.
-  EXPECT_THAT(averaged.model(), EqualsProto(model1));
+  EXPECT_THAT(averaged, EqualsProto(model1));
 }
 
 TEST_F(FederatedRecencyTest, ModelFLoat32SingleLearnerTwoModels) /* NOLINT */ {
-  auto model1 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
-  auto model2 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model1 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model2 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
 
   // Modify second's model variable value by multiplying by 2.
-  auto variable = DeserializeTensor<float>(model1.tensors().at(0));
+  auto variable = TensorOps::DeserializeTensor<float>(model1.tensors().at(0));
   for (auto &val : variable) val *= 2;
-  auto variable_ser = SerializeTensor<float>(variable);
+  auto variable_ser = TensorOps::SerializeTensor<float>(variable);
   std::string variable_ser_str(variable_ser.begin(), variable_ser.end());
   *model2.mutable_tensors(0)->mutable_value() = variable_ser_str;
 
@@ -104,27 +103,27 @@ TEST_F(FederatedRecencyTest, ModelFLoat32SingleLearnerTwoModels) /* NOLINT */ {
   std::vector to_aggregate({seq1});
 
   auto averaged = FederatedRecencyTest::RecencyAggregation(to_aggregate);
-  auto averaged_value_serialized = averaged.model().tensors().at(0).value();
-  auto num_values = averaged.model().tensors().at(0).length();
-  metisfl::proto::PrintSerializedTensor<float>(averaged_value_serialized,
-                                               num_values);
+  auto averaged_value_serialized = averaged.tensors().at(0).value();
+  auto num_values = averaged.tensors().at(0).length();
+  TensorOps::PrintSerializedTensor<float>(averaged_value_serialized,
+                                          num_values);
 
   // We expect that the returned federated/averaged model to be equal
   // to the second model that was part of the learner's model collection.
-  EXPECT_THAT(averaged.model(), EqualsProto(model2));
+  EXPECT_THAT(averaged, EqualsProto(model2));
 }
 
 TEST_F(FederatedRecencyTest, ModelFloat32AggregationFirstTimeCommittersV1)
 /* NOLINT */ {
   // Model for the first time committing / requesting aggregation.
-  auto model1 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model1 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   // Model for the second time committing / requesting aggregation.
-  auto model2 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model2 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   // Model for the third time committing / requesting aggregation.
-  auto model3 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model3 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
 
   // Construct model sequence for each learner. The main
   // difference across all learners is the contribution value.
@@ -146,32 +145,32 @@ TEST_F(FederatedRecencyTest, ModelFloat32AggregationFirstTimeCommittersV1)
   });
 
   auto averaged = FederatedRecencyTest::RecencyAggregation(to_aggregate);
-  auto averaged_value_serialized = averaged.model().tensors().at(0).value();
-  auto num_values = averaged.model().tensors().at(0).length();
-  metisfl::proto::PrintSerializedTensor<float>(averaged_value_serialized,
-                                               num_values);
+  auto averaged_value_serialized = averaged.tensors().at(0).value();
+  auto num_values = averaged.tensors().at(0).length();
+  TensorOps::PrintSerializedTensor<float>(averaged_value_serialized,
+                                          num_values);
 
   // The aggregated model proto definition should be equal to the original
   // model.
-  EXPECT_THAT(averaged.model(), EqualsProto(model1));
+  EXPECT_THAT(averaged, EqualsProto(model1));
 }
 
 TEST_F(FederatedRecencyTest, ModelFloat32AggregationFirstTimeCommittersV2)
 /* NOLINT */ {
   // Model for the first time committing / requesting aggregation.
-  auto model1 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model1 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   // Model for the second time committing / requesting aggregation.
-  auto model2 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model2 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   // Model for the third time committing / requesting aggregation.
-  auto model3 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model3 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
 
   // Modify third learner's model variable value by multiplying by 0.
-  auto variable = DeserializeTensor<float>(model3.tensors().at(0));
+  auto variable = TensorOps::DeserializeTensor<float>(model3.tensors().at(0));
   for (auto &val : variable) val *= 0;
-  auto variable_ser = SerializeTensor<float>(variable);
+  auto variable_ser = TensorOps::SerializeTensor<float>(variable);
   std::string variable_ser_str(variable_ser.begin(), variable_ser.end());
   *model3.mutable_tensors(0)->mutable_value() = variable_ser_str;
 
@@ -205,41 +204,41 @@ TEST_F(FederatedRecencyTest, ModelFloat32AggregationFirstTimeCommittersV2)
   //                 ( 0.49 | 0.98 | 1.47 | 1.96 | 2.45 | 2.96 | 3.43 | 3.92
   //                 | 4.41 | 4.9 )
   // Should Be       (0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5 )
-  auto expected =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto expected = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   std::vector<float> expected_values{0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5};
-  auto serialized_tensor = SerializeTensor(expected_values);
+  auto serialized_tensor = TensorOps::SerializeTensor(expected_values);
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
   *expected.mutable_tensors(0)->mutable_value() = serialized_tensor_str;
 
   auto averaged = FederatedRecencyTest::RecencyAggregation(to_aggregate);
-  auto averaged_value_serialized = averaged.model().tensors().at(0).value();
-  auto num_values = averaged.model().tensors().at(0).length();
-  metisfl::proto::PrintSerializedTensor<float>(averaged_value_serialized,
-                                               num_values);
+  auto averaged_value_serialized = averaged.tensors().at(0).value();
+  auto num_values = averaged.tensors().at(0).length();
+  TensorOps::PrintSerializedTensor<float>(averaged_value_serialized,
+                                          num_values);
 
   // The aggregated model proto definition should be equal to the original
   // model.
-  EXPECT_THAT(averaged.model(), EqualsProto(expected));
+  EXPECT_THAT(averaged, EqualsProto(expected));
 }
 
 TEST_F(FederatedRecencyTest, ModelFloat32AggregationOneTimeCommitters)
 /* NOLINT */ {
   // Model for the first time committing / requesting aggregation.
-  auto model1 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model1 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   // Model for the second time committing / requesting aggregation.
-  auto model2 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model2 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   // Model for the third time committing / requesting aggregation.
-  auto model3 =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto model3 = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
 
   // Modify second's model variable value by multiplying by 2.
-  auto variable = DeserializeTensor<float>(model3.tensors().at(0));
+  auto variable = TensorOps::DeserializeTensor<float>(model3.tensors().at(0));
   for (auto &val : variable) val *= 0.5;
-  auto variable_ser = SerializeTensor<float>(variable);
+  auto variable_ser = TensorOps::SerializeTensor<float>(variable);
   std::string variable_ser_str(variable_ser.begin(), variable_ser.end());
   *model3.mutable_tensors(0)->mutable_value() = variable_ser_str;
 
@@ -280,24 +279,24 @@ TEST_F(FederatedRecencyTest, ModelFloat32AggregationOneTimeCommitters)
    Final Community Model:{4.5, 9, 13.5, 18, 22.5, 27, 31.5, 36, 40.5, 45}*1/6
    Final Community Model:{0.75, 1.5, 2.25, 3, 3.75, 4.5, 5.25, 6, 6.75, 7.5}
   */
-  auto expected =
-      ParseTextOrDie<Model>(kModel1_with_tensor_values_1to10_as_FLOAT32);
+  auto expected = TensorOps::ParseTextOrDie<Model>(
+      kModel1_with_tensor_values_1to10_as_FLOAT32);
   std::vector<float> expected_values{0.75, 1.5,  2.25, 3,    3.75,
                                      4.5,  5.25, 6,    6.75, 7.5};
-  auto serialized_tensor = SerializeTensor(expected_values);
+  auto serialized_tensor = TensorOps::SerializeTensor(expected_values);
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
   *expected.mutable_tensors(0)->mutable_value() = serialized_tensor_str;
 
   auto averaged = FederatedRecencyTest::RecencyAggregation(to_aggregate);
-  auto averaged_value_serialized = averaged.model().tensors().at(0).value();
-  auto num_values = averaged.model().tensors().at(0).length();
-  metisfl::proto::PrintSerializedTensor<float>(averaged_value_serialized,
-                                               num_values);
+  auto averaged_value_serialized = averaged.tensors().at(0).value();
+  auto num_values = averaged.tensors().at(0).length();
+  TensorOps::PrintSerializedTensor<float>(averaged_value_serialized,
+                                          num_values);
 
   // The aggregated model proto definition should be equal to the original
   // model.
-  EXPECT_THAT(averaged.model(), EqualsProto(expected));
+  EXPECT_THAT(averaged, EqualsProto(expected));
 }
 
 }  // namespace
