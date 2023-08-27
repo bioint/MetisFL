@@ -16,11 +16,11 @@ class AggregationFunction {
   virtual ~AggregationFunction() = default;
 
   virtual Model Aggregate(
-      std::vector<std::vector<std::pair<Model *, double>>> &pairs) = 0;
+      std::vector<std::vector<std::pair<const Model *, double>>> &pairs) = 0;
 
-  [[nodiscard]] inline virtual int RequiredLearnerLineageLength() const = 0;
+  inline virtual int RequiredLearnerLineageLength() const = 0;
 
-  [[nodiscard]] inline virtual std::string Name() const = 0;
+  inline virtual std::string Name() const;
 
   virtual void Reset() = 0;
 };

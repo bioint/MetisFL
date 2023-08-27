@@ -41,12 +41,12 @@ const char kModel1_with_tensor_values_1to10_as_FLOAT32[] = R"pb(
 
 class FederatedStrideTest : public ::testing::Test {
  public:
-  static Model StridedAggregation(const std::vector<std::vector<std::pair<Model *, double>>> &to_aggregate,
+  static Model StridedAggregation(const std::vector<std::vector<std::pair<const Model *, double>>> &to_aggregate,
                                            const uint32_t &stride_length) {
     // Construct batch of stride_length and perform aggregation.
     Model averaged;
     auto aggregator = FederatedStride<float>();
-    std::vector<std::vector<std::pair<Model *, double>>> to_stride;
+    std::vector<std::vector<std::pair<const Model *, double>>> to_stride;
     for (auto itr = to_aggregate.begin(); itr != to_aggregate.end(); itr++) {
       to_stride.push_back({*itr});
       if (to_stride.size() == stride_length || itr == (--to_aggregate.end())) {

@@ -8,9 +8,20 @@
 
 namespace metisfl::controller {
 class ModelManager {
+  bool is_initialized_;
+  Model model_;
+  GlobalTrainParams global_train_params_;
+  ModelMetadataMap metadata_;
+
+  std::mutex model_store_mutex_;
+  std::unique_ptr<AggregationFunction> aggregator_;
+  std::unique_ptr<ModelStore> model_store_;
+
  public:
   ModelManager(const GlobalTrainParams &global_train_params,
                const ModelStoreParams &model_store_params);
+
+  ~ModelManager() = default;
 
   // Getters
   Model GetModel() const { return model_; }
@@ -20,52 +31,46 @@ class ModelManager {
   bool IsInitialized() const { return is_initialized_; }
 
   // Public methods
-  void InitializeAggregator(const DType_Type tensor_dtype);
+  void InitializeAggregator(DType_Type tensor_dtype);
 
   void SetInitialModel(const Model &model);
 
-  void InsertModel(const std::string &learner_id, const Model &model);
+  void InsertModel(std::string learner_id, const Model &model);
 
-  void UpdateModel(const std::string &learner_id, const Model &model);
+  void UpdateModel(std::vector<std::string> learner_ids,
+                   absl::flat_hash_map<std::string, double> scaling_factors);
 
-  void EraseModels(const std::vector<std::string> &learner_ids);
+  void EraseModels(std::vector<std::string> learner_ids);
 
   void Shutdown();
 
  private:
   std::string InitializeMetadata();
 
-  int GetStrideLength(const int num_learners) const;
+  int GetStrideLength(int num_learners) const;
 
-  int GetLineageLength(std::string &learner_id) const;
+  int GetLineageLength(std::string learner_id) const;
 
   std::map<std::string, std::vector<const Model *>> SelectModels(
-      const std::string &update_id,
-      const std::vector<std::pair<std::string, int>> &to_select_block);
+      std::string update_id,
+      std::vector<std::pair<std::string, int>> to_select_block);
 
-  std::vector<std::vector<std::pair<Model *, double>>> GetAggregationPairs(
+  std::vector<std::vector<std::pair<const Model *, double>>>
+  GetAggregationPairs(
       std::map<std::string, std::vector<const Model *>> selected_models,
-      const absl::flat_hash_map<std::string, double> scaling_factors) const;
+      absl::flat_hash_map<std::string, double> scaling_factors) const;
 
-  void Aggregate(
-      std::string &update_id,
-      std::vector<std::vector<std::pair<Model *, double>>> to_aggregate_block);
+  void Aggregate(std::string update_id,
+                 std::vector<std::vector<std::pair<const Model *, double>>>
+                     to_aggregate_block);
 
-  void RecordBlockSize(std::string &update_id, int block_size);
+  void RecordBlockSize(std::string update_id, int block_size);
 
-  void RecordAggregationTime(std::string &update_id,
-                             std::chrono::time_point start);
+  void RecordAggregationTime(
+      std::string update_id,
+      std::chrono::time_point<std::chrono::system_clock> start);
 
-  const RecordModelSize(std::string &update_id);
-
-  bool is_initialized_;
-  Model model_;
-  GlobalTrainParams global_train_params_;
-  ModelMetadataMap metadata_;
-
-  std::mutex model_store_mutex_;
-  std::unique_ptr<AggregationFunction> aggregator_;
-  std::unique_ptr<ModelStore> model_store_;
+  void RecordModelSize(std::string &update_id);
 };
 }  // namespace metisfl::controller
 

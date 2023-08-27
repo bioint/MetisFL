@@ -215,7 +215,7 @@ namespace metisfl::controller
     }
 
     std::vector<std::pair<std::string, int>> to_select_block;                      // e.g., { (learner_id, stride_length), ...}
-    std::vector<std::vector<std::pair<Model *, double>>> to_aggregate_block; // e.g., { {m1*, 0.1}, {m2*, 0.3}, ...}
+    std::vector<std::vector<std::pair<const Model *, double>>> to_aggregate_block; // e.g., { {m1*, 0.1}, {m2*, 0.3}, ...}
     std::vector<std::pair<const Model *, double>> to_aggregate_learner_models_tmp;
 
     for (auto itr = participating_states.begin(); itr != participating_states.end(); itr++)

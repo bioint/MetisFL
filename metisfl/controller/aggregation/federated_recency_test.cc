@@ -42,12 +42,12 @@ const char kModel1_with_tensor_values_1to10_as_FLOAT32[] = R"pb(
 class FederatedRecencyTest : public ::testing::Test {
  public:
   static Model RecencyAggregation(
-      const std::vector<std::vector<std::pair<Model *, double>>> &to_aggregate) {
+      const std::vector<std::vector<std::pair<const Model *, double>>> &to_aggregate) {
     auto aggregator_ = FederatedRecency<double>();
     Model averaged_;
     for (auto &itr : to_aggregate) {
       // Wrap learner's models within a new vector to be sent for aggregation.
-      std::vector<std::vector<std::pair<Model *, double>>> tmp{itr};
+      std::vector<std::vector<std::pair<const Model *, double>>> tmp{itr};
       averaged_ = aggregator_.Aggregate(tmp);
     }
     return averaged_;

@@ -40,19 +40,19 @@ typedef struct ModelStoreParams {
 typedef std::unique_ptr<metisfl::LearnerService::Stub> LearnerStub;
 
 // Indexed by learner_id
-typedef std::unique_ptr<std::string, LearnerStub> LearnerStubMap;
-typedef absl::flat_hash_map<std::string, Learner *> LearnersMap;
+typedef absl::flat_hash_map<std::string, LearnerStub> LearnerStubMap;
+typedef absl::flat_hash_map<std::string, Learner> LearnersMap;
 typedef absl::flat_hash_map<std::string, TrainParams> TrainParamsMap;
 typedef absl::flat_hash_map<std::string, EvaluationParams> EvaluationParamsMap;
 
 // Indexed by task_id
 typedef absl::flat_hash_map<std::string, std::string>
     TaskLearnerMap;  // task_id -> learner_id
-typedef absl::flat_hash_map<std::string, TrainingMetadata *>
-    TrainingMetadataMap;
-typedef absl::flat_hash_map<std::string, EvaluationMetadata *>
+typedef absl::flat_hash_map<std::string, TrainingMetadata> TrainingMetadataMap;
+typedef absl::flat_hash_map<std::string, EvaluationMetadata>
     EvaluationMetadataMap;
-typedef std::unique_ptr<std::string, ModelMetadata> ModelMetadataMap;
+// FIXME: figure out correct index for this
+typedef absl::flat_hash_map<std::string, ModelMetadata> ModelMetadataMap;
 
 // GRPC Async Calls types
 template <typename T>

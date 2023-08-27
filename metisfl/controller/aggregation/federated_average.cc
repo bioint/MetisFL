@@ -5,7 +5,7 @@ namespace metisfl::controller {
 
 template <typename T>
 Model FederatedAverage<T>::Aggregate(
-    std::vector<std::vector<std::pair<Model *, double>>> &pairs) {
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   Model model;
 
   const auto &sample_model = pairs.front().front().first;
@@ -50,7 +50,7 @@ void FederatedAverage<T>::AddTensors(std::vector<T> &tensor_left,
 
 template <typename T>
 std::vector<T> FederatedAverage<T>::AggregateTensorAtIndex(
-    std::vector<std::vector<std::pair<Model *, double>>> &pairs, int var_idx,
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs, int var_idx,
     uint32_t var_num_values) const {
   auto aggregated_tensor = std::vector<T>(var_num_values);
   for (const auto &pair : pairs) {

@@ -20,30 +20,53 @@
 #include "metisfl/controller/core/types.h"
 #include "metisfl/proto/controller.grpc.pb.h"
 
+using ::grpc::Server;
+using ::grpc::ServerBuilder;
+using ::grpc::ServerContext;
+using ::grpc::Status;
+using ::grpc::StatusCode;
+
 namespace metisfl::controller {
-class ControllerServicer : public ControllerService::Service {
- public:
-  virtual const Controller *GetController() const = 0;
-
-  virtual void StartService() = 0;
-
-  virtual void WaitService() = 0;
-
-  virtual void StopService() = 0;
-
-  virtual bool ShutdownRequestReceived() = 0;
-
-  static std::unique_ptr<ControllerServicer> New(ServerParams &server_params,
-                                                 Controller *controller);
-
- private:
+class ControllerServicer final : public ControllerService::Service {
   std::unique_ptr<Server> server_;
   ServerParams server_params_;
   BS::thread_pool pool_;
-  Controller *controller_;
+  Controller* controller_;
   bool shutdown_ = false;
-};
 
+ public:
+  ControllerServicer(const ServerParams& server_params, Controller* controller)
+      : server_params_(server_params), pool_(1), controller_(controller){};
+
+  void StartService();
+
+  void WaitService();
+
+  void StopService();
+
+  void ShutdownServer();
+
+  bool ShutdownRequestReceived();
+
+  Status GetHealthStatus(ServerContext* context, const metisfl::Empty* request,
+                         metisfl::Ack* response) override;
+  Status SetInitialModel(ServerContext* context, const metisfl::Model* request,
+                         metisfl::Ack* response) override;
+  Status JoinFederation(ServerContext* context, const metisfl::Learner* request,
+                        metisfl::LearnerId* response) override;
+  Status LeaveFederation(ServerContext* context,
+                         const metisfl::LearnerId* request,
+                         metisfl::Ack* response) override;
+  Status StartTraining(ServerContext* context, const metisfl::Empty* request,
+                       metisfl::Ack* response) override;
+  Status TrainDone(ServerContext* context,
+                   const metisfl::TrainDoneRequest* request,
+                   metisfl::Ack* response) override;
+  Status GetLogs(ServerContext* context, const metisfl::Empty* request,
+                 metisfl::Logs* response) override;
+  Status ShutDown(ServerContext* context, const metisfl::Empty* request,
+                  metisfl::Ack* response) override;
+};
 }  // namespace metisfl::controller
 
 #endif  // METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_SERVICER_H_

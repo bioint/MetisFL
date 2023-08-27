@@ -7,7 +7,7 @@ namespace metisfl::controller {
 
 template <typename T>
 Model FederatedRecency<T>::Aggregate(
-    std::vector<std::vector<std::pair<Model *, double>>> &pairs) {
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   std::vector<std::pair<const Model *, double>> model_pair = pairs.front();
   if (model_pair.size() > this.RequiredLearnerLineageLength()) {
     PLOG(ERROR) << "More models have been given: " << model_pair.size()

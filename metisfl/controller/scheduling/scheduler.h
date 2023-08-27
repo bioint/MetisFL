@@ -8,6 +8,9 @@
 namespace metisfl::controller {
 
 class Scheduler {
+ protected:
+  int global_iteration_;
+
  public:
   virtual ~Scheduler() = default;
 

@@ -5,7 +5,7 @@ namespace metisfl::controller {
 
 template <typename T>
 Model FederatedStride<T>::Aggregate(
-    std::vector<std::vector<std::pair<Model *, double>>> &pairs) {
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   for (auto pair : pairs) {
     const Model *latest_model = pair.front().first;
     double contrib_value = pair.front().second;

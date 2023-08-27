@@ -14,8 +14,8 @@ namespace metisfl::controller {
 template <typename T>
 class FederatedAverage : public AggregationFunction {
  public:
-  Model Aggregate(
-      std::vector<std::vector<std::pair<Model *, double>>> &pairs) override;
+  Model Aggregate(std::vector<std::vector<std::pair<const Model *, double>>>
+                      &pairs) override;
 
   inline std::string Name() const override { return "FedAvg"; }
 
@@ -28,8 +28,8 @@ class FederatedAverage : public AggregationFunction {
                   double scaling_factor_right) const;
 
   std::vector<T> AggregateTensorAtIndex(
-      std::vector<std::vector<std::pair<Model *, double>>> &pairs, int var_idx,
-      uint32_t var_num_values) const;
+      std::vector<std::vector<std::pair<const Model *, double>>> &pairs,
+      int var_idx, uint32_t var_num_values) const;
 };
 
 }  // namespace metisfl::controller

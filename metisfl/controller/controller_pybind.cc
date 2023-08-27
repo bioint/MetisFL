@@ -61,26 +61,24 @@ class ControllerWrapper {
   void Start(const ServerParams& server_params,
              const GlobalTrainParams& global_train_params,
              const ModelStoreParams& model_store_params) {
-    controller_ = Controller::New(global_train_params, model_store_params);
-    servicer_ = ControllerServicer::New(server_params, controller_.get());
-    servicer_->StartService();
+    controller = new Controller(global_train_params, model_store_params);
+    servicer = new ControllerServicer(server_params, controller);
+    servicer->StartService();
   }
 
   void Shutdown() {
-    PLOG(INFO) << "Wrapping up resources and shutting down..";
-    servicer_->StopService();
-    servicer_->WaitService();
+    PLOG(INFO) << "Wrapping up resources and shutting down...";
+    servicer->StopService();
+    servicer->WaitService();
   }
 
-  bool ShutdownRequestReceived() {
-    return servicer_->ShutdownRequestReceived();
-  }
+  bool ShutdownRequestReceived() { return servicer->ShutdownRequestReceived(); }
 
-  void Wait() { servicer_->WaitService(); }
+  void Wait() { servicer->WaitService(); }
 
  private:
-  std::unique_ptr<Controller> controller_;
-  std::unique_ptr<ControllerServicer> servicer_;
+  Controller* controller;
+  ControllerServicer* servicer;
 };
 
 }  // namespace metisfl::controller

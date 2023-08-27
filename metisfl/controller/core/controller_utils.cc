@@ -4,12 +4,8 @@
 namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction> CreateAggregator(
-    const GlobalTrainParams &global_train_params, const DType_Type dtype) {
-  const auto &aggregation_rule = global_train_params.aggregation_rule;
-  const auto &he_batch_size = global_train_params.he_batch_size;
-  const auto &he_scaling_factor_bits =
-      global_train_params.he_scaling_factor_bits;
-  const auto &crypto_context_file = global_train_params.he_crypto_context_file;
+    const GlobalTrainParams &params, const DType_Type dtype) {
+  const auto &aggregation_rule = params.aggregation_rule;
 
   if (aggregation_rule == "FedAvg")
     return CreateAggregatorForDType<FederatedAverage>(dtype);
@@ -18,14 +14,13 @@ std::unique_ptr<AggregationFunction> CreateAggregator(
   if (aggregation_rule == "FedStride")
     return CreateAggregatorForDType<FederatedStride>(dtype);
   if (aggregation_rule == "SecAgg") {
-    SecAgg sec_aggr = CreateAggregatorForDType<SecAgg>(dtype);
-    sec_aggr.InitScheme(he_batch_size, he_scaling_factor_bits,
-                        crypto_context_file);
-    return sec_aggr;
+    return absl::make_unique<SecAgg>(params.he_batch_size,
+                                     params.he_scaling_factor_bits,
+                                     params.he_crypto_context_file);
   }
 }
 
-template <typename C>
+template <template <typename T> class C>
 std::unique_ptr<AggregationFunction> CreateAggregatorForDType(
     DType_Type dtype) {
   switch (dtype) {
@@ -65,16 +60,8 @@ std::unique_ptr<ModelStore> CreateModelStore(
                                               model_store_port, lineage_length);
   if (model_store == "InMemory")
     return absl::make_unique<HashMapModelStore>(lineage_length);
-}
 
-std::unique_ptr<ScalingFunction> CreateScaler(
-    const std::string &scaling_factor) {
-  if (scaling_factor == "NumCompletedBatches")
-    return absl::make_unique<BatchesScaler>();
-  if (scaling_factor == "NumParticipants")
-    return absl::make_unique<ParticipantsScaler>();
-  if (scaling_factor == "NumTrainingExamples")
-    return absl::make_unique<TrainDatasetSizeScaler>();
+  PLOG(FATAL) << "Unsupported model store.";
 }
 
 std::unique_ptr<Scheduler> CreateScheduler(
@@ -84,6 +71,8 @@ std::unique_ptr<Scheduler> CreateScheduler(
     return absl::make_unique<SynchronousScheduler>();
   if (communication_protocol == "Asynchronous")
     return absl::make_unique<AsynchronousScheduler>();
+
+  PLOG(FATAL) << "Unsupported communication protocol.";
 }
 
 std::unique_ptr<Selector> CreateSelector() {

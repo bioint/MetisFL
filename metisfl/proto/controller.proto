@@ -2,6 +2,7 @@ syntax = "proto3";
 package metisfl;
 
 import "metisfl/proto/model.proto";
+import "metisfl/proto/learner.proto";
 import "metisfl/proto/service_common.proto";
 
 service ControllerService {
@@ -50,10 +51,6 @@ message TrainingMetadata {
   float processing_ms_per_batch = 6;
 }
 
-message EvaluationMetadata {
-  map<string, float> metrics = 1;
-}
-
 message Logs {
   // task_id -> learner_id
   map<string, string> task_learner_map = 1;
@@ -67,7 +64,6 @@ message Logs {
 // TODO: record task stard/end time
 
 message ModelMetadata {
-  double insertion_duration_ms = 1;
   double selection_duration_ms = 2;
   double aggregation_duration_ms = 3;
   repeated double aggregation_block_size = 15;

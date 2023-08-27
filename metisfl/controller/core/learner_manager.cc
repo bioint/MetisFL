@@ -10,12 +10,12 @@ LearnerManager::LearnerManager()
       eval_params_(),
       learners_mutex_(),
       scheduling_pool_(2),
-      run_tasks_cq_(),
+      train_tasks_cq_(),
       eval_tasks_cq_() {
-  std::thread run_tasks_digest_t_(&Controller::DigestTrainResponses, this);
+  std::thread run_tasks_digest_t_(&LearnerManager::DigestTrainResponses, this);
+  std::thread eval_tasks_digest_t_(&LearnerManager::DigestEvaluateResponses,
+                                   this);
   run_tasks_digest_t_.detach();
-
-  std::thread eval_tasks_digest_t_(&Controller::DigestEvaluateResponses, this);
   eval_tasks_digest_t_.detach();
 }
 
@@ -23,7 +23,7 @@ LearnerManager::LearnerManager()
 absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
   std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
-  const std::string learner_id =
+  std::string learner_id =
       GenerateLearnerId(learner.hostname(), learner.port());
 
   if (learners_.contains(learner_id)) {
@@ -59,26 +59,26 @@ absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
   return absl::OkStatus();
 }
 
-void LearnerManager::ScheduleAll() {
-  scheduling_pool_.push_task([this, learner_id] { ScheduleTasks(learners_); });
+void LearnerManager::ScheduleAll(const Model &model) {
+  Schedule(GetLearnerIds(), model);
 }
 
-void LearnerManager::Schedule(const std::vector<std::string> &learner_ids) {
+void LearnerManager::Schedule(const std::vector<std::string> &learner_ids,
+                              const Model &model) {
   scheduling_pool_.push_task(
-      [this, learner_ids] { ScheduleTasks(learner_ids); });
+      [this, learner_ids, model] { ScheduleTasks(learner_ids, model); });
 }
 
 void LearnerManager::Shutdown() {
-  run_tasks_cq_.Shutdown();
+  train_tasks_cq_.Shutdown();
   eval_tasks_cq_.Shutdown();
   scheduling_pool_.wait_for_tasks();
-  model_store_->Shutdown();
 }
 
 void LearnerManager::UpdateMetadata(const std::string &task_id,
                                     const std::string &learner_id,
-                                    const TrainingMetadata metadata) {
-  num_completed_batches_[learner_id] = metadata.num_completed_batches();
+                                    const TrainingMetadata &metadata) {
+  num_completed_batches_[learner_id] = metadata.completed_batches();
   training_metadata_[task_id] = metadata;
 }
 
@@ -96,7 +96,7 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumTrainingExamples(
 
 absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
     const std::vector<std::string> &learner_ids) {
-  absl::flat_hash_map<std::string, double> num_completed_batches;
+  absl::flat_hash_map<std::string, int> num_completed_batches;
 
   for (const auto &learner_id : learner_ids) {
     num_completed_batches[learner_id] = num_completed_batches_[learner_id];
@@ -145,11 +145,11 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
 
 // Private methods
 LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
-  auto hostname = learners_[learner_id]->hostname();
-  auto port = learners_[learner_id]->port();
+  auto hostname = learners_[learner_id].hostname();
+  auto port = learners_[learner_id].port();
   auto target = absl::StrCat(hostname, ":", port);
-  auto &root_certificate = learners_[learner_id]->root_certificate_bytes();
-  auto &public_certificate = learners_[learner_id]->public_certificate_bytes();
+  auto &root_certificate = learners_[learner_id].root_certificate_bytes();
+  auto &public_certificate = learners_[learner_id].public_certificate_bytes();
 
   auto ssl_creds = grpc::InsecureChannelCredentials();
 
@@ -164,39 +164,68 @@ LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
   return LearnerService::NewStub(channel);
 }
 
-absl::Status LearnerManager::ValidateLearner(
-    const std::string &learner_id) const {
-  const auto &learner = learners_.find(learner_id);
-
-  if (learner == learners_.end())
-    return absl::NotFoundError("Learner does not exist.");
-
-  return absl::OkStatus();
+bool LearnerManager::ValidateLearner(const std::string &learner_id) const {
+  return learners_.contains(learner_id);
 }
 
-void LearnerManager::ScheduleTasks(
-    const std::vector<std::string> &learner_ids) {
+void LearnerManager::ScheduleTasks(const std::vector<std::string> &learner_ids,
+                                   const Model &model) {
   for (const auto &learner_id : learner_ids) {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
-    SendTrainAsync(learner_id);
+    SendTrainAsync(learner_id, model);
 
     // TODO: should we wait before sending the evaluation task?
 
-    SendEvaluateAsync(learner_id);
+    SendEvaluateAsync(learner_id, model);
 
-    UpdateLearnersTaskTemplates(to_schedule);
+    // UpdateLearnersTaskTemplates(to_schedule);
   }
 }
 
-void LearnerManager::SendEvaluateAsync(const std::string &learner_id) {
-  auto task_id = metisfl::controller::GenerateRadnomId();
-  EvaluationMetadataMap evaluation_metadata;
-  evaluation_metadata_[task_id] = evaluation_metadata;
+void LearnerManager::SendTrainAsync(const std::string &learner_id,
+                                    const Model &model) {
+  TrainRequest request;
+  *request.mutable_task_id() = metisfl::controller::GenerateRadnomId();
+  *request.mutable_model() = model;
+  *request.mutable_params() = train_params_[learner_id];
 
+  auto *call = new AsyncLearnerRunTaskCall;
+  auto &cq = train_tasks_cq_;
+  auto learner_stub = CreateLearnerStub(learner_id);
+
+  call->learner_id = learner_id;
+  call->response_reader =
+      learner_stub->PrepareAsyncTrain(&call->context, request, &cq);
+  call->response_reader->StartCall();
+  call->response_reader->Finish(&call->reply, &call->status, (void *)call);
+}
+
+void LearnerManager::DigestTrainResponses() {
+  void *got_tag;
+  bool ok = false;
+
+  auto &cq_ = train_tasks_cq_;
+
+  while (cq_.Next(&got_tag, &ok)) {
+    auto *call = static_cast<AsyncLearnerRunTaskCall *>(got_tag);
+    GPR_ASSERT(ok);
+
+    if (call) {
+      if (!call->status.ok()) {
+        PLOG(ERROR) << "RunTask RPC request to learner: " << call->learner_id
+                    << " failed with error: " << call->status.error_message();
+      }
+    }
+    delete call;
+  }
+}
+
+void LearnerManager::SendEvaluateAsync(const std::string &learner_id,
+                                       const Model &model) {
   EvaluateRequest request;
-  *request.mutable_task_id() = task_id;
-  *request.mutable_model() = model_manager_.GetModel();
+  *request.mutable_task_id() = metisfl::controller::GenerateRadnomId();
+  *request.mutable_model() = model;
   *request.mutable_params() = eval_params_[learner_id];
 
   auto *call = new AsyncLearnerEvalCall;
@@ -221,52 +250,11 @@ void LearnerManager::DigestEvaluateResponses() {
 
     if (call) {
       if (call->status.ok()) {
-        (*metadata_.at(call->metadata_ref_idx)
-              .mutable_eval_task_received_at())[call->learner_id] =
-            TimeUtil::GetCurrentTime();
-
-        (*community_evaluations_.at(call->comm_eval_ref_idx)
-              .mutable_evaluations())[call->learner_id] = call->reply;
+        const std::string &task_id = call->reply.task_id();
+        evaluation_metadata_[task_id] = call->reply.metadata();
       } else {
         PLOG(ERROR) << "EvaluateModel RPC request to learner: "
                     << call->learner_id
-                    << " failed with error: " << call->status.error_message();
-      }
-    }
-    delete call;
-  }
-}
-
-void LearnerManager::SendTrainAsync(const std::string &learner_id) {
-  TrainRequest request;
-  *request.mutable_task_id() = metisfl::controller::GenerateRadnomId();
-  *request.mutable_model() = model_manager_.GetModel();
-  *request.mutable_params() = train_params_[learner_id];
-
-  auto *call = new AsyncLearnerRunTaskCall;
-  auto &cq = run_tasks_cq_;
-  auto learner_stub = CreateLearnerStub(learner_id);
-
-  call->learner_id = learner_id;
-  call->response_reader =
-      learner_stub->PrepareAsyncTrain(&call->context, request, &cq);
-  call->response_reader->StartCall();
-  call->response_reader->Finish(&call->reply, &call->status, (void *)call);
-}
-
-void LearnerManager::DigestTrainResponses() {
-  void *got_tag;
-  bool ok = false;
-
-  auto &cq_ = run_tasks_cq_;
-
-  while (cq_.Next(&got_tag, &ok)) {
-    auto *call = static_cast<AsyncLearnerRunTaskCall *>(got_tag);
-    GPR_ASSERT(ok);
-
-    if (call) {
-      if (!call->status.ok()) {
-        PLOG(ERROR) << "RunTask RPC request to learner: " << call->learner_id
                     << " failed with error: " << call->status.error_message();
       }
     }

@@ -3,14 +3,14 @@
 
 namespace metisfl::controller {
 
-void SecAgg::InitScheme(const int batch_size, const int scaling_factor_bits,
-                        const std::string &crypto_context) {
+SecAgg::SecAgg(int batch_size, int scaling_factor_bits,
+               std::string crypto_context) {
   encryption_scheme_.reset(new CKKS(batch_size, scaling_factor_bits));
   encryption_scheme_->LoadCryptoContextFromFile(crypto_context);
 }
 
 Model SecAgg::Aggregate(
-    std::vector<std::vector<std::pair<Model *, double>>> &pairs) {
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   // Throughout this implementation, we use the first model provided in the
   // pair. If only one learner is given for the aggregation step, then we set
   // its scaling factor value to 1, else we use the precomputed scaling factors.

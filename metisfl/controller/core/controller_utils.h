@@ -13,7 +13,6 @@
 #include "metisfl/controller/aggregation/aggregation.h"
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/controller/core/types.h"
-#include "metisfl/controller/scaling/scaling.h"
 #include "metisfl/controller/scheduling/scheduling.h"
 #include "metisfl/controller/selection/selection.h"
 #include "metisfl/controller/store/store.h"
@@ -21,17 +20,13 @@
 namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction> CreateAggregator(
-    const GlobalTrainParams &global_train_params);
+    const GlobalTrainParams &global_train_params, const DType_Type dtype);
 
-template <typename C>
-std::unique_ptr<AggregationFunction> CreateAggregatorForDType(
-    DType_Type dtype){};
+template <template <typename T> class C>
+std::unique_ptr<AggregationFunction> CreateAggregatorForDType(DType_Type dtype);
 
 std::unique_ptr<ModelStore> CreateModelStore(
     const ModelStoreParams &model_store_params);
-
-std::unique_ptr<ScalingFunction> CreateScaler(
-    const std::string &scaling_factor);
 
 std::unique_ptr<Scheduler> CreateScheduler(
     const std::string &communication_protocol);

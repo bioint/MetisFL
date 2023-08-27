@@ -27,8 +27,8 @@ def app(
         The server parameters of the Learner server. 
     num_training_examples : Optional[int], (default=None)
         TODO: complete this docstring
-        The number of training examples. Used in certain aggregaction strategies by the Controller.
-        If None, the aggregation strategies that need this parameter will not run. By default None
+        The number of training examples. Used when the scaling factor is "NumTrainingExamples".
+        If not provided, this scaling factor cannot be used.
     """
 
     port = client_params.port

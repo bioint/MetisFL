@@ -3,6 +3,6 @@
 
 #include "metisfl/proto/model.pb.h"
 
-typedef std::vector<std::vector<std::pair<Model *, double>>> AggregationPairs;
+typedef std::vector<std::vector<std::pair<const Model *, double>>> AggregationPairs;
 
 #endif  // METISFL_METISFL_CONTROLLER_AGGREGATION_TYPES_H_
