@@ -9,18 +9,19 @@ ModelManager::ModelManager(const GlobalTrainParams &global_train_params,
       model_(),
       global_train_params_(global_train_params) {
   model_store_ = CreateModelStore(model_store_params);
+  aggregator_ = CreateAggregator(global_train_params);
 }
 
 // Public methods
-void ModelManager::InitializeAggregator(const DType_Type tensor_dtype) {
-  aggregator_ = CreateAggregator(global_train_params_, tensor_dtype);
-  is_initialized_ = true;
-}
 
-void ModelManager::SetInitialModel(const Model &model) {
+absl::Status ModelManager::SetInitialModel(const Model &model) {
+  if (is_initialized_)
+    return absl::FailedPreconditionError("Model is already initialized.");
+
   PLOG(INFO) << "Received initial model.";
   model_ = model;
-  InitializeAggregator(model_.tensors(0).type().type());
+  is_initialized_ = true;
+  return absl::OkStatus();
 }
 
 void ModelManager::InsertModel(std::string learner_id, const Model &model) {
@@ -47,8 +48,9 @@ void ModelManager::UpdateModel(
       std::chrono::high_resolution_clock::now();
 
   for (std::string learner_id : learner_ids) {
-    std::vector<std::pair<std::string, int>> to_select_block;
     auto lineage_length = GetLineageLength(learner_id);
+    std::vector<std::pair<std::string, int>> to_select_block;
+
     to_select_block.emplace_back(learner_id, lineage_length);
     int block_size = to_select_block.size();
 
@@ -143,7 +145,8 @@ ModelManager::GetAggregationPairs(
 
 void ModelManager::Aggregate(
     std::string update_id,
-    std::vector<std::vector<std::pair<const Model *, double>>> to_aggregate_block) {
+    std::vector<std::vector<std::pair<const Model *, double>>>
+        to_aggregate_block) {
   auto start_time_block_aggregation = std::chrono::high_resolution_clock::now();
 
   model_ = aggregator_->Aggregate(to_aggregate_block);

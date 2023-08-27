@@ -1,7 +1,7 @@
 
 """A gRPC client used from the driver to communicate with the controller."""
 
-from typing import Optional
+from typing import Callable, Optional
 from ..common.client import get_client
 from ..proto import controller_pb2, controller_pb2_grpc, model_pb2, service_common_pb2
 from ..common.types import ClientParams
@@ -58,7 +58,8 @@ class GRPCControllerClient(object):
         """
 
         with self._get_client() as client:
-            stub, schedule, _ = client
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
 
             return schedule(stub.GetHealthStatus,
                             request_retries, request_timeout, block)
@@ -89,7 +90,8 @@ class GRPCControllerClient(object):
             The response Proto object with the ack from the controller.
         """
         with self._get_client() as client:
-            stub, schedule, _ = client
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
 
             def _request(_timeout=None):
                 return stub.SetInitialModel(model, timeout=_timeout)
@@ -120,19 +122,20 @@ class GRPCControllerClient(object):
         """
 
         with self._get_client() as client:
-            stub, schedule, _ = client
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
 
             def _request(_timeout=None):
-                return stub.StartTraining(service_common_pb2.StartTrainingRequest(), timeout=_timeout)
+                return stub.StartTraining(service_common_pb2.Empty(), timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 
-    def get_statistics(
+    def get_logs(
         self,
         request_retries: Optional[int] = 1,
         request_timeout: Optional[int] = None,
         block: Optional[bool] = True
-    ) -> controller_pb2.GetLogs:
+    ) -> controller_pb2.Logs:
         """Gets logs from the controller.
 
         Parameters
@@ -150,12 +153,14 @@ class GRPCControllerClient(object):
             The response Proto object with the statistics from the controller.
         """
         with self._get_client() as client:
-            stub, schedule, _ = client
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
 
             # FIXME: convert to getLogs
             def _request(_timeout=None):
                 request = service_common_pb2.Empty()
-                return stub.GetStatistics(request, timeout=_timeout)
+                return stub.GetLogs(request, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -183,7 +188,8 @@ class GRPCControllerClient(object):
 
         """
         with self._get_client() as client:
-            stub, schedule, _ = client
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
 
             def _request(_timeout=None):
                 return stub.ShutDown(service_common_pb2.ShutDownRequest(), timeout=_timeout)
@@ -194,5 +200,5 @@ class GRPCControllerClient(object):
         """Shuts down the client."""
 
         with self._get_client() as client:
-            _, _, shutdown = client
+            shutdown: Callable = client[2]
             shutdown()

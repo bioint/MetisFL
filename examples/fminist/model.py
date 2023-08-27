@@ -1,12 +1,14 @@
-from typing import List, Tuple
 import tensorflow as tf
+from typing import List, Tuple
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 
 def get_model(
-    metrics: List[str] = ["accuracy"],
-    input_shape: Tuple[int] = (28, 28, 1),
-    dense_units_per_layer: List[int] = [256, 128],
-    num_classes: int = 10) -> tf.keras.Model:
+        metrics: List[str] = ["accuracy"],
+        input_shape: Tuple[int] = (28, 28, 1),
+        dense_units_per_layer: List[int] = [256, 128],
+        num_classes: int = 10) -> tf.keras.Model:
     """A helper function to create a simple sequential model.
 
     Args:
@@ -34,5 +36,5 @@ def get_model(
 
     # Add the output layer
     model.add(Dense(num_classes, activation="softmax"))
-    
+
     return model

@@ -31,12 +31,7 @@ absl::Status Controller::RemoveLearner(std::string learner_id) {
 }
 
 absl::Status Controller::SetInitialModel(const Model &model) {
-  if (model_manager_->IsInitialized())
-    return absl::FailedPreconditionError("Model is already initialized.");
-
-  model_manager_->SetInitialModel(model);
-
-  return absl::OkStatus();
+  return model_manager_->SetInitialModel(model);
 }
 
 absl::Status Controller::StartTraining() {
@@ -65,7 +60,6 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
     std::vector<std::string> selected_ids =
         selector_->Select(to_schedule, learner_ids);
 
-    // FIXME:
     auto scaling_factors = ComputeScalingFactors(selected_ids);
 
     model_manager_->UpdateModel(selected_ids, scaling_factors);

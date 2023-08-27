@@ -130,11 +130,7 @@ class FederationMonitor:
     def _collect_statistics(self) -> None:
         """Collects statistics from the federation."""
 
-        statistics_pb = self._controller_client.get_statistics(
-            local_task_backtracks=-1,
-            metadata_backtracks=0,
-            community_evaluation_backtracks=-1,
-        )
+        statistics_pb = self._controller_client.get_logs()
 
         def msg_to_dict_fn(x): return MessageToDict(
             x, preserving_proto_field_name=True)

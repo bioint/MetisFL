@@ -20,10 +20,7 @@
 namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction> CreateAggregator(
-    const GlobalTrainParams &global_train_params, const DType_Type dtype);
-
-template <template <typename T> class C>
-std::unique_ptr<AggregationFunction> CreateAggregatorForDType(DType_Type dtype);
+    const GlobalTrainParams &global_train_params);
 
 std::unique_ptr<ModelStore> CreateModelStore(
     const ModelStoreParams &model_store_params);

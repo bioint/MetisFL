@@ -8,6 +8,7 @@ from metisfl.learner.learner import Learner
 from metisfl.proto import model_pb2
 from env import controller_params, learner_1, learner_2
 
+
 model = get_model()
 x_train, y_train, x_test, y_test = load_data()
 

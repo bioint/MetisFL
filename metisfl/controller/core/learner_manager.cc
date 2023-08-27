@@ -213,7 +213,7 @@ void LearnerManager::DigestTrainResponses() {
 
     if (call) {
       if (!call->status.ok()) {
-        PLOG(ERROR) << "RunTask RPC request to learner: " << call->learner_id
+        PLOG(ERROR) << "Train RPC request to learner: " << call->learner_id
                     << " failed with error: " << call->status.error_message();
       }
     }

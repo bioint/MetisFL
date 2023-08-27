@@ -4,7 +4,7 @@
 namespace metisfl::controller {
 
 std::unique_ptr<AggregationFunction> CreateAggregator(
-    const GlobalTrainParams &params, const DType_Type dtype) {
+    const GlobalTrainParams &params) {
   const auto &aggregation_rule = params.aggregation_rule;
 
   if (aggregation_rule == "FedAvg")

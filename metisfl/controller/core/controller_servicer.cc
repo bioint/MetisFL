@@ -108,20 +108,25 @@ Status ControllerServicer::SetInitialModel(ServerContext *context,
                                            const Model *model, Ack *ack) {
   auto status = controller_->SetInitialModel(*model);
   if (status.ok()) {
-    PLOG(INFO) << "Replaced Community Model.";
+    PLOG(INFO) << "Received Initial Model.";
     ack->set_status(true);
     return Status::OK;
   }
-
-  PLOG(ERROR) << "Couldn't Replace Community Model.";
-  return {StatusCode::UNAUTHENTICATED, std::string(status.message())};
+  PLOG(ERROR) << "Couldn't Replace Initial Model.";
+  return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
 }
 
 Status ControllerServicer::StartTraining(ServerContext *context,
                                          const Empty *request, Ack *ack) {
   const auto status = controller_->StartTraining();
-  ack->set_status(true);
-  return Status::OK;
+  if (status.ok()) {
+    PLOG(INFO) << "Started Training.";
+    ack->set_status(true);
+    return Status::OK;
+  } else {
+    ack->set_status(false);
+    return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
+  }
 }
 
 Status ControllerServicer::LeaveFederation(ServerContext *context,
@@ -135,6 +140,7 @@ Status ControllerServicer::LeaveFederation(ServerContext *context,
   const auto del_status = controller_->RemoveLearner(learnerId->id());
 
   if (del_status.ok()) {
+    PLOG(INFO) << "Learner " << learnerId->id() << " left Federation.";
     ack->set_status(true);
     return Status::OK;
   } else {

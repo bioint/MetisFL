@@ -2,11 +2,9 @@
 """MetisFL Homomorphic Encryption Module using Palisade."""
 
 import os
-from typing import List
 
 from metisfl import config
 from metisfl.encryption import fhe
-from ..models.types import ModelWeightsDescriptor
 from ..proto import model_pb2
 from ..proto.proto_messages_factory import ModelProtoMessages
 

@@ -65,6 +65,10 @@ class DriverSession(object):
         self._ship_model_to_learners(model=model, skip_learner=learner_index)
         self._ship_model_to_controller(model=model)
 
+        sleep(1)  # FIXME: Wait for the controller to receive the model.
+
+        self.start_training()
+
     def start_training(self) -> None:
         """Starts the federated training."""
         # TODO: Ping controller and learners to check if they are alive.

@@ -67,6 +67,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             ))
             self._shutdown_event.wait()
         else:
+            # TODO: Should we raise an exception here?
             MetisLogger.error("Learner server failed to start.")
 
     def GetHealthStatus(self) -> service_common_pb2.HealthStatusResponse:

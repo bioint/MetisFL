@@ -1,6 +1,7 @@
 #ifndef METISFL_CONTROLLER_CORE_MODEL_MANAGER_H_
 #define METISFL_CONTROLLER_CORE_MODEL_MANAGER_H_
 
+#include "absl/status/statusor.h"
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/controller/core/controller_utils.h"
 #include "metisfl/controller/core/types.h"
@@ -8,7 +9,7 @@
 
 namespace metisfl::controller {
 class ModelManager {
-  bool is_initialized_;
+  bool is_initialized_ = false;
   Model model_;
   GlobalTrainParams global_train_params_;
   ModelMetadataMap metadata_;
@@ -33,7 +34,7 @@ class ModelManager {
   // Public methods
   void InitializeAggregator(DType_Type tensor_dtype);
 
-  void SetInitialModel(const Model &model);
+  absl::Status SetInitialModel(const Model &model);
 
   void InsertModel(std::string learner_id, const Model &model);
 

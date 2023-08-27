@@ -1,4 +1,6 @@
 
+import signal
+
 from typing import Optional
 
 from ..config import get_auth_token_fp
@@ -7,6 +9,26 @@ from .controller_client import GRPCClient
 from .learner import Learner
 from .learner_server import LearnerServer
 from .task_manager import TaskManager
+
+
+def register_handlers(client: GRPCClient, server: LearnerServer):
+    """ Register handlers for SIGTERM and SIGINT to leave the federation.
+
+    Parameters
+    ----------
+    client : GRPCClient
+        The GRPCClient object.
+    server : LearnerServer
+        The LearnerServer object.
+    """
+
+    def handler(signum, frame):
+        print("Received SIGTERM, leaving federation...")
+        client.leave_federation()
+        server.ShutDown()
+
+    signal.signal(signal.SIGTERM, handler)
+    signal.signal(signal.SIGINT, handler)
 
 
 def app(
@@ -52,6 +74,9 @@ def app(
         num_training_examples=num_training_examples,
         server_params=server_params,
     )
+
+    # Register handlers
+    register_handlers(client, server)
 
     # Blocking until Shutdown endpoint is called
     server.start()

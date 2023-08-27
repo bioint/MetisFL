@@ -126,9 +126,8 @@ class GRPCClient(object):
             stub, schedule, _ = client
 
             def _request(_timeout=None):
-                request = controller_pb2.LeaveFederationRequest(
-                    learner_id=self._learner_id,
-                    auth_token=self._auth_token
+                request = controller_pb2.LearnerId(
+                    id=self._learner_id,
                 )
                 return stub.LeaveFederation(
                     request=request,
@@ -222,6 +221,5 @@ class GRPCClient(object):
                     "Rejoined federation with learner id: {}".format(learner_id))
 
             else:
+                # FIXME: figure out how to handle this error
                 MetisLogger.fatal("Unhandled grpc error: {}".format(rpc_error))
-        self._learner_id = learner_id
-        return learner_id
