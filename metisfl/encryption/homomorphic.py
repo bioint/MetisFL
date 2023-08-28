@@ -1,12 +1,8 @@
 
 """MetisFL Homomorphic Encryption Module using Palisade."""
 
-import os
-
-from metisfl import config
 from metisfl.encryption import fhe
 from ..proto import model_pb2
-from ..proto.proto_messages_factory import ModelProtoMessages
 
 
 class HomomorphicEncryption(object):
@@ -17,8 +13,11 @@ class HomomorphicEncryption(object):
         self,
         batch_size: int,
         scaling_factor_bits: int,
+        crypto_context_path: str,
+        public_key_path: str,
+        private_key_path: str,
     ):
-        """Initializes the HomomorphicEncryption object. 
+        """Initializes the CKKS Homomorphic Encryption scheme. 
 
         Parameters
         ----------
@@ -27,23 +26,18 @@ class HomomorphicEncryption(object):
         scaling_factor_bits : int
             The number of bits to use for the scaling factor.
         crypto_context_path : str, optional
-            The path to the crypto context file, by default None
+            The path to the crypto context file.
+        public_key_path : str, optional
+            The path to the public key file.
+        private_key_path : str, optional
+            The path to the private key file.
 
         """
+        # TODO: Make it easier to load the crypto context and keys.
         self._he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
-        self._setup_fhe()
-
-    def _setup_fhe(self):
-        """Sets up the FHE scheme."""
-
-        paths = config.get_fhe_resources()
-        bools = map(lambda path: os.path.exists(path), paths)
-
-        if any(bools):
-            self._he_scheme.load_context_and_keys_from_files(*paths[:3])
-        else:
-            fhe_dir = config.get_fhe_dir()
-            self._he_scheme.gen_crypto_context_and_keys(fhe_dir)
+        self._he_scheme.load_crypto_context_from_file(crypto_context_path)
+        self._he_scheme.load_public_key_from_file(public_key_path)
+        self._he_scheme.load_private_key_from_file(private_key_path)
 
     def decrypt(self, model: model_pb2.Model) -> model_pb2.Model:
         """Decrypts the model in place (if encrypted).
@@ -62,38 +56,29 @@ class HomomorphicEncryption(object):
         for tensor in model.tensors:
             if tensor.encryped:
                 decoded_value = self._he_scheme.decrypt(
-                    tensor.value, tensor.length, 1)
+                    tensor.value, tensor.length)
                 tensor.value = decoded_value
                 tensor.encrypted = False
 
         return model
 
     def encrypt(self, model: model_pb2.Model) -> model_pb2.Model:
+        """Encrypts the model in place (if not encrypted).
+
+        Parameters
+        ----------
+        model : model_pb2.Model
+            The model to encrypt.
+
+        Returns
+        -------
+        model_pb2.Model
+            The encrypted model.
+        """
         # FIXME:
-        weights_names = weights_descriptor.weights_names
-        weights_trainable = weights_descriptor.weights_trainable
-        weights_values = weights_descriptor.weights_values
-        if not weights_names:
-            # Populating weights names with surrogate keys.
-            weights_names = ["arr_{}".format(widx)
-                             for widx in range(len(weights_values))]
-        if weights_trainable:
-            # Since weights have not specified as trainable or not, we default all weights to trainable.
-            weights_trainable = [True for _ in range(len(weights_values))]
+        for tensor in model.tensors:
+            if not tensor.encrypted:
+                tensor.value = self._he_scheme.encrypt(tensor.value)
+                tensor.encrypted = True
 
-        variables_pb = []
-        for w_n, w_t, w_v in zip(weights_names, weights_trainable, weights_values):
-            ciphertext = None
-            if self._he_scheme:
-                ciphertext = self._he_scheme.encrypt(w_v.flatten())
-            # If we have a ciphertext we prioritize it over the plaintext.
-            # @stripeli what does this mean?
-            tensor_pb = ModelProtoMessages.construct_tensor_pb(nparray=w_v,
-                                                               ciphertext=ciphertext)
-            model_var = ModelProtoMessages.construct_model_variable_pb(name=w_n,
-                                                                       trainable=w_t,
-                                                                       tensor_pb=tensor_pb)
-            variables_pb.append(model_var)
-
-        return model_pb2.Model(
-            variables=variables_pb)
+        return model

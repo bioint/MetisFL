@@ -1,16 +1,17 @@
 
 
 import threading
-from typing import Any
+from typing import Any, Dict
 
 import grpc
+from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
 
+from ..common.logger import MetisLogger
 from ..common.server import get_server
+from ..common.types import ServerParams
 from ..proto import (learner_pb2, learner_pb2_grpc, model_pb2,
                      service_common_pb2)
-from ..common.types import ServerParams
-from ..common.logger import MetisLogger
 from .controller_client import GRPCClient
 from .learner import (Learner, try_call_evaluate, try_call_get_weights,
                       try_call_set_weights, try_call_train)
@@ -192,19 +193,23 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         Returns
         -------
         service_common_pb2.Ack
-            The response containing the acknoledgement. The acknoledgement contains the status, i.e. True if the training was started, False otherwise.
+            The response containing the acknoledgement. 
+            The acknoledgement contains the status, i.e. True if the training was started, False otherwise.
 
         """
         if not self._is_serving(context):
-            # TODO: Should we return an ack here? Check this.
-            return learner_pb2.RunTaskResponse(ack=None)
+            return service_common_pb2.Ack(status=False)
+
+        task_id: str = request.task_id
+        model_dict: Dict = MessageToDict(request.model)
+        params_dict: Dict = MessageToDict(request.params)
 
         self._task_manager.run_task(
             task_fn=try_call_train,
             task_kwargs={
                 'learner': self._learner,
-                'model': request.model,
-                'params': request.params,
+                'model': model_dict,
+                'params': params_dict,
             },
             callback=self._client.train_done,
         )

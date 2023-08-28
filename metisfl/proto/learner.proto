@@ -25,7 +25,6 @@ message TrainRequest {
 }
 
 message TrainParams {
-  uint32 global_iteration = 1;
   uint32 batch_size = 2;
   uint32 epochs = 3;
   uint32 num_local_updates = 4;

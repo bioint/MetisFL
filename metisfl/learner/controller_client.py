@@ -1,12 +1,12 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import grpc
+import numpy as np
 
-from ..proto import (controller_pb2, controller_pb2_grpc, model_pb2,
-                     service_common_pb2)
-from ..common.types import ClientParams, ServerParams
-from ..common.logger import MetisLogger
 from ..common.client import get_client
+from ..common.logger import MetisLogger
+from ..common.types import ClientParams, ServerParams
+from ..proto import controller_pb2, controller_pb2_grpc, service_common_pb2
 
 
 def read_certificate(fp: str) -> bytes:
@@ -138,7 +138,8 @@ class GRPCClient(object):
 
     def train_done(
         self,
-        model: model_pb2.Model,
+        task_id: str,
+        weights: List[np.ndarray],
         metrics: Dict[str, Any],
         metadata: Dict[str, str],
         request_retries=1,
@@ -149,8 +150,10 @@ class GRPCClient(object):
 
         Parameters
         ----------
-        model : model_pb2.Model
-            The model to be sent.
+        task_id : str
+            The task id.
+        weights : List[np.ndarray]
+            The weights of the model.
         metrics : Dict[str, Any]
             The metrics produced during training.
         metadata : Dict[str, str]
@@ -168,19 +171,24 @@ class GRPCClient(object):
             The response Proto object with the Ack.
         """
         with self._get_client() as client:
-            stub, schedule, _ = client
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule = client[1]
 
             def _request(_timeout=None):
 
                 request = controller_pb2.TrainDoneRequest(
                     learner_id=self._learner_id,
-                    auth_token=self._auth_token,
-                    model=model,
+                    task_id=task_id,
+                    model=weights_to_model_proto(weights),
                     metrics=metrics,
                     metadata=metadata
                 )
 
-                return stub.MarkTaskCompleted(request, timeout=_timeout)
+                return stub.TrainDone(
+                    request=request,
+                    timeout=_timeout
+                )
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -190,7 +198,7 @@ class GRPCClient(object):
         request: controller_pb2.Learner,
         timeout: Optional[int] = None
     ) -> None:
-        """Sends a request to the Controller to join the federation.
+        """Sends a request to the Controller to join the federation and stores the assigned learner id.
 
         Parameters
         ----------

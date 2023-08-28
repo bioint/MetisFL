@@ -48,7 +48,6 @@ def app(
     server_params : ServerParams
         The server parameters of the Learner server. 
     num_training_examples : Optional[int], (default=None)
-        TODO: complete this docstring
         The number of training examples. Used when the scaling factor is "NumTrainingExamples".
         If not provided, this scaling factor cannot be used.
     """
