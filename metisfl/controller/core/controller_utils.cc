@@ -1,77 +1,58 @@
 
-#include <sys/resource.h>
-
 #include "controller_utils.h"
-#include "metisfl/controller/aggregation/model_aggregation.h"
-#include "metisfl/controller/scaling/model_scaling.h"
-#include "metisfl/controller/selection/model_selection.h"
-#include "metisfl/controller/store/store.h"
-#include "metisfl/controller/scheduling/scheduling.h"
 
 namespace metisfl::controller {
 
-std::unique_ptr<AggregationFunction>
-CreateAggregator(const AggregationRule &aggregation_rule) {
+std::unique_ptr<AggregationFunction> CreateAggregator(
+    const GlobalTrainParams &params) {
+  const auto &aggregation_rule = params.aggregation_rule;
 
-  if (aggregation_rule.has_fed_avg()) {
+  if (aggregation_rule == "FedAvg")
     return absl::make_unique<FederatedAverage>();
-  } else if (aggregation_rule.has_fed_rec()) {
+  if (aggregation_rule == "FedRec")
     return absl::make_unique<FederatedRecency>();
-  } else if (aggregation_rule.has_fed_stride()) {
+  if (aggregation_rule == "FedStride")
     return absl::make_unique<FederatedStride>();
-  } else if (aggregation_rule.has_pwa()) {
-    return absl::make_unique<PWA>(aggregation_rule.pwa().he_scheme_config());
-  } else {
-    throw std::runtime_error("Unsupported aggregation rule.");
+  if (aggregation_rule == "SecAgg") {
+    return absl::make_unique<SecAgg>(params.he_batch_size,
+                                     params.he_scaling_factor_bits,
+                                     params.he_crypto_context_file);
   }
-
 }
 
-std::unique_ptr<ModelStore>
-CreateModelStore(const ModelStoreConfig &config) {
+std::unique_ptr<ModelStore> CreateModelStore(
+    const ModelStoreParams &model_store_params) {
+  const auto &model_store = model_store_params.model_store;
+  const auto &lineage_length = model_store_params.lineage_length;
+  const auto &model_store_hostname = model_store_params.hostname;
+  const auto &model_store_port = model_store_params.port;
+  if (model_store == "Redis")
+    return absl::make_unique<RedisModelStore>(model_store_hostname,
+                                              model_store_port, lineage_length);
+  if (model_store == "InMemory")
+    return absl::make_unique<HashMapModelStore>(lineage_length);
 
-  if (config.has_in_memory_store()) {
-    return absl::make_unique<HashMapModelStore>(config.in_memory_store());
-  } else if (config.has_redis_db_store()) {
-    return absl::make_unique<RedisModelStore>(config.redis_db_store());
-  } else {
-    throw std::runtime_error("Unsupported model store backend.");
-  }
-
+  PLOG(FATAL) << "Unsupported model store.";
 }
 
-std::unique_ptr<ScalingFunction>
-CreateScaler(const AggregationRuleSpecs &aggregation_rule_specs) {
-
-  if (aggregation_rule_specs.scaling_factor() == AggregationRuleSpecs::NUM_COMPLETED_BATCHES) {
-    return absl::make_unique<BatchesScaler>();
-  } else if (aggregation_rule_specs.scaling_factor() == AggregationRuleSpecs::NUM_PARTICIPANTS) {
-    return absl::make_unique<ParticipantsScaler>();
-  } else if (aggregation_rule_specs.scaling_factor() == AggregationRuleSpecs::NUM_TRAINING_EXAMPLES) {
-    return absl::make_unique<TrainDatasetSizeScaler>();
-  } else {
-    throw std::runtime_error("Unsupported scaler.");
-  }
-
-}
-
-std::unique_ptr<Scheduler>
-CreateScheduler(const CommunicationSpecs &specs) {
-
-  if (specs.protocol() == CommunicationSpecs::SYNCHRONOUS ||
-      specs.protocol() == CommunicationSpecs::SEMI_SYNCHRONOUS) {
+std::unique_ptr<Scheduler> CreateScheduler(
+    const std::string &communication_protocol) {
+  if (communication_protocol == "Synchronous" ||
+      communication_protocol == "SemiSynchronous")
     return absl::make_unique<SynchronousScheduler>();
-  } else if (specs.protocol() == CommunicationSpecs::ASYNCHRONOUS) {
+  if (communication_protocol == "Asynchronous")
     return absl::make_unique<AsynchronousScheduler>();
-  } else {
-    throw std::runtime_error("Unsupported scheduling policy.");
-  }
 
+  PLOG(FATAL) << "Unsupported communication protocol.";
 }
 
-std::unique_ptr<Selector>
-CreateSelector() {
+std::unique_ptr<Selector> CreateSelector() {
   return absl::make_unique<ScheduledCardinality>();
+}
+
+std::string GenerateRadnomId() {
+  std::string id = absl::StrCat(absl::ToUnixMicros(absl::Now()));
+  return id;
 }
 
 long GetTotalMemory() {
@@ -81,7 +62,7 @@ long GetTotalMemory() {
   // but rather remains constant.
   // TODO(stripeli): We need a more fine-grained (dynamic) memory capture
   // tool that also accounts for memory release not just cumulative.
-  struct rusage usage{};
+  struct rusage usage {};
   int ret = getrusage(RUSAGE_SELF, &usage);
   if (ret == 0) {
     // Capture value in kilobytes - maximum resident set size
@@ -93,4 +74,4 @@ long GetTotalMemory() {
   }
 }
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller

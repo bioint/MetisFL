@@ -7,41 +7,31 @@
 
 namespace metisfl::controller {
 
-// Implements the synchronous task scheduling policy.
 class SynchronousScheduler : public Scheduler {
  public:
-  std::vector<std::string> ScheduleNext(const std::string &learner_id,
-                                        const CompletedLearningTask &task,
-                                        const std::vector<LearnerDescriptor> &active_learners) override {
-    // First, it adds the learner id to the set.
+  std::vector<std::string> ScheduleNext(
+      const std::string &learner_id, const int num_active_learners) override {
     learner_ids_.insert(learner_id);
 
-    // Second, it checks if the number of learners in the set is the same as
-    // `total_num_learners_`.
-    if (learner_ids_.size() != active_learners.size()) {
-      // If not, then return an empty list. No need to schedule any task.
+    if (learner_ids_.size() != num_active_learners) {
       return {};
     }
 
-    // Otherwise, schedule all learners for the next task.
-    std::vector<std::string>
-        to_schedule(learner_ids_.begin(), learner_ids_.end());
-
-    // Clean the state.
+    std::vector<std::string> to_schedule(learner_ids_.begin(),
+                                         learner_ids_.end());
     learner_ids_.clear();
+    ++global_iteration_;
 
     return to_schedule;
   }
 
-  inline std::string name() override {
-    return "SynchronousScheduler";
-  }
+  inline std::string name() override { return "SynchronousScheduler"; }
 
  private:
-  // Keeps track of the learners.
-  ::absl::flat_hash_set<std::string> learner_ids_;
+  absl::flat_hash_set<std::string> learner_ids_;
+  int global_iteration_ = 0;
 };
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller
 
-#endif //METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
+#endif  // METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_

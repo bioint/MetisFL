@@ -99,7 +99,7 @@ fabric.properties
 /production
 /.sass-cache
 # Bazelisk version file
-.bazelversion
+# .bazelversion
 # User-specific .bazelrc
 user.bazelrc
 
@@ -135,7 +135,7 @@ user.bazelrc
 /venv*
 /.venv/*
 /.venv
-__pycache__/
+**/__pycache__
 .build/*
 build/*
 **experiment.json

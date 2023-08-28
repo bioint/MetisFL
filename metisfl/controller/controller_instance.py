@@ -1,51 +1,96 @@
 import signal
 import time
-from threading import Thread
-from metisfl.proto.metis_pb2 import ControllerParams
-# This imports the controller python module defined inside the `pybind/controller_pybind.cc` script.
+from typing import Optional
+
 from metisfl.controller import controller
 
+from ..common.types import GlobalTrainConfig, ModelStoreConfig, ServerParams
 
-class ControllerInstance(object):
 
-    def __init__(self):
-        self.__controller_wrapper = controller.ControllerWrapper()
-        self.__shutdown_signal = False
+class Controller(object):
 
-    def start(self, controller_params_pb):
-        assert isinstance(controller_params_pb, ControllerParams)
-        controller_params_ser = controller_params_pb.SerializeToString()
-        self.__controller_wrapper.start(controller_params_ser)
-
-    def shutdown(self, instantly=False):
-        """
-        The function registers the termination signals that will modify the
-        internal state of the controller instance and trigger a shutdown() event.
-
-        The function also checks whether the controller has received any shutdown
-        requests at the servicer level; recall this instance is a wrapper of the
-        actual controller class. In such a case we only need to wait() for any
-        resources to be released by the main thread that started the controller.
+    def __init__(
+        self,
+        server_params: ServerParams,
+        global_train_config: GlobalTrainConfig,
+        model_store_config: ModelStoreConfig
+    ):
+        """Initializes the MetisFL Controller.
 
         Parameters
         ----------
-        instantly : bool, optional
-            Whether to stop/shutdown the controller instance right away.
+        server_params : ServerParams
+            The server parameters.
+        global_train_config : GlobalTrainConfig
+            Configuration for the global training.
+        model_store_config : ModelStoreConfig
+            Configuration for the model store.
+        """
+        self._server_params = server_params
+        self._global_train_config = global_train_config
+        self._model_store_config = model_store_config
+        self._controller_wrapper = controller.ControllerWrapper()
+        self._shutdown_signal_received = False
+
+    def start(self):
+        """Starts the controller."""
+
+        server = self._server_params
+        global_train = self._global_train_config
+        model_store = self._model_store_config
+
+        # Optional parameters are passed as empty strings or -1.
+        self._controller_wrapper.start(
+            hostname=server.hostname,
+            port=server.port,
+            root_certificate=server.root_certificate or "",
+            server_certificate=server.server_certificate or "",
+            private_key=server.private_key or "",
+
+            aggregation_rule=global_train.aggregation_rule,
+            communication_protocol=global_train.communication_protocol,
+            scaling_factor=global_train.scaling_factor,
+            participation_ratio=global_train.participation_ratio,
+            stride_length=global_train.stride_length or -1,
+            he_batch_size=global_train.he_batch_size or -1,
+            he_scaling_factor_bits=global_train.he_scaling_factor_bits or -1,
+            he_crypto_context_file=global_train.he_crypto_context_file or "",
+            semi_sync_lambda=global_train.semi_sync_lambda or -1,
+            semi_sync_recompute_num_updates=global_train.semi_sync_recompute_num_updates or -1,
+
+            model_store=model_store.model_store,
+            lineage_length=model_store.lineage_length,
+            model_store_hostname=model_store.model_store_hostname or "",
+            model_store_port=model_store.model_store_port or -1,
+        )
+
+        # Wait for the controller to shut down.
+        self.wait()
+
+    def wait(self, stop_instantly: Optional[bool] = False):
+        """Waits for the shutdown signal.
+
+        Parameters
+        ----------
+        instantly : Optional[bool], (default=False)
+            If True, the controller will be shut down instantly.
+            Otherwise, the controller will wait either for a shutdown request
+            from the server or for a SIGINT/SIGTERM signal.
         """
         def sigint_handler(signum, frame):
-            self.__shutdown_signal = True
+            self._shutdown_signal_received = True
 
-        # Registering signal termination/shutdown calls.
         signal.signal(signal.SIGTERM, sigint_handler)
         signal.signal(signal.SIGINT, sigint_handler)
 
-        # Infinite loop till shutdown signal is triggered
-        # or shutdown request is received. The
         while True:
-            if instantly or self.__shutdown_signal:
-                self.__controller_wrapper.shutdown()
-                break
-            if self.__controller_wrapper.shutdown_request_received():
-                self.__controller_wrapper.wait()
+            shutdown_condition = \
+                stop_instantly or \
+                self._shutdown_signal_received or \
+                self._controller_wrapper.shutdown_request_received()
+            if shutdown_condition:
                 break
             time.sleep(0.01)
+
+        if not self._controller_wrapper.shutdown_request_received():
+            self._controller_wrapper.shutdown()

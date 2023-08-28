@@ -4,22 +4,6 @@ load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 
-##### Protobuff
-##### This is used system-wise. The version 3.19+ is needed by almost all MetisFL dependencies.
-_PROTOBUF_VERSION_ = "3.19.6"
-
-http_archive(
-    name = "com_google_protobuf",
-    sha256 = "9a301cf94a8ddcb380b901e7aac852780b826595075577bb967004050c835056",
-    strip_prefix = "protobuf-" + _PROTOBUF_VERSION_,
-    urls = [
-        "https://github.com/protocolbuffers/protobuf/archive/v" + _PROTOBUF_VERSION_ + ".tar.gz",
-    ],
-)
-
-load("@com_google_protobuf//:protobuf_deps.bzl", "protobuf_deps")
-protobuf_deps()
-
 ###### PyBind11
 http_archive(
   name = "pybind11_bazel",

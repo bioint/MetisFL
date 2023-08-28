@@ -9,9 +9,9 @@ pybind_extension(
     # also a data dependency for the py_library() rule below; therefore it needs
     # to remain UNCHANGED!
     name = "controller",
-    srcs = ["pybind/controller_pybind.cc"],
+    srcs = ["controller_pybind.cc"],
     deps = [
-        "//metisfl/controller/core:controller_servicer",
+        "//metisfl/controller/core:controller",
     ],
     linkstatic=True
 )
@@ -20,7 +20,6 @@ py_library(
     name = "controller_lib",
     srcs = [
         "controller_instance.py",
-        "__main__.py",
     ],
     data = ["controller.so"],
     srcs_version = "PY3",
@@ -31,8 +30,11 @@ cc_binary(
     name = "controller_main",
     srcs = ["controller_main.cc"],
     deps = [
-        "//metisfl/controller/core:controller_servicer",
+        "//metisfl/controller/core:controller",        
         "@absl//absl/strings",
         "@com_github_google_glog//:glog",
     ],
+    data = [
+        "//metisfl/resources:ssl",
+    ]
 )

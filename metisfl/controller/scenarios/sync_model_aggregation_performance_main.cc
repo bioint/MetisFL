@@ -4,7 +4,7 @@
 #include <glog/logging.h>
 
 #include "metisfl/proto/model.pb.h"
-#include "metisfl/proto/metis.pb.h"
+
 #include "metisfl/controller/scenarios/scenarios_common.h"
 
 using namespace metisfl::controller;

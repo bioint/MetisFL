@@ -1,0 +1,43 @@
+CommunicationProtocol: 
+  Name: "Synchronous"
+  
+TerminationSignals:
+  FederationRounds: 3
+
+ModelStoreConfig:
+  ModelStore: "InMemory"
+  EvictionPolicy: "LineageLengthEviction"
+  LineageLength: 1
+
+GlobalModelConfig:
+  AggregationRule: "FedAvg"
+  ScalingFactor: "NumTrainingExamples"
+  ParticipationRatio: 1
+
+LocalModelConfig:
+  BatchSize: 32
+  LocalEpochs: 1
+  OptimizerParams:
+    LearningRate: 0.01
+    ProxMu: 0.00001  # This is a specific hyperparamter for FedProx.
+
+Controller:
+  ProjectHome: "/metisfl"
+  ConnectionConfig:
+    Hostname: "localhost"
+    Username: "root"
+    Password: "root"
+  GRPCServer:
+    Hostname: "localhost"
+    Port: 50051
+
+Learners:
+  - ProjectHome: "/metisfl"
+    ConnectionConfig:
+      Hostname: "localhost"
+      Username: "root"
+      Password: "root"
+    GRPCServer:
+      Hostname: "localhost"
+      Port: 50052
+    CudaDevices: [0]

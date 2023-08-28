@@ -1,21 +1,24 @@
-import sys
+import glob
 import os
 import shutil
-import glob
+import site
+import sys
+
+PY_VERSIONS = ["3.8", "3.9", "3.10"]
+os.environ["PYTHON_BIN_PATH"] = sys.executable
+os.environ["PYTHON_LIB_PATH"] = site.getsitepackages()[0]
 
 BAZEL_CMD = "bazelisk"
 BUILD_DIR = "build"
 CONTROLER_SO_DST = "metisfl/controller/controller.so"
 CONTROLER_SO_SRC = "bazel-bin/metisfl/controller/controller.so"
 CONTROLER_SO_TARGET = "//metisfl/controller:controller.so"
-DOCKER_REPO = "us-west2-docker.pkg.dev/nevron-385600/builders/ubuntu_focal_x86_64_py38"
 FHE_SO_DST = "metisfl/encryption/fhe.so"
 FHE_SO_SRC = "bazel-bin/metisfl/encryption/fhe.so"
 FHE_SO_TARGET = "//metisfl/encryption:fhe.so"
 PROT_DST_DIR = "metisfl/proto"
 PROTO_GRPC_TARGET = "//metisfl/proto:py_grpc_src"
 PROTO_SRC_DIR = "bazel-bin/metisfl/proto/py_grpc_src/metisfl/proto/"
-PY_VERSIONS = ["3.8", "3.9", "3.10"]
 
 
 def run_build(python_verion):
@@ -56,10 +59,16 @@ def copy_helper(src_file, dst):
 
 
 if __name__ == "__main__":
-    py_version = ".".join(map(str, sys.version_info[:2]))
+    py_version = ".".join(
+        map(str, [sys.version_info.major, sys.version_info.minor]))
     if py_version not in PY_VERSIONS:
-        print(
-            "Detected Python {} in environment. Need {}".format(py_version, PY_VERSIONS)
+        raise ValueError(
+            "Python version {} is not supported. Supported versions are {}".format(
+                py_version, PY_VERSIONS
+            )
         )
-        exit(1)
+    lib_path = os.environ["PYTHON_LIB_PATH"]
+    if not os.path.isdir(lib_path):
+        raise ValueError("PYTHON_LIB_PATH {} does not exist".format(lib_path))
+
     run_build(py_version)

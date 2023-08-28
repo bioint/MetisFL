@@ -6,24 +6,20 @@
 
 namespace metisfl::controller {
 
-// Implements the asynchronous task scheduling policy.
 class AsynchronousScheduler : public Scheduler {
  public:
-  std::vector<std::string> ScheduleNext(const std::string &learner_id,
-                                        const CompletedLearningTask &task,
-                                        const std::vector<LearnerDescriptor> &active_learners) override {
-
-    // Schedules current learner for its next task.
-    return std::vector<std::string> {learner_id};
-
+  std::vector<std::string> ScheduleNext(
+      const std::string &learner_id, const int num_active_learners) override {
+    ++global_iteration_;
+    return std::vector<std::string>{learner_id};
   }
 
-  inline std::string name() override {
-    return "AsynchronousScheduler";
-  }
+  inline std::string name() override { return "AsynchronousScheduler"; }
 
+ private:
+  int global_iteration_ = 0;
 };
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller
 
-#endif //METISFL_METISFL_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_
+#endif  // METISFL_METISFL_CONTROLLER_SCHEDULING_ASYNCHRONOUS_SCHEDULER_H_

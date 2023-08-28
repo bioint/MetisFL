@@ -7,7 +7,7 @@ cc_library(
         "scheduled_cardinality.h",
     ],
     hdrs = [
-        "model_selection.h",
+        "selection.h",
     ],
     deps = [
         "//metisfl/proto:cc_grpc_lib",
