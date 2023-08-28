@@ -9,7 +9,7 @@ pybind_extension(
     # also a data dependency for the py_library() rule below; therefore it needs
     # to remain UNCHANGED!
     name = "fhe",
-    srcs = ["pybind/ckks_pybind.cc"],
+    srcs = ["ckks_pybind.cc"],
     deps = [
       "//metisfl/encryption/palisade:palisade_wrapper",
     ],
@@ -39,7 +39,3 @@ py_library(
     data = [":fhe.so"],
 )
 
-cc_library(
-    name = "encryption_cc",
-    hdrs = ["encryption_scheme.h"],
-)

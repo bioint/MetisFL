@@ -6,7 +6,8 @@ import numpy as np
 from ..common.client import get_client
 from ..common.logger import MetisLogger
 from ..common.types import ClientParams, ServerParams
-from ..proto import controller_pb2, controller_pb2_grpc, service_common_pb2
+from ..proto import (controller_pb2, controller_pb2_grpc, model_pb2,
+                     service_common_pb2)
 
 
 def read_certificate(fp: str) -> bytes:
@@ -82,7 +83,9 @@ class GRPCClient(object):
             The response Proto object with the Ack.
         """
         with self._get_client() as client:
-            stub, schedule, _ = client
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule = client[1]
 
             def _request(_timeout=None):
 
@@ -121,9 +124,22 @@ class GRPCClient(object):
         -------
         service_common_pb2.Ack
             The response Proto object with the Ack.
+
+        Raises
+        ------
+        RuntimeError
+            If the learner id does not exist, 
+            which means that the Learner has not joined the federation.
         """
+
+        if not self._has_learner_id():
+            raise RuntimeError(
+                "Cannot leave federation before joining it.")
+
         with self._get_client() as client:
-            stub, schedule, _ = client
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule = client[1]
 
             def _request(_timeout=None):
                 request = controller_pb2.LearnerId(
@@ -169,7 +185,18 @@ class GRPCClient(object):
         -------
         service_common_pb2.Ack
             The response Proto object with the Ack.
+
+        Raises
+        ------
+        RuntimeError
+            If the learner id does not exist,
+            which means that the Learner has not joined the federation.
         """
+
+        if not self._has_learner_id():
+            raise RuntimeError(
+                "Cannot send train done before joining the federation.")
+
         with self._get_client() as client:
 
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
@@ -231,3 +258,13 @@ class GRPCClient(object):
             else:
                 # FIXME: figure out how to handle this error
                 MetisLogger.fatal("Unhandled grpc error: {}".format(rpc_error))
+
+    def _has_learner_id(self) -> bool:
+        """Checks if the learner id exists.
+
+        Returns
+        -------
+        bool
+            True if the learner id exists, False otherwise.
+        """
+        return self._learner_id is not None

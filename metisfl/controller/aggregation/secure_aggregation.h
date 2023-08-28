@@ -5,15 +5,15 @@
 #include <omp.h>
 
 #include "metisfl/controller/aggregation/aggregation_function.h"
-#include "metisfl/encryption/encryption_scheme.h"
 #include "metisfl/encryption/palisade/ckks_scheme.h"
+#include "metisfl/encryption/palisade/encryption_scheme.h"
 #include "metisfl/proto/model.pb.h"
 
 namespace metisfl::controller {
 
 class SecAgg : public AggregationFunction {
  public:
-    SecAgg(int batch_size, int scaling_factor_bits, std::string crypto_context);
+  SecAgg(int batch_size, int scaling_factor_bits, std::string crypto_context);
 
   Model Aggregate(std::vector<std::vector<std::pair<const Model *, double>>>
                       &pairs) override;

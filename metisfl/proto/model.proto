@@ -1,52 +1,19 @@
 syntax = "proto3";
 package metisfl;
 
-/**
- * Aiming for a minimal representation based on the numpy.dtype Python class.
- * See https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
- * Following representation is based on the excellent work of Max Klein:
- * https://github.com/telamonian/numpy-protobuf
- */
-message DType {
-  enum Type {
-    INT8 = 0; 
-    INT16 = 1; 
-    INT32 = 2; 
-    INT64 = 3; 
-    UINT8 = 4;
-    UINT16 = 5; 
-    UINT32 = 6; 
-    UINT64 = 7; 
-    FLOAT32 = 8;
-    FLOAT64 = 9; 
-  }
-
-  enum ByteOrder {
-    NA = 0; // Order not applicable. For example, endian is not relevant for 8 bit numbers, e.g., int8, uint8!
-    BIG_ENDIAN_ORDER = 1; // We add the _ORDER suffix because the BIG_ENDIAN and LITTLE_ENDIAN macros are already used.
-    LITTLE_ENDIAN_ORDER = 2;
-  }
-
-  Type type = 1;
-  ByteOrder byte_order = 2;
-  bool fortran_order = 3;
-}
-
 message TensorQuantifier {
   optional uint32 tensor_non_zeros = 1; // We set the field as optional because we want to print/record the zero values.
   optional uint32 tensor_zeros = 2; // We set the field as optional because we want to print/record the zero values.
   uint32 tensor_size_bytes = 3;
 }
 
-
 message Tensor {
-  bool encrypted = 1;
-  uint32 length = 2;
-  repeated int64 dimensions = 3;
-  DType type = 4;
-  bytes value = 5;
+  uint32 length = 1;
+  repeated int64 dimensions = 2;
+  bytes value = 3;
 }
 
 message Model {
-  repeated Tensor tensors = 1;
+  bool encrypted = 1;
+  repeated Tensor tensors = 2;
 }

@@ -1,11 +1,12 @@
 
 """MetisFL Homomorphic Encryption Module using Palisade."""
 
+import numpy as np
 from metisfl.encryption import fhe
-from ..proto import model_pb2
+from .scheme import EncryptionScheme
 
 
-class HomomorphicEncryption(object):
+class HomomorphicEncryption(EncryptionScheme):
 
     """Homomorphic Encryption class using Palisade. Wraps the C++ implementation of Palisade."""
 
@@ -39,46 +40,36 @@ class HomomorphicEncryption(object):
         self._he_scheme.load_public_key_from_file(public_key_path)
         self._he_scheme.load_private_key_from_file(private_key_path)
 
-    def decrypt(self, model: model_pb2.Model) -> model_pb2.Model:
-        """Decrypts the model in place (if encrypted).
+    def decrypt(self, value: bytes, length: int) -> np.ndarray:
+        """Decrypts the value.
 
         Parameters
         ----------
-        model : model_pb2.Model
-            The model to decrypt.
+        value : bytes
+            The value to decrypt as bytes.
+        length : int
+            The length of the value.
 
         Returns
         -------
-        model_pb2.Model
-            The decrypted model.
+        np.ndarray
+            The decrypted value as a numpy array.
         """
 
-        for tensor in model.tensors:
-            if tensor.encryped:
-                decoded_value = self._he_scheme.decrypt(
-                    tensor.value, tensor.length)
-                tensor.value = decoded_value
-                tensor.encrypted = False
+        return self._he_scheme.decrypt(value, length)
 
-        return model
-
-    def encrypt(self, model: model_pb2.Model) -> model_pb2.Model:
-        """Encrypts the model in place (if not encrypted).
+    def encrypt(self, arr: np.ndarray) -> bytes:
+        """Encrypts the array.
 
         Parameters
         ----------
-        model : model_pb2.Model
-            The model to encrypt.
+        arr : np.ndarray
+            The array to encrypt.
 
         Returns
         -------
-        model_pb2.Model
-            The encrypted model.
+        bytes
+            The encrypted array as bytes.
         """
-        # FIXME:
-        for tensor in model.tensors:
-            if not tensor.encrypted:
-                tensor.value = self._he_scheme.encrypt(tensor.value)
-                tensor.encrypted = True
 
-        return model
+        return self._he_scheme.encrypt(arr)

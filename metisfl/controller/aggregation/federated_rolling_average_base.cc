@@ -8,10 +8,10 @@ void FederatedRollingAverageBase::InitializeModel(const Model *init_model,
   wc_scaled_model = *init_model;
   score_z = init_contrib_value;
 
-  for (auto index = 0; index < init_model->tensors_size(); index++) {
-    const auto &init_tensor = init_model->tensors(index);
-    auto scaled_tensor = wc_scaled_model.mutable_tensors(index);
-    if (!scaled_tensor->encrypted()) {
+  if (!wc_scaled_model.encrypted()) {
+    for (auto index = 0; index < init_model->tensors_size(); index++) {
+      const auto &init_tensor = init_model->tensors(index);
+      auto scaled_tensor = wc_scaled_model.mutable_tensors(index);
       auto aggregated_result = ScaleTensor(init_tensor, init_contrib_value,
                                            TensorOperation::MULTIPLY);
 
@@ -27,10 +27,10 @@ void FederatedRollingAverageBase::InitializeModel(const Model *init_model,
 void FederatedRollingAverageBase::UpdateScaledModel(
     const Model *existing_model, const Model *new_model,
     double existing_contrib_value, double new_contrib_value) {
-  for (int index = 0; index < wc_scaled_model.tensors_size(); index++) {
-    auto scaled_tensor = wc_scaled_model.mutable_tensors(index);
+  if (!wc_scaled_model.encrypted()) {
+    for (int index = 0; index < wc_scaled_model.tensors_size(); index++) {
+      auto scaled_tensor = wc_scaled_model.mutable_tensors(index);
 
-    if (!scaled_tensor->encrypted()) {
       std::string aggregated_result;
 
       if (existing_model->tensors_size() > 0) {
@@ -55,10 +55,10 @@ void FederatedRollingAverageBase::UpdateScaledModel(
 
 void FederatedRollingAverageBase::UpdateCommunityModel() {
   model = Model();
-  for (const auto &scaled_mdl_variable : wc_scaled_model.tensors()) {
-    auto cm_variable = model.add_tensors();
-    *cm_variable = scaled_mdl_variable;
-    if (!scaled_mdl_variable.encrypted()) {
+  if (!wc_scaled_model.encrypted()) {
+    for (const auto &scaled_mdl_variable : wc_scaled_model.tensors()) {
+      auto cm_variable = model.add_tensors();
+      *cm_variable = scaled_mdl_variable;
       std::string scaled_result;
       scaled_result =
           ScaleTensor(scaled_mdl_variable, score_z, TensorOperation::DIVIDE);

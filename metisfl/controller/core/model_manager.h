@@ -32,8 +32,6 @@ class ModelManager {
   bool IsInitialized() const { return is_initialized_; }
 
   // Public methods
-  void InitializeAggregator(DType_Type tensor_dtype);
-
   absl::Status SetInitialModel(const Model &model);
 
   void InsertModel(std::string learner_id, const Model &model);

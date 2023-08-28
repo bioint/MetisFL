@@ -51,8 +51,8 @@ std::vector<double> FederatedAverage::AggregateTensorAtIndex(
   auto aggregated_tensor = std::vector<double>(var_num_values);
   for (const auto &pair : pairs) {
     const auto *local_model = pair.front().first;
-    const auto &local_tensor = local_model->tensors(var_idx);
-    if (!local_tensor.encrypted()) {
+    if (!local_model->encrypted()) {
+      const auto &local_tensor = local_model->tensors(var_idx);
       AddTensors(aggregated_tensor, local_tensor, pair.front().second);
     } else {
       throw std::runtime_error(

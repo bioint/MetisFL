@@ -12,7 +12,7 @@
 
 #include "ciphertext-ser.h"
 #include "cryptocontext-ser.h"
-#include "metisfl/encryption/encryption_scheme.h"
+#include "metisfl/encryption/palisade/encryption_scheme.h"
 #include "palisade.h"
 #include "pubkeylp-ser.h"
 #include "scheme/ckks/ckks-ser.h"
