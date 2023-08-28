@@ -1,205 +1,161 @@
-import queue
-import time
+import random
+from time import sleep
+from typing import Dict, List, Union
 
-import multiprocessing as mp
-
-from typing import Callable, List
-from pebble import ProcessPool
-
-from metisfl import config
-from metisfl.models.utils import construct_model_pb
-from metisfl.models.metis_model import MetisModel
-from metisfl.utils.fedenv import FederationEnvironment
-from metisfl.utils.logger import MetisASCIIArt, MetisLogger
-
+from ..proto import model_pb2
+from ..common.types import ClientParams, FederationEnvironment
+from ..common.logger import MetisASCIIArt
 from .controller_client import GRPCControllerClient
+from .federation_monitor import FederationMonitor
 from .learner_client import GRPCLearnerClient
-from .service_initializer import ServiceInitializer
-from .service_monitor import ServiceMonitor
 
 
 class DriverSession(object):
-    def __init__(self,
-                 fed_env: FederationEnvironment,
-                 model: MetisModel,
-                 train_dataset_fps: List[str],
-                 train_dataset_recipe_fn: Callable,
-                 validation_dataset_fps: List[str] = None,
-                 validation_dataset_recipe_fn: Callable = None,
-                 test_dataset_fps: List[str] = None,
-                 test_dataset_recipe_fn: Callable = None):
-        """ 
-        Entry point for MetisFL Driver Session API.
+    def __init__(self, fedenv: Union[str, FederationEnvironment]):
+        """Initializes a new DriverSession.
 
-            This class is the entry point of the MetisFL Driver Session API. It is responsible for initializing the federation environment
-            defined by the :param:`fed_env` and starting the federated training for the :param:`model` using the datasets defined by
-            :param:`train_datset_fps`, :param:`validation_dataset_fps` and :param:`test_dataset_fps`. The dataset recipes given by
-            :param:`train_dataset_recipe_fn`, :param:`validation_dataset_recipe_fn` and :param:`test_dataset_recipe_fn` are functions
-            that will be used to create the datasets on the remote Learner machine. They must take a single argument, the dataset file path,
-            and return a :class: `metisfl.models.model_dataset.ModelDataset` instance. 
-
-            To boostrap the training process, we ssh into the remote Controller and Learners host machines using the authorization
-            credentials defined in the federation environment yaml file. The boostrapping process involves the following steps:
-
-                - Copy the intial model weights to the remote Learner machines.
-                - Copy the dataset file and the pickled dataset recipe functions to the remote Learner machines.
-                - Start the Controller and Learner processes on the remote machines. 
-
-            The boostraping is delegated to the :class:`ServiceInitializer` class, which exposes a :meth:`ServiceInitializer.init_controller`
-            and a :meth:`ServiceInitializer.init_learner` method. These methods are invoked in parallel using 
-            a [Pebble](https://pypi.org/project/Pebble/) process pool. 
-
-            The present class creates the following GRPC clients
-
-                - one :class:`GRPCControllerClient` for the controller in the federation environment.
-                - one :class:`GRPCLearnerClient` for each learner in the federation environment.
-
-            The Controller client ships the initial model weights state to the Controller and is used from the :class:`ServiceMonitor` 
-            to monitor the training process and collect statistics upon completion. The method :meth:`DriverSession.run` is used to
-            start the federated training process and orderly invokes the methods :meth:`initialize_federation()`, 
-            :meth:`ServiceMonitor.monitor_federation`, which blocks execution and waits for the termination signals and 
-            :meth:`shutdown_federation()`.
-
-            Args:
-                fed_env (str): The path to the federation environment yaml file.
-                model (MetisModel): A :class:`MetisModel` instance.
-                train_datset_fps (List[str]): A list of file paths to the training datasets (one for each learner)
-                train_dataset_recipe_fn (Callable): A function that will be used to create the training datasets on the remote Learner machines.
-                validation_dataset_fps (List[str], optional): A list of file paths to the validation datasets (one for each learner). Defaults to None.
-                validation_dataset_recipe_fn (Callable, optional): A function that will be used to create the validation datasets on the remote Learner machines. Defaults to None.
-                test_dataset_fps (List[str], optional): A list of file paths to the test datasets (one for each learner). Defaults to None.
-                test_dataset_recipe_fn (Callable, optional): A function that will be used to create the test datasets on the remote Learner machines. Defaults to None.
+        Parameters
+        ----------
+        fedenv : Union[str, FederationEnvironment]
+            The path to the YAML file containing the federation environment or a FederationEnvironment object.
         """
-        # Print welcome message.
         MetisASCIIArt.print()
-        self._federation_environment = FederationEnvironment(fed_env)
+
+        if isinstance(fedenv, str):
+            fedenv = FederationEnvironment.from_yaml(fedenv)
+        self._federation_environment = fedenv
         self._num_learners = len(self._federation_environment.learners)
-        self._model = model
-        self._encryption_config_pb = \
-            self._federation_environment.get_encryption_config_pb()
-        self._init_pool()
-        self._driver_controller_grpc_client = \
-            self._create_driver_controller_grpc_client()
-        self._driver_learner_grpc_clients = \
-            self._create_driver_learner_grpc_clients()
 
-        dataset_fps = self._gen_dataset_dict(
-            train_dataset_fps, validation_dataset_fps, test_dataset_fps)
+        global_config = self._federation_environment.global_train_config
 
-        dataset_recipe_fns = self._gen_dataset_dict(
-            train_dataset_recipe_fn, 
-            validation_dataset_recipe_fn, 
-            test_dataset_recipe_fn)
+        self._controller_client = self._create_controller_client()
+        self._learner_clients = self._create_learner_clients()
+        self._service_monitor = FederationMonitor(
+            controller_client=self._controller_client,
+            termination_signals=self._federation_environment.termination_signals,
+            is_async=global_config.communication_protocol == "Asynchronous",
+        )
 
-        self._service_initilizer = ServiceInitializer(
-            federation_environment=self._federation_environment,
-            dataset_recipe_fns=dataset_recipe_fns,
-            dataset_fps=dataset_fps,
-            model=self._model)
+    def run(self) -> Dict:
+        """Runs the federated training session.
 
-        self._service_monitor = ServiceMonitor(
-            federation_environment=self._federation_environment,
-            driver_controller_grpc_client=self._driver_controller_grpc_client)
-        
-    def get_federation_statistics(self):
-        return self._service_monitor.get_federation_statistics()
-
-    def initialize_federation(self):
-        # NOTE: If we need to test the pipeline we force a future return here,
-        # i.e., controller_future.result(). The following initialization futures are
-        # always running (status=running) since we need to keep the connections open
-        # in order to retrieve logs regarding the execution progress of the federation.
-        
-        # FIXME(@stripeli): so how would the users be able to see and inform us for any
-        # potential errors?
-        controller_future = self._executor.schedule(
-            function=self._service_initilizer.init_controller)
-        self._executor_controller_tasks_q.put(controller_future)
-        if self._driver_controller_grpc_client.check_health_status(request_retries=10, request_timeout=30, block=True):
-            self._ship_model_to_controller()
-            for idx in range(self._num_learners):
-                learner_future = self._executor.schedule(
-                    function=self._service_initilizer.init_learner,
-                    args=(idx, ))  # NOTE: args must be a tuple.
-                self._executor_learners_tasks_q.put(learner_future)
-                # FIXME(@stripeli): Might need to remove the sleep time in the future.
-                # For now, we perform sleep because if the learners are co-located, e.g., localhost, then an 
-                # exception is raised by the SSH client: """ Exception (client): Error reading SSH protocol banner """.
-                if self._federation_environment.learners[idx].hostname == "localhost":
-                    time.sleep(0.1)
-                # NOTE: If we need to test the pipeline we can force a future return here, i.e., learner_future.result().
-                self._executor_learners_tasks_q.put(learner_future)                  
-        else:
-            MetisLogger.fatal(
-                "Controller is not responsive. Cannot proceed with execution.")
-
-    def monitor_federation(self):
-        self._service_monitor.monitor_federation()  # Blocking call.
-
-    def run(self):
+        Returns
+        -------
+        Dict
+            A dictionary containing the statistics of the federated training.
+        """
         self.initialize_federation()
-        self.monitor_federation()  # Blocking call.
+
+        statistics = self.monitor_federation()  # Blocking call.
+
         self.shutdown_federation()
 
-    def shutdown_federation(self):
-        self._service_monitor.collect_local_statistics()
+        return statistics
 
-        for grpc_client in self._driver_learner_grpc_clients.values():
-            grpc_client.shutdown_learner(
-                request_retries=1, request_timeout=30, block=False)
-        for grpc_client in self._driver_learner_grpc_clients.values():
+    def initialize_federation(self):
+        """Initialzes the federation. Picks a random Learner to obtain the intial weights from and
+            ships the weights to all other Learners and the Controller.
+        """
+
+        learner_index = random.randint(0, self._num_learners - 1)
+
+        model = self._learner_clients[learner_index].get_model(
+            request_timeout=30, request_retries=2, block=True)
+
+        self._ship_model_to_learners(model=model, skip_learner=learner_index)
+        self._ship_model_to_controller(model=model)
+
+        sleep(1)  # FIXME: Wait for the controller to receive the model.
+
+        self.start_training()
+
+    def start_training(self) -> None:
+        """Starts the federated training."""
+        # TODO: Ping controller and learners to check if they are alive.
+        self._controller_client.start_training()
+
+    def monitor_federation(self) -> Dict:
+        """Monitors the federation and returns the statistics. This is a blocking call.
+
+        Returns
+        -------
+        Dict
+            A dictionary containing the statistics of the federated training.
+        """
+        return self._service_monitor.monitor_federation()  # Blocking call.
+
+    def shutdown_federation(self):
+        """Shuts down the Controller and all Learners."""
+
+        for grpc_client in self._learner_clients:
+            grpc_client.shutdown_server(request_timeout=30, block=False)
             grpc_client.shutdown()
 
-        self._service_monitor.collect_global_statistics()
-        self._driver_controller_grpc_client.shutdown_controller(
+        # FIXME:
+        self._controller_client.shutdown_server(
             request_retries=2, request_timeout=30, block=True)
-        self._driver_controller_grpc_client.shutdown()
+        self._controller_client.shutdown_client()
 
-        self._executor.close()
-        self._executor.join()
+    def _create_controller_client(self):
+        """Creates a GRPC client for the controller."""
 
-    def _create_driver_controller_grpc_client(self):
-        controller_server_entity_pb = \
-            self._federation_environment.controller.get_server_entity_pb(
-                gen_connection_entity=True)
+        controller = self._federation_environment.controller
+
         return GRPCControllerClient(
-            controller_server_entity=controller_server_entity_pb,
-            max_workers=1)
+            client_params=ClientParams(
+                hostname=controller.hostname,
+                port=controller.port,
+                root_certificate=controller.root_certificate,
+            )
+        )
 
-    def _create_driver_learner_grpc_clients(self):
-        grpc_clients = {}
+    def _create_learner_clients(self) -> List[GRPCLearnerClient]:
+        """Creates a dictionary of GRPC clients for the learners."""
+
+        grpc_clients: List[GRPCLearnerClient] = [None] * self._num_learners
+
         for idx in range(self._num_learners):
+
             learner = self._federation_environment.learners[idx]
-            learner_server_entity_pb = \
-                learner.get_server_entity_pb(gen_connection_entity=True)
-            grpc_clients[learner.identifier] = \
-                GRPCLearnerClient(
-                    learner_server_entity=learner_server_entity_pb, 
-                    max_workers=1)
+
+            grpc_clients[idx] = GRPCLearnerClient(
+                client_params=ClientParams(
+                    hostname=learner.hostname,
+                    port=learner.port,
+                    root_certificate=learner.root_certificate,
+                ),
+            )
+
         return grpc_clients
 
-    def _gen_dataset_dict(self,
-                          train_val,
-                          validation_val=None,
-                          test_val=None):
-        dataset_dict = {}
-        dataset_dict[config.TRAIN] = train_val  # Always required.
-        if validation_val:
-            dataset_dict[config.VALIDATION] = validation_val
-        if test_val:
-            dataset_dict[config.TEST] = test_val
-        return dataset_dict
+    def _ship_model_to_controller(self, model: model_pb2.Model) -> None:
+        """Encrypts and ships the model to the controller.
 
-    def _init_pool(self):
-        mp_ctx = mp.get_context("spawn")
-        self._executor = ProcessPool(
-            max_workers=self._num_learners + 1, context=mp_ctx)
-        self._executor_controller_tasks_q = queue.LifoQueue(maxsize=0)
-        self._executor_learners_tasks_q = queue.LifoQueue(maxsize=0)
+        Parameters
+        ----------
+        model : model_pb2.Model
+            The Protobuf object containing the model to be shipped.
+        """
 
-    def _ship_model_to_controller(self):
-        weights_descriptor = self._model.get_weights_descriptor()
-        model_pb = construct_model_pb(weights_descriptor, self._encryption_config_pb)
-        self._driver_controller_grpc_client.replace_community_model(
-            num_contributors=self._num_learners,
-            model_pb=model_pb)
+        self._controller_client.set_initial_model(
+            model=model,
+        )
+
+    def _ship_model_to_learners(self, model: model_pb2.Model, skip_learner: int = None) -> None:
+        """Ships the given model to all Learners.
+
+        Parameters
+        ----------
+        model : model_pb2.Model
+            The Protobuf object containing the model to be shipped.
+        skip_learner : Optional[int], (default=None)
+            The index of the learner to skip.
+        """
+
+        for idx in range(self._num_learners):
+            if idx == skip_learner:
+                continue
+
+            self._learner_clients[idx].set_initial_model(
+                model=model,
+            )

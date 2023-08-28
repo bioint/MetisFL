@@ -14,7 +14,7 @@ from housing_mlp import HousingMLP
 
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.model_dataset import ModelDatasetRegression
-from metisfl.utils.fedenv_gen import EnvGen
+from metisfl.common.fedenv_gen import EnvGen
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 

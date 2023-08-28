@@ -1,119 +1,19 @@
 syntax = "proto3";
 package metisfl;
 
-///////////////////////////
-// Tensor Representation //
-///////////////////////////
-
-/**
- * Aiming for a minimal representation based on the numpy.dtype Python class.
- * See https://docs.scipy.org/doc/numpy/reference/arrays.dtypes.html
- * Following representation is based on the excellent work of Max Klein:
- * https://github.com/telamonian/numpy-protobuf
- */
-message DType {
-
-  enum Type {
-    INT8 = 0; // Byte (-128 to 127)
-    INT16 = 1; // Integer (-32768 to 32767)
-    INT32 = 2; // Integer (-2147483648 to 2147483647)
-    INT64 = 3; // Integer (-9223372036854775808 to 9223372036854775807)
-    UINT8 = 4; // Unsigned integer (0 to 255)
-    UINT16 = 5; // Unsigned integer (0 to 65535)
-    UINT32 = 6; // Unsigned integer (0 to 4294967295)
-    UINT64 = 7; // Unsigned integer (0 to 18446744073709551615)
-    FLOAT32 = 8; // Single precision float: sign bit, 8 bits exponent, 23 bits mantissa
-    FLOAT64 = 9; // Double precision float: sign bit, 11 bits exponent, 52 bits mantissa
-  }
-
-  enum ByteOrder {
-    NA = 0; // Order not applicable. For example, endian is not relevant for 8 bit numbers, e.g., int8, uint8!
-    BIG_ENDIAN_ORDER = 1; // We add the _ORDER suffix because the BIG_ENDIAN and LITTLE_ENDIAN macros are already used.
-    LITTLE_ENDIAN_ORDER = 2;
-  }
-
-  Type type = 1;
-  ByteOrder byte_order = 2;
-  bool fortran_order = 3;
-
-}
-
-// A message to measure the size of the tensor.
 message TensorQuantifier {
   optional uint32 tensor_non_zeros = 1; // We set the field as optional because we want to print/record the zero values.
   optional uint32 tensor_zeros = 2; // We set the field as optional because we want to print/record the zero values.
   uint32 tensor_size_bytes = 3;
 }
 
-// Structural info of a tensor.
-message TensorSpec {
-  // Length of the tensor, i.e., total number of values it stores.
+message Tensor {
   uint32 length = 1;
-
-  // The size of each dimension of the tensor.
   repeated int64 dimensions = 2;
-
-  DType type = 3;
-
-  // Representation of the flatten tensor as bytes.
-  bytes value = 4;
+  bytes value = 3;
 }
 
-// A wrapper over tensor spec for non-encoded / plaintext tensors.
-message PlaintextTensor {
-  // Tensor specifications.
-  TensorSpec tensor_spec = 1;
-}
-
-// A wrapper over tensor spec for encoded tensors.
-message CiphertextTensor {
-  // Tensor specifications.
-  TensorSpec tensor_spec = 1;
-}
-
-//////////////////////////
-// Model Representation //
-//////////////////////////
-
-// Represents a machine learning model.
 message Model {
-  message Variable {
-    // The name of the variable.
-    string name = 1;
-
-    // Set to true if this is a trainable variable. Otherwise, false.
-    bool trainable = 2;
-
-    // The tensor shape and values representing this variable.
-    oneof tensor {
-      // The value of a plaintext tensor are not encrypted.
-      PlaintextTensor plaintext_tensor = 3;
-      // The values of a ciphertext tensor are encrypted.
-      CiphertextTensor ciphertext_tensor = 4;
-    }
-
-  }
-
-  // Model's variables.
-  repeated Variable variables = 1;
-}
-
-// Represents a community model.
-message FederatedModel {
-  // Number of entities that contributed to the aggregation of this model.
-  uint32 num_contributors = 1;
-
-  uint32 global_iteration = 2;
-
-  // The aggregated community model.
-  Model model = 3;
-}
-
-////////////////
-// Optimizers //
-////////////////
-
-message OptimizerConfig {
-  string name=1;
-  map<string, string> params=2;
+  bool encrypted = 1;
+  repeated Tensor tensors = 2;
 }

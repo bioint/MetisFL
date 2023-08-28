@@ -11,30 +11,21 @@ namespace metisfl::controller {
 // subset (scheduled) collection.
 class ScheduledCardinality : public Selector {
  public:
-
   std::vector<std::string> Select(
       const std::vector<std::string> &scheduled_learners,
-      const std::vector<LearnerDescriptor> &active_learners) override {
-
+      const std::vector<std::string> &active_learners) override {
     // The given set of scheduled learners needs to contain at
     // least 2 learners else we select all active learners.
     if (scheduled_learners.size() < 2) {
-      std::vector<std::string> active_ids;
-      for (const auto &learner_descriptor : active_learners) {
-        active_ids.push_back(learner_descriptor.id());
-      }
-      return active_ids;
+      return active_learners;
     } else {
       return scheduled_learners;
     }
   }
 
-  std::string name() override {
-    return "ScheduledCardinality";
-  };
+  std::string name() override { return "ScheduledCardinality"; };
 };
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller
 
-
-#endif //METISFL_METISFL_CONTROLLER_SELECTION_SCHEDULED_CARDINALITY_H
+#endif  // METISFL_METISFL_CONTROLLER_SELECTION_SCHEDULED_CARDINALITY_H

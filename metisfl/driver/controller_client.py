@@ -1,92 +1,204 @@
-from metisfl.grpc.grpc_services import GRPCClient
-from metisfl.proto import controller_pb2, service_common_pb2
-from metisfl.utils.logger import MetisLogger
-from metisfl.proto.proto_messages_factory import ModelProtoMessages
+
+"""A gRPC client used from the driver to communicate with the controller."""
+
+from typing import Callable, Optional
+from ..common.client import get_client
+from ..proto import controller_pb2, controller_pb2_grpc, model_pb2, service_common_pb2
+from ..common.types import ClientParams
 
 
-# FIXME(@stripeli) - logic here implies that requests go through without errors
-# what about error handling?
-class GRPCControllerClient(GRPCClient):
-    def __init__(self,
-                 controller_server_entity,
-                 max_workers=1):
-        super(GRPCControllerClient, self).__init__(
-            controller_server_entity, max_workers)
+class GRPCControllerClient(object):
+    """A gRPC client used from the driver to communicate with the controller."""
 
-    def check_health_status(self, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            get_services_health_status_request_pb = service_common_pb2.GetServicesHealthStatusRequest()
-            MetisLogger.info("Requesting controller's health status.")
-            response = self._stub.GetServicesHealthStatus(
-                get_services_health_status_request_pb, timeout=_timeout)
-            MetisLogger.info("Received controller's health status, {} - {}".format(
-                self.grpc_endpoint.listening_endpoint, response))
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+    def __init__(
+        self,
+        client_params: ClientParams,
+        max_workers=1
+    ):
+        """Initializes the client.
 
-    def get_community_model_evaluation_lineage(self, num_backtracks, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            request_pb = controller_pb2.GetCommunityModelEvaluationLineageRequest(
-                num_backtracks=num_backtracks)
-            MetisLogger.info(
-                "Requesting community model evaluation lineage for {} backtracks.".format(num_backtracks))
-            response = self._stub.GetCommunityModelEvaluationLineage(
-                request_pb, timeout=_timeout)
-            MetisLogger.info("Retrieved community model evaluation lineage.")
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+        Parameters
+        ----------
+        client_params : ClientParams
+            The parameters needed to connect to the Controller.
+        max_workers : int, optional
+            The maximum number of workers for the client ThreadPool, by default 1
+        """
+        self._client_params = client_params
+        self._max_workers = max_workers
 
-    def get_local_task_lineage(self, num_backtracks, learner_ids, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            request_pb = controller_pb2.GetLocalTaskLineageRequest(num_backtracks=num_backtracks,
-                                                                   learner_ids=learner_ids)
-            MetisLogger.info(
-                "Requesting local model evaluation lineage for {} backtracks.".format(num_backtracks))
-            response = self._stub.GetLocalTaskLineage(
-                request_pb, timeout=_timeout)
-            MetisLogger.info("Received local model evaluation lineage.")
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+    def _get_client(self):
+        return get_client(
+            stub_class=controller_pb2_grpc.ControllerServiceStub,
+            client_params=self._client_params,
+            max_workers=self._max_workers
+        )
 
-    def get_participating_learners(self, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            request_pb = controller_pb2.GetParticipatingLearnersRequest()
-            MetisLogger.info("Requesting number of participating learners.")
-            response = self._stub.GetParticipatingLearners(
-                request_pb, timeout=_timeout)
-            MetisLogger.info("Received number of participating learners.")
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+    def check_health_status(
+        self,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
+    ) -> service_common_pb2.HealthStatusResponse:
+        """Checks the health status of the controller.
 
-    def get_runtime_metadata(self, num_backtracks, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            request_pb = controller_pb2.GetRuntimeMetadataLineageRequest(num_backtracks=num_backtracks)
-            MetisLogger.info("Requesting runtime metadata lineage.")
-            response = self._stub.GetRuntimeMetadataLineage(
-                request_pb, timeout=_timeout)
-            MetisLogger.info("Received runtime metadata lineage.")
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+        Parameters
+        ----------
+        request_retries : Optional[int], (default=1)
+            The number of retries, by default 1
+        request_timeout : Optional[int], (default=None)
+            The timeout in seconds, by default None
+        block : Optional[bool], (default=True)
+            Whether to block until the request is completed, by default True
 
-    def replace_community_model(self, num_contributors, model_pb, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            federated_model_pb = ModelProtoMessages.construct_federated_model_pb(
-                num_contributors, model_pb)
-            request_pb = controller_pb2.ReplaceCommunityModelRequest(model=federated_model_pb)
-            MetisLogger.info("Replacing controller's community model.")
-            response = self._stub.ReplaceCommunityModel(
-                request_pb, timeout=_timeout)
-            MetisLogger.info("Replaced controller's community model.")
-            return response.ack.status
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+        Returns
+        -------
+        service_common_pb2.HealthStatusResponse
+            The response Proto object with the health status from the controller.
+        """
 
-    def shutdown_controller(self, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            request_pb = service_common_pb2.ShutDownRequest()
-            MetisLogger.info("Sending shutdown request to controller {}.".format(
-                self.grpc_endpoint.listening_endpoint))
-            response = self._stub.ShutDown(request_pb, timeout=_timeout)
-            MetisLogger.info("Sent shutdown request to controller {}.".format(
-                self.grpc_endpoint.listening_endpoint))
-            return response.ack.status
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+        with self._get_client() as client:
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
+
+            return schedule(stub.GetHealthStatus,
+                            request_retries, request_timeout, block)
+
+    def set_initial_model(
+        self,
+        model: model_pb2.Model,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
+    ) -> service_common_pb2.Ack:
+        """Sends an initial model to the Controller.
+
+        Parameters
+        ----------
+        model : model_pb2.Model
+            The initial model.
+        request_retries : Optional[int], (default=1)
+            The number of retries, by default 1
+        request_timeout : Optional[int], (default=None)
+            The timeout in seconds, by default None
+        block : Optional[bool], (default=True)
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            The response Proto object with the ack from the controller.
+        """
+        with self._get_client() as client:
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
+
+            def _request(_timeout=None):
+                return stub.SetInitialModel(model, timeout=_timeout)
+
+            return schedule(_request, request_retries, request_timeout, block)
+
+    def start_training(
+        self,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
+    ) -> service_common_pb2.Ack:
+        """Starts the federated training.
+
+        Parameters
+        ----------
+        request_retries : Optional[int], optional
+            The number of retries, by default 1
+        request_timeout : Optional[int], optional
+            The timeout in seconds, by default None
+        block : Optional[bool], optional
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            The response Proto object with the ack from the controller.
+        """
+
+        with self._get_client() as client:
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
+
+            def _request(_timeout=None):
+                return stub.StartTraining(service_common_pb2.Empty(), timeout=_timeout)
+
+            return schedule(_request, request_retries, request_timeout, block)
+
+    def get_logs(
+        self,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
+    ) -> controller_pb2.Logs:
+        """Gets logs from the controller.
+
+        Parameters
+        ----------
+        request_retries : Optional[int], (default=1)
+            The number of retries, by default 1
+        request_timeout : Optional[int], (default=None)
+            The timeout in seconds, by default None
+        block : Optional[bool], (default=True)
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        controller_pb2.GetStatisticsResponse
+            The response Proto object with the statistics from the controller.
+        """
+        with self._get_client() as client:
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
+
+            # FIXME: convert to getLogs
+            def _request(_timeout=None):
+                request = service_common_pb2.Empty()
+                return stub.GetLogs(request, timeout=_timeout)
+
+            return schedule(_request, request_retries, request_timeout, block)
+
+    def shutdown_server(
+        self,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
+    ) -> service_common_pb2.Ack:
+        """Sends a shutdown request to the controller.
+
+        Parameters
+        ----------
+        request_retries : Optional[int], (default=1)
+            The number of retries, by default 1
+        request_timeout : Optional[int], (default=None)
+            The timeout in seconds, by default None
+        block : Optional[bool], (default=True)
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            The response Proto object with the ack from the controller.
+
+        """
+        with self._get_client() as client:
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule: Callable = client[1]
+
+            def _request(_timeout=None):
+                return stub.ShutDown(service_common_pb2.ShutDownRequest(), timeout=_timeout)
+
+            return schedule(_request, request_retries, request_timeout, block)
+
+    def shutdown_client(self):
+        """Shuts down the client."""
+
+        with self._get_client() as client:
+            shutdown: Callable = client[2]
+            shutdown()

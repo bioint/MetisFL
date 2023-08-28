@@ -1,147 +1,239 @@
+
+
 import threading
+from typing import Any, Dict
 
 import grpc
+from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from metisfl import config
-from metisfl.grpc.grpc_services import GRPCServerMaxMsgLength
-from metisfl.proto import learner_pb2, learner_pb2_grpc, service_common_pb2
-from metisfl.proto.metis_pb2 import ServerEntity
-from metisfl.utils.logger import MetisLogger
-
-from .controller_client import GRPCControllerClient
-from .learner_executor import LearnerExecutor
+from ..common.logger import MetisLogger
+from ..common.server import get_server
+from ..common.types import ServerParams
+from ..proto import (learner_pb2, learner_pb2_grpc, model_pb2,
+                     service_common_pb2)
+from .controller_client import GRPCClient
+from .learner import (Learner, try_call_evaluate, try_call_get_weights,
+                      try_call_set_weights, try_call_train)
+from .task_manager import TaskManager
 
 
 class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
-    def __init__(self,
-                 learner_executor: LearnerExecutor,
-                 controller_server_entity_pb: ServerEntity,
-                 learner_server_entity_pb: ServerEntity,
-                 dataset_metadata: dict,
-                 server_workers=10):
-        self._learner_executor = learner_executor
-        self.__server_workers = server_workers
-        self.__community_models_received = 0
-        self.__model_evaluation_requests = 0
-        # event to stop serving inbound requests
-        self.__not_serving_event = threading.Event()
-        # event to stop all grpc related tasks
-        self.__shutdown_event = threading.Event()
+    def __init__(
+        self,
+        learner: Learner,
+        client: GRPCClient,
+        task_manager: TaskManager,
+        server_params: ServerParams,
+    ):
+        """The Learner server. Impliments the LearnerServiceServicer endponits.
 
-        # Here, we just define the grpc server specifications.
-        # The initialization of the server takes place once 
-        # after the init_server() procedure is called.
-        self.__grpc_server = GRPCServerMaxMsgLength(
-            max_workers=self.__server_workers,
-            server_entity_pb=learner_server_entity_pb)
+        Parameters
+        ----------
+        learner : Learner
+            The Learner object. Must impliment the Learner interface.
+        server_params : ServerParams
+            The server parameters of the Learner server.
+        task_manager : TaskManager
+            The task manager object. Udse to run tasks in a pool of workers.
+        client : GRPCControllerClient
+            The client object. Used to communicate with the controller.
 
-        # Similarly, here, we only define the client specifications
-        # to connect to the controller server. The client invokes 
-        # the controller in subsequent calls, e.g., join_federation().
-        self._learner_controller_client = GRPCControllerClient(
-            controller_server_entity_pb=controller_server_entity_pb,
-            learner_server_entity_pb=learner_server_entity_pb,
-            dataset_metadata=dataset_metadata)
+        """
+        self._learner = learner
+        self._client = client
+        self._task_manager = task_manager
 
-    def init_server(self):
-        learner_pb2_grpc.add_LearnerServiceServicer_to_server(
-            self, self.__grpc_server.server)
-        self.__grpc_server.server.start()
-        self._learner_controller_client.join_federation()
-        self._log_init_learner()
-        self.__shutdown_event.wait()
-        self.__grpc_server.server.stop(None)
+        self._status = service_common_pb2.ServingStatus.UNKNOWN
+        self._shutdown_event = threading.Event()
+        self._server_params = server_params
 
-    def EvaluateModel(self, request, context):
+        self._server = get_server(
+            server_params=server_params,
+            servicer=self,
+            add_servicer_to_server_fn=learner_pb2_grpc.add_LearnerServiceServicer_to_server,
+        )
+
+    def start(self):
+        """Starts the server. This is a blocking call and will block until the server is shutdown."""
+
+        self._server.start()
+
+        if self._server:
+            self._status = service_common_pb2.ServingStatus.SERVING
+            MetisLogger.info("Learner server started. Listening on: {}:{}".format(
+                self._server_params.hostname,
+                self._server_params.port,
+            ))
+            self._shutdown_event.wait()
+        else:
+            # TODO: Should we raise an exception here?
+            MetisLogger.error("Learner server failed to start.")
+
+    def GetHealthStatus(self) -> service_common_pb2.HealthStatusResponse:
+        """Returns the health status of the server."""
+
+        return service_common_pb2.HealthStatusResponse(
+            status=self._status,
+        )
+
+    def GetModel(
+        self,
+        _: service_common_pb2.Empty,
+        context: Any
+    ) -> model_pb2.Model:
+        """Initializes the weights of the model.
+
+        Parameters
+        ----------
+        _ : service_common_pb2.Empty
+            An empty request. No parameters are needed.
+        context : Any
+            The gRPC context of the request.
+
+        Returns
+        -------
+        model_pb2.Model
+            The ProtoBuf object containing the model.
+
+        """
         if not self._is_serving(context):
-            return learner_pb2.EvaluateModelResponse(evaluations=None)
+            return None
 
-        self._log_evaluation_task_receive()
-        self.__model_evaluation_requests += 1  # @stripeli where is this used?
+        model = try_call_get_weights(
+            learner=self._learner,
+        )
 
-        # Unpack these from the request as they are repeated proto fields
-        # and can't be pickled
-        evaluation_dataset_pb = [d for d in request.evaluation_dataset]
-        # metric_pb = [m for m in request.metrics.metric]
+        return model
 
-        model_evaluations_pb = self._learner_executor.run_evaluation_task(
-            model_pb=request.model,
-            batch_size=request.batch_size,
-            evaluation_dataset_pb=evaluation_dataset_pb,
-            # metrics_pb=metric_pb,
-            cancel_running_tasks=False,
-            block=True,
-            verbose=True)
-        return learner_pb2.EvaluateModelResponse(evaluations=model_evaluations_pb)
+    def SetInitialWeights(
+        self,
+        model: model_pb2.Model,
+        context: Any
+    ) -> service_common_pb2.Ack:
+        """Sets the initial weights of the model.
 
-    def GetServicesHealthStatus(self, request, context):
+        Parameters
+        ----------
+        request : model_pb2.Model
+            The ProtoBuf object containing the model.
+        context : Any
+            The gRPC context of the request.
+
+        Returns
+        -------
+        learner_pb2.SetInitialWeightsResponse
+            The response containing the acknoledgement. The acknoledgement contains the status, i.e. True if the weights were set, False otherwise.
+        """
+
         if not self._is_serving(context):
-            return service_common_pb2.GetServicesHealthStatusRequest()
-        self._log_health_check_receive()
-        services_status = {"server": self.__grpc_server.server is not None}
-        return service_common_pb2.GetServicesHealthStatusResponse(services_status=services_status)
+            return service_common_pb2.Ack(status=False)
 
-    def RunTask(self, request, context):
-        if self._is_serving(context) is False:
-            return learner_pb2.RunTaskResponse(ack=None)
+        status = try_call_set_weights(
+            learner=self._learner,
+            model=model,
+        )
 
-        self._log_training_task_receive()
-        self.__community_models_received += 1
-        is_task_submitted = self._learner_executor.run_learning_task(
-            callback=self._learner_controller_client.mark_task_completed,
-            learning_task_pb=request.task,
-            model_pb=request.federated_model.model,
-            hyperparameters_pb=request.hyperparameters,
-            cancel_running_tasks=True,
-            block=False,
-            verbose=True)
-        return self._get_task_response_pb(is_task_submitted)
+        return service_common_pb2.Ack(
+            status=status,
+            timestamp=Timestamp().GetCurrentTime()
+        )
 
-    def ShutDown(self, request, context):
-        self._log_shutdown()
-        self.__not_serving_event.set()
-        self._learner_executor.shutdown(
-            CANCEL_RUNNING=config.CANCEL_RUNNING_ON_SHUTDOWN)
-        self._learner_controller_client.leave_federation()
-        self.__shutdown_event.set()
-        return self._get_shutdown_response_pb()
+    def Evaluate(
+        self,
+        request: learner_pb2.EvaluateRequest,
+        context: Any
+    ) -> learner_pb2.EvaluateResponse:
+        """Evaluation endpoint. Evaluates the given model.
 
-    def _get_task_response_pb(self, is_task_submitted):
-        ack_pb = service_common_pb2.Ack(
-            status=is_task_submitted, timestamp=Timestamp().GetCurrentTime(), message=None)
-        return learner_pb2.RunTaskResponse(ack=ack_pb)
+        Parameters
+        ----------
+        request : learner_pb2.EvaluateRequest
+            The request containing the model and evaluation parameters.
+        context : Any
+            The gRPC context of the request.
 
-    def _get_shutdown_response_pb(self):
-        ack_pb = service_common_pb2.Ack(
+        Returns
+        -------
+        learner_pb2.EvaluateResponse
+            The response containing the evaluation metrics.
+        """
+        if not self._is_serving(context):
+            return learner_pb2.EvaluateResponse(ack=None)
+
+        metrics = try_call_evaluate(
+            learner=self._learner,
+            model=request.model,
+            params=request.params,
+        )
+
+        # TODO: need to ensure that metrics is a dict containing the metrics in request.params.
+
+        return learner_pb2.EvaluateResponse(
+            metrics=metrics
+        )
+
+    def Train(
+        self,
+        request: learner_pb2.TrainRequest,
+        context: Any
+    ) -> service_common_pb2.Ack:
+        """Training endpoint. Training happens asynchronously in a seperate process. 
+            The Learner server responds with an acknoledgement after receiving the request.
+            When training is done, the client calls the TrainDone Controller endpoint.
+
+        Parameters
+        ----------
+        request : learner_pb2.TrainRequest
+            The request containing the model and training parameters.
+        context : Any
+            The gRPC context of the request.
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            The response containing the acknoledgement. 
+            The acknoledgement contains the status, i.e. True if the training was started, False otherwise.
+
+        """
+        if not self._is_serving(context):
+            return service_common_pb2.Ack(status=False)
+
+        task_id: str = request.task_id
+        model_dict: Dict = MessageToDict(request.model)
+        params_dict: Dict = MessageToDict(request.params)
+
+        self._task_manager.run_task(
+            task_fn=try_call_train,
+            task_kwargs={
+                'learner': self._learner,
+                'model': model_dict,
+                'params': params_dict,
+            },
+            callback=self._client.train_done,
+        )
+
+        return service_common_pb2.Ack(
             status=True,
             timestamp=Timestamp().GetCurrentTime(),
-            message=None)
-        return service_common_pb2.ShutDownResponse(ack=ack_pb)
+        )
 
-    def _is_serving(self, context):
-        if self.__not_serving_event.is_set():
+    def ShutDown(self) -> service_common_pb2.Ack:
+        """Shuts down the server."""
+
+        self._status = service_common_pb2.ServingStatus.NOT_SERVING
+        self._shutdown_event.set()
+
+        return service_common_pb2.Ack(
+            status=True,
+            timestamp=Timestamp().GetCurrentTime(),
+        )
+
+    def _is_serving(self, context) -> bool:
+        """Returns True if the server is serving, False otherwise."""
+
+        if self._status != service_common_pb2.ServingStatus.SERVING:
             context.set_code(grpc.StatusCode.UNAVAILABLE)
             return False
         return True
-
-    def _log_init_learner(self):
-        MetisLogger.info("Initialized Learner GRPC Server {}".format(
-            self.__grpc_server.grpc_endpoint.listening_endpoint))
-
-    def _log_evaluation_task_receive(self):
-        MetisLogger.info("Learner Server {} received model evaluation task.".format(
-            self.__grpc_server.grpc_endpoint.listening_endpoint))
-
-    def _log_health_check_receive(self):
-        MetisLogger.info("Learner Server {} received a health status request.".format(
-            self.__grpc_server.grpc_endpoint.listening_endpoint))
-
-    def _log_training_task_receive(self):
-        MetisLogger.info("Learner Server {} received local training task.".format(
-            self.__grpc_server.grpc_endpoint.listening_endpoint))
-
-    def _log_shutdown(self):
-        MetisLogger.info("Learner Server {} received shutdown request.".format(
-            self.__grpc_server.grpc_endpoint.listening_endpoint))

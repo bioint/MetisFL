@@ -2,143 +2,27 @@ package(default_visibility = ["//metisfl/controller:__subpackages__"])
 
 cc_library(
     name = "aggregation",
-    srcs = [],
-    hdrs = [
-        "aggregation.h",
-    ],
-    deps = [
-        ":federated_average",
-        ":federated_recency",
-        ":federated_stride",
-        ":secure_aggregation",
-        "//metisfl/controller/common:proto_tensor_serde",
-        "//metisfl/proto:cc_grpc_lib",
-    ]
-)
-
-cc_library(
-    name = "federated_average",
     srcs = [
         "federated_average.cc",
-    ],
-    hdrs = [
-        "aggregation_function.h",
-        "federated_average.h",
-    ],
-    deps = [
-        "//metisfl/proto:cc_grpc_lib",
-        "//metisfl/controller/common:proto_tensor_serde",
-        "@com_github_google_glog//:glog",
-    ],
-    linkopts = select({
-      "//:linux_x86_64": ["-lgomp"],
-      "//conditions:default": [],
-    }),
-    copts = [
-        "-O3",
-        "-fopenmp",
-    ]
-)
-
-cc_test(
-    name = "federated_average_test",
-    srcs = [
-        "federated_average_test.cc",
-    ],
-    deps = [
-        ":federated_average",
-        "//metisfl/controller/common:macros",
-        "//metisfl/controller/common:proto_matchers",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "federated_rolling_average_base",
-    srcs = [
-        "federated_rolling_average_base.cc",
-    ],
-    hdrs = [
-        "federated_rolling_average_base.h",
-    ],
-    deps = [
-         "//metisfl/proto:cc_grpc_lib",
-         "//metisfl/controller/common:proto_tensor_serde",
-    ],
-)
-
-cc_library(
-    name = "federated_recency",
-    srcs = [
         "federated_recency.cc",
-    ],
-    hdrs = [
-        "aggregation_function.h",
-        "federated_recency.h",
-    ],
-    deps = [
-        ":federated_rolling_average_base",
-        "//metisfl/proto:cc_grpc_lib",
-        "@com_github_google_glog//:glog",
-    ],
-)
-
-cc_test(
-    name = "federated_recency_test",
-    srcs = [
-        "federated_recency_test.cc",
-    ],
-    deps = [
-        ":federated_recency",
-        "//metisfl/controller/common:macros",
-        "//metisfl/controller/common:proto_matchers",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "federated_stride",
-    srcs = [
+        "federated_rolling_average_base.cc",
         "federated_stride.cc",
-    ],
-    hdrs = [
-        "aggregation_function.h",
-        "federated_stride.h",
-    ],
-    deps = [
-        ":federated_rolling_average_base",
-         "//metisfl/proto:cc_grpc_lib",
-    ],
-)
-
-cc_test(
-    name = "federated_stride_test",
-    srcs = [
-        "federated_stride_test.cc",
-    ],
-    deps = [
-        ":federated_stride",
-        "//metisfl/controller/common:macros",
-        "//metisfl/controller/common:proto_matchers",
-        "@gtest//:gtest",
-        "@gtest//:gtest_main",
-    ],
-)
-
-cc_library(
-    name = "secure_aggregation",
-    srcs = [
         "secure_aggregation.cc",
     ],
     hdrs = [
+        "aggregation.h",
         "aggregation_function.h",
+        "federated_average.h",
+        "federated_recency.h",
+        "federated_rolling_average_base.h",
+        "federated_stride.h",
         "secure_aggregation.h",
     ],
     deps = [
-        "//metisfl/proto:cc_grpc_lib",
+        "//metisfl/controller/common:common",
         "//metisfl/encryption/palisade:palisade_wrapper",
+        "//metisfl/proto:cc_grpc_lib",
+        "@com_github_google_glog//:glog",
     ],
     linkopts = select({
       "//:linux_x86_64": ["-lgomp"],
@@ -151,16 +35,14 @@ cc_library(
 )
 
 cc_test(
-    name = "secure_aggregation_test",
-    srcs = [
-        "secure_aggregation_test.cc",
-    ],
-    deps = [
-        ":secure_aggregation",
-        "//metisfl/controller/common:macros",
-        "//metisfl/controller/common:proto_matchers",
+    name="aggregation_test",
+    srcs=["federated_average_test.cc", "federated_average.cc"],
+    deps=[
+        ":aggregation",
+        "//metisfl/controller/common:common",
         "//metisfl/encryption/palisade:palisade_wrapper",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
     ],
 )
+

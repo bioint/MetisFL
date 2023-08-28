@@ -3,29 +3,29 @@ package metisfl;
 
 import "google/protobuf/timestamp.proto";
 
-// Acknowledgment message.
 message Ack {
-  // Set to true if this acknowledges the successful
-  // completion of a request, or false otherwise.
   bool status = 1;
-
-  // Timestamp of the acknowledgement.
   google.protobuf.Timestamp timestamp = 2;
-
-  // An optional message.
   string message = 3;
 }
 
-message GetServicesHealthStatusRequest {}
-
-message GetServicesHealthStatusResponse {
-  // A Key-Value services status reply.
-  map<string, bool> services_status = 1;
+enum ServingStatus {
+  UNKNOWN = 0;
+  SERVING = 1;
+  NOT_SERVING = 2;
 }
 
-message ShutDownRequest {
-  //TODO(stripeli): require some sort of auth key here?
+message HealthStatusResponse {
+ ServingStatus status = 1;
 }
+
+message GetHealthStatusRequest {}
+
+message GetHealthStatusResponse {
+  Ack ack = 1;
+}
+
+message Empty {}
 
 message ShutDownResponse {
   Ack ack = 1;

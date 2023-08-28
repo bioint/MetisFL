@@ -2,91 +2,70 @@
 #ifndef METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_H_
 #define METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_H_
 
+#include <glog/logging.h>
+
+#include <mutex>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
-#include <glog/logging.h>
-
 #include "absl/container/flat_hash_map.h"
+#include "absl/memory/memory.h"
 #include "absl/status/statusor.h"
-#include "metisfl/proto/controller.grpc.pb.h"
+#include "metisfl/controller/common/proto_tensor_serde.h"
+#include "metisfl/controller/core/controller_utils.h"
+#include "metisfl/controller/core/learner_manager.h"
+#include "metisfl/controller/core/model_manager.h"
+#include "metisfl/controller/core/types.h"
+#include "metisfl/controller/scaling/scaling.h"
+
+using google::protobuf::util::TimeUtil;
 
 namespace metisfl::controller {
-
-/**
-* The controller orchestrates the execution of the entire federated
-* learning environment. It comprises of the following core procedures
-* (with order of execution during federated traininig):
-* - Training Task Scheduling: select the learners that will participate
-*       in the training of the federated model, specify synchronization
-*        points, dispatch the model training task to the selected learners,
-*        and receive local models.
-* - Model Storing: save the local models and the contribution value of
-*        each learner to improve model aggregation efficiency in the
-*        presence of many learners and/or large models.
-* - Model Aggregation: mix/merge the local models of the earners and compute
-*        a new global model. The aggregation can also take place in an
-*        encrypted space (e.g. using homomorphic encryption).
-* - Evaluation Task Scheduling: dispatch the global model evaluation task
-*        to the learners and await to collect the respective metrics.
-*/
-
 class Controller {
+  GlobalTrainParams global_train_params_;
+
+  std::unique_ptr<ModelManager> model_manager_;
+  std::unique_ptr<LearnerManager> learner_manager_;
+  std::unique_ptr<Scheduler> scheduler_;
+  std::unique_ptr<Selector> selector_;
+
  public:
-  virtual ~Controller() = default;
+  Controller(const GlobalTrainParams &global_train_params,
+             const ModelStoreParams &model_store_params);
 
-  // Returns the parameters with which the controller was initialized.
-  ABSL_MUST_USE_RESULT
-  virtual const ControllerParams &GetParams() const = 0;
+  ~Controller() = default;
 
-  // Returns the list of all the active learners.
-  ABSL_MUST_USE_RESULT
-  virtual std::vector<LearnerDescriptor> GetLearners() const = 0;
+  TrainingMetadataMap GetTrainingMetadata() {
+    return learner_manager_->GetTrainingMetadata();
+  }
 
-  // Returns the number of active learners.
-  ABSL_MUST_USE_RESULT
-  virtual uint32_t GetNumLearners() const = 0;
+  EvaluationMetadataMap GetEvaluationMetadata() {
+    return learner_manager_->GetEvaluationMetadata();
+  }
 
-  // Returns the current community model;
-  ABSL_MUST_USE_RESULT
-  virtual const FederatedModel& CommunityModel() const = 0;
+  ModelMetadataMap GetModelMetadata() {
+    return model_manager_->GetModelMetadata();
+  }
 
-  // Overwrites/replaces the community model with the provided.
-  virtual absl::Status ReplaceCommunityModel(const FederatedModel& model) = 0;
+  absl::StatusOr<std::string> AddLearner(const Learner &learner);
 
-  // Attempts to add a new learner to the federation. If successful, a
-  // LearnerState instance is returned. Otherwise, it returns null.
-  virtual absl::StatusOr<LearnerDescriptor>
-  AddLearner(const ServerEntity &server_entity,
-             const DatasetSpec &dataset_spec) = 0;
+  absl::Status SetInitialModel(const Model &model);
 
-  // Removes a learner from the federation. If successful it returns OK.
-  // Otherwise, it returns an error.
-  virtual absl::Status
-  RemoveLearner(const std::string &learner_id, const std::string &token) = 0;
+  absl::Status RemoveLearner(std::string learner_id);
 
-  virtual absl::Status
-  LearnerCompletedTask(const std::string &learner_id,
-                       const std::string &token,
-                       const CompletedLearningTask &task) = 0;
+  absl::Status StartTraining();
 
-  virtual std::vector<FederatedTaskRuntimeMetadata>
-  GetRuntimeMetadataLineage(uint32_t num_steps) = 0;
+  absl::Status TrainDone(const TrainDoneRequest &task);
 
-  virtual std::vector<CommunityModelEvaluation>
-  GetEvaluationLineage(uint32_t num_steps) = 0;
+  void Shutdown();
 
-  virtual std::vector<TaskExecutionMetadata>
-  GetLocalTaskLineage(const std::string &learner_id, uint32_t num_steps) = 0;
-
-  virtual void Shutdown() = 0;
-
-public:
-  // Creates a new controller using the default implementation, i.e., in-memory.
-  static std::unique_ptr<Controller> New(const ControllerParams &params);
+ private:
+  absl::flat_hash_map<std::string, double> ComputeScalingFactors(
+      const std::vector<std::string> &selected_learners);
 };
 
-} // namespace metisfl::controller
+}  // namespace metisfl::controller
 
-#endif //METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_H_
+#endif  // METISFL_METISFL_CONTROLLER_CORE_CONTROLLER_H_

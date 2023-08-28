@@ -1,148 +1,270 @@
+from typing import Any, Dict, List, Optional
+
 import grpc
+import numpy as np
 
-from typing import Dict, Any
-
-from metisfl import config
-from metisfl.grpc.grpc_services import GRPCClient, SSLProtoHelper
-from metisfl.proto import controller_pb2, controller_pb2_grpc
-from metisfl.proto.metis_pb2 import ServerEntity
-from metisfl.utils.logger import MetisLogger
-from metisfl.proto.proto_messages_factory import MetisProtoMessages
+from ..common.client import get_client
+from ..common.logger import MetisLogger
+from ..common.types import ClientParams, ServerParams
+from ..proto import (controller_pb2, controller_pb2_grpc, model_pb2,
+                     service_common_pb2)
 
 
-class GRPCControllerClient(GRPCClient):
-    """
-    When issuing the join federation request, the learner/client needs also to  share
-    the public certificate of its servicer with the controller, in order  to receive
-    new incoming requests. The certificate needs to be in bytes (stream) format.
-    
-    Most importantly, the learner/client must not share  its private key with the
-    controller. Therefore, we need to clear the private key to make sure it is not
-    released to the controller. To achieve this, we generate a new ssl configuration
-    only with the value of the public certificate.
-    
-    If it is the first time that the learner joins the federation, then both
-    learner id and authentication token are saved on disk to appropriate files.
-    
-    If the learner has previously joined the federation, then an error
-    grpc.StatusCode.ALREADY_EXISTS is raised and the existing/already saved
-    learner id and authentication token are read/loaded from the disk.
-    """
+def read_certificate(fp: str) -> bytes:
+    if fp is None:
+        return None
+    with open(fp, "rb") as f:
+        return f.read()
 
-    def __init__(self,
-                 controller_server_entity_pb: ServerEntity,
-                 learner_server_entity_pb: ServerEntity,
-                 dataset_metadata: Dict[str, Any],
-                 max_workers=1):
-        super(GRPCControllerClient, self).__init__(
-            controller_server_entity_pb, max_workers)
-        self._learner_id_fp = config.get_learner_id_fp(
-            learner_server_entity_pb.port)
-        self._auth_token_fp = config.get_auth_token_fp(
-            learner_server_entity_pb.port)
-        self._learner_server_entity_pb = learner_server_entity_pb
-        self._dataset_metadata = dataset_metadata
-        self._stub = controller_pb2_grpc.ControllerServiceStub(self._channel)
 
-        # These must be set after joining the federation, provided by the controller
+class GRPCClient(object):
+
+    def __init__(
+        self,
+        client_params: ClientParams,
+        learner_id_fp: str,
+        max_workers: Optional[int] = 1
+    ):
+        """A gRPC client used from the Learner to communicate with the Controller.
+
+        Parameters
+        ----------
+        client_params : ClientParams
+            The client parameters. Used by the learner to connect to the Controller.
+        learner_id_fp : str
+            The file where the learner id is stored. 
+        auth_token_fp : str
+            The file where the auth token is stored.
+        max_workers : Optional[int], (default: 1)
+            The maximum number of workers for the client ThreadPool, by default 1
+        """
+        self._client_params = client_params
+        self._learner_id_fp = learner_id_fp
+        self._max_workers = max_workers
+
+        # Must be initialized after joining the federation
         self._learner_id = None
         self._auth_token = None
 
-    def join_federation(self, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            join_federation_request_pb = self._get_join_request_pb()
-            self._join_federation(join_federation_request_pb, timeout=_timeout)
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+    def _get_client(self):
+        return get_client(
+            stub_class=controller_pb2_grpc.ControllerServiceStub,
+            client_params=self._client_params,
+            max_workers=self._max_workers
+        )
 
-    def leave_federation(self, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            leave_federation_request_pb = \
-                    controller_pb2.LeaveFederationRequest(
-                        learner_id=self._learner_id,
-                        auth_token=self._auth_token)
-            MetisLogger.info(
-                "Leaving federation, learner {}.".format(self._learner_id))
-            response = self._stub.LeaveFederation(
-                leave_federation_request_pb, timeout=_timeout)
-            MetisLogger.info(
-                "Left federation, learner {}.".format(self._learner_id))
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+    def join_federation(
+        self,
+        num_training_examples: int,
+        server_params: ServerParams,
+        request_retries: Optional[int] = 1,
+        request_timeout: Optional[int] = None,
+        block: Optional[bool] = True
+    ) -> service_common_pb2.Ack:
+        """Sends a request to the controller to join the federation.
 
-    def mark_task_completed(self, completed_task_pb, request_retries=1, request_timeout=None, block=True):
-        def _request(_timeout=None):
-            mark_task_completed_request_pb = \
-                controller_pb2.MarkTaskCompletedRequest(
+        Parameters
+        ----------
+        num_training_examples : int
+            The number of training examples of the local dataset.
+        server_params : ServerParams
+            The server parameters of the Learner server. They are sent to the Controller 
+            when joining the federation so that the Controller can connect to the Learner Server.
+        request_retries : int, optional
+            The number of retries, by default 1
+        request_timeout : int, optional
+            The timeout in seconds, by default None
+        block : bool, optional
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack  
+            The response Proto object with the Ack.
+        """
+        with self._get_client() as client:
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule = client[1]
+
+            def _request(_timeout=None):
+
+                request = controller_pb2.Learner(
+                    hostname=server_params.hostname,
+                    port=server_params.port,
+                    root_certificate_bytes=read_certificate(
+                        server_params.root_certificate),
+                    public_certificate_bytes=read_certificate(
+                        server_params.server_certificate),
+                    num_training_examples=num_training_examples
+                )
+
+                return self._join_federation(stub, request, timeout=_timeout)
+
+            return schedule(_request, request_retries, request_timeout, block)
+
+    def leave_federation(
+        self,
+        request_retries=1,
+        request_timeout=None,
+        block=True
+    ) -> service_common_pb2.Ack:
+        """Sends a request to the Controller to leave the federation.
+
+        Parameters
+        ----------
+        request_retries : int, optional
+            The number of retries, by default 1
+        request_timeout : _type_, optional
+            The timeout in seconds, by default None
+        block : bool, optional
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            The response Proto object with the Ack.
+
+        Raises
+        ------
+        RuntimeError
+            If the learner id does not exist, 
+            which means that the Learner has not joined the federation.
+        """
+
+        if not self._has_learner_id():
+            raise RuntimeError(
+                "Cannot leave federation before joining it.")
+
+        with self._get_client() as client:
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule = client[1]
+
+            def _request(_timeout=None):
+                request = controller_pb2.LearnerId(
+                    id=self._learner_id,
+                )
+                return stub.LeaveFederation(
+                    request=request,
+                    timeout=_timeout
+                )
+
+            return schedule(_request, request_retries, request_timeout, block)
+
+    def train_done(
+        self,
+        task_id: str,
+        weights: List[np.ndarray],
+        metrics: Dict[str, Any],
+        metadata: Dict[str, str],
+        request_retries=1,
+        request_timeout=None,
+        block=True
+    ) -> service_common_pb2.Ack:
+        """Sends the completed task to the Controller.
+
+        Parameters
+        ----------
+        task_id : str
+            The task id.
+        weights : List[np.ndarray]
+            The weights of the model.
+        metrics : Dict[str, Any]
+            The metrics produced during training.
+        metadata : Dict[str, str]
+            The metadata to be sent.
+        request_retries : int, optional
+            The number of retries, by default 1
+        request_timeout : int, optional
+            The timeout in seconds, by default None
+        block : bool, optional
+            Whether to block until the request is completed, by default True
+
+        Returns
+        -------
+        service_common_pb2.Ack
+            The response Proto object with the Ack.
+
+        Raises
+        ------
+        RuntimeError
+            If the learner id does not exist,
+            which means that the Learner has not joined the federation.
+        """
+
+        if not self._has_learner_id():
+            raise RuntimeError(
+                "Cannot send train done before joining the federation.")
+
+        with self._get_client() as client:
+
+            stub: controller_pb2_grpc.ControllerServiceStub = client[0]
+            schedule = client[1]
+
+            def _request(_timeout=None):
+
+                request = controller_pb2.TrainDoneRequest(
                     learner_id=self._learner_id,
-                    auth_token=self._auth_token,
-                    task=completed_task_pb)
-            MetisLogger.info(
-                "Sending local completed task, learner {}.".format(self._learner_id))
-            response = self._stub.MarkTaskCompleted(
-                mark_task_completed_request_pb, timeout=_timeout)
-            MetisLogger.info(
-                "Sent local completed task, learner {}.".format(self._learner_id))
-            return response
-        return self.schedule_request(_request, request_retries, request_timeout, block)
+                    task_id=task_id,
+                    model=weights_to_model_proto(weights),
+                    metrics=metrics,
+                    metadata=metadata
+                )
 
-    def _join_federation(self, join_federation_request_pb, timeout=None):
+                return stub.TrainDone(
+                    request=request,
+                    timeout=_timeout
+                )
+
+            return schedule(_request, request_retries, request_timeout, block)
+
+    def _join_federation(
+        self,
+        stub: controller_pb2_grpc.ControllerServiceStub,
+        request: controller_pb2.Learner,
+        timeout: Optional[int] = None
+    ) -> None:
+        """Sends a request to the Controller to join the federation and stores the assigned learner id.
+
+        Parameters
+        ----------
+        stub : controller_pb2_grpc.ControllerServiceStub
+            The gRPC stub.
+        request : controller_pb2.Learner
+            The request Proto object with the Learner.
+        timeout : Optional[int], optional
+            The timeout in seconds, by default None
+
+        """
         try:
-            MetisLogger.info("Joining federation, learner {}.".format(
-                self.grpc_endpoint.listening_endpoint))
-            response = self._stub.JoinFederation(
-                join_federation_request_pb, timeout=timeout)
-            learner_id, auth_token, status = \
-                response.learner_id, response.auth_token, response.ack.status
-            # override file contents or create file if not exists
-            # FIXME: need to handle file open/write exceptions
-            open(self._learner_id_fp, "w+").write(learner_id.strip())
-            open(self._auth_token_fp, "w+").write(auth_token.strip())
-            MetisLogger.info(
-                "Joined federation with assigned id: {}".format(learner_id))
-        except grpc.RpcError as rpc_error:
-            if rpc_error.code() == grpc.StatusCode.ALREADY_EXISTS:
-                learner_id = open(self._learner_id_fp, "r").read().strip()
-                auth_token = open(self._auth_token_fp, "r").read().strip()
-                status = True
-                MetisLogger.info(
-                    "Learner re-joined federation with assigned id: {}".format(learner_id))
-            else:
-                MetisLogger.fatal("Unhandled grpc error: {}".format(rpc_error))
-        self._learner_id = learner_id
-        self._auth_token = auth_token
-        return learner_id, auth_token, status
+            response = stub.JoinFederation(request, timeout=timeout)
+            learner_id = response.id
 
-    def _get_join_request_pb(self):
+            open(self._learner_id_fp, "w+").write(learner_id.strip())
+            self._learner_id = learner_id
+
+            MetisLogger.info(
+                "Joined federation with learner id: {}".format(learner_id))
+        except grpc.RpcError as rpc_error:
+
+            if rpc_error.code() == grpc.StatusCode.ALREADY_EXISTS:
+
+                learner_id = open(self._learner_id_fp, "r").read().strip()
+                self._learner_id = learner_id
+                MetisLogger.info(
+                    "Rejoined federation with learner id: {}".format(learner_id))
+
+            else:
+                # FIXME: figure out how to handle this error
+                MetisLogger.fatal("Unhandled grpc error: {}".format(rpc_error))
+
+    def _has_learner_id(self) -> bool:
+        """Checks if the learner id exists.
+
+        Returns
+        -------
+        bool
+            True if the learner id exists, False otherwise.
         """
-        Here, we rectreate the learner's server entity so that we can 
-        send the learner's public certificate (as a stream!) to the 
-        controller along with the join request. This is necessary for 
-        the controller to send requests to the learner in the case where 
-        the learner server receives only requests through SSL.
-        """
-        public_certificate_stream, _ = \
-            SSLProtoHelper.from_ssl_config_pb(
-                self._learner_server_entity_pb.ssl_config, 
-                as_stream=True)
-        ssl_config_pb = MetisProtoMessages.construct_ssl_config_pb(
-            ssl_enable=self._learner_server_entity_pb.ssl_config.enable,
-            config_pb=MetisProtoMessages\
-                .construct_ssl_config_stream_pb(public_certificate_stream))
-        learner_server_entity_public = ServerEntity(
-            hostname=self._learner_server_entity_pb.hostname,
-            port=self._learner_server_entity_pb.port,
-            ssl_config=ssl_config_pb)
-        dataset_spec_pb = MetisProtoMessages.construct_dataset_spec_pb(
-            num_training_examples=self._dataset_metadata["train_dataset_size"],
-            num_validation_examples=self._dataset_metadata["validation_dataset_size"],
-            num_test_examples=self._dataset_metadata["test_dataset_size"],
-            training_spec=self._dataset_metadata["train_dataset_specs"],
-            validation_spec=self._dataset_metadata["validation_dataset_specs"],
-            test_spec=self._dataset_metadata["test_dataset_specs"],
-            is_classification=self._dataset_metadata["is_classification"],
-            is_regression=self._dataset_metadata["is_regression"])
-        join_federation_request_pb = \
-            controller_pb2.JoinFederationRequest(
-                server_entity=learner_server_entity_public,
-                local_dataset_spec=dataset_spec_pb)
-        return join_federation_request_pb
+        return self._learner_id is not None

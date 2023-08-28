@@ -17,7 +17,7 @@ from brainage_cnns import BrainAge2DCNN, BrainAge3DCNN
 
 from metisfl.driver.driver_session import DriverSession
 from metisfl.models.model_dataset import ModelDatasetClassification, ModelDatasetRegression
-from metisfl.utils.fedenv_parser import FederationEnvironment
+from metisfl.common.fedenv_parser import FederationEnvironment
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -59,7 +59,8 @@ class TFDatasetUtils(object):
             feature = {}
             # Convert every attribute to tf compatible feature.
             for k_idx, k in enumerate(record_keys):
-                feature[k] = cls._bytes_feature(tf.compat.as_bytes(chunk[k_idx].flatten().tostring()))
+                feature[k] = cls._bytes_feature(
+                    tf.compat.as_bytes(chunk[k_idx].flatten().tostring()))
             yield feature
 
     @classmethod
@@ -82,13 +83,15 @@ class TFDatasetUtils(object):
 
         feature_description = dict()
         for attr in schema_attributes_positioned:
-            feature_description[attr] = tf.io.FixedLenFeature(shape=[], dtype=tf.string)
+            feature_description[attr] = tf.io.FixedLenFeature(
+                shape=[], dtype=tf.string)
 
         deserialized_example = tf.io.parse_single_example(
             serialized=example_proto, features=feature_description)
         record = []
         for attr in schema_attributes_positioned:
-            attr_restored = tf.io.decode_raw(deserialized_example[attr], example_schema[attr])
+            attr_restored = tf.io.decode_raw(
+                deserialized_example[attr], example_schema[attr])
             record.append(attr_restored)
 
         return record
@@ -118,7 +121,8 @@ class TFDatasetUtils(object):
         tf_record_writer = tf.io.TFRecordWriter(output_filename)
         # Iterate over dataset's features generator
         for feature in cls._generate_tffeature(dataset_records_mappings):
-            example = tf.train.Example(features=tf.train.Features(feature=feature))
+            example = tf.train.Example(
+                features=tf.train.Features(feature=feature))
             # Serialize the example to a string
             serialized = example.SerializeToString()
             # Write the serialized object to the file
@@ -163,7 +167,6 @@ class MRIScanGen(object):
         return subj_table
 
     def generate_tfrecord(self):
-
         """
         If tfrecord already exists, then just return the tfrecord, else parse
         the .csv file and generate a new tfrecord.
@@ -171,7 +174,8 @@ class MRIScanGen(object):
         """
         if os.path.exists(self.tfrecord_output) \
                 and os.path.exists(self.tfrecord_schema_output):
-            tfrecord_schema = cloudpickle.load(file=open(self.tfrecord_schema_output, "rb"))
+            tfrecord_schema = cloudpickle.load(
+                file=open(self.tfrecord_schema_output, "rb"))
         else:
             subj_table = pd.read_csv(self.filepath)
             subj_table = self.parse_csv_table(subj_table)
@@ -192,7 +196,8 @@ class MRIScanGen(object):
 
             tfrecord_schema = TFDatasetUtils.serialize_to_tfrecords(
                 final_mappings, self.tfrecord_output)
-            cloudpickle.dump(obj=tfrecord_schema, file=open(self.tfrecord_schema_output, "wb+"))
+            cloudpickle.dump(obj=tfrecord_schema, file=open(
+                self.tfrecord_schema_output, "wb+"))
 
         return tfrecord_schema
 
@@ -213,12 +218,14 @@ class MRIScanGen(object):
     def process_record(self, image, label):
         # The label is the assigned label to the MRI scan.
         # This could be the age of the scan (regression) or the AD value (classification/binary).
-        image = tf.reshape(image, [self.rows, self.cols, self.depth, self.channels])
+        image = tf.reshape(
+            image, [self.rows, self.cols, self.depth, self.channels])
         label = tf.squeeze(label)
         return image, label
 
     def load_dataset(self, tfrecord_schema):
-        dataset = tf.data.TFRecordDataset(self.tfrecord_output)  # automatically interleaves reads from multiple files
+        # automatically interleaves reads from multiple files
+        dataset = tf.data.TFRecordDataset(self.tfrecord_output)
         dataset = dataset.map(map_func=lambda x: TFDatasetUtils
                               .deserialize_single_tfrecord_example(example_proto=x, example_schema=tfrecord_schema),
                               num_parallel_calls=3)
@@ -304,9 +311,12 @@ if __name__ == "__main__":
         os.makedirs(metis_filepath_prefix)
 
     model_definition_dir = "{}/model_definition".format(metis_filepath_prefix)
-    train_dataset_recipe_fp_pkl = "{}/model_train_dataset_ops.pkl".format(metis_filepath_prefix)
-    validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(metis_filepath_prefix)
-    test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(metis_filepath_prefix)
+    train_dataset_recipe_fp_pkl = "{}/model_train_dataset_ops.pkl".format(
+        metis_filepath_prefix)
+    validation_dataset_recipe_fp_pkl = "{}/model_validation_dataset_ops.pkl".format(
+        metis_filepath_prefix)
+    test_dataset_recipe_fp_pkl = "{}/model_test_dataset_ops.pkl".format(
+        metis_filepath_prefix)
 
     batch_size = FederationEnvironment(
         args.federation_environment_config_fp).local_model_config.batch_size
@@ -344,9 +354,12 @@ if __name__ == "__main__":
     nn_model.evaluate(x=dummy_dataset.batch(1))
     nn_model.save(model_definition_dir)
 
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(train_dataset_recipe_fp_pkl, "wb+"))
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(test_dataset_recipe_fp_pkl, "wb+"))
-    cloudpickle.dump(obj=dataset_recipe_fn, file=open(validation_dataset_recipe_fp_pkl, "wb+"))
+    cloudpickle.dump(obj=dataset_recipe_fn, file=open(
+        train_dataset_recipe_fp_pkl, "wb+"))
+    cloudpickle.dump(obj=dataset_recipe_fn, file=open(
+        test_dataset_recipe_fp_pkl, "wb+"))
+    cloudpickle.dump(obj=dataset_recipe_fn, file=open(
+        validation_dataset_recipe_fp_pkl, "wb+"))
 
     driver_session = DriverSession(args.federation_environment_config_fp,
                                    model=nn_model,

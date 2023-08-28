@@ -28,6 +28,7 @@ cc_test(
     srcs = ["model_store_test.cc"],
     deps = [
         ":model_store",
+        ":storing",
         "@gtest//:gtest",
         "@gtest//:gtest_main",
         "//metisfl/proto:cc_grpc_lib",

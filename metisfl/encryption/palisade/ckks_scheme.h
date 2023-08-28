@@ -3,15 +3,16 @@
 #define METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H_
 
 #include <glog/logging.h>
-#include <omp.h>
 #include <math.h>
-#include <iostream>
+#include <omp.h>
+
 #include <fstream>
+#include <iostream>
 #include <sstream>
 
 #include "ciphertext-ser.h"
 #include "cryptocontext-ser.h"
-#include "metisfl/encryption/encryption_scheme.h"
+#include "metisfl/encryption/palisade/encryption_scheme.h"
 #include "palisade.h"
 #include "pubkeylp-ser.h"
 #include "scheme/ckks/ckks-ser.h"
@@ -20,16 +21,16 @@ using namespace lbcrypto;
 using namespace std::chrono;
 
 class CKKS : public EncryptionScheme {
-
  public:
   ~CKKS() = default;
   CKKS();
   CKKS(uint32_t batch_size, uint32_t scaling_factor_bits);
 
   // File-based API.
-  void GenCryptoParamsFiles(CryptoParamsFiles crypto_params_files) override;  
+  void GenCryptoParamsFiles(CryptoParamsFiles crypto_params_files) override;
   CryptoParamsFiles GetCryptoParamsFiles() override;
-  void LoadCryptoParamsFromFiles(CryptoParamsFiles crypto_params_files) override;
+  void LoadCryptoParamsFromFiles(
+      CryptoParamsFiles crypto_params_files) override;
   void LoadCryptoContextFromFile(std::string crypto_context_file) override;
   void LoadPublicKeyFromFile(std::string public_key_file) override;
   void LoadPrivateKeyFromFile(std::string private_key_file) override;
@@ -62,12 +63,11 @@ class CKKS : public EncryptionScheme {
   LPPublicKey<DCRTPoly> pk;
   LPPrivateKey<DCRTPoly> sk;
 
-  template<typename T>
+  template <typename T>
   bool DeserializeFromFile(std::string filepath, T &obj);
 
-  template<typename T>
+  template <typename T>
   void Deserialize(std::string s, T &obj);
-
 };
 
-#endif //METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H_
+#endif  // METISFL_METISFL_ENCRYPTION_PALISADE_CKKS_SCHEME_H_

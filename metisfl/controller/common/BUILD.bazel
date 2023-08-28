@@ -1,33 +1,12 @@
 package(default_visibility = ["//visibility:public"])
 
 cc_library(
-    name = "macros",
-    srcs = [],
-    hdrs = ["macros.h"],
-    deps = [],
-)
-
-cc_library(
-    name = "thread_pool",
-    srcs = [],
-    hdrs = ["bs_thread_pool.h"],
-)
-
-cc_library(
-    name = "proto_matchers",
-    srcs = [],
-    hdrs = ["proto_matchers.h"],
-    deps = [
-        "@gtest//:gtest",
-    ],
-)
-
-cc_library(
-    name = "proto_tensor_serde",
-    hdrs = ["proto_tensor_serde.h"],
-    srcs = [],
+    name = "common",
+    srcs = glob(["*.cc"]),
+    hdrs = glob(["*.h"]),
     deps = [
         "//metisfl/proto:cc_grpc_lib",
+        "@gtest//:gtest",
     ],
 )
 

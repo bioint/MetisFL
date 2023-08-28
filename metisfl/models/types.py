@@ -2,11 +2,6 @@
 from collections import namedtuple
 
 
-ModelWeightsDescriptor = \
-    namedtuple('ModelWeightsDescriptor',
-               ['weights_names', 'weights_trainable', 'weights_values'])
-
-
 LearningTaskStats = namedtuple('LearningTaskStats', [
     "global_iteration",
     "train_stats",
