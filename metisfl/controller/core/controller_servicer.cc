@@ -152,8 +152,11 @@ Status ControllerServicer::LeaveFederation(ServerContext *context,
 Status ControllerServicer::TrainDone(ServerContext *context,
                                      const TrainDoneRequest *request,
                                      Ack *ack) {
-  PLOG(INFO) << "Received Completed Task By " << request->learner_id();
+  PLOG(INFO) << "Received Completed Task from Learner "
+             << controller_->GetLearnerId(request->task_id());
+
   const auto status = controller_->TrainDone(*request);
+
   if (!status.ok()) {
     switch (status.code()) {
       case absl::StatusCode::kInvalidArgument:
@@ -173,21 +176,19 @@ Status ControllerServicer::TrainDone(ServerContext *context,
 
 Status ControllerServicer::GetLogs(ServerContext *context, const Empty *request,
                                    Logs *logs) {
-  auto training_metadata = controller_->GetTrainingMetadata();
-  auto evaluation_metadata = controller_->GetEvaluationMetadata();
+  auto train_results = controller_->GetTrainResults();
+  auto evaluation_results = controller_->GetEvaluationResults();
   auto model_metadata = controller_->GetModelMetadata();
 
-  *logs->mutable_training_metadata() =
-      google::protobuf::Map<std::string, TrainingMetadata>(
-          training_metadata.begin(), training_metadata.end());
-  *logs->mutable_evaluation_metadata() =
-      google::protobuf::Map<std::string, EvaluationMetadata>(
-          evaluation_metadata.begin(), evaluation_metadata.end());
+  *logs->mutable_train_results() =
+      google::protobuf::Map<std::string, TrainResults>(train_results.begin(),
+                                                       train_results.end());
+  *logs->mutable_evaluation_results() =
+      google::protobuf::Map<std::string, EvaluationResults>(
+          evaluation_results.begin(), evaluation_results.end());
   *logs->mutable_model_metadata() =
       google::protobuf::Map<std::string, ModelMetadata>(model_metadata.begin(),
                                                         model_metadata.end());
-
-  // TODO : Implement this
   return Status::OK;
 }
 

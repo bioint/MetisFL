@@ -75,11 +75,11 @@ void LearnerManager::Shutdown() {
   scheduling_pool_.wait_for_tasks();
 }
 
-void LearnerManager::UpdateMetadata(const std::string &task_id,
-                                    const std::string &learner_id,
-                                    const TrainingMetadata &metadata) {
-  num_completed_batches_[learner_id] = metadata.completed_batches();
-  training_metadata_[task_id] = metadata;
+void LearnerManager::UpdateTrainResults(const std::string &task_id,
+                                        const std::string &learner_id,
+                                        const TrainResults &results) {
+  train_results_[task_id] = results;
+  latest_train_results_[learner_id] = results;
 }
 
 absl::flat_hash_map<std::string, int> LearnerManager::GetNumTrainingExamples(
@@ -99,7 +99,10 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
   absl::flat_hash_map<std::string, int> num_completed_batches;
 
   for (const auto &learner_id : learner_ids) {
-    num_completed_batches[learner_id] = num_completed_batches_[learner_id];
+    num_completed_batches[learner_id] = (int)latest_train_results_[learner_id]
+                                            .metadata()
+                                            .find("num_completed_batches")
+                                            ->second;
   }
 
   return num_completed_batches;
@@ -116,7 +119,7 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
 //     // Finds the slowest learner.
 //     float ms_per_epoch_slowest = std::numeric_limits<float>::min();
 //     for (const auto &learner_id : learners) {
-//       const auto &metadata = training_metadata_[learner_id].front();
+//       const auto &metadata = train_results_[learner_id].front();
 //       if (metadata.processing_ms_per_epoch() > ms_per_epoch_slowest) {
 //         ms_per_epoch_slowest = metadata.processing_ms_per_epoch();
 //       }
@@ -128,7 +131,7 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
 
 //     // Updates the task templates based on the slowest learner.
 //     for (const auto &learner_id : learners) {
-//       const auto &metadata = training_metadata_[learner_id].front();
+//       const auto &metadata = train_results_[learner_id].front();
 
 //       auto processing_ms_per_batch = metadata.processing_ms_per_batch();
 //       if (processing_ms_per_batch == 0) {
@@ -251,7 +254,7 @@ void LearnerManager::DigestEvaluateResponses() {
     if (call) {
       if (call->status.ok()) {
         const std::string &task_id = call->reply.task_id();
-        evaluation_metadata_[task_id] = call->reply.metadata();
+        evaluation_results_[task_id] = call->reply.results();
       } else {
         PLOG(ERROR) << "EvaluateModel RPC request to learner: "
                     << call->learner_id

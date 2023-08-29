@@ -44,11 +44,11 @@ absl::Status Controller::StartTraining() {
 }
 
 absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
-  auto learner_id = request.learner_id();
   auto task_id = request.task_id();
+  auto learner_id = learner_manager_->GetLearnerId(task_id);
 
   model_manager_->InsertModel(learner_id, request.model());
-  learner_manager_->UpdateMetadata(task_id, learner_id, request.metadata());
+  learner_manager_->UpdateTrainResults(task_id, learner_id, request.results());
 
   auto learner_ids = learner_manager_->GetLearnerIds();
   auto to_schedule = scheduler_->ScheduleNext(learner_id, learner_ids.size());

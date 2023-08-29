@@ -37,18 +37,24 @@ class Controller {
 
   ~Controller() = default;
 
-  TrainingMetadataMap GetTrainingMetadata() {
-    return learner_manager_->GetTrainingMetadata();
+  // Getters
+  TrainResultsMap GetTrainResults() {
+    return learner_manager_->GetTrainResults();
   }
 
-  EvaluationMetadataMap GetEvaluationMetadata() {
-    return learner_manager_->GetEvaluationMetadata();
+  EvaluationResultsMap GetEvaluationResults() {
+    return learner_manager_->GetEvaluationResults();
   }
 
   ModelMetadataMap GetModelMetadata() {
     return model_manager_->GetModelMetadata();
   }
 
+  std::string GetLearnerId(std::string task_id) {
+    return learner_manager_->GetLearnerId(task_id);
+  }
+
+  // Public methods
   absl::StatusOr<std::string> AddLearner(const Learner &learner);
 
   absl::Status SetInitialModel(const Model &model);

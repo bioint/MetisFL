@@ -36,19 +36,14 @@ message LearnerId {
 }
 
 message TrainDoneRequest {
-  string learner_id = 1;
   string task_id = 2;
   Model model = 3;
-  TrainingMetadata metadata = 4;
+  TrainResults results = 4;
 }
 
-message TrainingMetadata {
+message TrainResults {
   map<string, string> metrics = 1;
-  float completed_epochs =  2;
-  uint32 completed_batches = 3;
-  uint32 batch_size = 4;
-  float processing_ms_per_epoch = 5;
-  float processing_ms_per_batch = 6;
+  map<string, double> metadata = 2;
 }
 
 message Logs {
@@ -56,8 +51,8 @@ message Logs {
   map<string, string> task_learner_map = 1;
 
   // Indexed by task_id
-  map<string, TrainingMetadata> training_metadata = 2;
-  map<string, EvaluationMetadata> evaluation_metadata = 3;
+  map<string, TrainResults> train_results = 2;
+  map<string, EvaluationResults> evaluation_results = 3;
   map<string, ModelMetadata> model_metadata = 4;
 }
 

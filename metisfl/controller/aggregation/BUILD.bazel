@@ -36,7 +36,7 @@ cc_library(
 
 cc_test(
     name="aggregation_test",
-    srcs=["federated_average_test.cc", "federated_average.cc"],
+    srcs=glob(["*_test.cc"]),
     deps=[
         ":aggregation",
         "//metisfl/controller/common:common",

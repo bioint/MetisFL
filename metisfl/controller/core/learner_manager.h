@@ -34,15 +34,15 @@ class LearnerManager {
   // task_id -> learner_id
   TaskLearnerMap task_learner_map_;
 
-  // task_id -> metadata
-  TrainingMetadataMap training_metadata_;
-  EvaluationMetadataMap evaluation_metadata_;
+  // task_id -> {}
+  TrainResultsMap train_results_;
+  EvaluationResultsMap evaluation_results_;
+
+  // learner_id -> {}
+  TrainResultsMap latest_train_results_;
 
   // learner_id -> num_training_examples
   absl::flat_hash_map<std::string, int> num_training_examples_;
-
-  // learner_id -> num_completed_batches in latest training task
-  absl::flat_hash_map<std::string, double> num_completed_batches_;
 
  public:
   LearnerManager();
@@ -50,12 +50,17 @@ class LearnerManager {
   ~LearnerManager() = default;
 
   // Getters/Setters
-  TrainingMetadataMap GetTrainingMetadata() { return training_metadata_; }
+  TrainResultsMap GetTrainResults() { return train_results_; }
 
-  EvaluationMetadataMap GetEvaluationMetadata() { return evaluation_metadata_; }
+  EvaluationResultsMap GetEvaluationResults() { return evaluation_results_; }
 
-  void UpdateMetadata(const std::string &task_id, const std::string &learner_id,
-                      const TrainingMetadata &metadata);
+  void UpdateTrainResults(const std::string &task_id,
+                          const std::string &learner_id,
+                          const TrainResults &metadata);
+
+  std::string GetLearnerId(const std::string &task_id) {
+    return task_learner_map_[task_id];
+  }
 
   // Public methods
   absl::StatusOr<std::string> AddLearner(const Learner &learner);

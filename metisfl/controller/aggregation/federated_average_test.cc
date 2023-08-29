@@ -15,21 +15,19 @@ using metisfl::proto::TensorOps;
 using ::testing::proto::EqualsProto;
 
 const char kModel1_with_tensor_values_1to10_as_FLOAT32[] = R"pb(
-  tensor {
+  encrypted: false
+  tensors {
     length: 10
-    encrypted: false
     dimensions: 10
-    type { type: FLOAT32 byte_order: LITTLE_ENDIAN_ORDER fortran_order: False }
     value: "\000\000\200?\000\000\000@\000\000@@\000\000\200@\000\000\240@\000\000\300@\000\000\340@\000\000\000A\000\000\020A\000\000 A"
   }
 )pb";
 
 const char kModel1_with_tensor_values_1to10_as_FLOAT64[] = R"pb(
-  tensor {
+  encrypted: false
+  tensors {
     length: 10
-    encrypted: false
     dimensions: 10
-    type { type: FLOAT64 byte_order: LITTLE_ENDIAN_ORDER fortran_order: False }
     value: "\000\000\000\000\000\000\360?\000\000\000\000\000\000\000@\000\000\000\000\000\000\010@\000\000\000\000\000\000\020@\000\000\000\000\000\000\024@\000\000\000\000\000\000\030@\000\000\000\000\000\000\034@\000\000\000\000\000\000 @\000\000\000\000\000\000\"@\000\000\000\000\000\000$@"
   }
 )pb";

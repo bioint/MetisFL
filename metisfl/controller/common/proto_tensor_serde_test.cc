@@ -16,7 +16,6 @@ using metisfl::proto::TensorOps;
 char kTensor_1to10_as_FLOAT64[] = R"pb(
   length: 10
   dimensions: 10
-  type { type: FLOAT64 byte_order: LITTLE_ENDIAN_ORDER fortran_order: False }
   value: "\000\000\000\000\000\000\360?\000\000\000\000\000\000\000@\000\000\000\000\000\000\010@\000\000\000\000\000\000\020@\000\000\000\000\000\000\024@\000\000\000\000\000\000\030@\000\000\000\000\000\000\034@\000\000\000\000\000\000 @\000\000\000\000\000\000\"@\000\000\000\000\000\000$@"
 )pb";
 
@@ -29,8 +28,6 @@ TEST_F(ProtoTensorSerDe, DeSerFLOAT64) /* NOLINT */ {
   auto deserialized_tensor = TensorOps::DeserializeTensor(tensor_float64);
   auto serialized_tensor = TensorOps::SerializeTensor(deserialized_tensor);
 
-  // Deserialize the serialized values to validate equality with original
-  // tensor.
   std::string serialized_tensor_str(serialized_tensor.begin(),
                                     serialized_tensor.end());
   std::vector<double> deserialized_tensor_aux(num_values);

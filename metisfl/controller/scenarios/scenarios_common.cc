@@ -185,7 +185,7 @@ namespace metisfl::controller
     auto scaling_factors = scaler_->ComputeScalingFactors(
         community_model,
         participating_states,
-        absl::flat_hash_map<std::string, TrainingMetadata *>{});
+        absl::flat_hash_map<std::string, TrainResults *>{});
 
     uint32_t aggregation_stride_length = participating_states.size();
     if (params_.global_model_specs().aggregation_rule().has_fed_stride())
