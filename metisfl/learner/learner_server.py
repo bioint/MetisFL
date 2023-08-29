@@ -16,6 +16,7 @@ from .controller_client import GRPCClient
 from .learner import (Learner, try_call_evaluate, try_call_get_weights,
                       try_call_set_weights, try_call_train)
 from .task_manager import TaskManager
+from .message_helper import MessageHelper
 
 
 class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
@@ -24,6 +25,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         self,
         learner: Learner,
         client: GRPCClient,
+        message_helper: MessageHelper,
         task_manager: TaskManager,
         server_params: ServerParams,
     ):
@@ -33,16 +35,19 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         ----------
         learner : Learner
             The Learner object. Must impliment the Learner interface.
-        server_params : ServerParams
-            The server parameters of the Learner server.
-        task_manager : TaskManager
-            The task manager object. Udse to run tasks in a pool of workers.
         client : GRPCControllerClient
             The client object. Used to communicate with the controller.
+        message_helper : MessageHelper
+            The message helper object. Used to convert ProtoBuf objects
+        task_manager : TaskManager
+            The task manager object. Udse to run tasks in a pool of workers.
+        server_params : ServerParams
+            The server parameters of the Learner server.
 
         """
         self._learner = learner
         self._client = client
+        self._message_helper = message_helper
         self._task_manager = task_manager
 
         self._status = service_common_pb2.ServingStatus.UNKNOWN
@@ -101,13 +106,13 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return None
 
-        model = try_call_get_weights(
+        weights = try_call_get_weights(
             learner=self._learner,
         )
 
-        return model
+        return self._message_helper.weights_to_model_proto(weights)
 
-    def SetInitialWeights(
+    def SetInitialModel(
         self,
         model: model_pb2.Model,
         context: Any
@@ -123,16 +128,18 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         Returns
         -------
-        learner_pb2.SetInitialWeightsResponse
+        learner_pb2.SetInitialModelResponse
             The response containing the acknoledgement. The acknoledgement contains the status, i.e. True if the weights were set, False otherwise.
         """
 
         if not self._is_serving(context):
             return service_common_pb2.Ack(status=False)
 
+        weights = self._message_helper.model_proto_to_weights(model)
+
         status = try_call_set_weights(
             learner=self._learner,
-            model=model,
+            weights=weights,
         )
 
         return service_common_pb2.Ack(
@@ -162,10 +169,13 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return learner_pb2.EvaluateResponse(ack=None)
 
+        weights = self._message_helper.model_proto_to_weights(request.model)
+        params = MessageToDict(request.params)
+
         metrics = try_call_evaluate(
             learner=self._learner,
-            model=request.model,
-            params=request.params,
+            weights=weights,
+            params=params,
         )
 
         # TODO: need to ensure that metrics is a dict containing the metrics in request.params.
@@ -200,16 +210,17 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return service_common_pb2.Ack(status=False)
 
+        # FIXME:
         task_id: str = request.task_id
-        model_dict: Dict = MessageToDict(request.model)
-        params_dict: Dict = MessageToDict(request.params)
+        weights = self._message_helper.model_proto_to_weights(request.model)
+        params = MessageToDict(request.params)
 
         self._task_manager.run_task(
             task_fn=try_call_train,
             task_kwargs={
                 'learner': self._learner,
-                'model': model_dict,
-                'params': params_dict,
+                'weights': weights,
+                'params': params,
             },
             callback=self._client.train_done,
         )

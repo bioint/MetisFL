@@ -57,7 +57,7 @@ class TaskManager(object):
 
         """
         self._empty_tasks_q(force=cancel_running)
-        
+
         future = self._worker_pool.schedule(function=task_fn,
                                             args=task_args,
                                             kwargs={**task_kwargs})
@@ -72,6 +72,7 @@ class TaskManager(object):
 
         def callback_wrapper(future: ProcessFuture) -> None:
             if future.done() and not future.cancelled():
+                # FIXME: need to catch errors here
                 callback(future.result())
 
         return callback_wrapper

@@ -44,6 +44,7 @@ class MessageHelper:
             tensor = model.tensors.add()
             tensor.length = weight.size
             tensor.dimensions.extend(weight.shape)
+            weight = weight.astype(np.float32)
 
             if self.scheme is not None:
                 model.encrypted = True
@@ -80,14 +81,14 @@ class MessageHelper:
                 weights.append(
                     np.array(
                         decrypted,
-                        dtype=np.float64
+                        dtype=np.float32
                     ).reshape(tensor.dimensions)
                 )
             else:
                 weights.append(
                     np.frombuffer(
                         buffer=tensor.value,
-                        dtype=np.float64,
+                        dtype=np.float32,
                         count=tensor.length
                     ).reshape(tensor.dimensions)
                 )

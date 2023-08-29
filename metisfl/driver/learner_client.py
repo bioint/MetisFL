@@ -3,6 +3,8 @@
 
 from typing import Optional
 
+from metisfl.proto import controller_pb2_grpc
+
 from ..common.client import get_client
 from ..proto import learner_pb2_grpc, model_pb2, service_common_pb2
 from ..common.types import ClientParams
@@ -94,10 +96,11 @@ class GRPCLearnerClient(object):
 
         """
         with self._get_client() as client:
-            stub, schedule, _ = client
+            stub: learner_pb2_grpc.LearnerServiceStub = client[0]
+            schedule = client[1]
 
             def _request(_timeout=None):
-                return stub.SetInitialWeights(model, timeout=_timeout)
+                return stub.SetInitialModel(model, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 

@@ -26,8 +26,8 @@ class LearnerServiceStub(object):
                 request_serializer=metisfl_dot_proto_dot_service__common__pb2.Empty.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
                 )
-        self.SetInitialWeights = channel.unary_unary(
-                '/metisfl.LearnerService/SetInitialWeights',
+        self.SetInitialModel = channel.unary_unary(
+                '/metisfl.LearnerService/SetInitialModel',
                 request_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
                 response_deserializer=metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
                 )
@@ -63,7 +63,7 @@ class LearnerServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def SetInitialWeights(self, request, context):
+    def SetInitialModel(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -100,8 +100,8 @@ def add_LearnerServiceServicer_to_server(servicer, server):
                     request_deserializer=metisfl_dot_proto_dot_service__common__pb2.Empty.FromString,
                     response_serializer=metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
             ),
-            'SetInitialWeights': grpc.unary_unary_rpc_method_handler(
-                    servicer.SetInitialWeights,
+            'SetInitialModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetInitialModel,
                     request_deserializer=metisfl_dot_proto_dot_model__pb2.Model.FromString,
                     response_serializer=metisfl_dot_proto_dot_service__common__pb2.Ack.SerializeToString,
             ),
@@ -165,7 +165,7 @@ class LearnerService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def SetInitialWeights(request,
+    def SetInitialModel(request,
             target,
             options=(),
             channel_credentials=None,
@@ -175,7 +175,7 @@ class LearnerService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/SetInitialWeights',
+        return grpc.experimental.unary_unary(request, target, '/metisfl.LearnerService/SetInitialModel',
             metisfl_dot_proto_dot_model__pb2.Model.SerializeToString,
             metisfl_dot_proto_dot_service__common__pb2.Ack.FromString,
             options, channel_credentials,

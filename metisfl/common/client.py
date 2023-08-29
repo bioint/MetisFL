@@ -172,8 +172,8 @@ def request_with_timeout(
         try:
             response = request_fn(request_timeout)
         except grpc.RpcError as rpc_error:
-            MetisLogger.info(
-                "Exception Raised: {},".format(rpc_error))
+            MetisLogger.error(
+                f"Request to failed with {rpc_error.code()}: {rpc_error.details()}")
             if rpc_error.code() == grpc.StatusCode.UNAVAILABLE:
                 time.sleep(10)
         else:

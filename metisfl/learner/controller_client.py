@@ -6,8 +6,8 @@ import numpy as np
 from ..common.client import get_client
 from ..common.logger import MetisLogger
 from ..common.types import ClientParams, ServerParams
-from ..proto import (controller_pb2, controller_pb2_grpc, model_pb2,
-                     service_common_pb2)
+from ..proto import controller_pb2, controller_pb2_grpc, service_common_pb2
+from .message_helper import MessageHelper
 
 
 def read_certificate(fp: str) -> bytes:
@@ -22,6 +22,7 @@ class GRPCClient(object):
     def __init__(
         self,
         client_params: ClientParams,
+        message_helper: MessageHelper,
         learner_id_fp: str,
         max_workers: Optional[int] = 1
     ):
@@ -31,14 +32,15 @@ class GRPCClient(object):
         ----------
         client_params : ClientParams
             The client parameters. Used by the learner to connect to the Controller.
+        message_helper : MessageHelper
+            The MessageHelper object used to serialize the requests.
         learner_id_fp : str
             The file where the learner id is stored. 
-        auth_token_fp : str
-            The file where the auth token is stored.
         max_workers : Optional[int], (default: 1)
             The maximum number of workers for the client ThreadPool, by default 1
         """
         self._client_params = client_params
+        self._message_helper = message_helper
         self._learner_id_fp = learner_id_fp
         self._max_workers = max_workers
 
@@ -133,8 +135,9 @@ class GRPCClient(object):
         """
 
         if not self._has_learner_id():
-            raise RuntimeError(
-                "Cannot leave federation before joining it.")
+            MetisLogger.warning(
+                "Cannot leave federation before joining the federation.")
+            return
 
         with self._get_client() as client:
 
@@ -203,15 +206,16 @@ class GRPCClient(object):
             schedule = client[1]
 
             def _request(_timeout=None):
-
-                request = controller_pb2.TrainDoneRequest(
-                    learner_id=self._learner_id,
-                    task_id=task_id,
-                    model=weights_to_model_proto(weights),
+                model = self._message_helper.weights_to_model_proto(weights)
+                train_results = controller_pb2.TrainResults(
                     metrics=metrics,
                     metadata=metadata
                 )
-
+                request = controller_pb2.TrainDoneRequest(
+                    task_id=task_id,
+                    model=model,
+                    results=train_results,
+                )
                 return stub.TrainDone(
                     request=request,
                     timeout=_timeout

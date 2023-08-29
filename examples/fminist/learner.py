@@ -5,20 +5,24 @@ from model import get_model
 
 from metisfl.learner.app import app
 from metisfl.learner.learner import Learner
-from metisfl.proto import model_pb2
 from env import controller_params, learner_1, learner_2
 
 
 model = get_model()
+model.compile(
+    loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
+)
 x_train, y_train, x_test, y_test = load_data()
 
 
 class MyLearner(Learner):
     def get_weights(self):
-        return model_pb2.Model()
+        print("Getting weights")
+        return model.get_weights()
 
     def set_weights(self, parameters):
-        return True
+        print("Setting weights")
+        model.set_weights(parameters)
 
     def train(self, parameters, config):
         print("Training")

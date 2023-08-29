@@ -17,8 +17,6 @@ ModelManager::ModelManager(const GlobalTrainParams &global_train_params,
 absl::Status ModelManager::SetInitialModel(const Model &model) {
   if (is_initialized_)
     return absl::FailedPreconditionError("Model is already initialized.");
-
-  PLOG(INFO) << "Received initial model.";
   model_ = model;
   is_initialized_ = true;
   return absl::OkStatus();

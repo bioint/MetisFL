@@ -1,13 +1,13 @@
 
 import signal
-
 from typing import Optional
 
-from ..config import get_auth_token_fp
 from ..common.types import ClientParams, ServerParams
+from ..config import get_learner_id_fp
 from .controller_client import GRPCClient
 from .learner import Learner
 from .learner_server import LearnerServer
+from .message_helper import MessageHelper
 from .task_manager import TaskManager
 
 
@@ -24,7 +24,8 @@ def register_handlers(client: GRPCClient, server: LearnerServer):
 
     def handler(signum, frame):
         print("Received SIGTERM, leaving federation...")
-        client.leave_federation()
+        # TODO: need to make it safe, if the controller is down, it will hang here
+        client.leave_federation(block=False, request_timeout=1)
         server.ShutDown()
 
     signal.signal(signal.SIGTERM, handler)
@@ -48,16 +49,21 @@ def app(
     server_params : ServerParams
         The server parameters of the Learner server. 
     num_training_examples : Optional[int], (default=None)
-        The number of training examples. Used when the scaling factor is "NumTrainingExamples".
+        The number of training examples. 
+        Used when the scaling factor is "NumTrainingExamples".
         If not provided, this scaling factor cannot be used.
     """
 
     port = client_params.port
 
+    # FIXME: add encryption if needed
+    message_helper = MessageHelper()
+
     # Create the gRPC client to communicate with the Controller
     client = GRPCClient(
         client_params=client_params,
-        learner_id_fp=get_auth_token_fp(port),
+        message_helper=message_helper,
+        learner_id_fp=get_learner_id_fp(port),
     )
 
     # Create the gRPC server for the Controller to communicate with the Learner
@@ -66,6 +72,7 @@ def app(
         server_params=server_params,
         task_manager=TaskManager(),
         client=client,
+        message_helper=message_helper,
     )
 
     # Register with the Controller

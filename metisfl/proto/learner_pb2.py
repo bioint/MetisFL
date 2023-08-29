@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x1bmetisfl/proto/learner.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"{\n\x0cTrainRequest\x12\x17\n\x07task_id\x18\x01 \x01(\tR\x06taskId\x12$\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12,\n\x06params\x18\x03 \x01(\x0b\x32\x14.metisfl.TrainParamsR\x06params\"\x8a\x01\n\x0bTrainParams\x12\x1d\n\nbatch_size\x18\x02 \x01(\rR\tbatchSize\x12\x16\n\x06\x65pochs\x18\x03 \x01(\rR\x06\x65pochs\x12*\n\x11num_local_updates\x18\x04 \x01(\rR\x0fnumLocalUpdates\x12\x18\n\x07metrics\x18\x05 \x03(\tR\x07metrics\"\x83\x01\n\x0f\x45valuateRequest\x12\x17\n\x07task_id\x18\x01 \x01(\tR\x06taskId\x12$\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12\x31\n\x06params\x18\x03 \x01(\x0b\x32\x19.metisfl.EvaluationParamsR\x06params\"K\n\x10\x45valuationParams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x18\n\x07metrics\x18\x02 \x03(\tR\x07metrics\"a\n\x10\x45valuateResponse\x12\x17\n\x07task_id\x18\x01 \x01(\tR\x06taskId\x12\x34\n\x07results\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResultsR\x07results\"\x92\x01\n\x11\x45valuationResults\x12\x41\n\x07metrics\x18\x01 \x03(\x0b\x32\'.metisfl.EvaluationResults.MetricsEntryR\x07metrics\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x02R\x05value:\x02\x38\x01\x32\xc5\x02\n\x0eLearnerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12,\n\x08GetModel\x12\x0e.metisfl.Empty\x1a\x0e.metisfl.Model\"\x00\x12\x33\n\x11SetInitialWeights\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12.\n\x05Train\x12\x15.metisfl.TrainRequest\x1a\x0c.metisfl.Ack\"\x00\x12\x41\n\x08\x45valuate\x12\x18.metisfl.EvaluateRequest\x1a\x19.metisfl.EvaluateResponse\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x1bmetisfl/proto/learner.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\"{\n\x0cTrainRequest\x12\x17\n\x07task_id\x18\x01 \x01(\tR\x06taskId\x12$\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12,\n\x06params\x18\x03 \x01(\x0b\x32\x14.metisfl.TrainParamsR\x06params\"\x8a\x01\n\x0bTrainParams\x12\x1d\n\nbatch_size\x18\x02 \x01(\rR\tbatchSize\x12\x16\n\x06\x65pochs\x18\x03 \x01(\rR\x06\x65pochs\x12*\n\x11num_local_updates\x18\x04 \x01(\rR\x0fnumLocalUpdates\x12\x18\n\x07metrics\x18\x05 \x03(\tR\x07metrics\"\x83\x01\n\x0f\x45valuateRequest\x12\x17\n\x07task_id\x18\x01 \x01(\tR\x06taskId\x12$\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12\x31\n\x06params\x18\x03 \x01(\x0b\x32\x19.metisfl.EvaluationParamsR\x06params\"K\n\x10\x45valuationParams\x12\x1d\n\nbatch_size\x18\x01 \x01(\rR\tbatchSize\x12\x18\n\x07metrics\x18\x02 \x03(\tR\x07metrics\"a\n\x10\x45valuateResponse\x12\x17\n\x07task_id\x18\x01 \x01(\tR\x06taskId\x12\x34\n\x07results\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResultsR\x07results\"\x92\x01\n\x11\x45valuationResults\x12\x41\n\x07metrics\x18\x01 \x03(\x0b\x32\'.metisfl.EvaluationResults.MetricsEntryR\x07metrics\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x02R\x05value:\x02\x38\x01\x32\xc3\x02\n\x0eLearnerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12,\n\x08GetModel\x12\x0e.metisfl.Empty\x1a\x0e.metisfl.Model\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12.\n\x05Train\x12\x15.metisfl.TrainRequest\x1a\x0c.metisfl.Ack\"\x00\x12\x41\n\x08\x45valuate\x12\x18.metisfl.EvaluateRequest\x1a\x19.metisfl.EvaluateResponse\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3'
   ,
   dependencies=[metisfl_dot_proto_dot_model__pb2.DESCRIPTOR,metisfl_dot_proto_dot_service__common__pb2.DESCRIPTOR,])
 
@@ -396,7 +396,7 @@ _LEARNERSERVICE = _descriptor.ServiceDescriptor(
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
   serialized_start=829,
-  serialized_end=1154,
+  serialized_end=1152,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetHealthStatus',
@@ -419,8 +419,8 @@ _LEARNERSERVICE = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='SetInitialWeights',
-    full_name='metisfl.LearnerService.SetInitialWeights',
+    name='SetInitialModel',
+    full_name='metisfl.LearnerService.SetInitialModel',
     index=2,
     containing_service=None,
     input_type=metisfl_dot_proto_dot_model__pb2._MODEL,

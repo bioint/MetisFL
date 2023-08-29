@@ -112,6 +112,7 @@ Status ControllerServicer::SetInitialModel(ServerContext *context,
     ack->set_status(true);
     return Status::OK;
   }
+  // TODO: better error handling
   PLOG(ERROR) << "Couldn't Replace Initial Model.";
   return {StatusCode::INVALID_ARGUMENT, std::string(status.message())};
 }
