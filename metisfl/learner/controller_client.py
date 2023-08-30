@@ -223,6 +223,10 @@ class GRPCClient(object):
 
             return schedule(_request, request_retries, request_timeout, block)
 
+    def shutdown_client(self):
+        """Shuts down the client."""
+        self._get_client()[2]()
+
     def _join_federation(
         self,
         stub: controller_pb2_grpc.ControllerServiceStub,

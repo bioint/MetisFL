@@ -1,8 +1,7 @@
 
-from metisfl.common.types import (ClientParams, FederationEnvironment,
-                                   GlobalTrainConfig, LocalTrainConfig,
-                                   ModelStoreConfig, ServerParams,
-                                   TerminationSingals)
+from metisfl.common.types import (FederationEnvironment, GlobalTrainConfig,
+                                  LocalTrainConfig, ModelStoreConfig,
+                                  ServerParams, TerminationSingals)
 
 controller_params = ServerParams(
     hostname="localhost",
@@ -10,8 +9,8 @@ controller_params = ServerParams(
 )
 
 global_train_config = GlobalTrainConfig(
-    aggregation_rule="FedAvg",
-    communication_protocol="Asynchronous",
+    aggregation_rule="FedStride",
+    communication_protocol="Synchronous",
     scaling_factor="NumTrainingExamples",
 )
 
@@ -32,7 +31,7 @@ learner_2 = ServerParams(
 
 env = FederationEnvironment(
     termination_signals=TerminationSingals(
-        federation_rounds=10,
+        federation_rounds=3,
     ),
     global_train_config=global_train_config,
     model_store_config=model_store_config,

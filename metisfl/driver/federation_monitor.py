@@ -35,7 +35,7 @@ class FederationMonitor:
         self._controller_client = controller_client
         self._signals = termination_signals
         self._is_async = is_async
-        self._statistics = None
+        self._logs = None
 
     def monitor_federation(self, request_every_secs=10) -> Dict:
         """Monitors the federation. 
@@ -59,13 +59,13 @@ class FederationMonitor:
 
         while not terminate:
             time.sleep(request_every_secs)
-            self._collect_statistics()
+            self._collect_logs()
 
             terminate = self._reached_federation_rounds() or \
                 self._reached_evaluation_score() or \
                 self._reached_execution_time(st)
 
-        return self._statistics
+        return self._logs
 
     def _reached_federation_rounds(self) -> bool:
         """Checks if the federation has reached the maximum number of rounds."""
@@ -73,16 +73,11 @@ class FederationMonitor:
         if not self._signals.federation_rounds or self._is_async:
             return False
 
-        metadata = self._statistics["metadata"]
-
-        if metadata:
-            current_global_iteration = max(
-                [m.global_iteration for m in metadata])
-
-            if current_global_iteration > self._signals.federation_rounds:
-                MetisLogger.info(
-                    "Exceeded federation rounds cutoff point. Exiting ...")
-                return True
+        if "global_iteration" in self._logs and \
+                self._logs["global_iteration"] > self._signals.federation_rounds:
+            MetisLogger.info(
+                "Exceeded federation rounds cutoff point. Exiting ...")
+            return True
         return False
 
     def _reached_evaluation_score(self) -> bool:
@@ -94,7 +89,7 @@ class FederationMonitor:
             return False
 
         commmunity_evaluation = [
-            x for x in self._statistics["community_evaluation"]]
+            x for x in self._logs["community_evaluation"]]
 
         for res in commmunity_evaluation:
             scores = []
@@ -127,21 +122,20 @@ class FederationMonitor:
 
         return False
 
-    def _collect_statistics(self) -> None:
+    def _collect_logs(self) -> None:
         """Collects statistics from the federation."""
 
-        statistics_pb = self._controller_client.get_logs()
+        logs = self._controller_client.get_logs()
 
         def msg_to_dict_fn(x): return MessageToDict(
             x, preserving_proto_field_name=True)
 
-        statistics = {}
-        # FIXME:
-        statistics["learners"] = msg_to_dict_fn(statistics_pb.learners)
-        statistics["metadata"] = msg_to_dict_fn(statistics_pb.metadata)
-        statistics["learners_task"] = msg_to_dict_fn(
-            statistics_pb.learners_task)
-        statistics["community_evaluation"] = msg_to_dict_fn(
-            statistics_pb.community_model_lineage)
+        statistics = {
+            "global_iteration": logs.global_iteration,
+            "tasks": logs.task_learner_map,
+            "train_results": logs.train_results,
+            "evaluation_results": logs.evaluation_results,
+            "model_metadata": logs.model_metadata,
+        }
 
-        self._statistics = statistics
+        self._logs = statistics

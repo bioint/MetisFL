@@ -1,7 +1,7 @@
 
 
 import threading
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 import grpc
 from google.protobuf.json_format import MessageToDict
@@ -178,10 +178,11 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             params=params,
         )
 
-        # TODO: need to ensure that metrics is a dict containing the metrics in request.params.
-
         return learner_pb2.EvaluateResponse(
-            metrics=metrics
+            task_id=request.task_id,
+            results=learner_pb2.EvaluationResults(
+                metrics=metrics,
+            ),
         )
 
     def Train(
@@ -210,10 +211,17 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return service_common_pb2.Ack(status=False)
 
-        # FIXME:
         task_id: str = request.task_id
         weights = self._message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
+
+        def train_out_to_callback_fn(train_out: Tuple[Any]) -> Tuple[Any]:
+            return (
+                task_id,
+                train_out[0],  # weights
+                train_out[1],  # metrics
+                train_out[2],  # metadata
+            )
 
         self._task_manager.run_task(
             task_fn=try_call_train,
@@ -223,6 +231,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
                 'params': params,
             },
             callback=self._client.train_done,
+            task_out_to_callback_fn=train_out_to_callback_fn,
         )
 
         return service_common_pb2.Ack(

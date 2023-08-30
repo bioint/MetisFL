@@ -173,8 +173,7 @@ void ModelManager::RecordAggregationTime(
   metadata_[update_id].set_aggregation_duration_ms(elapsed.count());
 }
 
-void ModelManager::RecordModelSize(std::string &update_id) {
+void ModelManager::RecordModelSize(std::string update_id) {
   // TODO:
 }
-
 };  // namespace metisfl::controller

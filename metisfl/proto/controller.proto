@@ -47,13 +47,15 @@ message TrainResults {
 }
 
 message Logs {
+  int32 global_iteration = 1;
+
   // task_id -> learner_id
-  map<string, string> task_learner_map = 1;
+  map<string, string> task_learner_map = 2;
 
   // Indexed by task_id
-  map<string, TrainResults> train_results = 2;
-  map<string, EvaluationResults> evaluation_results = 3;
-  map<string, ModelMetadata> model_metadata = 4;
+  map<string, TrainResults> train_results = 3;
+  map<string, EvaluationResults> evaluation_results = 4;
+  map<string, ModelMetadata> model_metadata = 5;
 }
 
 // TODO: record task stard/end time

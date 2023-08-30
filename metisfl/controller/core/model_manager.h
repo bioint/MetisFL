@@ -69,7 +69,7 @@ class ModelManager {
       std::string update_id,
       std::chrono::time_point<std::chrono::system_clock> start);
 
-  void RecordModelSize(std::string &update_id);
+  void RecordModelSize(std::string update_id);
 };
 }  // namespace metisfl::controller
 

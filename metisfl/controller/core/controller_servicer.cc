@@ -177,16 +177,25 @@ Status ControllerServicer::TrainDone(ServerContext *context,
 
 Status ControllerServicer::GetLogs(ServerContext *context, const Empty *request,
                                    Logs *logs) {
+  auto tasks_map = controller_->GetTasksMap();
   auto train_results = controller_->GetTrainResults();
   auto evaluation_results = controller_->GetEvaluationResults();
   auto model_metadata = controller_->GetModelMetadata();
 
+  logs->set_global_iteration(controller_->GetGlobalIteration());
+
+  *logs->mutable_task_learner_map() =
+      google::protobuf::Map<std::string, std::string>(tasks_map.begin(),
+                                                      tasks_map.end());
+
   *logs->mutable_train_results() =
       google::protobuf::Map<std::string, TrainResults>(train_results.begin(),
                                                        train_results.end());
+
   *logs->mutable_evaluation_results() =
       google::protobuf::Map<std::string, EvaluationResults>(
           evaluation_results.begin(), evaluation_results.end());
+
   *logs->mutable_model_metadata() =
       google::protobuf::Map<std::string, ModelMetadata>(model_metadata.begin(),
                                                         model_metadata.end());

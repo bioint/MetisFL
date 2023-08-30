@@ -201,14 +201,29 @@ def try_call_train(
     if has_train(learner):
         train_res = learner.train(weights, params)
 
+        if not isinstance(train_res, tuple) or len(train_res) not in [2, 3]:
+            raise ValueError(
+                "Learner.train must return a tuple of length 2 or 3")
+
+        weights = train_res[0]
+        metrics = train_res[1]
+        metadata = train_res[2] if len(train_res) == 3 else {}
+
+        if not isinstance(weights, list) or len(weights) == 0 or \
+                not all(isinstance(weight, np.ndarray) for weight in weights):
+            raise ValueError(
+                "Learner.train must return a list of numpy arrays")
+
         for metrics in params.get('metrics', []):
             if metrics not in train_res[1]:
                 raise ValueError(
                     f"Metric {metrics} not found in training results")
 
-        # TODO: Add post-check for metadata if needed
+        if not isinstance(metadata, dict):
+            raise ValueError(
+                "Learner.train must return a dictionary of metadata")
 
-        return train_res
+        return weights, metrics, metadata
 
     raise ValueError("Learner does not have a train method")
 
@@ -244,6 +259,10 @@ def try_call_evaluate(
 
     if has_evaluate(learner):
         eval_res = learner.evaluate(weights, params)
+
+        if not isinstance(eval_res, dict):
+            raise ValueError(
+                "Learner.evaluate must return a dictionary of metrics")
 
         for metrics in params.get('metrics', []):
             if metrics not in eval_res:

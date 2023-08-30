@@ -5,3 +5,5 @@ from env import env
 session = DriverSession(env)
 
 res = session.run()
+
+print(res)

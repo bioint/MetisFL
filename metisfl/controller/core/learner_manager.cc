@@ -59,14 +59,24 @@ absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
   return absl::OkStatus();
 }
 
-void LearnerManager::ScheduleAll(const Model &model) {
-  Schedule(GetLearnerIds(), model);
+void LearnerManager::ScheduleTrain(const std::vector<std::string> &learner_ids,
+                                   const Model &model) {
+  for (const auto &learner_id : learner_ids) {
+    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
+
+    scheduling_pool_.push_task(
+        [this, learner_id, model] { SendTrainAsync(learner_id, model); });
+  }
 }
 
-void LearnerManager::Schedule(const std::vector<std::string> &learner_ids,
-                              const Model &model) {
-  scheduling_pool_.push_task(
-      [this, learner_ids, model] { ScheduleTasks(learner_ids, model); });
+void LearnerManager::ScheduleEvaluate(
+    const std::vector<std::string> &learner_ids, const Model &model) {
+  for (const auto &learner_id : learner_ids) {
+    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
+
+    scheduling_pool_.push_task(
+        [this, learner_id, model] { SendEvaluateAsync(learner_id, model); });
+  }
 }
 
 void LearnerManager::Shutdown() {
@@ -171,25 +181,13 @@ bool LearnerManager::ValidateLearner(const std::string &learner_id) const {
   return learners_.contains(learner_id);
 }
 
-void LearnerManager::ScheduleTasks(const std::vector<std::string> &learner_ids,
-                                   const Model &model) {
-  for (const auto &learner_id : learner_ids) {
-    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-
-    SendTrainAsync(learner_id, model);
-
-    // TODO: should we wait before sending the evaluation task?
-
-    SendEvaluateAsync(learner_id, model);
-
-    // UpdateLearnersTaskTemplates(to_schedule);
-  }
-}
-
 void LearnerManager::SendTrainAsync(const std::string &learner_id,
                                     const Model &model) {
+  auto task_id = GenerateRadnomId();
+  task_learner_map_[task_id] = learner_id;
+
   TrainRequest request;
-  *request.mutable_task_id() = metisfl::controller::GenerateRadnomId();
+  *request.mutable_task_id() = task_id;
   *request.mutable_model() = model;
   *request.mutable_params() = train_params_[learner_id];
 
@@ -226,8 +224,11 @@ void LearnerManager::DigestTrainResponses() {
 
 void LearnerManager::SendEvaluateAsync(const std::string &learner_id,
                                        const Model &model) {
+  auto task_id = GenerateRadnomId();
+  task_learner_map_[task_id] = learner_id;
+
   EvaluateRequest request;
-  *request.mutable_task_id() = metisfl::controller::GenerateRadnomId();
+  *request.mutable_task_id() = task_id;
   *request.mutable_model() = model;
   *request.mutable_params() = eval_params_[learner_id];
 

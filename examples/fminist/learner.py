@@ -17,24 +17,23 @@ x_train, y_train, x_test, y_test = load_data()
 
 class MyLearner(Learner):
     def get_weights(self):
-        print("Getting weights")
         return model.get_weights()
 
     def set_weights(self, parameters):
-        print("Setting weights")
         model.set_weights(parameters)
+        return True
 
     def train(self, parameters, config):
-        print("Training")
-        print(parameters)
         model.set_weights(parameters)
-        model.fit(x_train, y_train, epochs=1, batch_size=32, steps_per_epoch=3)
+        model.fit(x_train, y_train, epochs=1,
+                  batch_size=64)
         return model.get_weights(), {}
 
     def evaluate(self, parameters, config):
         model.set_weights(parameters)
         loss, accuracy = model.evaluate(x_test, y_test)
-        return loss, len(x_test), {"accuracy": float(accuracy)}
+        print("loss: {}, accuracy: {}".format(loss, accuracy))
+        return {"accuracy": float(accuracy)}
 
 
 def run(server_params):

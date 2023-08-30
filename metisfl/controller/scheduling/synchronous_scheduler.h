@@ -2,6 +2,8 @@
 #ifndef METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
 #define METISFL_METISFL_CONTROLLER_SCHEDULING_SYNCHRONOUS_SCHEDULER_H_
 
+#include <glog/logging.h>
+
 #include "absl/container/flat_hash_set.h"
 #include "metisfl/controller/scheduling/scheduler.h"
 
@@ -21,6 +23,8 @@ class SynchronousScheduler : public Scheduler {
                                          learner_ids_.end());
     learner_ids_.clear();
     ++global_iteration_;
+
+    PLOG(INFO) << "Starting Federation Round " << global_iteration_;
 
     return to_schedule;
   }

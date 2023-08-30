@@ -24,8 +24,8 @@ def register_handlers(client: GRPCClient, server: LearnerServer):
 
     def handler(signum, frame):
         print("Received SIGTERM, leaving federation...")
-        # TODO: need to make it safe, if the controller is down, it will hang here
         client.leave_federation(block=False, request_timeout=1)
+        client.shutdown_client()
         server.ShutDown()
 
     signal.signal(signal.SIGTERM, handler)

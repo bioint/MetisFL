@@ -38,6 +38,10 @@ class Controller {
   ~Controller() = default;
 
   // Getters
+  int GetGlobalIteration() { return scheduler_->GetGlobalIteration(); }
+
+  TaskLearnerMap GetTasksMap() { return learner_manager_->GetTasksMap(); }
+
   TrainResultsMap GetTrainResults() {
     return learner_manager_->GetTrainResults();
   }

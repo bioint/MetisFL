@@ -1,6 +1,6 @@
 import multiprocessing as mp
 import queue
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Optional, Tuple
 
 from pebble import ProcessFuture, ProcessPool
 
@@ -35,9 +35,10 @@ class TaskManager(object):
     def run_task(
         self,
         task_fn: Callable,
-        task_args: Optional[tuple] = None,
-        task_kwargs: Optional[dict] = None,
-        callback: Optional[Callable] = None,
+        task_kwargs: Optional[dict] = {},
+        callback: Optional[Callable] = lambda x: None,
+        task_out_to_callback_fn: Optional[Callable[[
+            Any], Tuple]] = lambda x: x,
         cancel_running: Optional[bool] = False
     ) -> None:
         """Runs a task in the pool of workers.
@@ -46,12 +47,12 @@ class TaskManager(object):
         ----------
         task_fn : Callable
             A Callable object that represents the task to be run.
-        task_args : Optional[tuple], (default=None)
-            The arguments to be passed to the task function, by default None
-        task_kwargs : Optional[dict], (default=None)
-            The keyword arguments to be passed to the task function, by default None
+        task_kwargs : Optional[dict], (default={})
+            The keyword arguments to be passed to the task function, by default {}
         callback : Optional[Callable], (default=None)
             A Callable object that represents the callback function to be run after the task is completed, by default None
+        task_results_to_callback_fn : Optional[Callable], (default=lambda x: x)
+            A Callable object that represents the function to be run on the task output before passing them to the callback function, by default lambda x: x  
         cancel_running : Optional[bool], (default=False)
             Whether to cancel the running task before running the new one, by default False
 
@@ -59,21 +60,41 @@ class TaskManager(object):
         self._empty_tasks_q(force=cancel_running)
 
         future = self._worker_pool.schedule(function=task_fn,
-                                            args=task_args,
                                             kwargs={**task_kwargs})
         if callback:
             future.add_done_callback(
-                self._callback_wrapper(callback)
+                self._callback_wrapper(
+                    callback=callback,
+                    task_out_to_callback_fn=task_out_to_callback_fn
+                )
             )
 
         self._future_queue.put(future)
 
-    def _callback_wrapper(self, callback: Callable) -> Callable:
+    def _callback_wrapper(
+        self,
+        callback: Callable,
+        task_out_to_callback_fn: Callable = lambda x: x,
+    ) -> Callable:
+        """Wraps the callback function to be run after the task is completed.
+
+        Parameters
+        ----------
+        callback : Callable
+            A Callable object to be called after the task is completed.
+        task_out_to_callback_fn : Callable, (default=lambda x: x)
+            A Callable object that represents the function to be run on the task output before passing them to the callback function, by default lambda x: x
+
+        Returns
+        -------
+        Callable
+            A Callable object that represents the wrapped callback function.
+        """
 
         def callback_wrapper(future: ProcessFuture) -> None:
             if future.done() and not future.cancelled():
                 # FIXME: need to catch errors here
-                callback(future.result())
+                callback(*task_out_to_callback_fn(future.result()))
 
         return callback_wrapper
 

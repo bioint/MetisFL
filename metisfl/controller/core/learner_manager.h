@@ -50,17 +50,17 @@ class LearnerManager {
   ~LearnerManager() = default;
 
   // Getters/Setters
+  TaskLearnerMap GetTasksMap() { return task_learner_map_; }
   TrainResultsMap GetTrainResults() { return train_results_; }
-
   EvaluationResultsMap GetEvaluationResults() { return evaluation_results_; }
-
-  void UpdateTrainResults(const std::string &task_id,
-                          const std::string &learner_id,
-                          const TrainResults &metadata);
 
   std::string GetLearnerId(const std::string &task_id) {
     return task_learner_map_[task_id];
   }
+
+  void UpdateTrainResults(const std::string &task_id,
+                          const std::string &learner_id,
+                          const TrainResults &metadata);
 
   // Public methods
   absl::StatusOr<std::string> AddLearner(const Learner &learner);
@@ -71,10 +71,11 @@ class LearnerManager {
 
   bool ValidateLearner(const std::string &learner_id) const;
 
-  void ScheduleAll(const Model &model);
+  void ScheduleTrain(const std::vector<std::string> &learner_ids,
+                     const Model &model);
 
-  void Schedule(const std::vector<std::string> &learner_ids,
-                const Model &model);
+  void ScheduleEvaluate(const std::vector<std::string> &learner_ids,
+                        const Model &model);
 
   absl::flat_hash_map<std::string, int> GetNumTrainingExamples(
       const std::vector<std::string> &learner_ids);

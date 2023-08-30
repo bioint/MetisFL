@@ -38,7 +38,13 @@ absl::Status Controller::StartTraining() {
   if (!model_manager_->IsInitialized())
     return absl::FailedPreconditionError("Model is not initialized.");
 
-  learner_manager_->ScheduleAll(model_manager_->GetModel());
+  auto learner_ids = learner_manager_->GetLearnerIds();
+  std::vector<std::string> to_schedule;
+  for (const auto &learner_id : learner_ids) {
+    to_schedule = scheduler_->ScheduleNext(learner_id, learner_ids.size());
+    if (!to_schedule.empty())
+      learner_manager_->ScheduleTrain(to_schedule, model_manager_->GetModel());
+  }
 
   return absl::OkStatus();
 }
@@ -47,15 +53,19 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
   auto task_id = request.task_id();
   auto learner_id = learner_manager_->GetLearnerId(task_id);
 
+  learner_manager_->ScheduleEvaluate({learner_id}, model_manager_->GetModel());
+
   model_manager_->InsertModel(learner_id, request.model());
+
   learner_manager_->UpdateTrainResults(task_id, learner_id, request.results());
 
   auto learner_ids = learner_manager_->GetLearnerIds();
   auto to_schedule = scheduler_->ScheduleNext(learner_id, learner_ids.size());
 
   if (!to_schedule.empty()) {
-    // Doing the scheduling first so that we don't wait for the aggregation
-    learner_manager_->Schedule(to_schedule, model_manager_->GetModel());
+    // NOTE: if we put this after the UpdateModel there's a sagmentation fault,
+    // the model probably needs a mutex
+    learner_manager_->ScheduleTrain(to_schedule, model_manager_->GetModel());
 
     std::vector<std::string> selected_ids =
         selector_->Select(to_schedule, learner_ids);
