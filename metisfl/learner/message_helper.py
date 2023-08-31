@@ -6,8 +6,8 @@ from typing import List, Optional
 
 import numpy as np
 
-from ..encryption.scheme import EncryptionScheme
-from ..proto import model_pb2
+from metisfl.encryption.scheme import EncryptionScheme
+from metisfl.proto import model_pb2
 
 
 class MessageHelper:

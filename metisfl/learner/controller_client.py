@@ -2,12 +2,15 @@ from typing import Any, Dict, List, Optional
 
 import grpc
 import numpy as np
+from google.protobuf.timestamp_pb2 import Timestamp
 
-from ..common.client import get_client
-from ..common.logger import MetisLogger
-from ..common.types import ClientParams, ServerParams
-from ..proto import controller_pb2, controller_pb2_grpc, service_common_pb2
-from .message_helper import MessageHelper
+from metisfl.proto import learner_pb2
+
+from metisfl.common.client import get_client
+from metisfl.common.logger import MetisLogger
+from metisfl.common.types import ClientParams, ServerParams
+from metisflproto import controller_pb2, controller_pb2_grpc, service_common_pb2
+from metisfl.message_helper import MessageHelper
 
 
 def read_certificate(fp: str) -> bytes:
@@ -157,7 +160,7 @@ class GRPCClient(object):
 
     def train_done(
         self,
-        task_id: str,
+        task: learner_pb2.Task,
         weights: List[np.ndarray],
         metrics: Dict[str, Any],
         metadata: Dict[str, str],
@@ -169,8 +172,8 @@ class GRPCClient(object):
 
         Parameters
         ----------
-        task_id : str
-            The task id.
+        task : learner_pb2.Task
+            The task Proto object. 
         weights : List[np.ndarray]
             The weights of the model.
         metrics : Dict[str, Any]
@@ -205,17 +208,25 @@ class GRPCClient(object):
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule = client[1]
 
+            task = learner_pb2.Task(
+                id=task.id,
+                received_at=task.received_at,
+                completed_at=Timestamp(),
+            )
+
             def _request(_timeout=None):
                 model = self._message_helper.weights_to_model_proto(weights)
                 train_results = controller_pb2.TrainResults(
                     metrics=metrics,
                     metadata=metadata
                 )
+
                 request = controller_pb2.TrainDoneRequest(
-                    task_id=task_id,
+                    task=task,
                     model=model,
                     results=train_results,
                 )
+
                 return stub.TrainDone(
                     request=request,
                     timeout=_timeout

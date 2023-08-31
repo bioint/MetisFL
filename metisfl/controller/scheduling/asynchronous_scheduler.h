@@ -17,7 +17,6 @@ class AsynchronousScheduler : public Scheduler {
   inline std::string name() override { return "AsynchronousScheduler"; }
 
  private:
-  int global_iteration_ = 0;
 };
 
 }  // namespace metisfl::controller

@@ -154,7 +154,7 @@ Status ControllerServicer::TrainDone(ServerContext *context,
                                      const TrainDoneRequest *request,
                                      Ack *ack) {
   PLOG(INFO) << "Received Completed Task from Learner "
-             << controller_->GetLearnerId(request->task_id());
+             << controller_->GetLearnerId(request->task().id());
 
   const auto status = controller_->TrainDone(*request);
 

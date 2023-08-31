@@ -45,6 +45,7 @@ typedef absl::flat_hash_map<std::string, Learner> LearnersMap;
 typedef absl::flat_hash_map<std::string, TrainParams> TrainParamsMap;
 typedef absl::flat_hash_map<std::string, EvaluationParams> EvaluationParamsMap;
 
+typedef absl::flat_hash_map<std::string, Task> TaskMap;  // task_id -> Task
 typedef absl::flat_hash_map<std::string, std::string>
     TaskLearnerMap;  // task_id -> learner_id
 typedef absl::flat_hash_map<std::string, TrainResults> TrainResultsMap;

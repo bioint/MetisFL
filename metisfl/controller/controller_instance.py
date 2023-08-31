@@ -2,9 +2,9 @@ import signal
 import time
 from typing import Optional
 
+from metisfl.common.types import (GlobalTrainConfig, ModelStoreConfig,
+                                  ServerParams)
 from metisfl.controller import controller
-
-from ..common.types import GlobalTrainConfig, ModelStoreConfig, ServerParams
 
 
 class Controller(object):

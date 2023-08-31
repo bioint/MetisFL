@@ -31,7 +31,7 @@ class Scheduler {
    *
    * @return int The global iteration.
    */
-  inline int GetGlobalIteration() { return global_iteration_; }
+  int GetGlobalIteration() { return global_iteration_; }
 };
 
 }  // namespace metisfl::controller

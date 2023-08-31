@@ -36,7 +36,7 @@ message LearnerId {
 }
 
 message TrainDoneRequest {
-  string task_id = 2;
+  Task task = 1;
   Model model = 3;
   TrainResults results = 4;
 }

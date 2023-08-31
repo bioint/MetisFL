@@ -3,7 +3,7 @@
 
 import numpy as np
 from metisfl.encryption import fhe
-from .scheme import EncryptionScheme
+from metisfl.encryption.scheme import EncryptionScheme
 
 
 class HomomorphicEncryption(EncryptionScheme):

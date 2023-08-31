@@ -5,9 +5,9 @@ from typing import Dict
 
 from google.protobuf.json_format import MessageToDict
 
-from .controller_client import GRPCControllerClient
-from ..common.types import TerminationSingals
-from ..common.logger import MetisLogger
+from metisfl.driver.controller_client import GRPCControllerClient
+from metisfl.common.types import TerminationSingals
+from metisfl.common.logger import MetisLogger
 
 
 class FederationMonitor:
@@ -127,9 +127,6 @@ class FederationMonitor:
 
         logs = self._controller_client.get_logs()
 
-        def msg_to_dict_fn(x): return MessageToDict(
-            x, preserving_proto_field_name=True)
-
         statistics = {
             "global_iteration": logs.global_iteration,
             "tasks": logs.task_learner_map,
@@ -137,5 +134,9 @@ class FederationMonitor:
             "evaluation_results": logs.evaluation_results,
             "model_metadata": logs.model_metadata,
         }
+
+        for k, v in statistics.items():
+            if isinstance(v, dict):
+                statistics[k] = MessageToDict(v)
 
         self._logs = statistics

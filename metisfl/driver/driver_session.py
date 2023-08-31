@@ -2,12 +2,12 @@ import random
 from time import sleep
 from typing import Dict, List, Union
 
-from ..proto import model_pb2
-from ..common.types import ClientParams, FederationEnvironment
-from ..common.logger import MetisASCIIArt
-from .controller_client import GRPCControllerClient
-from .federation_monitor import FederationMonitor
-from .learner_client import GRPCLearnerClient
+from metisfl.proto import model_pb2
+from metisfl.common.types import ClientParams, FederationEnvironment
+from metisfl.common.logger import MetisASCIIArt
+from metisfl.driver.controller_client import GRPCControllerClient
+from metisfl.driver.federation_monitor import FederationMonitor
+from metisfl.driver.learner_client import GRPCLearnerClient
 
 
 class DriverSession(object):
@@ -30,6 +30,7 @@ class DriverSession(object):
 
         self._controller_client = self._create_controller_client()
         self._learner_clients = self._create_learner_clients()
+
         self._service_monitor = FederationMonitor(
             controller_client=self._controller_client,
             termination_signals=self._federation_environment.termination_signals,
@@ -89,7 +90,7 @@ class DriverSession(object):
 
         for grpc_client in self._learner_clients:
             grpc_client.shutdown_server(request_timeout=30, block=False)
-            grpc_client.shutdown()
+            grpc_client.shutdown_client()
 
         # FIXME:
         self._controller_client.shutdown_server(

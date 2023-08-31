@@ -2,13 +2,13 @@
 import signal
 from typing import Optional
 
-from ..common.types import ClientParams, ServerParams
-from ..config import get_learner_id_fp
-from .controller_client import GRPCClient
-from .learner import Learner
-from .learner_server import LearnerServer
-from .message_helper import MessageHelper
-from .task_manager import TaskManager
+from metisfl.common.types import ClientParams, ServerParams
+from metisfl.config import get_learner_id_fp
+from metisfl.controller_client import GRPCClient
+from metisfllearner import Learner
+from metisfllearner_server import LearnerServer
+from metisfl.message_helper import MessageHelper
+from metisfltask_manager import TaskManager
 
 
 def register_handlers(client: GRPCClient, server: LearnerServer):

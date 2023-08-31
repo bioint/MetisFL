@@ -1,22 +1,22 @@
 
 
 import threading
-from typing import Any, Dict, Tuple
+from typing import Any, Tuple
 
 import grpc
 from google.protobuf.json_format import MessageToDict
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from ..common.logger import MetisLogger
-from ..common.server import get_server
-from ..common.types import ServerParams
-from ..proto import (learner_pb2, learner_pb2_grpc, model_pb2,
-                     service_common_pb2)
-from .controller_client import GRPCClient
-from .learner import (Learner, try_call_evaluate, try_call_get_weights,
-                      try_call_set_weights, try_call_train)
-from .task_manager import TaskManager
-from .message_helper import MessageHelper
+from metisfl.common.logger import MetisLogger
+from metisfl.common.server import get_server
+from metisfl.common.types import ServerParams
+from metisflproto import (learner_pb2, learner_pb2_grpc, model_pb2,
+                          service_common_pb2)
+from metisfl.controller_client import GRPCClient
+from metisfllearner import (Learner, try_call_evaluate, try_call_get_weights,
+                            try_call_set_weights, try_call_train)
+from metisfltask_manager import TaskManager
+from metisfl.message_helper import MessageHelper
 
 
 class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
@@ -128,8 +128,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         Returns
         -------
-        learner_pb2.SetInitialModelResponse
-            The response containing the acknoledgement. The acknoledgement contains the status, i.e. True if the weights were set, False otherwise.
+        service_common_pb2.Ack
+            The response containing the acknoledgement.
         """
 
         if not self._is_serving(context):
@@ -172,6 +172,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         weights = self._message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
 
+        recevied_at = Timestamp().GetCurrentTime()
+
         metrics = try_call_evaluate(
             learner=self._learner,
             weights=weights,
@@ -179,7 +181,11 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         )
 
         return learner_pb2.EvaluateResponse(
-            task_id=request.task_id,
+            task=learner_pb2.Task(
+                id=request.task.id,
+                received_at=recevied_at,
+                completed_at=Timestamp().GetCurrentTime(),
+            ),
             results=learner_pb2.EvaluationResults(
                 metrics=metrics,
             ),
@@ -211,13 +217,18 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return service_common_pb2.Ack(status=False)
 
-        task_id: str = request.task_id
+        task: learner_pb2.Task = request.task
         weights = self._message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
 
+        new_task = learner_pb2.Task(
+            id=task.id,
+            received_at=Timestamp().GetCurrentTime(),
+        )
+
         def train_out_to_callback_fn(train_out: Tuple[Any]) -> Tuple[Any]:
             return (
-                task_id,
+                new_task,  # task
                 train_out[0],  # weights
                 train_out[1],  # metrics
                 train_out[2],  # metadata
@@ -239,7 +250,11 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             timestamp=Timestamp().GetCurrentTime(),
         )
 
-    def ShutDown(self) -> service_common_pb2.Ack:
+    def ShutDown(
+        self,
+        _: service_common_pb2.Empty,
+        __: Any
+    ) -> service_common_pb2.Ack:
         """Shuts down the server."""
 
         self._status = service_common_pb2.ServingStatus.NOT_SERVING

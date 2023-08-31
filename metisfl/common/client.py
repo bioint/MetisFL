@@ -9,9 +9,9 @@ from typing import Any, Callable, Optional, Union
 import grpc
 from pebble import ThreadPool
 
-from ..common.types import ClientParams
-from ..common.logger import MetisLogger
-from .common import get_endpoint
+from metisfl.common.types import ClientParams
+from metisfl.common.logger import MetisLogger
+from metisfl.common.common import get_endpoint
 
 GRPC_MAX_MESSAGE_LENGTH: int = 512 * 1024 * 1024
 

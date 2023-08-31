@@ -31,7 +31,8 @@ class LearnerManager {
   TrainParamsMap train_params_;
   EvaluationParamsMap eval_params_;
 
-  // task_id -> learner_id
+  // task_id -> {}
+  TaskMap tasks_;
   TaskLearnerMap task_learner_map_;
 
   // task_id -> {}
@@ -58,8 +59,7 @@ class LearnerManager {
     return task_learner_map_[task_id];
   }
 
-  void UpdateTrainResults(const std::string &task_id,
-                          const std::string &learner_id,
+  void UpdateTrainResults(const Task &task, const std::string &learner_id,
                           const TrainResults &metadata);
 
   // Public methods
@@ -71,11 +71,11 @@ class LearnerManager {
 
   bool ValidateLearner(const std::string &learner_id) const;
 
-  void ScheduleTrain(const std::vector<std::string> &learner_ids,
-                     const Model &model);
+  void ScheduleTrain(const std::vector<std::string> learner_ids,
+                     const Model model);
 
-  void ScheduleEvaluate(const std::vector<std::string> &learner_ids,
-                        const Model &model);
+  void ScheduleEvaluate(const std::vector<std::string> learner_ids,
+                        const Model model);
 
   absl::flat_hash_map<std::string, int> GetNumTrainingExamples(
       const std::vector<std::string> &learner_ids);
@@ -87,9 +87,6 @@ class LearnerManager {
 
  private:
   LearnerStub CreateLearnerStub(const std::string &learner_id);
-
-  void ScheduleTasks(const std::vector<std::string> &learner_ids,
-                     const Model &model);
 
   void SendEvaluateAsync(const std::string &learner_id, const Model &model);
 

@@ -2,9 +2,9 @@
 """A gRPC client used from the driver to communicate with the controller."""
 
 from typing import Callable, Optional
-from ..common.client import get_client
-from ..proto import controller_pb2, controller_pb2_grpc, model_pb2, service_common_pb2
-from ..common.types import ClientParams
+from metisfl.common.client import get_client
+from metisfl.proto import controller_pb2, controller_pb2_grpc, model_pb2, service_common_pb2
+from metisfl.common.types import ClientParams
 
 
 class GRPCControllerClient(object):
@@ -157,7 +157,6 @@ class GRPCControllerClient(object):
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule: Callable = client[1]
 
-            # FIXME: convert to getLogs
             def _request(_timeout=None):
                 request = service_common_pb2.Empty()
                 return stub.GetLogs(request, timeout=_timeout)
@@ -192,7 +191,7 @@ class GRPCControllerClient(object):
             schedule: Callable = client[1]
 
             def _request(_timeout=None):
-                return stub.ShutDown(service_common_pb2.ShutDownRequest(), timeout=_timeout)
+                return stub.ShutDown(service_common_pb2.Empty(), timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 

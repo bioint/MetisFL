@@ -1,6 +1,7 @@
 #include "metisfl/controller/core/learner_manager.h"
 
 namespace metisfl::controller {
+using google::protobuf::util::TimeUtil;
 
 // Constructor
 LearnerManager::LearnerManager()
@@ -59,8 +60,8 @@ absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
   return absl::OkStatus();
 }
 
-void LearnerManager::ScheduleTrain(const std::vector<std::string> &learner_ids,
-                                   const Model &model) {
+void LearnerManager::ScheduleTrain(const std::vector<std::string> learner_ids,
+                                   const Model model) {
   for (const auto &learner_id : learner_ids) {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
@@ -70,7 +71,7 @@ void LearnerManager::ScheduleTrain(const std::vector<std::string> &learner_ids,
 }
 
 void LearnerManager::ScheduleEvaluate(
-    const std::vector<std::string> &learner_ids, const Model &model) {
+    const std::vector<std::string> learner_ids, const Model model) {
   for (const auto &learner_id : learner_ids) {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
@@ -85,11 +86,13 @@ void LearnerManager::Shutdown() {
   scheduling_pool_.wait_for_tasks();
 }
 
-void LearnerManager::UpdateTrainResults(const std::string &task_id,
+void LearnerManager::UpdateTrainResults(const Task &task,
                                         const std::string &learner_id,
                                         const TrainResults &results) {
+  auto task_id = task.id();
   train_results_[task_id] = results;
   latest_train_results_[learner_id] = results;
+  tasks_[task_id] = task;
 }
 
 absl::flat_hash_map<std::string, int> LearnerManager::GetNumTrainingExamples(
@@ -184,10 +187,14 @@ bool LearnerManager::ValidateLearner(const std::string &learner_id) const {
 void LearnerManager::SendTrainAsync(const std::string &learner_id,
                                     const Model &model) {
   auto task_id = GenerateRadnomId();
+  tasks_[task_id] = Task();
+  tasks_[task_id].set_id(task_id);
+  *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
+
   task_learner_map_[task_id] = learner_id;
 
   TrainRequest request;
-  *request.mutable_task_id() = task_id;
+  *request.mutable_task() = tasks_[task_id];
   *request.mutable_model() = model;
   *request.mutable_params() = train_params_[learner_id];
 
@@ -225,10 +232,14 @@ void LearnerManager::DigestTrainResponses() {
 void LearnerManager::SendEvaluateAsync(const std::string &learner_id,
                                        const Model &model) {
   auto task_id = GenerateRadnomId();
+  tasks_[task_id] = Task();
+  tasks_[task_id].set_id(task_id);
+  *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
+
   task_learner_map_[task_id] = learner_id;
 
   EvaluateRequest request;
-  *request.mutable_task_id() = task_id;
+  *request.mutable_task() = tasks_[task_id];
   *request.mutable_model() = model;
   *request.mutable_params() = eval_params_[learner_id];
 
@@ -254,8 +265,9 @@ void LearnerManager::DigestEvaluateResponses() {
 
     if (call) {
       if (call->status.ok()) {
-        const std::string &task_id = call->reply.task_id();
+        const std::string &task_id = call->reply.task().id();
         evaluation_results_[task_id] = call->reply.results();
+        tasks_[task_id] = call->reply.task();
       } else {
         PLOG(ERROR) << "EvaluateModel RPC request to learner: "
                     << call->learner_id

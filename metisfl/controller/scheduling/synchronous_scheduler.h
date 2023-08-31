@@ -33,7 +33,6 @@ class SynchronousScheduler : public Scheduler {
 
  private:
   absl::flat_hash_set<std::string> learner_ids_;
-  int global_iteration_ = 0;
 };
 
 }  // namespace metisfl::controller

@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
-from ..common.logger import MetisLogger
+from metisfl.common.logger import MetisLogger
 
 
 class Learner(ABC):
