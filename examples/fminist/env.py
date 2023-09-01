@@ -31,7 +31,8 @@ learner_2 = ServerParams(
 
 env = FederationEnvironment(
     termination_signals=TerminationSingals(
-        federation_rounds=3,
+        evaluation_metric="accuracy",
+        evaluation_metric_cutoff_score=0.6,
     ),
     global_train_config=global_train_config,
     model_store_config=model_store_config,

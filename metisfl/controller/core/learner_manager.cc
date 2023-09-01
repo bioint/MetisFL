@@ -60,8 +60,8 @@ absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
   return absl::OkStatus();
 }
 
-void LearnerManager::ScheduleTrain(const std::vector<std::string> learner_ids,
-                                   const Model model) {
+void LearnerManager::ScheduleTrain(const std::vector<std::string> &learner_ids,
+                                   const Model &model) {
   for (const auto &learner_id : learner_ids) {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
@@ -71,7 +71,7 @@ void LearnerManager::ScheduleTrain(const std::vector<std::string> learner_ids,
 }
 
 void LearnerManager::ScheduleEvaluate(
-    const std::vector<std::string> learner_ids, const Model model) {
+    const std::vector<std::string> &learner_ids, const Model &model) {
   for (const auto &learner_id : learner_ids) {
     std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 

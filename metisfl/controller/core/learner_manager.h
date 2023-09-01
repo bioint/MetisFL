@@ -69,11 +69,11 @@ class LearnerManager {
 
   bool ValidateLearner(const std::string &learner_id) const;
 
-  void ScheduleTrain(const std::vector<std::string> learner_ids,
-                     const Model model);
+  void ScheduleTrain(const std::vector<std::string> &learner_ids,
+                     const Model &model);
 
-  void ScheduleEvaluate(const std::vector<std::string> learner_ids,
-                        const Model model);
+  void ScheduleEvaluate(const std::vector<std::string> &learner_ids,
+                        const Model &model);
 
   absl::flat_hash_map<std::string, int> GetNumTrainingExamples(
       const std::vector<std::string> &learner_ids);

@@ -91,17 +91,16 @@ class FederationMonitor:
         if not metric or not cutoff_score:
             return False
 
-        tasks: List[learner_pb2.Task] = self._logs["tasks"]
-        eval_results: learner_pb2.EvaluationResults = self._logs["evaluation_results"]
         eval_score = {}
         timestamps = {}
 
+        tasks = self._logs["tasks"]
+        eval_results = self._logs["evaluation_results"]
+
         for task in tasks:
-            task_id = task.id
-            learner_id = task.learner_id
-            if metric not in eval_results[learner_id].metrics:
-                MetisLogger.warning(
-                    f"Metric {metric} not found in evaluation results for learner {learner_id}.")
+            task_id = task["id"]
+            learner_id = task["learner_id"]
+            if metric not in eval_results[learner_id]["metrics"]:
                 continue
 
             if learner_id not in eval_results or \
@@ -137,7 +136,9 @@ class FederationMonitor:
     def _get_logs(self) -> controller_pb2.Logs:
         """Collects statistics from the federation."""
 
-        self._logs = self._controller_client.get_logs()
+        logs = self._controller_client.get_logs()
+        logs = self._get_logs_dict()
+        self._logs = logs
 
         return self._logs
 

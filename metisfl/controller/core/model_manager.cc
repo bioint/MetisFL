@@ -22,21 +22,21 @@ absl::Status ModelManager::SetInitialModel(const Model &model) {
   return absl::OkStatus();
 }
 
-void ModelManager::InsertModel(std::string learner_id, const Model &model) {
+void ModelManager::InsertModel(std::string &learner_id, const Model &model) {
   std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
   model_store_->InsertModel(std::vector<std::pair<std::string, Model>>{
       std::pair<std::string, Model>(learner_id, model)});
 }
 
-void ModelManager::EraseModels(std::vector<std::string> learner_id) {
+void ModelManager::EraseModels(std::vector<std::string> &learner_id) {
   std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
   model_store_->EraseModels(learner_id);
 }
 
 void ModelManager::UpdateModel(
-    std::vector<std::string> learner_ids,
-    absl::flat_hash_map<std::string, double> scaling_factors) {
+    std::vector<std::string> &learner_ids,
+    absl::flat_hash_map<std::string, double> &scaling_factors) {
   std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
   auto update_id = InitializeMetadata();
@@ -91,7 +91,7 @@ int ModelManager::GetStrideLength(int num_learners) const {
   return stride_length;
 }
 
-int ModelManager::GetLineageLength(std::string learner_id) const {
+int ModelManager::GetLineageLength(std::string &learner_id) const {
   const auto lineage_length = model_store_->GetLearnerLineageLength(learner_id);
 
   auto required_lineage_length = aggregator_->RequiredLearnerLineageLength();
@@ -100,8 +100,8 @@ int ModelManager::GetLineageLength(std::string learner_id) const {
 }
 
 std::map<std::string, std::vector<const Model *>> ModelManager::SelectModels(
-    std::string update_id,
-    std::vector<std::pair<std::string, int>> to_select_block) {
+    std::string &update_id,
+    std::vector<std::pair<std::string, int>> &to_select_block) {
   auto start_time_selection = std::chrono::high_resolution_clock::now();
 
   std::map<std::string, std::vector<const Model *>> selected_models =
@@ -120,8 +120,8 @@ std::map<std::string, std::vector<const Model *>> ModelManager::SelectModels(
 
 std::vector<std::vector<std::pair<const Model *, double>>>
 ModelManager::GetAggregationPairs(
-    std::map<std::string, std::vector<const Model *>> selected_models,
-    absl::flat_hash_map<std::string, double> scaling_factors) const {
+    std::map<std::string, std::vector<const Model *>> &selected_models,
+    absl::flat_hash_map<std::string, double> &scaling_factors) const {
   std::vector<std::vector<std::pair<const Model *, double>>> to_aggregate_block;
 
   std::vector<std::pair<const Model *, double>> to_aggregate_learner_models_tmp;
@@ -142,9 +142,9 @@ ModelManager::GetAggregationPairs(
 }
 
 void ModelManager::Aggregate(
-    std::string update_id,
+    std::string &update_id,
     std::vector<std::vector<std::pair<const Model *, double>>>
-        to_aggregate_block) {
+        &to_aggregate_block) {
   auto start_time_block_aggregation = std::chrono::high_resolution_clock::now();
 
   model_ = aggregator_->Aggregate(to_aggregate_block);
@@ -158,7 +158,7 @@ void ModelManager::Aggregate(
       elapsed_time_block_aggregation.count();
 }
 
-void ModelManager::RecordBlockSize(std::string update_id, int block_size) {
+void ModelManager::RecordBlockSize(std::string &update_id, int block_size) {
   *metadata_[update_id].mutable_aggregation_block_size()->Add() = block_size;
   long block_memory = GetTotalMemory();
   *metadata_[update_id].mutable_aggregation_block_memory_kb()->Add() =
@@ -166,14 +166,14 @@ void ModelManager::RecordBlockSize(std::string update_id, int block_size) {
 }
 
 void ModelManager::RecordAggregationTime(
-    std::string update_id,
-    std::chrono::time_point<std::chrono::system_clock> start) {
+    std::string &update_id,
+    std::chrono::time_point<std::chrono::system_clock> &start) {
   auto end = std::chrono::high_resolution_clock::now();
   std::chrono::duration<double, std::milli> elapsed = end - start;
   metadata_[update_id].set_aggregation_duration_ms(elapsed.count());
 }
 
-void ModelManager::RecordModelSize(std::string update_id) {
+void ModelManager::RecordModelSize(std::string &update_id) {
   // TODO:
 }
 };  // namespace metisfl::controller

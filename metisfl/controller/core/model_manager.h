@@ -34,12 +34,12 @@ class ModelManager {
   // Public methods
   absl::Status SetInitialModel(const Model &model);
 
-  void InsertModel(std::string learner_id, const Model &model);
+  void InsertModel(std::string &learner_id, const Model &model);
 
-  void UpdateModel(std::vector<std::string> learner_ids,
-                   absl::flat_hash_map<std::string, double> scaling_factors);
+  void UpdateModel(std::vector<std::string> &learner_ids,
+                   absl::flat_hash_map<std::string, double> &scaling_factors);
 
-  void EraseModels(std::vector<std::string> learner_ids);
+  void EraseModels(std::vector<std::string> &learner_ids);
 
   void Shutdown();
 
@@ -48,28 +48,28 @@ class ModelManager {
 
   int GetStrideLength(int num_learners) const;
 
-  int GetLineageLength(std::string learner_id) const;
+  int GetLineageLength(std::string &learner_id) const;
 
   std::map<std::string, std::vector<const Model *>> SelectModels(
-      std::string update_id,
-      std::vector<std::pair<std::string, int>> to_select_block);
+      std::string &update_id,
+      std::vector<std::pair<std::string, int>> &to_select_block);
 
   std::vector<std::vector<std::pair<const Model *, double>>>
   GetAggregationPairs(
-      std::map<std::string, std::vector<const Model *>> selected_models,
-      absl::flat_hash_map<std::string, double> scaling_factors) const;
+      std::map<std::string, std::vector<const Model *>> &selected_models,
+      absl::flat_hash_map<std::string, double> &scaling_factors) const;
 
-  void Aggregate(std::string update_id,
+  void Aggregate(std::string &update_id,
                  std::vector<std::vector<std::pair<const Model *, double>>>
-                     to_aggregate_block);
+                     &to_aggregate_block);
 
-  void RecordBlockSize(std::string update_id, int block_size);
+  void RecordBlockSize(std::string &update_id, int block_size);
 
   void RecordAggregationTime(
-      std::string update_id,
-      std::chrono::time_point<std::chrono::system_clock> start);
+      std::string &update_id,
+      std::chrono::time_point<std::chrono::system_clock> &start);
 
-  void RecordModelSize(std::string update_id);
+  void RecordModelSize(std::string &update_id);
 };
 }  // namespace metisfl::controller
 

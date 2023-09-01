@@ -35,7 +35,7 @@ class GRPCClient(object):
         client_params : ClientParams
             The client parameters. Used by the learner to connect to the Controller.
         message_helper : MessageHelper
-            The MessageHelper object used to serialize the requests.
+            The MessageHelper object used to serialize/deserialize the messages.
         learner_id_fp : str
             The file where the learner id is stored. 
         max_workers : Optional[int], (default: 1)
