@@ -1,13 +1,15 @@
 
 import datetime
 import time
-from typing import Dict
+from typing import Dict, List
 
+import numpy as np
 from google.protobuf.json_format import MessageToDict
 
-from metisfl.driver.controller_client import GRPCControllerClient
-from metisfl.common.types import TerminationSingals
 from metisfl.common.logger import MetisLogger
+from metisfl.common.types import TerminationSingals
+from metisfl.driver.controller_client import GRPCControllerClient
+from metisfl.proto import controller_pb2, learner_pb2
 
 
 class FederationMonitor:
@@ -59,13 +61,13 @@ class FederationMonitor:
 
         while not terminate:
             time.sleep(request_every_secs)
-            self._collect_logs()
+            self._get_logs()
 
             terminate = self._reached_federation_rounds() or \
                 self._reached_evaluation_score() or \
                 self._reached_execution_time(st)
 
-        return self._logs
+        return self._get_logs_dict()
 
     def _reached_federation_rounds(self) -> bool:
         """Checks if the federation has reached the maximum number of rounds."""
@@ -73,39 +75,49 @@ class FederationMonitor:
         if not self._signals.federation_rounds or self._is_async:
             return False
 
-        if "global_iteration" in self._logs and \
-                self._logs["global_iteration"] > self._signals.federation_rounds:
+        if self._logs.global_iteration >= self._signals.federation_rounds:
             MetisLogger.info(
                 "Exceeded federation rounds cutoff point. Exiting ...")
             return True
+
         return False
 
     def _reached_evaluation_score(self) -> bool:
         """Checks if the federation has reached the maximum evaluation score."""
 
-        metric_cutoff_score = self._signals.evaluation_metric_cutoff_score
+        metric = self._signals.evaluation_metric
+        cutoff_score = self._signals.evaluation_metric_cutoff_score
 
-        if not metric_cutoff_score:
+        if not metric or not cutoff_score:
             return False
 
-        commmunity_evaluation = [
-            x for x in self._logs["community_evaluation"]]
+        tasks: List[learner_pb2.Task] = self._logs["tasks"]
+        eval_results: learner_pb2.EvaluationResults = self._logs["evaluation_results"]
+        eval_score = {}
+        timestamps = {}
 
-        for res in commmunity_evaluation:
-            scores = []
-            for _, evaluations in res.evaluations.items():
-                evaluation_metric = evaluations.evaluation.metric_values
+        for task in tasks:
+            task_id = task.id
+            learner_id = task.learner_id
+            if metric not in eval_results[learner_id].metrics:
+                MetisLogger.warning(
+                    f"Metric {metric} not found in evaluation results for learner {learner_id}.")
+                continue
 
-                if evaluation_metric and evaluation_metric in evaluations.evaluation.metric_values:
-                    test_score = evaluations.evaluation.metric_values[evaluation_metric]
-                    scores.append(float(test_score))
+            if learner_id not in eval_results or \
+                    timestamps[learner_id] < tasks[task_id].completed_at:
+                eval_score[learner_id] = eval_results[learner_id].metrics[metric]
+                timestamps[learner_id] = tasks[task_id].completed_at
+            else:
+                if timestamps[learner_id] < tasks[task_id].completed_at:
+                    eval_score[learner_id] = eval_results[learner_id].metrics[metric]
+                    timestamps[learner_id] = tasks[task_id].completed_at
 
-            if scores:
-                mean_score = sum(scores) / len(scores)
-                if mean_score >= metric_cutoff_score:
-                    MetisLogger.info(
-                        "Exceeded evaluation metric cutoff score. Exiting...")
-                    return True
+        if np.mean(list(eval_score.values())) > cutoff_score:
+            MetisLogger.info(
+                f"Exceeded evaluation score cutoff point. Exiting ...")
+            return True
+
         return False
 
     def _reached_execution_time(self, st) -> bool:
@@ -122,21 +134,28 @@ class FederationMonitor:
 
         return False
 
-    def _collect_logs(self) -> None:
+    def _get_logs(self) -> controller_pb2.Logs:
         """Collects statistics from the federation."""
 
-        logs = self._controller_client.get_logs()
+        self._logs = self._controller_client.get_logs()
 
-        statistics = {
-            "global_iteration": logs.global_iteration,
-            "tasks": logs.task_learner_map,
-            "train_results": logs.train_results,
-            "evaluation_results": logs.evaluation_results,
-            "model_metadata": logs.model_metadata,
+        return self._logs
+
+    def _get_logs_dict(self) -> None:
+        """Returns the collected statistics from the federation."""
+
+        def msg_convert(msg):
+            return MessageToDict(msg, preserving_proto_field_name=True)
+
+        def proto_map_to_dict(proto_map):
+            return {k: msg_convert(v) for k, v in proto_map.items()}
+
+        logs = {
+            "global_iteration": self._logs.global_iteration,
+            "tasks": [msg_convert(task) for task in self._logs.tasks],
+            "train_results": proto_map_to_dict(self._logs.train_results),
+            "evaluation_results": proto_map_to_dict(self._logs.evaluation_results),
+            "model_metadata":  proto_map_to_dict(self._logs.model_metadata),
         }
 
-        for k, v in statistics.items():
-            if isinstance(v, dict):
-                statistics[k] = MessageToDict(v)
-
-        self._logs = statistics
+        return logs

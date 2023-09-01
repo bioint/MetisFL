@@ -40,7 +40,7 @@ class Controller {
   // Getters
   int GetGlobalIteration() { return scheduler_->GetGlobalIteration(); }
 
-  TaskLearnerMap GetTasksMap() { return learner_manager_->GetTasksMap(); }
+  TaskMap GetTaskMap() { return learner_manager_->GetTaskMap(); }
 
   TrainResultsMap GetTrainResults() {
     return learner_manager_->GetTrainResults();

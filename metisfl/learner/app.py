@@ -4,11 +4,11 @@ from typing import Optional
 
 from metisfl.common.types import ClientParams, ServerParams
 from metisfl.config import get_learner_id_fp
-from metisfl.controller_client import GRPCClient
-from metisfllearner import Learner
-from metisfllearner_server import LearnerServer
-from metisfl.message_helper import MessageHelper
-from metisfltask_manager import TaskManager
+from metisfl.learner.controller_client import GRPCClient
+from metisfl.learner.learner import Learner
+from metisfl.learner.learner_server import LearnerServer
+from metisfl.learner.message_helper import MessageHelper
+from metisfl.learner.task_manager import TaskManager
 
 
 def register_handlers(client: GRPCClient, server: LearnerServer):

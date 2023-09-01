@@ -1,31 +1,32 @@
 import unittest
-
-from metisfl.proto import controller_pb2
+from unittest import mock
+from google.protobuf.json_format import MessageToDict
 
 from metisfl.common.types import TerminationSingals
 from metisfl.driver.controller_client import GRPCControllerClient
 from metisfl.driver.federation_monitor import FederationMonitor
-
-# write the sceleton of the test class
+from metisfl.proto import controller_pb2
 
 
 class TestFederationMonitor(unittest.TestCase):
 
     def setUp(self):
-        client_mock = unittest.mock.Mock(spec=GRPCControllerClient)
-        signals_mock = unittest.mock.Mock(TerminationSingals)
+        self.client_mock = mock.Mock(spec=GRPCControllerClient)
         self.federation_monitor = FederationMonitor(
-            client=client_mock,
-            signals=signals_mock,
-            is_active=True,
+            termination_signals=TerminationSingals(
+                evaluation_metric="accuracy",
+                evaluation_metric_cutoff_score=0.9,
+            ),
+            controller_client=self.client_mock,
+            is_async=True,
         )
 
-        client_mock.get_logs.return_value = controller_pb2.Logs(
+        self.client_mock.get_logs.return_value = controller_pb2.Logs(
             global_iteration=1,
-            task_learner_map={},
+            tasks=[],
             train_results={},
             evaluation_results={},
-            model_results={},
+            model_metadata={},
         )
 
     def tearDown(self):
@@ -43,16 +44,17 @@ class TestFederationMonitor(unittest.TestCase):
     def test_reached_execution_time(self):
         pass
 
-    def test__get_logs(self):
-        client_mock = unittest.mock.Mock(spec=GRPCControllerClient)
-        signals_mock = unittest.mock.Mock(TerminationSingals)
-        federation_monitor = FederationMonitor(
-            client=client_mock,
-            signals=signals_mock,
-            is_active=True,
+    def test_get_logs(self):
+        logs = self.federation_monitor._get_logs()
+        self.assertEqual(logs, self.client_mock.get_logs.return_value)
+
+    def test_get_logs_dict(self):
+        self.federation_monitor._get_logs()
+        logs_dict = self.federation_monitor._get_logs_dict()
+        self.assertEqual(
+            logs_dict["global_iteration"],
+            self.client_mock.get_logs.return_value.global_iteration
         )
-        logs = federation_monitor._get_logs()
-        self.assertEqual(logs, client_mock.get_logs.return_value)
 
 
 if __name__ == '__main__':

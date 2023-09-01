@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\x1bmetisfl/proto/learner.proto\x1a\"metisfl/proto/service_common.proto\"\xdd\x01\n\x07Learner\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x34\n\x16root_certificate_bytes\x18\x03 \x01(\tR\x14rootCertificateBytes\x12\x38\n\x18public_certificate_bytes\x18\x04 \x01(\tR\x16publicCertificateBytes\x12\x32\n\x15num_training_examples\x18\x05 \x01(\rR\x13numTrainingExamples\"\x1b\n\tLearnerId\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x8c\x01\n\x10TrainDoneRequest\x12!\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.TaskR\x04task\x12$\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12/\n\x07results\x18\x04 \x01(\x0b\x32\x15.metisfl.TrainResultsR\x07results\"\x86\x02\n\x0cTrainResults\x12<\n\x07metrics\x18\x01 \x03(\x0b\x32\".metisfl.TrainResults.MetricsEntryR\x07metrics\x12?\n\x08metadata\x18\x02 \x03(\x0b\x32#.metisfl.TrainResults.MetadataEntryR\x08metadata\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1a;\n\rMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\"\xb9\x05\n\x04Logs\x12)\n\x10global_iteration\x18\x01 \x01(\x05R\x0fglobalIteration\x12K\n\x10task_learner_map\x18\x02 \x03(\x0b\x32!.metisfl.Logs.TaskLearnerMapEntryR\x0etaskLearnerMap\x12\x44\n\rtrain_results\x18\x03 \x03(\x0b\x32\x1f.metisfl.Logs.TrainResultsEntryR\x0ctrainResults\x12S\n\x12\x65valuation_results\x18\x04 \x03(\x0b\x32$.metisfl.Logs.EvaluationResultsEntryR\x11\x65valuationResults\x12G\n\x0emodel_metadata\x18\x05 \x03(\x0b\x32 .metisfl.Logs.ModelMetadataEntryR\rmodelMetadata\x1a\x41\n\x13TaskLearnerMapEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\tR\x05value:\x02\x38\x01\x1aV\n\x11TrainResultsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12+\n\x05value\x18\x02 \x01(\x0b\x32\x15.metisfl.TrainResultsR\x05value:\x02\x38\x01\x1a`\n\x16\x45valuationResultsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResultsR\x05value:\x02\x38\x01\x1aX\n\x12ModelMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12,\n\x05value\x18\x02 \x01(\x0b\x32\x16.metisfl.ModelMetadataR\x05value:\x02\x38\x01\"\xfd\x02\n\rModelMetadata\x12\x32\n\x15selection_duration_ms\x18\x02 \x01(\x01R\x13selectionDurationMs\x12\x36\n\x17\x61ggregation_duration_ms\x18\x03 \x01(\x01R\x15\x61ggregationDurationMs\x12\x34\n\x16\x61ggregation_block_size\x18\x0f \x03(\x01R\x14\x61ggregationBlockSize\x12=\n\x1b\x61ggregation_block_memory_kb\x18\x10 \x03(\x01R\x18\x61ggregationBlockMemoryKb\x12\x41\n\x1d\x61ggregation_block_duration_ms\x18\x11 \x03(\x01R\x1a\x61ggregationBlockDurationMs\x12H\n\x12tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifierR\x11tensorQuantifiers2\xab\x03\n\x11\x43ontrollerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12\x38\n\x0eJoinFederation\x12\x10.metisfl.Learner\x1a\x12.metisfl.LearnerId\"\x00\x12\x35\n\x0fLeaveFederation\x12\x12.metisfl.LearnerId\x1a\x0c.metisfl.Ack\"\x00\x12/\n\rStartTraining\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x36\n\tTrainDone\x12\x19.metisfl.TrainDoneRequest\x1a\x0c.metisfl.Ack\"\x00\x12*\n\x07GetLogs\x12\x0e.metisfl.Empty\x1a\r.metisfl.Logs\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\x1bmetisfl/proto/learner.proto\x1a\"metisfl/proto/service_common.proto\"\xdd\x01\n\x07Learner\x12\x1a\n\x08hostname\x18\x01 \x01(\tR\x08hostname\x12\x12\n\x04port\x18\x02 \x01(\rR\x04port\x12\x34\n\x16root_certificate_bytes\x18\x03 \x01(\tR\x14rootCertificateBytes\x12\x38\n\x18public_certificate_bytes\x18\x04 \x01(\tR\x16publicCertificateBytes\x12\x32\n\x15num_training_examples\x18\x05 \x01(\rR\x13numTrainingExamples\"\x1b\n\tLearnerId\x12\x0e\n\x02id\x18\x01 \x01(\tR\x02id\"\x8c\x01\n\x10TrainDoneRequest\x12!\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.TaskR\x04task\x12$\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.ModelR\x05model\x12/\n\x07results\x18\x04 \x01(\x0b\x32\x15.metisfl.TrainResultsR\x07results\"\x86\x02\n\x0cTrainResults\x12<\n\x07metrics\x18\x01 \x03(\x0b\x32\".metisfl.TrainResults.MetricsEntryR\x07metrics\x12?\n\x08metadata\x18\x02 \x03(\x0b\x32#.metisfl.TrainResults.MetadataEntryR\x08metadata\x1a:\n\x0cMetricsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x02R\x05value:\x02\x38\x01\x1a;\n\rMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n\x05value\x18\x02 \x01(\x01R\x05value:\x02\x38\x01\"\xce\x04\n\x04Logs\x12)\n\x10global_iteration\x18\x01 \x01(\x05R\x0fglobalIteration\x12#\n\x05tasks\x18\x02 \x03(\x0b\x32\r.metisfl.TaskR\x05tasks\x12\x44\n\rtrain_results\x18\x04 \x03(\x0b\x32\x1f.metisfl.Logs.TrainResultsEntryR\x0ctrainResults\x12S\n\x12\x65valuation_results\x18\x05 \x03(\x0b\x32$.metisfl.Logs.EvaluationResultsEntryR\x11\x65valuationResults\x12G\n\x0emodel_metadata\x18\x06 \x03(\x0b\x32 .metisfl.Logs.ModelMetadataEntryR\rmodelMetadata\x1aV\n\x11TrainResultsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12+\n\x05value\x18\x02 \x01(\x0b\x32\x15.metisfl.TrainResultsR\x05value:\x02\x38\x01\x1a`\n\x16\x45valuationResultsEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12\x30\n\x05value\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResultsR\x05value:\x02\x38\x01\x1aX\n\x12ModelMetadataEntry\x12\x10\n\x03key\x18\x01 \x01(\tR\x03key\x12,\n\x05value\x18\x02 \x01(\x0b\x32\x16.metisfl.ModelMetadataR\x05value:\x02\x38\x01\"\xfd\x02\n\rModelMetadata\x12\x32\n\x15selection_duration_ms\x18\x02 \x01(\x01R\x13selectionDurationMs\x12\x36\n\x17\x61ggregation_duration_ms\x18\x03 \x01(\x01R\x15\x61ggregationDurationMs\x12\x34\n\x16\x61ggregation_block_size\x18\x0f \x03(\x01R\x14\x61ggregationBlockSize\x12=\n\x1b\x61ggregation_block_memory_kb\x18\x10 \x03(\x01R\x18\x61ggregationBlockMemoryKb\x12\x41\n\x1d\x61ggregation_block_duration_ms\x18\x11 \x03(\x01R\x1a\x61ggregationBlockDurationMs\x12H\n\x12tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifierR\x11tensorQuantifiers2\xab\x03\n\x11\x43ontrollerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12\x38\n\x0eJoinFederation\x12\x10.metisfl.Learner\x1a\x12.metisfl.LearnerId\"\x00\x12\x35\n\x0fLeaveFederation\x12\x12.metisfl.LearnerId\x1a\x0c.metisfl.Ack\"\x00\x12/\n\rStartTraining\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x36\n\tTrainDone\x12\x19.metisfl.TrainDoneRequest\x1a\x0c.metisfl.Ack\"\x00\x12*\n\x07GetLogs\x12\x0e.metisfl.Empty\x1a\r.metisfl.Logs\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3'
   ,
   dependencies=[metisfl_dot_proto_dot_model__pb2.DESCRIPTOR,metisfl_dot_proto_dot_learner__pb2.DESCRIPTOR,metisfl_dot_proto_dot_service__common__pb2.DESCRIPTOR,])
 
@@ -184,8 +184,8 @@ _TRAINRESULTS_METRICSENTRY = _descriptor.Descriptor(
       serialized_options=None, json_name='key', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='value', full_name='metisfl.TrainResults.MetricsEntry.value', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
+      number=2, type=2, cpp_type=6, label=1,
+      has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -282,44 +282,6 @@ _TRAINRESULTS = _descriptor.Descriptor(
 )
 
 
-_LOGS_TASKLEARNERMAPENTRY = _descriptor.Descriptor(
-  name='TaskLearnerMapEntry',
-  full_name='metisfl.Logs.TaskLearnerMapEntry',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='metisfl.Logs.TaskLearnerMapEntry.key', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='key', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='metisfl.Logs.TaskLearnerMapEntry.value', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='value', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=b'8\001',
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1153,
-  serialized_end=1218,
-)
-
 _LOGS_TRAINRESULTSENTRY = _descriptor.Descriptor(
   name='TrainResultsEntry',
   full_name='metisfl.Logs.TrainResultsEntry',
@@ -354,8 +316,8 @@ _LOGS_TRAINRESULTSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1220,
-  serialized_end=1306,
+  serialized_start=1113,
+  serialized_end=1199,
 )
 
 _LOGS_EVALUATIONRESULTSENTRY = _descriptor.Descriptor(
@@ -392,8 +354,8 @@ _LOGS_EVALUATIONRESULTSENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1308,
-  serialized_end=1404,
+  serialized_start=1201,
+  serialized_end=1297,
 )
 
 _LOGS_MODELMETADATAENTRY = _descriptor.Descriptor(
@@ -430,8 +392,8 @@ _LOGS_MODELMETADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1406,
-  serialized_end=1494,
+  serialized_start=1299,
+  serialized_end=1387,
 )
 
 _LOGS = _descriptor.Descriptor(
@@ -450,29 +412,29 @@ _LOGS = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='globalIteration', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='task_learner_map', full_name='metisfl.Logs.task_learner_map', index=1,
+      name='tasks', full_name='metisfl.Logs.tasks', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, json_name='taskLearnerMap', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+      serialized_options=None, json_name='tasks', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='train_results', full_name='metisfl.Logs.train_results', index=2,
-      number=3, type=11, cpp_type=10, label=3,
+      number=4, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='trainResults', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='evaluation_results', full_name='metisfl.Logs.evaluation_results', index=3,
-      number=4, type=11, cpp_type=10, label=3,
+      number=5, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, json_name='evaluationResults', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
       name='model_metadata', full_name='metisfl.Logs.model_metadata', index=4,
-      number=5, type=11, cpp_type=10, label=3,
+      number=6, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -480,7 +442,7 @@ _LOGS = _descriptor.Descriptor(
   ],
   extensions=[
   ],
-  nested_types=[_LOGS_TASKLEARNERMAPENTRY, _LOGS_TRAINRESULTSENTRY, _LOGS_EVALUATIONRESULTSENTRY, _LOGS_MODELMETADATAENTRY, ],
+  nested_types=[_LOGS_TRAINRESULTSENTRY, _LOGS_EVALUATIONRESULTSENTRY, _LOGS_MODELMETADATAENTRY, ],
   enum_types=[
   ],
   serialized_options=None,
@@ -490,7 +452,7 @@ _LOGS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=797,
-  serialized_end=1494,
+  serialized_end=1387,
 )
 
 
@@ -556,8 +518,8 @@ _MODELMETADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1497,
-  serialized_end=1878,
+  serialized_start=1390,
+  serialized_end=1771,
 )
 
 _TRAINDONEREQUEST.fields_by_name['task'].message_type = metisfl_dot_proto_dot_learner__pb2._TASK
@@ -567,14 +529,13 @@ _TRAINRESULTS_METRICSENTRY.containing_type = _TRAINRESULTS
 _TRAINRESULTS_METADATAENTRY.containing_type = _TRAINRESULTS
 _TRAINRESULTS.fields_by_name['metrics'].message_type = _TRAINRESULTS_METRICSENTRY
 _TRAINRESULTS.fields_by_name['metadata'].message_type = _TRAINRESULTS_METADATAENTRY
-_LOGS_TASKLEARNERMAPENTRY.containing_type = _LOGS
 _LOGS_TRAINRESULTSENTRY.fields_by_name['value'].message_type = _TRAINRESULTS
 _LOGS_TRAINRESULTSENTRY.containing_type = _LOGS
 _LOGS_EVALUATIONRESULTSENTRY.fields_by_name['value'].message_type = metisfl_dot_proto_dot_learner__pb2._EVALUATIONRESULTS
 _LOGS_EVALUATIONRESULTSENTRY.containing_type = _LOGS
 _LOGS_MODELMETADATAENTRY.fields_by_name['value'].message_type = _MODELMETADATA
 _LOGS_MODELMETADATAENTRY.containing_type = _LOGS
-_LOGS.fields_by_name['task_learner_map'].message_type = _LOGS_TASKLEARNERMAPENTRY
+_LOGS.fields_by_name['tasks'].message_type = metisfl_dot_proto_dot_learner__pb2._TASK
 _LOGS.fields_by_name['train_results'].message_type = _LOGS_TRAINRESULTSENTRY
 _LOGS.fields_by_name['evaluation_results'].message_type = _LOGS_EVALUATIONRESULTSENTRY
 _LOGS.fields_by_name['model_metadata'].message_type = _LOGS_MODELMETADATAENTRY
@@ -633,13 +594,6 @@ _sym_db.RegisterMessage(TrainResults.MetadataEntry)
 
 Logs = _reflection.GeneratedProtocolMessageType('Logs', (_message.Message,), {
 
-  'TaskLearnerMapEntry' : _reflection.GeneratedProtocolMessageType('TaskLearnerMapEntry', (_message.Message,), {
-    'DESCRIPTOR' : _LOGS_TASKLEARNERMAPENTRY,
-    '__module__' : 'metisfl.proto.controller_pb2'
-    # @@protoc_insertion_point(class_scope:metisfl.Logs.TaskLearnerMapEntry)
-    })
-  ,
-
   'TrainResultsEntry' : _reflection.GeneratedProtocolMessageType('TrainResultsEntry', (_message.Message,), {
     'DESCRIPTOR' : _LOGS_TRAINRESULTSENTRY,
     '__module__' : 'metisfl.proto.controller_pb2'
@@ -665,7 +619,6 @@ Logs = _reflection.GeneratedProtocolMessageType('Logs', (_message.Message,), {
   # @@protoc_insertion_point(class_scope:metisfl.Logs)
   })
 _sym_db.RegisterMessage(Logs)
-_sym_db.RegisterMessage(Logs.TaskLearnerMapEntry)
 _sym_db.RegisterMessage(Logs.TrainResultsEntry)
 _sym_db.RegisterMessage(Logs.EvaluationResultsEntry)
 _sym_db.RegisterMessage(Logs.ModelMetadataEntry)
@@ -680,7 +633,6 @@ _sym_db.RegisterMessage(ModelMetadata)
 
 _TRAINRESULTS_METRICSENTRY._options = None
 _TRAINRESULTS_METADATAENTRY._options = None
-_LOGS_TASKLEARNERMAPENTRY._options = None
 _LOGS_TRAINRESULTSENTRY._options = None
 _LOGS_EVALUATIONRESULTSENTRY._options = None
 _LOGS_MODELMETADATAENTRY._options = None
@@ -692,8 +644,8 @@ _CONTROLLERSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1881,
-  serialized_end=2308,
+  serialized_start=1774,
+  serialized_end=2201,
   methods=[
   _descriptor.MethodDescriptor(
     name='GetHealthStatus',

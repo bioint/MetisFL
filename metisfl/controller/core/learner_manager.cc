@@ -189,9 +189,8 @@ void LearnerManager::SendTrainAsync(const std::string &learner_id,
   auto task_id = GenerateRadnomId();
   tasks_[task_id] = Task();
   tasks_[task_id].set_id(task_id);
+  tasks_[task_id].set_learner_id(learner_id);
   *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
-
-  task_learner_map_[task_id] = learner_id;
 
   TrainRequest request;
   *request.mutable_task() = tasks_[task_id];
@@ -212,9 +211,7 @@ void LearnerManager::SendTrainAsync(const std::string &learner_id,
 void LearnerManager::DigestTrainResponses() {
   void *got_tag;
   bool ok = false;
-
   auto &cq_ = train_tasks_cq_;
-
   while (cq_.Next(&got_tag, &ok)) {
     auto *call = static_cast<AsyncLearnerRunTaskCall *>(got_tag);
     GPR_ASSERT(ok);
@@ -234,9 +231,8 @@ void LearnerManager::SendEvaluateAsync(const std::string &learner_id,
   auto task_id = GenerateRadnomId();
   tasks_[task_id] = Task();
   tasks_[task_id].set_id(task_id);
+  tasks_[task_id].set_learner_id(learner_id);
   *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
-
-  task_learner_map_[task_id] = learner_id;
 
   EvaluateRequest request;
   *request.mutable_task() = tasks_[task_id];
@@ -257,7 +253,6 @@ void LearnerManager::SendEvaluateAsync(const std::string &learner_id,
 void LearnerManager::DigestEvaluateResponses() {
   void *got_tag;
   bool ok = false;
-
   auto &cq_ = eval_tasks_cq_;
   while (cq_.Next(&got_tag, &ok)) {
     auto *call = static_cast<AsyncLearnerEvalCall *>(got_tag);

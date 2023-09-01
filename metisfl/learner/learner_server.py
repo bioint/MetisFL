@@ -1,22 +1,24 @@
 
 
+import datetime
 import threading
 from typing import Any, Tuple
 
 import grpc
 from google.protobuf.json_format import MessageToDict
-from google.protobuf.timestamp_pb2 import Timestamp
 
 from metisfl.common.logger import MetisLogger
 from metisfl.common.server import get_server
 from metisfl.common.types import ServerParams
-from metisflproto import (learner_pb2, learner_pb2_grpc, model_pb2,
-                          service_common_pb2)
-from metisfl.controller_client import GRPCClient
-from metisfllearner import (Learner, try_call_evaluate, try_call_get_weights,
-                            try_call_set_weights, try_call_train)
-from metisfltask_manager import TaskManager
-from metisfl.message_helper import MessageHelper
+from metisfl.common.utils import get_timestamp
+from metisfl.learner.controller_client import GRPCClient
+from metisfl.learner.learner import (Learner, try_call_evaluate,
+                                     try_call_get_weights,
+                                     try_call_set_weights, try_call_train)
+from metisfl.learner.message_helper import MessageHelper
+from metisfl.learner.task_manager import TaskManager
+from metisfl.proto import (learner_pb2, learner_pb2_grpc, model_pb2,
+                           service_common_pb2)
 
 
 class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
@@ -144,7 +146,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         return service_common_pb2.Ack(
             status=status,
-            timestamp=Timestamp().GetCurrentTime()
+            timestamp=get_timestamp(),
         )
 
     def Evaluate(
@@ -172,7 +174,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         weights = self._message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
 
-        recevied_at = Timestamp().GetCurrentTime()
+        received_at = get_timestamp()
 
         metrics = try_call_evaluate(
             learner=self._learner,
@@ -183,8 +185,9 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         return learner_pb2.EvaluateResponse(
             task=learner_pb2.Task(
                 id=request.task.id,
-                received_at=recevied_at,
-                completed_at=Timestamp().GetCurrentTime(),
+                sent_at=request.task.sent_at,
+                received_at=received_at,
+                completed_at=get_timestamp(),
             ),
             results=learner_pb2.EvaluationResults(
                 metrics=metrics,
@@ -223,7 +226,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         new_task = learner_pb2.Task(
             id=task.id,
-            received_at=Timestamp().GetCurrentTime(),
+            sent_at=task.sent_at,
+            received_at=get_timestamp(),
         )
 
         def train_out_to_callback_fn(train_out: Tuple[Any]) -> Tuple[Any]:
@@ -247,7 +251,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         return service_common_pb2.Ack(
             status=True,
-            timestamp=Timestamp().GetCurrentTime(),
+            timestamp=get_timestamp(),
         )
 
     def ShutDown(
@@ -262,7 +266,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         return service_common_pb2.Ack(
             status=True,
-            timestamp=Timestamp().GetCurrentTime(),
+            timestamp=get_timestamp(),
         )
 
     def _is_serving(self, context) -> bool:

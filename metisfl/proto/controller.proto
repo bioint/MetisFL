@@ -42,23 +42,19 @@ message TrainDoneRequest {
 }
 
 message TrainResults {
-  map<string, string> metrics = 1;
+  map<string, float> metrics = 1;
   map<string, double> metadata = 2;
 }
 
 message Logs {
   int32 global_iteration = 1;
-
-  // task_id -> learner_id
-  map<string, string> task_learner_map = 2;
+  repeated Task tasks = 2;
 
   // Indexed by task_id
-  map<string, TrainResults> train_results = 3;
-  map<string, EvaluationResults> evaluation_results = 4;
-  map<string, ModelMetadata> model_metadata = 5;
+  map<string, TrainResults> train_results = 4;
+  map<string, EvaluationResults> evaluation_results = 5;
+  map<string, ModelMetadata> model_metadata = 6;
 }
-
-// TODO: record task stard/end time
 
 message ModelMetadata {
   double selection_duration_ms = 2;

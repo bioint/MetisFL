@@ -2,15 +2,14 @@ from typing import Any, Dict, List, Optional
 
 import grpc
 import numpy as np
-from google.protobuf.timestamp_pb2 import Timestamp
-
-from metisfl.proto import learner_pb2
 
 from metisfl.common.client import get_client
 from metisfl.common.logger import MetisLogger
 from metisfl.common.types import ClientParams, ServerParams
-from metisflproto import controller_pb2, controller_pb2_grpc, service_common_pb2
-from metisfl.message_helper import MessageHelper
+from metisfl.common.utils import get_timestamp
+from metisfl.learner.message_helper import MessageHelper
+from metisfl.proto import (controller_pb2, controller_pb2_grpc, learner_pb2,
+                           service_common_pb2)
 
 
 def read_certificate(fp: str) -> bytes:
@@ -210,8 +209,9 @@ class GRPCClient(object):
 
             task = learner_pb2.Task(
                 id=task.id,
+                sent_at=task.sent_at,
                 received_at=task.received_at,
-                completed_at=Timestamp(),
+                completed_at=get_timestamp(),
             )
 
             def _request(_timeout=None):

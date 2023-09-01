@@ -33,9 +33,6 @@ class LearnerManager {
 
   // task_id -> {}
   TaskMap tasks_;
-  TaskLearnerMap task_learner_map_;
-
-  // task_id -> {}
   TrainResultsMap train_results_;
   EvaluationResultsMap evaluation_results_;
 
@@ -51,12 +48,13 @@ class LearnerManager {
   ~LearnerManager() = default;
 
   // Getters/Setters
-  TaskLearnerMap GetTasksMap() { return task_learner_map_; }
+
+  TaskMap GetTaskMap() { return tasks_; }
   TrainResultsMap GetTrainResults() { return train_results_; }
   EvaluationResultsMap GetEvaluationResults() { return evaluation_results_; }
 
   std::string GetLearnerId(const std::string &task_id) {
-    return task_learner_map_[task_id];
+    return tasks_[task_id].learner_id();
   }
 
   void UpdateTrainResults(const Task &task, const std::string &learner_id,

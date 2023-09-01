@@ -21,9 +21,10 @@ service LearnerService {
 
 message Task {
   string id = 1;
-  google.protobuf.Timestamp sent_at = 2;
-  google.protobuf.Timestamp received_at = 3;
-  google.protobuf.Timestamp completed_at = 4;
+  string learner_id = 2;
+  google.protobuf.Timestamp sent_at = 3;
+  google.protobuf.Timestamp received_at = 4;
+  google.protobuf.Timestamp completed_at = 5;
 }
 
 message TrainRequest {
@@ -33,10 +34,10 @@ message TrainRequest {
 }
 
 message TrainParams {
-  uint32 batch_size = 2;
-  uint32 epochs = 3;
-  uint32 num_local_updates = 4;
-  repeated string metrics = 5;
+  uint32 batch_size = 1;
+  uint32 epochs = 2;
+  uint32 num_local_updates = 3;
+  repeated string metrics = 4;
 }
 
 message EvaluateRequest {
