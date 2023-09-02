@@ -35,7 +35,7 @@ def iid_partition(
         The training data.
     y_train : Union[np.ndarray, List[np.ndarray]]
         The training labels.
-    partitions_num : _type_
+    partitions_num : int
         The number of partitions.
     seed : int, optional
         The random seed, by default 1990
@@ -68,7 +68,7 @@ def iid_partition(
     return x_chunks, y_chunks
 
 
-def iid_partition(
+def niid_partition(
     x_train: Union[np.ndarray, List[np.ndarray]],
     y_train: Union[np.ndarray, List[np.ndarray]],
     partitions_num: int,

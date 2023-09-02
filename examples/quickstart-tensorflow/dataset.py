@@ -4,8 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from typing import List, Tuple
-
-from data_partitioning import DataPartitioning
+from metisfl.common.utils import iid_partition
 
 
 def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -28,18 +27,6 @@ def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray,
 
     # Return the data
     return x_train, y_train, x_test, y_test
-
-
-def partition_data_iid(x_train, y_train, num_learners):
-    x_chunks, y_chunks = DataPartitioning(
-        x_train, y_train, num_learners).iid_partition()
-    return x_chunks, y_chunks
-
-
-def partition_data_noniid(x_train, y_train, num_learners):
-    x_chunks, y_chunks = DataPartitioning(
-        x_train, y_train, num_learners).non_iid_partition()
-    return x_chunks, y_chunks
 
 
 def save_data(x_chunks, y_chunks, x_test, y_test) -> Tuple[List[str], str]:

@@ -1,7 +1,6 @@
 import os
 
 from pathlib import Path
-from shutil import which, copyfile
 
 
 METIS_WORKING_DIR = ".metisfl"

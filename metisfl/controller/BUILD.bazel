@@ -1,40 +1,13 @@
-load("@pybind11_bazel//:build_defs.bzl", "pybind_extension")
 load("@rules_python//python:defs.bzl", "py_library")
 
 package(default_visibility = ["//visibility:public"])
 
-pybind_extension(
-    # The name of this rule is associated with how the module will be imported
-    # in python scripts. The rule will generate the lib controller.so, which is
-    # also a data dependency for the py_library() rule below; therefore it needs
-    # to remain UNCHANGED!
-    name = "controller",
-    srcs = ["controller_pybind.cc"],
-    deps = [
-        "//metisfl/controller/core:controller",
-    ],
-    linkstatic=True
-)
-
 py_library(
     name = "controller_lib",
     srcs = [
+        "__init__.py",
         "controller_instance.py",
     ],
     data = ["controller.so"],
     srcs_version = "PY3",
-)
-
-# Binary.
-cc_binary(
-    name = "controller_main",
-    srcs = ["controller_main.cc"],
-    deps = [
-        "//metisfl/controller/core:controller",        
-        "@absl//absl/strings",
-        "@com_github_google_glog//:glog",
-    ],
-    data = [
-        "//metisfl/resources:ssl",
-    ]
 )

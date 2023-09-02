@@ -9,7 +9,7 @@ from google.protobuf.json_format import MessageToDict
 from metisfl.common.logger import MetisLogger
 from metisfl.common.types import TerminationSingals
 from metisfl.driver.controller_client import GRPCControllerClient
-from metisfl.proto import controller_pb2, learner_pb2
+from metisfl.proto import controller_pb2
 
 
 class FederationMonitor:

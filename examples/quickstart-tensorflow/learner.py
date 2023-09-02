@@ -1,14 +1,13 @@
 import argparse
 
 from dataset import load_data
-from examples.fminist.dataset_keras import partition_data_iid
-from metisfl.common.types import ClientParams
+from env import learner_1, learner_2, learner_3
 from model import get_model
 
-from metisfl.learner.app import app
+from metisfl.common.types import ClientParams
+from metisfl.common.utils import iid_partition
+from metisfl.learner import app
 from metisfl.learner.learner import Learner
-from env import controller_params, learner_1, learner_2, learner_3
-
 
 model = get_model()
 model.compile(
@@ -16,7 +15,7 @@ model.compile(
 )
 x_train, y_train, x_test, y_test = load_data()
 
-x_chunks, y_chunks = partition_data_iid(x_train, y_train, 3)
+x_chunks, y_chunks = iid_partition(x_train, y_train, 3)
 
 
 class MyLearner1(Learner):

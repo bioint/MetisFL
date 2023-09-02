@@ -12,8 +12,8 @@ controller_params = ServerParams(
 )
 
 global_train_config = GlobalTrainConfig(
-    aggregation_rule="FedAvg",
-    communication_protocol="Synchronous",
+    aggregation_rule="FedStride",
+    communication_protocol="Asynchronous",
     scaling_factor="NumTrainingExamples",
 )
 
