@@ -6,9 +6,7 @@ namespace metisfl::controller {
 ModelManager::ModelManager(LearnerManager *learner_manager, Selector *selector,
                            const GlobalTrainParams &global_train_params,
                            const ModelStoreParams &model_store_params)
-    : model_store_mutex_(),
-      model_(),
-      global_train_params_(global_train_params) {
+    : model_(), global_train_params_(global_train_params) {
   learner_manager_ = learner_manager;
   selector_ = selector;
   model_store_ = CreateModelStore(model_store_params);
@@ -20,7 +18,6 @@ ModelManager::ModelManager(LearnerManager *learner_manager, Selector *selector,
 absl::Status ModelManager::SetInitialModel(const Model &model) {
   if (is_initialized_)
     return absl::FailedPreconditionError("Model is already initialized.");
-  std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
 
   model_ = model;
   is_initialized_ = true;
@@ -28,21 +25,16 @@ absl::Status ModelManager::SetInitialModel(const Model &model) {
 }
 
 void ModelManager::InsertModel(std::string &learner_id, const Model &model) {
-  std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
-
   model_store_->InsertModel(std::vector<std::pair<std::string, Model>>{
       std::pair<std::string, Model>(learner_id, model)});
 }
 
 void ModelManager::EraseModels(std::vector<std::string> &learner_id) {
-  std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
   model_store_->EraseModels(learner_id);
 }
 
 void ModelManager::UpdateModel(std::vector<std::string> &to_schedule,
                                std::vector<std::string> &learner_ids) {
-  std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
-
   std::vector<std::string> selected_ids =
       selector_->Select(to_schedule, learner_ids);
 

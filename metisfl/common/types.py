@@ -26,7 +26,7 @@ class TerminationSingals(object):
         Maximum execution time in minutes. 
     evaluation_metric : Optional[str], (default=None)
         The evaluation metric to use for early stopping. 
-        The metric must be one returned by the Learner train() method.
+        The metric must be returned by the Learner's `evaluate` method.
     evaluation_metric_cutoff_score : Optional[float], (default=None)
         The evaluation metric cutoff score for early stopping.
 
@@ -46,7 +46,15 @@ class TerminationSingals(object):
         yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
-        # FIXME make sure one is defined
+    def __post_init__(self):
+        if not self.federation_rounds and self.execution_cutoff_time_mins and\
+                (not self.evaluation_metric or not self.evaluation_metric_cutoff_score):
+            raise ValueError(
+                "Must spesify a termination signal.")
+
+        if self.evaluation_metric and not self.evaluation_metric_cutoff_score:
+            raise ValueError(
+                "Must spesify a evaluation metric cutoff score.")
 
 
 @dataclass
@@ -55,9 +63,9 @@ class ModelStoreConfig(object):
 
     Parameters
     ----------
-    model_store : str
+    model_store : Optional[str], (default="InMemory")
         The model store to use. Must be one of the following: ["InMemory", "Redis"].
-    lineage_length : int
+    lineage_length : Optional[int], (default=0)
         The max number of models to store before start evicting models. If 0, no eviction is performed.
     model_store_hostname : Optional[str], (default=None)
         The hostname of the model store. Required if the model store is Redis.
@@ -73,8 +81,8 @@ class ModelStoreConfig(object):
         - If the model store is Redis and the hostname or port are not specified.
     """
 
-    model_store: str
-    lineage_length: int
+    model_store: Optional[str] = "InMemory"
+    lineage_length: Optional[int] = 0
     model_store_hostname: Optional[str] = None
     model_store_port: Optional[int] = None
 

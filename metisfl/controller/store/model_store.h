@@ -19,7 +19,6 @@ class ModelStore {
 
   virtual void Expunge() = 0;
 
-  // Delete all models from the cache for a given list of learners.
   virtual void EraseModels(const std::vector<std::string> &learner_ids) = 0;
 
   // For every learner, model pair insert the model inside the model cache.
@@ -30,7 +29,6 @@ class ModelStore {
   virtual void InsertModel(
       std::vector<std::pair<std::string, Model>> learner_pairs) = 0;
 
-  // Remove the models from ephermal state of the model store only.
   virtual void ResetState() = 0;
 
   // Select a number of models (int value) for each learner and return a map
@@ -45,23 +43,16 @@ class ModelStore {
   virtual std::map<std::string, std::vector<const Model *>> SelectModels(
       std::vector<std::pair<std::string, int>> learner_pairs) = 0;
 
-  // Proper release of resources and model store shutdown.
   virtual void Shutdown() = 0;
 
-  // Name of model cache.
   virtual std::string Name() = 0;
 
-  // Number of models saved in model_store type
-  // based on the configured eviction policy.
   virtual int GetConfiguredLineageLength() = 0;
 
-  // Returns the count of models inserted for each learner.
   virtual int GetLearnerLineageLength(std::string learner_id) = 0;
 
  protected:
   int m_lineage_length;
-
-  // Keep track of the models that have been part of the model_store.
   std::map<std::string, std::vector<Model>> m_model_store_cache;
 };
 

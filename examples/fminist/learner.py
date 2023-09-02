@@ -28,13 +28,16 @@ class MyLearner1(Learner):
 
     def train(self, parameters, config):
         model.set_weights(parameters)
-        model.fit(x_train[0:20000], y_train[0:20000], epochs=5,
+        print(parameters[0])
+        model.fit(x_chunks[0], y_chunks[0], epochs=3,
                   batch_size=64)
-        return model.get_weights(), {}
+        parameters = model.get_weights()
+        print(parameters[0])
+        return parameters, {}
 
     def evaluate(self, parameters, config):
         model.set_weights(parameters)
-        loss, accuracy = model.evaluate(x_test[0:3000], y_test[0:3000])
+        loss, accuracy = model.evaluate(x_test, y_test)
         print("loss: {}, accuracy: {}".format(loss, accuracy))
         return {"accuracy": float(accuracy)}
 
@@ -49,13 +52,16 @@ class MyLearner2(Learner):
 
     def train(self, parameters, config):
         model.set_weights(parameters)
-        model.fit(x_train[20000:40000], y_train[20000:40000], epochs=5,
+        print(parameters[0])
+        model.fit(x_chunks[1], y_chunks[1], epochs=3,
                   batch_size=64)
-        return model.get_weights(), {}
+        parameters = model.get_weights()
+        print(parameters[0])
+        return parameters, {}
 
     def evaluate(self, parameters, config):
         model.set_weights(parameters)
-        loss, accuracy = model.evaluate(x_test[3000:6000], y_test[3000:6000])
+        loss, accuracy = model.evaluate(x_test, y_test)
         print("loss: {}, accuracy: {}".format(loss, accuracy))
         return {"accuracy": float(accuracy)}
 
@@ -70,13 +76,16 @@ class MyLearner3(Learner):
 
     def train(self, parameters, config):
         model.set_weights(parameters)
-        model.fit(x_train[40000:60000], y_train[40000:60000], epochs=5,
+        print(parameters[0])
+        model.fit(x_chunks[2], y_chunks[2], epochs=3,
                   batch_size=64)
-        return model.get_weights(), {}
+        parameters = model.get_weights()
+        print(parameters[0])
+        return parameters, {}
 
     def evaluate(self, parameters, config):
         model.set_weights(parameters)
-        loss, accuracy = model.evaluate(x_test[6000:9000], y_test[6000:9000])
+        loss, accuracy = model.evaluate(x_test, y_test)
         print("loss: {}, accuracy: {}".format(loss, accuracy))
         return {"accuracy": float(accuracy)}
 
@@ -86,14 +95,13 @@ def run(server_params, learner):
         learner=learner,
         server_params=server_params,
         client_params=controller_params,
-        num_training_examples=len(x_train),
+        num_training_examples=1,
     )
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--learner")
-
     args = parser.parse_args()
     if args.learner == "1":
         run(learner_1, MyLearner1())

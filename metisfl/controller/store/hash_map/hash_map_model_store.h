@@ -8,6 +8,8 @@
 namespace metisfl::controller {
 
 class HashMapModelStore : public ModelStore {
+  std::mutex m_model_store_cache_mutex;
+
  public:
   // Cannot be initialized without an external store referenced by ref_learners.
   explicit HashMapModelStore(const int lineage_length);

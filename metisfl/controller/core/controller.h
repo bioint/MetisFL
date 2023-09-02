@@ -30,6 +30,9 @@ class Controller {
   std::unique_ptr<Scheduler> scheduler_;
   std::unique_ptr<Selector> selector_;
 
+  std::mutex model_manager_mutex_;
+  std::mutex learner_manager_mutex_;
+
  public:
   Controller(const GlobalTrainParams &global_train_params,
              const ModelStoreParams &model_store_params);

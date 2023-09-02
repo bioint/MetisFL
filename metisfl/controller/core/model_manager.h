@@ -16,7 +16,6 @@ class ModelManager {
   GlobalTrainParams global_train_params_;
   ModelMetadataMap metadata_;
 
-  std::mutex model_store_mutex_;
   std::unique_ptr<AggregationFunction> aggregator_;
   std::unique_ptr<ModelStore> model_store_;
 

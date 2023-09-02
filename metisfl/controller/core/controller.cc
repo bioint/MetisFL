@@ -51,12 +51,15 @@ absl::Status Controller::StartTraining() {
 }
 
 absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
+  std::lock_guard<std::mutex> model_manager_guard(model_manager_mutex_);
+  std::lock_guard<std::mutex> learner_manager_guard(learner_manager_mutex_);
+
   auto task = request.task();
   auto learner_id = learner_manager_->GetLearnerId(task.id());
 
-  learner_manager_->ScheduleEvaluate({learner_id}, model_manager_->GetModel());
-
   model_manager_->InsertModel(learner_id, request.model());
+
+  learner_manager_->ScheduleEvaluate({learner_id}, model_manager_->GetModel());
 
   learner_manager_->UpdateTrainResults(task, learner_id, request.results());
 
@@ -64,9 +67,9 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
   auto to_schedule = scheduler_->ScheduleNext(learner_id, learner_ids.size());
 
   if (!to_schedule.empty()) {
-    learner_manager_->ScheduleTrain(to_schedule, model_manager_->GetModel());
-
     model_manager_->UpdateModel(to_schedule, learner_ids);
+
+    learner_manager_->ScheduleTrain(to_schedule, model_manager_->GetModel());
   }
 
   return absl::OkStatus();
