@@ -7,7 +7,7 @@ namespace metisfl::controller {
 
 HashMapModelStore::HashMapModelStore(const int lineage_length)
     : ModelStore(lineage_length), m_model_store_cache_mutex() {
-  PLOG(INFO) << "Using InMemoryStore (HashMapStore) as model store backend.";
+  PLOG(INFO) << "Using InMemory Model Store.";
 }
 
 void HashMapModelStore::Expunge() {
@@ -83,9 +83,6 @@ HashMapModelStore::SelectModels(
     int index =
         learner_pair.second;  // The number of models to select from store.
     int history_size = GetLearnerLineageLength(learner_id);
-
-    PLOG(INFO) << "Select models for learner_id: " << learner_id
-               << " index: " << index;
 
     // Check if index is less than size of lineage
     // return empty models.

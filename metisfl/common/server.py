@@ -57,12 +57,12 @@ def get_server(
 
     if server_params.root_certificate is not None:
         root_certificate = Path(server_params.root_certificate).read_bytes()
-        public_certificate = Path(
-            server_params.public_certificate).read_bytes()
+        server_certificate = Path(
+            server_params.server_certificate).read_bytes()
         private_key = Path(server_params.private_key).read_bytes()
 
         server_credentials = grpc.ssl_server_credentials(
-            ((private_key, public_certificate),),
+            ((private_key, server_certificate),),
             root_certificates=root_certificate,
         )
         server.add_secure_port(endpoint, server_credentials)

@@ -257,7 +257,7 @@ class ClientParams(object):
     port : int
         The port of the server.
     root_certificate : Optional[str], (default=None)
-        The root certificate file of the server. If not specified, the connection is insecure.
+        The root certificate file of the CA. If not specified, the connection is insecure.
 
     Raises
     ------

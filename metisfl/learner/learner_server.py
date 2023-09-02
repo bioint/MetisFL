@@ -1,6 +1,5 @@
 
 
-import datetime
 import threading
 from typing import Any, Tuple
 
@@ -69,9 +68,10 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         if self._server:
             self._status = service_common_pb2.ServingStatus.SERVING
-            MetisLogger.info("Learner server started. Listening on: {}:{}".format(
+            MetisLogger.info("Learner server started. Listening on: {}:{} with SSL: {}".format(
                 self._server_params.hostname,
                 self._server_params.port,
+                "ENABLED" if self._is_ssl() else "DISABLED",
             ))
             self._shutdown_event.wait()
         else:
@@ -276,3 +276,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             context.set_code(grpc.StatusCode.UNAVAILABLE)
             return False
         return True
+
+    def _is_ssl(self) -> bool:
+        """Returns True if the server is using SSL, False otherwise."""
+
+        return self._server_params.root_certificate is not None

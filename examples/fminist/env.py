@@ -6,6 +6,9 @@ from metisfl.common.types import (FederationEnvironment, GlobalTrainConfig,
 controller_params = ServerParams(
     hostname="localhost",
     port=50051,
+    root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
+    server_certificate="/home/panoskyriakis/metisfl/server-cert.pem",
+    private_key="/home/panoskyriakis/metisfl/server-key.pem",
 )
 
 global_train_config = GlobalTrainConfig(
@@ -22,16 +25,25 @@ model_store_config = ModelStoreConfig(
 learner_1 = ServerParams(
     hostname="localhost",
     port=50052,
+    root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
+    server_certificate="/home/panoskyriakis/metisfl/server-cert.pem",
+    private_key="/home/panoskyriakis/metisfl/server-key.pem",
 )
 
 learner_2 = ServerParams(
     hostname="localhost",
     port=50053,
+    root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
+    server_certificate="/home/panoskyriakis/metisfl/server-cert.pem",
+    private_key="/home/panoskyriakis/metisfl/server-key.pem",
 )
 
 learner_3 = ServerParams(
     hostname="localhost",
     port=50054,
+    root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
+    server_certificate="/home/panoskyriakis/metisfl/server-cert.pem",
+    private_key="/home/panoskyriakis/metisfl/server-key.pem",
 )
 
 env = FederationEnvironment(

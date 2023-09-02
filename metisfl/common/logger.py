@@ -1,7 +1,7 @@
 import inspect
 import threading
 import logging
-import sys
+import os
 
 import datetime as dt
 
@@ -14,8 +14,10 @@ class MetisASCIIArt(object):
     @classmethod
     def print(cls):
         # Print 'METIS Federated Learning' on console as an ASCII-Art pattern.
-        cprint(figlet_format('METIS', font='greek'), 'blue', None, attrs=['bold'], flush=True)
-        cprint(figlet_format('Federated Learning Framework', width=150), 'blue', None, attrs=['bold'], flush=True)
+        cprint(figlet_format('METIS', font='greek'),
+               'blue', None, attrs=['bold'], flush=True)
+        cprint(figlet_format('Federated Learning Framework', width=150),
+               'blue', None, attrs=['bold'], flush=True)
 
 
 class MyFormatter(logging.Formatter):
@@ -35,12 +37,11 @@ class MyFormatter(logging.Formatter):
         return s
 
 
-
 class MetisLogger(object):
-    
+
     log_formatter = MyFormatter(
-        '%(asctime)s %(name)s [%(levelname)s] %(message)s', 
-        datefmt="%Y-%m-%d %H:%M:%S.%f")
+        '%(asctime)s %(name)s [%(levelname)s] %(message)s',
+        datefmt="%H:%M:%S")
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(log_formatter)
     __logger = logging.getLogger('MetisFL')
@@ -60,7 +61,7 @@ class MetisLogger(object):
     @classmethod
     def log_with_filename(cls, level, msg):
         caller_frame = inspect.stack()[2]  # Get the caller's frame
-        filename = caller_frame.filename
+        filename = os.path.basename(caller_frame.filename)
         lineno = caller_frame.lineno
         log_msg = f"{filename}:{lineno}: {msg}"
         cls.getlogger().log(level, log_msg)
@@ -68,15 +69,15 @@ class MetisLogger(object):
     @classmethod
     def debug(cls, msg):
         cls.log_with_filename(logging.DEBUG, msg)
-        
+
     @classmethod
     def info(cls, msg):
         cls.log_with_filename(logging.INFO, msg)
-        
+
     @classmethod
     def warning(cls, msg):
         cls.log_with_filename(logging.WARNING, msg)
-        
+
     @classmethod
     def error(cls, msg):
         cls.log_with_filename(logging.ERROR, msg)

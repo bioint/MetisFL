@@ -2,6 +2,7 @@ import argparse
 
 from dataset import load_data
 from examples.fminist.dataset_keras import partition_data_iid
+from metisfl.common.types import ClientParams
 from model import get_model
 
 from metisfl.learner.app import app
@@ -28,11 +29,9 @@ class MyLearner1(Learner):
 
     def train(self, parameters, config):
         model.set_weights(parameters)
-        print(parameters[0])
         model.fit(x_chunks[0], y_chunks[0], epochs=3,
                   batch_size=64)
         parameters = model.get_weights()
-        print(parameters[0])
         return parameters, {}
 
     def evaluate(self, parameters, config):
@@ -52,11 +51,9 @@ class MyLearner2(Learner):
 
     def train(self, parameters, config):
         model.set_weights(parameters)
-        print(parameters[0])
         model.fit(x_chunks[1], y_chunks[1], epochs=3,
                   batch_size=64)
         parameters = model.get_weights()
-        print(parameters[0])
         return parameters, {}
 
     def evaluate(self, parameters, config):
@@ -76,11 +73,9 @@ class MyLearner3(Learner):
 
     def train(self, parameters, config):
         model.set_weights(parameters)
-        print(parameters[0])
         model.fit(x_chunks[2], y_chunks[2], epochs=3,
                   batch_size=64)
         parameters = model.get_weights()
-        print(parameters[0])
         return parameters, {}
 
     def evaluate(self, parameters, config):
@@ -94,7 +89,11 @@ def run(server_params, learner):
     app(
         learner=learner,
         server_params=server_params,
-        client_params=controller_params,
+        client_params=ClientParams(
+            hostname="localhost",
+            port=50051,
+            root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
+        ),
         num_training_examples=1,
     )
 
