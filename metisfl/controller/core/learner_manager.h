@@ -15,7 +15,6 @@
 #include "metisfl/controller/common/bs_thread_pool.h"
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/controller/core/controller_utils.h"
-#include "metisfl/controller/core/model_manager.h"
 #include "metisfl/controller/core/types.h"
 
 namespace metisfl::controller {

@@ -29,10 +29,14 @@ learner_2 = ServerParams(
     port=50053,
 )
 
+learner_3 = ServerParams(
+    hostname="localhost",
+    port=50054,
+)
+
 env = FederationEnvironment(
     termination_signals=TerminationSingals(
-        evaluation_metric="accuracy",
-        evaluation_metric_cutoff_score=0.6,
+        federation_rounds=5,
     ),
     global_train_config=global_train_config,
     model_store_config=model_store_config,
@@ -44,5 +48,6 @@ env = FederationEnvironment(
     learners=[
         learner_1,
         learner_2,
+        learner_3,
     ]
 )

@@ -1,7 +1,7 @@
 
 import datetime
 import time
-from typing import Dict, List
+from typing import Dict, List, Union
 
 import numpy as np
 from google.protobuf.json_format import MessageToDict
@@ -39,7 +39,7 @@ class FederationMonitor:
         self._is_async = is_async
         self._logs = None
 
-    def monitor_federation(self, request_every_secs=10) -> Dict:
+    def monitor_federation(self, request_every_secs=5) -> Union[Dict, None]:
         """Monitors the federation. 
 
         The controller and learners are terminated when any of the termination signals is reached,
@@ -61,13 +61,14 @@ class FederationMonitor:
 
         while not terminate:
             time.sleep(request_every_secs)
+            MetisLogger.info("Requesting logs from controller ...")
             self._get_logs()
 
             terminate = self._reached_federation_rounds() or \
                 self._reached_evaluation_score() or \
                 self._reached_execution_time(st)
 
-        return self._get_logs_dict()
+        return self._logs
 
     def _reached_federation_rounds(self) -> bool:
         """Checks if the federation has reached the maximum number of rounds."""
@@ -75,7 +76,7 @@ class FederationMonitor:
         if not self._signals.federation_rounds or self._is_async:
             return False
 
-        if self._logs.global_iteration >= self._signals.federation_rounds:
+        if self._logs["global_iteration"] >= self._signals.federation_rounds:
             MetisLogger.info(
                 "Exceeded federation rounds cutoff point. Exiting ...")
             return True
@@ -91,28 +92,27 @@ class FederationMonitor:
         if not metric or not cutoff_score:
             return False
 
-        eval_score = {}
-        timestamps = {}
+        eval_metric = {}  # learner_id -> eval_metric
+        timestamps = {}  # learner_id -> timestamp
 
         tasks = self._logs["tasks"]
         eval_results = self._logs["evaluation_results"]
 
         for task in tasks:
+            print(task)
             task_id = task["id"]
             learner_id = task["learner_id"]
-            if metric not in eval_results[learner_id]["metrics"]:
+
+            if task_id not in eval_results or\
+                    metric not in eval_results[task_id]["metrics"]:
                 continue
 
-            if learner_id not in eval_results or \
-                    timestamps[learner_id] < tasks[task_id].completed_at:
-                eval_score[learner_id] = eval_results[learner_id].metrics[metric]
-                timestamps[learner_id] = tasks[task_id].completed_at
-            else:
-                if timestamps[learner_id] < tasks[task_id].completed_at:
-                    eval_score[learner_id] = eval_results[learner_id].metrics[metric]
-                    timestamps[learner_id] = tasks[task_id].completed_at
+            if learner_id not in eval_metric or \
+                    timestamps[learner_id] < task.completed_at:
+                eval_metric[learner_id] = eval_results[task_id].metrics[metric]
+                timestamps[learner_id] = task.completed_at
 
-        if np.mean(list(eval_score.values())) > cutoff_score:
+        if np.mean(list(eval_metric.values())) > cutoff_score:
             MetisLogger.info(
                 f"Exceeded evaluation score cutoff point. Exiting ...")
             return True
@@ -136,14 +136,10 @@ class FederationMonitor:
     def _get_logs(self) -> controller_pb2.Logs:
         """Collects statistics from the federation."""
 
-        logs = self._controller_client.get_logs()
-        logs = self._get_logs_dict()
-        self._logs = logs
+        self._logs = self._controller_client.get_logs()
 
-        return self._logs
-
-    def _get_logs_dict(self) -> None:
-        """Returns the collected statistics from the federation."""
+        if self._logs is None:
+            raise Exception("Failed to get logs from controller.")
 
         def msg_convert(msg):
             return MessageToDict(msg, preserving_proto_field_name=True)
@@ -158,5 +154,7 @@ class FederationMonitor:
             "evaluation_results": proto_map_to_dict(self._logs.evaluation_results),
             "model_metadata":  proto_map_to_dict(self._logs.model_metadata),
         }
+
+        self._logs = logs
 
         return logs

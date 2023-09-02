@@ -8,11 +8,12 @@ Controller::Controller(const GlobalTrainParams &global_train_params,
                        const ModelStoreParams &model_store_params) {
   global_train_params_ = global_train_params;
 
-  model_manager_ =
-      absl::make_unique<ModelManager>(global_train_params_, model_store_params);
   learner_manager_ = absl::make_unique<LearnerManager>();
   scheduler_ = CreateScheduler(global_train_params_.communication_protocol);
   selector_ = CreateSelector();
+  model_manager_ =
+      absl::make_unique<ModelManager>(learner_manager_.get(), selector_.get(),
+                                      global_train_params_, model_store_params);
 }
 
 // Public methods
@@ -65,12 +66,7 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
   if (!to_schedule.empty()) {
     learner_manager_->ScheduleTrain(to_schedule, model_manager_->GetModel());
 
-    std::vector<std::string> selected_ids =
-        selector_->Select(to_schedule, learner_ids);
-
-    auto scaling_factors = ComputeScalingFactors(selected_ids);
-
-    model_manager_->UpdateModel(selected_ids, scaling_factors);
+    model_manager_->UpdateModel(to_schedule, learner_ids);
   }
 
   return absl::OkStatus();
@@ -79,25 +75,5 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
 void Controller::Shutdown() {
   learner_manager_->Shutdown();
   model_manager_->Shutdown();
-}
-
-// Private methods
-absl::flat_hash_map<std::string, double> Controller::ComputeScalingFactors(
-    const std::vector<std::string> &selected_ids) {
-  auto scaling_factor = global_train_params_.scaling_factor;
-
-  if (scaling_factor == "NumCompletedBatches") {
-    auto num_completed_batches =
-        learner_manager_->GetNumCompletedBatches(selected_ids);
-    return Scaling::GetBatchesScalingFactors(num_completed_batches);
-  } else if (scaling_factor == "NumParticipants") {
-    return Scaling::GetParticipantsScalingFactors(selected_ids);
-  } else if (scaling_factor == "NumTrainingExamples") {
-    auto num_training_examples =
-        learner_manager_->GetNumTrainingExamples(selected_ids);
-    return Scaling::GetDatasetScalingFactors(num_training_examples);
-  } else {
-    PLOG(FATAL) << "Unsupported scaling factor.";
-  }
 }
 }  // namespace metisfl::controller

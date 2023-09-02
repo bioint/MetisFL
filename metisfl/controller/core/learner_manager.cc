@@ -62,9 +62,8 @@ absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
 
 void LearnerManager::ScheduleTrain(const std::vector<std::string> &learner_ids,
                                    const Model &model) {
+  std::lock_guard<std::mutex> learners_guard(learners_mutex_);
   for (const auto &learner_id : learner_ids) {
-    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-
     scheduling_pool_.push_task(
         [this, learner_id, model] { SendTrainAsync(learner_id, model); });
   }
@@ -72,9 +71,8 @@ void LearnerManager::ScheduleTrain(const std::vector<std::string> &learner_ids,
 
 void LearnerManager::ScheduleEvaluate(
     const std::vector<std::string> &learner_ids, const Model &model) {
+  std::lock_guard<std::mutex> learners_guard(learners_mutex_);
   for (const auto &learner_id : learner_ids) {
-    std::lock_guard<std::mutex> learners_guard(learners_mutex_);
-
     scheduling_pool_.push_task(
         [this, learner_id, model] { SendEvaluateAsync(learner_id, model); });
   }
@@ -89,10 +87,12 @@ void LearnerManager::Shutdown() {
 void LearnerManager::UpdateTrainResults(const Task &task,
                                         const std::string &learner_id,
                                         const TrainResults &results) {
+  std::lock_guard<std::mutex> learners_guard(learners_mutex_);
   auto task_id = task.id();
   train_results_[task_id] = results;
   latest_train_results_[learner_id] = results;
-  tasks_[task_id] = task;
+  *tasks_[task_id].mutable_received_at() = task.received_at();
+  *tasks_[task_id].mutable_completed_at() = task.completed_at();
 }
 
 absl::flat_hash_map<std::string, int> LearnerManager::GetNumTrainingExamples(
@@ -262,7 +262,10 @@ void LearnerManager::DigestEvaluateResponses() {
       if (call->status.ok()) {
         const std::string &task_id = call->reply.task().id();
         evaluation_results_[task_id] = call->reply.results();
-        tasks_[task_id] = call->reply.task();
+        *tasks_[task_id].mutable_received_at() =
+            call->reply.task().received_at();
+        *tasks_[task_id].mutable_completed_at() =
+            call->reply.task().completed_at();
       } else {
         PLOG(ERROR) << "EvaluateModel RPC request to learner: "
                     << call->learner_id

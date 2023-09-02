@@ -3,11 +3,14 @@
 namespace metisfl::controller {
 
 // Constructor
-ModelManager::ModelManager(const GlobalTrainParams &global_train_params,
+ModelManager::ModelManager(LearnerManager *learner_manager, Selector *selector,
+                           const GlobalTrainParams &global_train_params,
                            const ModelStoreParams &model_store_params)
     : model_store_mutex_(),
       model_(),
       global_train_params_(global_train_params) {
+  learner_manager_ = learner_manager;
+  selector_ = selector;
   model_store_ = CreateModelStore(model_store_params);
   aggregator_ = CreateAggregator(global_train_params);
 }
@@ -17,6 +20,8 @@ ModelManager::ModelManager(const GlobalTrainParams &global_train_params,
 absl::Status ModelManager::SetInitialModel(const Model &model) {
   if (is_initialized_)
     return absl::FailedPreconditionError("Model is already initialized.");
+  std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
+
   model_ = model;
   is_initialized_ = true;
   return absl::OkStatus();
@@ -34,10 +39,14 @@ void ModelManager::EraseModels(std::vector<std::string> &learner_id) {
   model_store_->EraseModels(learner_id);
 }
 
-void ModelManager::UpdateModel(
-    std::vector<std::string> &learner_ids,
-    absl::flat_hash_map<std::string, double> &scaling_factors) {
+void ModelManager::UpdateModel(std::vector<std::string> &to_schedule,
+                               std::vector<std::string> &learner_ids) {
   std::lock_guard<std::mutex> model_store_guard(model_store_mutex_);
+
+  std::vector<std::string> selected_ids =
+      selector_->Select(to_schedule, learner_ids);
+
+  auto scaling_factors = ComputeScalingFactors(selected_ids);
 
   auto update_id = InitializeMetadata();
   int stride_length = GetStrideLength(learner_ids.size());
@@ -72,6 +81,25 @@ void ModelManager::UpdateModel(
 }
 
 void ModelManager::Shutdown() { model_store_->Shutdown(); }
+
+absl::flat_hash_map<std::string, double> ModelManager::ComputeScalingFactors(
+    const std::vector<std::string> &selected_ids) const {
+  auto scaling_factor = global_train_params_.scaling_factor;
+
+  if (scaling_factor == "NumCompletedBatches") {
+    auto num_completed_batches =
+        learner_manager_->GetNumCompletedBatches(selected_ids);
+    return Scaling::GetBatchesScalingFactors(num_completed_batches);
+  } else if (scaling_factor == "NumParticipants") {
+    return Scaling::GetParticipantsScalingFactors(selected_ids);
+  } else if (scaling_factor == "NumTrainingExamples") {
+    auto num_training_examples =
+        learner_manager_->GetNumTrainingExamples(selected_ids);
+    return Scaling::GetDatasetScalingFactors(num_training_examples);
+  } else {
+    PLOG(FATAL) << "Unsupported scaling factor.";
+  }
+}
 
 std::string ModelManager::InitializeMetadata() {
   auto update_id = metisfl::controller::GenerateRadnomId();

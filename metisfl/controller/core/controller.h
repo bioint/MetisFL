@@ -18,7 +18,6 @@
 #include "metisfl/controller/core/learner_manager.h"
 #include "metisfl/controller/core/model_manager.h"
 #include "metisfl/controller/core/types.h"
-#include "metisfl/controller/scaling/scaling.h"
 
 using google::protobuf::util::TimeUtil;
 
@@ -70,10 +69,6 @@ class Controller {
   absl::Status TrainDone(const TrainDoneRequest &task);
 
   void Shutdown();
-
- private:
-  absl::flat_hash_map<std::string, double> ComputeScalingFactors(
-      const std::vector<std::string> &selected_learners);
 };
 
 }  // namespace metisfl::controller

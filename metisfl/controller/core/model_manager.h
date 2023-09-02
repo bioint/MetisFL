@@ -4,7 +4,9 @@
 #include "absl/status/statusor.h"
 #include "metisfl/controller/common/proto_tensor_serde.h"
 #include "metisfl/controller/core/controller_utils.h"
+#include "metisfl/controller/core/learner_manager.h"
 #include "metisfl/controller/core/types.h"
+#include "metisfl/controller/scaling/scaling.h"
 #include "metisfl/proto/model.pb.h"
 
 namespace metisfl::controller {
@@ -18,8 +20,12 @@ class ModelManager {
   std::unique_ptr<AggregationFunction> aggregator_;
   std::unique_ptr<ModelStore> model_store_;
 
+  LearnerManager *learner_manager_;
+  Selector *selector_;
+
  public:
-  ModelManager(const GlobalTrainParams &global_train_params,
+  ModelManager(LearnerManager *learner_manager, Selector *selector,
+               const GlobalTrainParams &global_train_params,
                const ModelStoreParams &model_store_params);
 
   ~ModelManager() = default;
@@ -36,8 +42,8 @@ class ModelManager {
 
   void InsertModel(std::string &learner_id, const Model &model);
 
-  void UpdateModel(std::vector<std::string> &learner_ids,
-                   absl::flat_hash_map<std::string, double> &scaling_factors);
+  void UpdateModel(std::vector<std::string> &to_schedule,
+                   std::vector<std::string> &learner_ids);
 
   void EraseModels(std::vector<std::string> &learner_ids);
 
@@ -49,6 +55,9 @@ class ModelManager {
   int GetStrideLength(int num_learners) const;
 
   int GetLineageLength(std::string &learner_id) const;
+
+  absl::flat_hash_map<std::string, double> ComputeScalingFactors(
+      const std::vector<std::string> &selected_ids) const;
 
   std::map<std::string, std::vector<const Model *>> SelectModels(
       std::string &update_id,
