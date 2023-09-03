@@ -3,7 +3,7 @@ import signal
 from typing import Optional
 
 from metisfl.common.types import ClientParams, ServerParams
-from metisfl.config import get_learner_id_fp
+from metisfl.common.config import get_learner_id_fp
 from metisfl.learner.controller_client import GRPCClient
 from metisfl.learner.learner import Learner
 from metisfl.learner.learner_server import LearnerServer

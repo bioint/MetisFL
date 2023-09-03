@@ -5,7 +5,7 @@ import numpy as np
 
 from metisfl.learner.message_helper import MessageHelper
 from metisfl.encryption.homomorphic import HomomorphicEncryption
-from metisfl.encryption.keys_helper import generate_keys
+from metisfl.helpers.keys_helper import generate_keys
 
 batch_size = 8192
 scaling_factor_bits = 40

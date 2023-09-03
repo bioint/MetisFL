@@ -1,29 +1,15 @@
-import os
+""" This module contains the paths configuration for the MetisFL package. """
 
+import os
 from pathlib import Path
 
-
 METIS_WORKING_DIR = ".metisfl"
-DRIVER_DIR_NAME = "driver"
-CONTROLLER_DIR_NAME = "controller"
 LEARNER_DIR_NAME = "learner_{}"
 LEARNER_ID_FILE = "learner_id"
 
 
 def get_project_home() -> str:
     path = os.path.join(Path.home(), METIS_WORKING_DIR)
-    return _get_path_safe(path)
-
-
-def get_driver_path() -> str:
-    path = get_project_home()
-    path = os.path.join(path, DRIVER_DIR_NAME)
-    return _get_path_safe(path)
-
-
-def get_controller_path():
-    path = get_project_home()
-    path = os.path.join(path, "controller")
     return _get_path_safe(path)
 
 

@@ -68,7 +68,7 @@ class TFLearner(Learner):
         res = self.model.fit(x=self.x_train, y=self.y_train,
                              batch_size=batch_size, epochs=epochs)
 
-        print(res)
+        # TODO: Return the loss and accuracy
 
         parameters = self.model.get_weights()
         return parameters, {}
