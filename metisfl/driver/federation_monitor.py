@@ -1,7 +1,7 @@
 
 import datetime
 import time
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 from google.protobuf.json_format import MessageToDict

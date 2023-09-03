@@ -92,7 +92,9 @@ class DriverSession(object):
             grpc_client.shutdown_server(request_timeout=30, block=False)
             grpc_client.shutdown_client()
 
-        # FIXME:
+        # Sleep for 2 seconds to allow the Learners to shutdown.
+        sleep(2)
+
         self._controller_client.shutdown_server(
             request_retries=2, request_timeout=30, block=True)
         self._controller_client.shutdown_client()

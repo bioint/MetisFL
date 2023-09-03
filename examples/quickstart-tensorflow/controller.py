@@ -1,11 +1,43 @@
-from metisfl.controller.controller_instance import Controller
 
-from env import controller_params, global_train_config, model_store_config
+""" Controller for the TF quickstart example."""
 
-controller_instance = Controller(
-    server_params=controller_params,
-    global_train_config=global_train_config,
-    model_store_config=model_store_config,
+from metisfl.common.types import GlobalTrainConfig, ModelStoreConfig, ServerParams
+from metisfl.controller import Controller
+
+""" Parameters for the controller server."""
+controller_params = ServerParams(
+    hostname="localhost",
+    port=50051,
+    root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
+    server_certificate="/home/panoskyriakis/metisfl/server-cert.pem",
+    private_key="/home/panoskyriakis/metisfl/server-key.pem",
 )
 
-controller_instance.start()
+""" Global training configuration."""
+global_train_config = GlobalTrainConfig(
+    aggregation_rule="FedStride",
+    communication_protocol="Synchronous",
+    scaling_factor="NumTrainingExamples",
+)
+
+""" Model store configuration."""
+model_store_config = ModelStoreConfig(
+    model_store="InMemory",
+    lineage_length=0
+)
+
+
+def start_controller():
+    """ Initialize the controller. """
+    controller = Controller(
+        server_params=controller_params,
+        global_train_config=global_train_config,
+        model_store_config=model_store_config,
+    )
+
+    """ Start the controller. """
+    controller.start()
+
+
+if __name__ == "__main__":
+    start_controller()

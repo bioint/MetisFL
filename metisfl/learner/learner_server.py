@@ -9,7 +9,7 @@ from google.protobuf.json_format import MessageToDict
 from metisfl.common.logger import MetisLogger
 from metisfl.common.server import get_server
 from metisfl.common.types import ServerParams
-from metisfl.common.utils import get_timestamp
+from metisfl.common.formatting import get_timestamp
 from metisfl.learner.controller_client import GRPCClient
 from metisfl.learner.learner import (Learner, try_call_evaluate,
                                      try_call_get_weights,

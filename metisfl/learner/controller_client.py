@@ -6,7 +6,7 @@ import numpy as np
 from metisfl.common.client import get_client
 from metisfl.common.logger import MetisLogger
 from metisfl.common.types import ClientParams, ServerParams
-from metisfl.common.utils import get_timestamp
+from metisfl.common.formatting import get_timestamp
 from metisfl.learner.message_helper import MessageHelper
 from metisfl.proto import (controller_pb2, controller_pb2_grpc, learner_pb2,
                            service_common_pb2)
@@ -236,7 +236,8 @@ class GRPCClient(object):
 
     def shutdown_client(self):
         """Shuts down the client."""
-        self._get_client()[2]()
+        with self._get_client() as client:
+            client[2].shutdown()
 
     def _join_federation(
         self,
