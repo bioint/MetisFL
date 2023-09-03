@@ -3,11 +3,11 @@ import yaml
 
 from dataclasses import dataclass
 from typing import List, Optional
-from metisfl.common.formatting import DataTypeFormatter
+from metisfl.common.formatting import camel_to_snake_dict_keys
 
-METRICS = ["accuracy"]
-COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
-MODEL_STORES = ["InMemory", "Redis"]
+# TODO: add SemiSynchronous; fix in backend
+COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous"]
+MODEL_STORES = ["InMemory"]  # TODO: add Redis, fix in backend
 HE_SCHEMES = ["CKKS"]
 AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "SecAgg"]
 SCALING_FACTORS = ["NumTrainingExamples",
@@ -43,7 +43,7 @@ class TerminationSingals(object):
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'TerminationSingals':
-        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
     def __post_init__(self):
@@ -88,7 +88,7 @@ class ModelStoreConfig(object):
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'ModelStoreConfig':
-        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
     def __post_init__(self):
@@ -152,7 +152,7 @@ class GlobalTrainConfig(object):
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'GlobalTrainConfig':
-        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
     def __post_init__(self):
@@ -187,7 +187,7 @@ class LocalTrainConfig(object):
 
     @classmethod
     def from_yaml(cls, yaml_dict):
-        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
 
@@ -226,7 +226,7 @@ class ServerParams(object):
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'ServerParams':
-        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
     def __post_init__(self):
@@ -272,7 +272,7 @@ class ClientParams(object):
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'ClientParams':
-        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
     def __post_init__(self):
@@ -318,7 +318,7 @@ class FederationEnvironment(object):
 
         yaml_dict = yaml.safe_load(open(yaml_file, 'r'))
 
-        yaml_dict = DataTypeFormatter.camel_to_snake_dict_keys(yaml_dict)
+        yaml_dict = camel_to_snake_dict_keys(yaml_dict)
 
         for key, value in yaml_dict.items():
             if key in KEY_TO_CLASS:

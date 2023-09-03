@@ -6,7 +6,7 @@ import grpc
 
 from metisfl.proto import learner_pb2_grpc
 from metisfl.common.types import ServerParams
-from metisfl.common.utils import get_endpoint
+from metisfl.common.formatting import get_endpoint
 
 GRPC_MAX_MESSAGE_LENGTH: int = 512 * 1024 * 1024
 
