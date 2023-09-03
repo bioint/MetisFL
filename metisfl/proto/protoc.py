@@ -1,6 +1,5 @@
 """This module contains functions related to proto compilation."""
 
-
 import glob
 from os import path
 

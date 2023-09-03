@@ -331,3 +331,8 @@ class FederationEnvironment(object):
             learner) for learner in yaml_dict['learners']]
 
         return cls(**yaml_dict)
+
+    def __post_init__(self):
+        if self.termination_signals.federation_rounds and self.global_train_config.communication_protocol == "Asynchronous":
+            raise ValueError(
+                "Cannot specify federation rounds when the communication protocol is asynchronous.")

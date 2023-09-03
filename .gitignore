@@ -139,3 +139,5 @@ user.bazelrc
 .build/*
 build/*
 **experiment.json
+
+**/*.pem

@@ -11,6 +11,8 @@ PY_VERSIONS = ["3.8", "3.9", "3.10"]
 os.environ["PYTHON_BIN_PATH"] = sys.executable
 os.environ["PYTHON_LIB_PATH"] = site.getsitepackages()[0]
 
+ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+
 BAZEL_CMD = "bazelisk"
 BUILD_DIR = "build"
 
@@ -21,10 +23,6 @@ CONTROLER_SO_DST = "metisfl/controller/controller.so"
 FHE_SO_TARGET = "//metisfl/encryption/palisade:fhe.so"
 FHE_SO_SRC = "bazel-bin/metisfl/encryption/palisade/fhe.so"
 FHE_SO_DST = "metisfl/encryption/fhe.so"
-
-PROTO_TARGET = "//metisfl/proto:py_grpc_src"
-PROTO_SRC_DIR = "bazel-bin/metisfl/proto/py_grpc_src/metisfl/proto/"
-PROTO_DST_DIR = "metisfl/proto"
 
 
 def copy_helper(src_path, dst):
@@ -46,15 +44,13 @@ def run_build(python_verion):
     # Build .so and proto/grpc classes
     os.system("{} build {}".format(BAZEL_CMD, CONTROLER_SO_TARGET))
     os.system("{} build {}".format(BAZEL_CMD, FHE_SO_TARGET))
-    os.system("{} build {}".format(BAZEL_CMD, PROTO_TARGET))
+
+    # Compile proto files
+    os.system(f"{sys.executable} {ROOT_DIR}/metisfl/proto/protoc.py")
 
     # Copy .so
     copy_helper(CONTROLER_SO_SRC, CONTROLER_SO_DST)
     copy_helper(FHE_SO_SRC, FHE_SO_DST)
-
-    # Copy proto/grpc classes
-    for file in glob.glob("{}*.py".format(PROTO_SRC_DIR)):
-        copy_helper(file, PROTO_DST_DIR)
 
     # Build wheel
     os.system(

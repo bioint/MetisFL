@@ -1,7 +1,7 @@
 
 import datetime
 import time
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 from google.protobuf.json_format import MessageToDict
@@ -20,7 +20,8 @@ class FederationMonitor:
         self,
         termination_signals: TerminationSingals,
         controller_client: GRPCControllerClient,
-        is_async: bool
+        is_async: bool,
+        log_request_interval_secs: Optional[int] = 15
     ):
         """Initializes the service monitor for the federation.
 
@@ -32,23 +33,21 @@ class FederationMonitor:
             A gRPC client used from the driver to communicate with the controller.
         is_async : bool
             Whether the communication protocol is asynchronous.
+        log_request_interval_secs : Optional[int], optional
+            The interval in seconds to request statistics from the Controller, by default 15
         """
 
         self._controller_client = controller_client
         self._signals = termination_signals
         self._is_async = is_async
+        self._log_request_interval_secs = log_request_interval_secs
         self._logs = None
 
-    def monitor_federation(self, request_every_secs=5) -> Union[Dict, None]:
+    def monitor_federation(self) -> Union[Dict, None]:
         """Monitors the federation. 
 
         The controller and learners are terminated when any of the termination signals is reached,
         and the collected statistics are returned.
-
-        Parameters
-        ----------
-        request_every_secs : int, optional
-            The interval in seconds to request statistics from the Controller, by default 10
 
         Returns
         -------
@@ -60,8 +59,9 @@ class FederationMonitor:
         terminate = False
 
         while not terminate:
-            time.sleep(request_every_secs)
+            time.sleep(self._log_request_interval_secs)
             MetisLogger.info("Requesting logs from controller ...")
+
             self._get_logs()
 
             terminate = self._reached_federation_rounds() or \
@@ -99,7 +99,6 @@ class FederationMonitor:
         eval_results = self._logs["evaluation_results"]
 
         for task in tasks:
-            print(task)
             task_id = task["id"]
             learner_id = task["learner_id"]
 
