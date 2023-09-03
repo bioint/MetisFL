@@ -1,14 +1,16 @@
 
+""" Driver for the quickstart example. """
+
 import argparse
 import json
-
-
-from metisfl.common.types import FederationEnvironment, LocalTrainConfig, TerminationSingals
-from metisfl.driver.driver_session import DriverSession
 
 from controller import (controller_params, global_train_config,
                         model_store_config)
 from learner import get_learner_server_params
+
+from metisfl.common.types import (FederationEnvironment, LocalTrainConfig,
+                                  TerminationSingals)
+from metisfl.driver import DriverSession
 
 if __name__ == "__main__":
     """ Entry point for the driver. """

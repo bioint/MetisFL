@@ -9,7 +9,7 @@ import numpy as np
 def iid_partition(
     x_train: Union[np.ndarray, List[np.ndarray]],
     y_train: Union[np.ndarray, List[np.ndarray]],
-    partitions_num: int,
+    num_partitions: int,
     seed: Optional[int] = 1990,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Partitions the data into IID chunks.
@@ -20,7 +20,7 @@ def iid_partition(
         The training data.
     y_train : Union[np.ndarray, List[np.ndarray]]
         The training labels.
-    partitions_num : int
+    num_partitions : int
         The number of partitions.
     seed : int, optional
         The random seed, by default 1990
@@ -38,10 +38,10 @@ def iid_partition(
     x_train_randomized = x_train[idx]
     y_train_randomized = y_train[idx]
 
-    chunk_size = int(len(x_train) / partitions_num)
+    chunk_size = int(len(x_train) / num_partitions)
     x_chunks, y_chunks = [], []
 
-    for i in range(partitions_num):
+    for i in range(num_partitions):
         x_chunks.append(
             x_train_randomized[idx[i * chunk_size:(i + 1) * chunk_size]])
         y_chunks.append(
@@ -56,7 +56,7 @@ def iid_partition(
 def niid_partition(
     x_train: Union[np.ndarray, List[np.ndarray]],
     y_train: Union[np.ndarray, List[np.ndarray]],
-    partitions_num: int,
+    num_partitions: int,
     seed: Optional[int] = 1990,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Partitions the data into Non-IID chunks."""

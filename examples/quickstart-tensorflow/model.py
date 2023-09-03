@@ -7,7 +7,6 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 
 def get_model(
-        metrics: List[str] = ["accuracy"],
         input_shape: Tuple[int] = (28, 28, 1),
         dense_units_per_layer: List[int] = [256, 128],
         num_classes: int = 10) -> tf.keras.Model:
@@ -19,7 +18,7 @@ def get_model(
         num_classes (int, optional): Shape of the output. Defaults to 10.
 
     Returns:
-        tf.keras.Model: A compiled Keras model.
+        tf.keras.Model: A Keras model (non-compiled).
     """
 
     # For convenience and readability

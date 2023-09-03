@@ -23,15 +23,13 @@ def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray,
         tuple(np.ndarray, np.ndarray, np.ndarray, np.ndarray): A tuple containing the training and test data.
     """
 
-    # Load data using TensorFlow Keras API
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
     # Normalize and reshape the data
     if rescale_reshape:
         x_train = (x_train.astype('float32') / 256).reshape(-1, 28, 28, 1)
         x_test = (x_test.astype('float32') / 256).reshape(-1, 28, 28, 1)
 
-    # Return the data
     return x_train, y_train, x_test, y_test
 
 
@@ -75,23 +73,18 @@ class TFLearner(Learner):
 
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
-
         loss, accuracy = self.model.evaluate(self.x_test, self.y_test)
-
         return {"accuracy": float(accuracy), "loss": float(loss)}
 
 
-def get_learner_server_params(learner_index):
+def get_learner_server_params(learner_index, max_learners=3):
     """A helper function to get the server parameters for a learner. """
 
-    ports = [50052, 50053, 50054]
+    ports = list(range(50002, 50000 + max_learners))
 
     return ServerParams(
         hostname="localhost",
         port=ports[learner_index],
-        root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
-        private_key="/home/panoskyriakis/metisfl/server-key.pem",
-        server_certificate="/home/panoskyriakis/metisfl/server-cert.pem",
     )
 
 
@@ -100,14 +93,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--learner")
+    parser.add_argument("-m", "--max-learners", type=int, default=3)
 
     args = parser.parse_args()
     index = int(args.learner) - 1
+    max_learners = args.max_learners
 
     x_train, y_train, x_test, y_test = load_data()
 
     # Partition the data into 3 clients, iid
-    x_client, y_client = iid_partition(x_train, y_train, 3)
+    x_client, y_client = iid_partition(x_train, y_train, max_learners)
 
     # Setup the Learner and the server parameters based on the given index
     learner = TFLearner(x_client[index], y_client[index], x_test, y_test)
@@ -117,7 +112,6 @@ if __name__ == "__main__":
     client_params = ClientParams(
         hostname=controller_params.hostname,
         port=controller_params.port,
-        root_certificate=controller_params.root_certificate,
     )
 
     # Start the app
