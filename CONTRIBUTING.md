@@ -1,7 +1,43 @@
+# Development Guide
 
-To contribute to this GitHub project, you can follow these steps:
+Thank you for you interest in contributing to MetisFL. We welcome all contributions from bug fixes to new features and documentation. To get started, please read the following guide.
 
-1. Fork the repository you want to contribute to by clicking the "Fork" button on the project page.
+# Development Environment
+First, you need to setup you development environment. Currently, the setup mentioned below has been tested on Ubuntu OS and for the x86_64 architecture. It should, however, work for different Linux-like OS on the same architecture. Support for different architectures is under development. The requirements for compiling and testing the code on your local machine are:
+
+* Bazel 4.2.1
+* Python 3.8 - 3.10
+* Python header and distutils
+* build-essential, autoconf and libomp-dev
+
+The recommended way to install Bazel is to use the [Bazelisk](https://github.com/bazelbuild/bazelisk) launcher and place the executable somewhere in your PATH, i.e., `/usr/bin/bazel` or `/usr/bin/bazelisk`. Please make sure that the name of the Bazelisk executable matches the BAZEL_CMD variable in `setup.py`. By default, the setup script will search for `bazelisk`. Bazelisk will automatically pick up the version from the `.bezelversion`file and then download and execute the corresponding Bazel executable.
+
+The Python headers and distutils are needed so that the C++ controller and encryption code can be compiled as Python modules. On Ubuntu, they can be installed with the following command:
+
+```Bash
+apt-get -y install python3.10-dev python3.10-distutils
+```
+
+Finally, the remaining requirements contain the compiler, autoconf and libomp (which is used for parallelization). Please make sure that they are available in your system by running:
+
+```Bash
+apt-get -y install build-essential autoconf libomp-dev
+```
+
+# Build Project
+The main command to build the project and the Python Wheel is:
+
+```Bash 
+python setup.py 
+```
+
+The build target of this script is a Python Wheel which will be placed in the `build` folder. In the process of producing that build, several other targets will be built such as the controller binaries `metisfl/controller/controller.so`, the Palisade/encryption binaries `metisfl/encryption/fhe.so` and the Protobuf/gRPC Python classes in `metisfl/proto` directory. Please note that Pybind will use the python headers of the currently active Python version. 
+
+
+# Fork and Develop
+Once you have setup your development environment, you can start contributing to MetisFL. The first step is to fork the repository you want to contribute to. This will create a copy of the repository in your GitHub account. You can then clone the forked repository to your local machine and start making changes. Once you are done with your changes, you can push them to your forked repository and create a pull request to merge them into the main repository. The following steps will guide you through this process:
+
+1. Fork the repository by clicking the "Fork" button on the project page.
 
 2. Clone the repository to your local machine and enter the newly created repo using the following commands:
 
@@ -58,4 +94,5 @@ Finally, delete the branch you created with the following command:
 ```
 git branch -d branch-name
 ```
-That's it you made it 🐣⭐⭐
+That's it you made it ⭐⭐
+
