@@ -36,7 +36,7 @@ This function takes the dataset and splits it into `num_partitions` chunks. The 
 
 ## Model 
 
-The model used in this example is a simple Dense Neural Network with two hidden layers and a softmax output layer. The model is defined in the `get_model` function in the [model.py](https://github.com/NevronAI/metisfl/blob/main/examples/quickstart-tensorflow/model.py) file. The function allows for some flexibilty in the model definition and can be used to define different models or tune this one.
+The model used in this example is a simple Dense Neural Network with two hidden layers and a softmax output layer. The model is defined in the `get_model` function in the [model.py](https://github.com/NevronAI/metisfl/blob/main/examples/quickstart-tensorflow/model.py) file. The function allows for some flexibility in the model definition and can be used to define different models or tune this one.
 
 ## MetisFL Controller
 
@@ -63,7 +63,7 @@ model_store_config = ModelStoreConfig(
 )
 ```
 
-The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. If no certificates are given, then SSL is not active. The GlobalTrainConfig defines the aggregation rule, communication protocol and model scaling factor. For the full set of options in the GlobalTrainConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Note that the "NumTrainingExamples" scaling factor requires that the Learner instance provides the size of its training dataset at initialization. Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). 
+The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. Certificates are optional and if not given then SSL is not active. The GlobalTrainConfig defines the aggregation rule, communication protocol and model scaling factor. For the full set of options in the GlobalTrainConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Note that the "NumTrainingExamples" scaling factor requires that the Learner instance provides the size of its training dataset at initialization. Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). 
 
 
 ## MetisFL Learner

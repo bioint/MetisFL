@@ -8,9 +8,6 @@ from metisfl.controller import Controller
 controller_params = ServerParams(
     hostname="localhost",
     port=50051,
-    root_certificate="/home/panoskyriakis/metisfl/ca-cert.pem",
-    server_certificate="/home/panoskyriakis/metisfl/server-cert.pem",
-    private_key="/home/panoskyriakis/metisfl/server-key.pem",
 )
 
 # Global training configuration.

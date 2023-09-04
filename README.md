@@ -95,7 +95,7 @@ The architecture of MetisFL consists of three main components: the **Federation 
 <div align="center">
 <picture>
   <source media="(prefers-color-scheme: light)" srcset="./docs/img/light/MetisFL-Components-Overview-02.png" width="700px">
-  <img alt="MetisFL Components Overview" src="./docs/img/dark/MetisFL-Components-Overview-02.png" width="700px">
+  <img alt="MetisFL Components Overview" src="./docs/img/dark/MetisFL-Components-Overview-01.png" width="700px">
 </picture>
 </div>
 
