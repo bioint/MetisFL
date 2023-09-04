@@ -1,9 +1,9 @@
 import random
 from time import sleep
-from typing import Dict, List, Union
+from typing import Dict, List
 
 from metisfl.common.logger import MetisASCIIArt
-from metisfl.common.types import ClientParams, FederationEnvironment
+from metisfl.common.types import ClientParams, ServerParams, TerminationSingals
 from metisfl.driver.controller_client import GRPCControllerClient
 from metisfl.driver.federation_monitor import FederationMonitor
 from metisfl.driver.learner_client import GRPCLearnerClient
@@ -11,30 +11,42 @@ from metisfl.proto import model_pb2
 
 
 class DriverSession(object):
-    def __init__(self, fedenv: Union[str, FederationEnvironment]):
+    # TODO: Fix input, driver does not the entire federation environment.
+
+    def __init__(
+        self,
+        controller: ServerParams,
+        learners: List[ServerParams],
+        termination_signals: TerminationSingals,
+        is_async: bool = False,
+    ) -> None:
         """Initializes a new DriverSession.
 
         Parameters
         ----------
-        fedenv : Union[str, FederationEnvironment]
-            The path to the YAML file containing the federation environment or a FederationEnvironment object.
+        controller : ServerParams
+            The parameters of the controller.
+        learners : List[ServerParams]
+            The parameters of the learners.
+        termination_signals : TerminationSingals
+            The termination signals for the federated training.
+        is_async : bool, (default=False)
+            Whether the communication protocol is asynchronous or not.
+
         """
         MetisASCIIArt.print()
 
-        if isinstance(fedenv, str):
-            fedenv = FederationEnvironment.from_yaml(fedenv)
-        self._federation_environment = fedenv
-        self._num_learners = len(self._federation_environment.learners)
-
-        global_config = self._federation_environment.global_train_config
+        self._learners = learners
+        self._controller = controller
+        self._num_learners = len(self._learners)
 
         self._controller_client = self._create_controller_client()
         self._learner_clients = self._create_learner_clients()
 
         self._service_monitor = FederationMonitor(
             controller_client=self._controller_client,
-            termination_signals=self._federation_environment.termination_signals,
-            is_async=global_config.communication_protocol == "Asynchronous",
+            termination_signals=termination_signals,
+            is_async=is_async,
         )
 
     def run(self) -> Dict:
@@ -42,7 +54,6 @@ class DriverSession(object):
 
         Returns
         -------
-        Dict
             A dictionary containing the statistics of the federated training.
         """
         self.initialize_federation()
@@ -93,7 +104,7 @@ class DriverSession(object):
             grpc_client.shutdown_client()
 
         # Sleep for 2 seconds to allow the Learners to shutdown.
-        sleep(2)
+        sleep(5)
 
         self._controller_client.shutdown_server(
             request_retries=2, request_timeout=30, block=True)
@@ -102,7 +113,7 @@ class DriverSession(object):
     def _create_controller_client(self):
         """Creates a GRPC client for the controller."""
 
-        controller = self._federation_environment.controller
+        controller = self._controller
 
         return GRPCControllerClient(
             client_params=ClientParams(
@@ -119,7 +130,7 @@ class DriverSession(object):
 
         for idx in range(self._num_learners):
 
-            learner = self._federation_environment.learners[idx]
+            learner = self._learners[idx]
 
             grpc_clients[idx] = GRPCLearnerClient(
                 client_params=ClientParams(

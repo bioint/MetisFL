@@ -27,6 +27,7 @@ def register_handlers(client: GRPCClient, server: LearnerServer):
         client.leave_federation(block=False, request_timeout=1)
         client.shutdown_client()
         server.ShutDown()
+        exit(0)
 
     signal.signal(signal.SIGTERM, handler)
     signal.signal(signal.SIGINT, handler)

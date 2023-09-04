@@ -1,16 +1,18 @@
 import argparse
+import os
 from typing import Tuple
 
 import numpy as np
 import tensorflow as tf
+from controller import controller_params
+from model import get_model
 
 from metisfl.common.types import ClientParams, ServerParams
 from metisfl.common.utils import iid_partition
 from metisfl.learner import app
 from metisfl.learner.learner import Learner
 
-from model import get_model
-from controller import controller_params
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 
 def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -80,7 +82,7 @@ class TFLearner(Learner):
 def get_learner_server_params(learner_index, max_learners=3):
     """A helper function to get the server parameters for a learner. """
 
-    ports = list(range(50002, 50000 + max_learners))
+    ports = list(range(50002, 50002 + max_learners))
 
     return ServerParams(
         hostname="localhost",
@@ -112,6 +114,7 @@ if __name__ == "__main__":
     client_params = ClientParams(
         hostname=controller_params.hostname,
         port=controller_params.port,
+        root_certificate=controller_params.root_certificate,
     )
 
     # Start the app
