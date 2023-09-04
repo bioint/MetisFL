@@ -1,6 +1,5 @@
 import unittest
 from unittest import mock
-from google.protobuf.json_format import MessageToDict
 
 from metisfl.common.types import TerminationSingals
 from metisfl.driver.controller_client import GRPCControllerClient

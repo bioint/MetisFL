@@ -39,7 +39,7 @@ def create_channel(
         The gRPC channel.
     """
 
-    if isinstance(root_certificate, str):
+    if isinstance(root_certificate, str) and Path(root_certificate).exists():
         root_certificate = Path(root_certificate).read_bytes()
 
     options = [

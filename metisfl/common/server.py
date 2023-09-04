@@ -1,19 +1,24 @@
 import concurrent.futures
 from pathlib import Path
-from typing import Callable
+import threading
+from typing import Any, Callable, Union
 
 import grpc
+from metisfl.common.logger import MetisLogger
 
-from metisfl.proto import learner_pb2_grpc
+from metisfl.proto import controller_pb2_grpc, learner_pb2_grpc, service_common_pb2
 from metisfl.common.types import ServerParams
-from metisfl.common.formatting import get_endpoint
+from metisfl.common.formatting import get_endpoint, get_timestamp
 
 GRPC_MAX_MESSAGE_LENGTH: int = 512 * 1024 * 1024
 
 
 def get_server(
     server_params: ServerParams,
-    servicer: learner_pb2_grpc.LearnerServiceServicer,
+    servicer: Union[
+        learner_pb2_grpc.LearnerServiceServicer,
+        controller_pb2_grpc.ControllerServiceServicer
+    ],
     add_servicer_to_server_fn: Callable,
     max_workers: int = 1000,
     max_message_length: int = GRPC_MAX_MESSAGE_LENGTH,
@@ -24,7 +29,7 @@ def get_server(
     ----------
     server_params : ServerParams
         The server configuration parameters.
-    servicer: learner_pb2_grpc.LearnerServiceServicer
+    servicer: Union[learner_pb2_grpc.LearnerServiceServicer, controller_pb2_grpc.ControllerServiceServicer]
         The servicer for the gRPC server.
     add_servicer_to_server_fn: Callable
         The function to add the servicer to the server.
@@ -70,3 +75,89 @@ def get_server(
         server.add_insecure_port(endpoint)
 
     return server
+
+
+class Server:
+    """Base class for the Controller and Learner servers. """
+
+    server: grpc.Server = None
+    status: service_common_pb2.ServingStatus = None
+    shutdown_event: threading.Event = None
+
+    def __init__(
+        self,
+        server_params: ServerParams,
+        add_servicer_to_server_fn: Callable,
+    ):
+        """Initializes the server.
+
+        Parameters
+        ----------
+        server_params : ServerParams
+            The server configuration parameters.
+        add_servicer_to_server_fn : Callable
+            The function to add the servicer to the server.
+
+        """
+
+        self.status = service_common_pb2.ServingStatus.UNKNOWN
+        self.shutdown_event = threading.Event()
+        self.server_params = server_params
+
+        self._server = get_server(
+            server_params=server_params,
+            servicer=self,
+            add_servicer_to_server_fn=add_servicer_to_server_fn,
+        )
+
+    def start(self):
+        """Starts the server. This is a blocking call and will block until the server is shutdown."""
+
+        self._server.start()
+
+        if self._server:
+            self.status = service_common_pb2.ServingStatus.SERVING
+            MetisLogger.info("Server started. Listening on: {}:{} with SSL: {}".format(
+                self.server_params.hostname,
+                self.server_params.port,
+                "ENABLED" if self._is_ssl() else "DISABLED",
+            ))
+            self.shutdown_event.wait()
+        else:
+            # TODO: Should we raise an exception here?
+            MetisLogger.error("Server failed to start.")
+
+    def GetHealthStatus(self) -> service_common_pb2.HealthStatusResponse:
+        """Returns the health status of the server."""
+
+        return service_common_pb2.HealthStatusResponse(
+            status=self.status,
+        )
+
+    def ShutDown(
+        self,
+        _: service_common_pb2.Empty,
+        __: Any
+    ) -> service_common_pb2.Ack:
+        """Shuts down the server."""
+
+        self.status = service_common_pb2.ServingStatus.NOT_SERVING
+        self.shutdown_event.set()
+
+        return service_common_pb2.Ack(
+            status=True,
+            timestamp=get_timestamp(),
+        )
+
+    def is_serving(self, context) -> bool:
+        """Returns True if the server is serving, False otherwise."""
+
+        if self.status != service_common_pb2.ServingStatus.SERVING:
+            context.set_code(grpc.StatusCode.UNAVAILABLE)
+            return False
+        return True
+
+    def is_ssl(self) -> bool:
+        """Returns True if the server is using SSL, False otherwise."""
+
+        return self.server_params.root_certificate is not None

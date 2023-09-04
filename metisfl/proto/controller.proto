@@ -27,7 +27,7 @@ message Learner {
   string hostname = 1;
   uint32 port = 2;
   string root_certificate_bytes = 3;
-  string public_certificate_bytes = 4;
+  string public_certificate_bytes = 4; // not needed 
   uint32 num_training_examples = 5;
 }
 
@@ -56,6 +56,7 @@ message Logs {
   map<string, ModelMetadata> model_metadata = 6;
 }
 
+// TODO: consode AggregationMetadata as name
 message ModelMetadata {
   double selection_duration_ms = 2;
   double aggregation_duration_ms = 3;
