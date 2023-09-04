@@ -2,15 +2,15 @@ import argparse
 import os
 from typing import Tuple
 
-import numpy as np
 import tensorflow as tf
 from controller import controller_params
 from model import get_model
 
-from metisfl.common.types import ClientParams, ServerParams
+from metisfl.common.types import ClientParams, ServerParams, LearnerConfig
 from metisfl.common.utils import iid_partition
 from metisfl.learner import app
-from metisfl.learner.learner import Learner
+from metisfl.learner import Learner
+
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
@@ -109,10 +109,19 @@ if __name__ == "__main__":
         root_certificate=controller_params.root_certificate,
     )
 
+    config = LearnerConfig(
+        batch_size=8192,
+        scaling_factor_bits=40,
+        crypto_context="/home/panoskyriakis/metisfl/crypto_context.txt",
+        public_key="/home/panoskyriakis/metisfl/public_key.txt",
+        private_key="/home/panoskyriakis/metisfl/private_key.txt",
+    )
+
     # Start the app
     app(
         learner=learner,
         server_params=server_params,
         client_params=client_params,
+        learner_config=config,
         num_training_examples=len(x_client[index]),
     )

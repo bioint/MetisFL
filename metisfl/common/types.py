@@ -104,7 +104,7 @@ class ModelStoreConfig(object):
 
 
 @dataclass
-class GlobalTrainConfig(object):
+class ControllerConfig(object):
     """Configuration for the global training. Sets basic parameters reqired for the federated training.
 
     Parameters
@@ -119,10 +119,8 @@ class GlobalTrainConfig(object):
         The participation ratio to use. Defaults to 1.0.
     stride_length : Optional[int], (default=None)
         The stride length to use. Required if the aggregation rule is FedStride.
-    he_batch_size : Optional[int], (default=None)
-        The HE batch size to use. Required if the aggregation rule is SecAgg.
-    he_scaling_factor_bits : Optional[int], (default=None)
-        The HE scaling factor bits to use. Required if the aggregation rule is SecAgg.
+    crypto_context : Optional[str], (default=None)
+        The HE crypto context file to use. Required if the aggregation rule is SecAgg.  
     semi_sync_lambda : Optional[float], (default=None)
         The semi-sync lambda to use. Required if the communication protocol is SemiSynchronous.
     semi_sync_recompute_num_updates : Optional[int], (default=None)
@@ -144,14 +142,14 @@ class GlobalTrainConfig(object):
     scaling_factor: str
     participation_ratio: Optional[float] = 1.0
     stride_length: Optional[int] = None
-    he_batch_size: Optional[int] = None
-    he_scaling_factor_bits: Optional[int] = None
-    he_crypto_context_file: Optional[str] = None
+    crypto_context: Optional[str] = None
+    batch_size: Optional[int] = None
+    scaling_factor_bits: Optional[int] = None
     semi_sync_lambda: Optional[float] = None
     semi_sync_recompute_num_updates: Optional[int] = None
 
     @classmethod
-    def from_yaml(cls, yaml_dict: dict) -> 'GlobalTrainConfig':
+    def from_yaml(cls, yaml_dict: dict) -> 'ControllerConfig':
         yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
 
@@ -164,31 +162,49 @@ class GlobalTrainConfig(object):
                 f"Invalid communication protocol: {self.protocol}")
         if self.scaling_factor not in SCALING_FACTORS:
             raise ValueError(f"Invalid scaling factor: {self.scaling_factor}")
-        if self.he_crypto_context_file is not None and not os.path.isfile(self.he_crypto_context_file):
+        if self.crypto_context is not None and not os.path.isfile(self.crypto_context):
             raise ValueError(
                 f"HE crypto context file {self.he_crypto_context_file} does not exist")
+        if self.crypto_context is None and self.aggregation_rule == "SecAgg":
+            raise ValueError(
+                f"HE crypto context file must be specified for SecAgg")
+        if self.crypto_context and not self.aggregation_rule == "SecAgg":
+            raise ValueError(
+                f"HE crypto context file can only be specified for SecAgg")
 
 
 @dataclass
-class LocalTrainConfig(object):
-    """Configuration for the local training. Sets basic parameters for the local training.
+class LearnerConfig(object):
 
-    Parameters
-    ----------
-    batch_size : int
-        The batch size te be used by the Leareners
-    epochs : int
-        The number of local epochs to be used by the Leareners.
-
-    """
-
-    batch_size: int
-    epochs: int
+    he_scheme: Optional[str] = "CKKS"
+    batch_size: Optional[int] = None
+    scaling_factor_bits: Optional[int] = None
+    crypto_context: Optional[str] = None
+    public_key: Optional[str] = None
+    private_key: Optional[str] = None
 
     @classmethod
     def from_yaml(cls, yaml_dict):
         yaml_dict = camel_to_snake_dict_keys(yaml_dict)
         return cls(**yaml_dict)
+
+    def __post_init__(self):
+        if self.he_scheme not in HE_SCHEMES:
+            raise ValueError(f"Invalid HE scheme: {self.he_scheme}")
+
+        if self.he_scheme == "CKKS":
+            if self.batch_size is None or self.batch_size <= 0:
+                raise ValueError(
+                    f"Batch size must be specified for CKKS and must be greater than 0")
+            if self.scaling_factor_bits is None or self.scaling_factor_bits <= 0:
+                raise ValueError(
+                    f"Scaling factor bits must be specified for CKKS and must be greater than 0")
+            if not all([self.crypto_context, self.public_key, self.private_key]):
+                raise ValueError(
+                    f"CKKS requires the crypto context, public key and private key to be specified")
+            if not all([os.path.isfile(self.crypto_context), os.path.isfile(self.public_key), os.path.isfile(self.private_key)]):
+                raise ValueError(
+                    f"CKKS crypto context, public key and private key files must exist")
 
 
 @dataclass
@@ -282,10 +298,9 @@ class ClientParams(object):
 
 
 KEY_TO_CLASS = {
-    "global_train_config": GlobalTrainConfig,
+    "controller_config": ControllerConfig,
     "termination_signals": TerminationSingals,
     "model_store_config": ModelStoreConfig,
-    "local_train_config": LocalTrainConfig,
 }
 
 
@@ -293,10 +308,9 @@ KEY_TO_CLASS = {
 class FederationEnvironment(object):
     """MetisFL federated training environment configuration."""
 
-    global_train_config: GlobalTrainConfig
+    controller_config: ControllerConfig
     termination_signals: TerminationSingals
     model_store_config: ModelStoreConfig
-    local_train_config: LocalTrainConfig
 
     controller: ServerParams
     learners: List[ServerParams]
@@ -333,6 +347,6 @@ class FederationEnvironment(object):
         return cls(**yaml_dict)
 
     def __post_init__(self):
-        if self.termination_signals.federation_rounds and self.global_train_config.communication_protocol == "Asynchronous":
+        if self.termination_signals.federation_rounds and self.controller_config.communication_protocol == "Asynchronous":
             raise ValueError(
                 "Cannot specify federation rounds when the communication protocol is asynchronous.")

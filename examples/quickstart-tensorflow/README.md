@@ -51,7 +51,7 @@ controller_params = ServerParams(
     private_key="" # path to the .pem private key
 )
 
-global_train_config = GlobalTrainConfig(
+controller_config = ControllerConfig(
     aggregation_rule="FedAvg",
     communication_protocol="Synchronous",
     scaling_factor="NumTrainingExamples",
@@ -63,7 +63,7 @@ model_store_config = ModelStoreConfig(
 )
 ```
 
-The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. Certificates are optional and if not given then SSL is not active. The GlobalTrainConfig defines the aggregation rule, communication protocol and model scaling factor. For the full set of options in the GlobalTrainConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Note that the "NumTrainingExamples" scaling factor requires that the Learner instance provides the size of its training dataset at initialization. Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). 
+The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. Certificates are optional and if not given then SSL is not active. The ControllerConfig defines the aggregation rule, communication protocol and model scaling factor. For the full set of options in the ControllerConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Note that the "NumTrainingExamples" scaling factor requires that the Learner instance provides the size of its training dataset at initialization. Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). 
 
 
 ## MetisFL Learner
@@ -126,7 +126,7 @@ def get_learner_server_params(learner_index, max_learners=3):
 
 termination_signals = TerminationSingals(federation_rounds=5)
 learners = [get_learner_server_params(i) for i in range(max_learners)]
-is_async = global_train_config.communication_protocol == 'Asynchronous'
+is_async = controller_config.communication_protocol == 'Asynchronous'
 
 session = DriverSession(
     controller=controller_params,

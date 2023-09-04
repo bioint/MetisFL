@@ -2,13 +2,14 @@
 import signal
 from typing import Optional
 
-from metisfl.common.types import ClientParams, ServerParams
+from metisfl.common.types import ClientParams, LearnerConfig, ServerParams
 from metisfl.common.config import get_learner_id_fp
 from metisfl.learner.controller_client import GRPCClient
 from metisfl.learner.learner import Learner
 from metisfl.learner.learner_server import LearnerServer
 from metisfl.learner.message_helper import MessageHelper
 from metisfl.learner.task_manager import TaskManager
+from metisfl.encryption import HomomorphicEncryption
 
 
 def register_handlers(client: GRPCClient, server: LearnerServer):
@@ -37,6 +38,7 @@ def app(
     learner: Learner,
     client_params: ClientParams,
     server_params: ServerParams,
+    learner_config: LearnerConfig,
     num_training_examples: Optional[int] = None,
 ):
     """Entry point for the MetisFL Learner application.
@@ -57,8 +59,19 @@ def app(
 
     port = client_params.port
 
-    # FIXME: add encryption if needed
-    message_helper = MessageHelper()
+    enc = None
+    if learner_config:
+        # Setup the Homomorphic Encryption scheme if provided
+        enc = HomomorphicEncryption(
+            batch_size=learner_config.batch_size,
+            scaling_factor_bits=learner_config.scaling_factor_bits,
+            crypto_context_path=learner_config.crypto_context,
+            public_key_path=learner_config.public_key,
+            private_key_path=learner_config.private_key,
+        )
+
+    # Create the MessageHelper
+    message_helper = MessageHelper(scheme=enc)
 
     # Create the gRPC client to communicate with the Controller
     client = GRPCClient(

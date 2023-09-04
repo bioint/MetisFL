@@ -42,7 +42,7 @@ message TrainDoneRequest {
 }
 
 message TrainResults {
-  map<string, float> metrics = 1;
+  string metrics = 1; // string representation of a JSON object
   map<string, double> metadata = 2;
 }
 

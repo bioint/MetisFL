@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict, List, Optional
 
 import grpc
@@ -216,8 +217,9 @@ class GRPCClient(object):
 
             def _request(_timeout=None):
                 model = self._message_helper.weights_to_model_proto(weights)
+
                 train_results = controller_pb2.TrainResults(
-                    metrics=metrics,
+                    metrics=json.dumps(metrics),
                     metadata=metadata
                 )
 

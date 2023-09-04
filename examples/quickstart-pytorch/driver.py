@@ -4,7 +4,7 @@
 import argparse
 import json
 
-from controller import controller_params, global_train_config
+from controller import controller_params, controller_config
 from learner import get_learner_server_params
 
 from metisfl.common.types import TerminationSingals
@@ -22,7 +22,7 @@ if __name__ == "__main__":
     termination_signals = TerminationSingals(
         federation_rounds=5)
     learners = [get_learner_server_params(i) for i in range(max_learners)]
-    is_async = global_train_config.communication_protocol == 'Asynchronous'
+    is_async = controller_config.communication_protocol == 'Asynchronous'
 
     # Start the driver session.
     session = DriverSession(

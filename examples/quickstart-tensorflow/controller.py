@@ -1,7 +1,7 @@
 
 """ Controller for the TF quickstart example."""
 
-from metisfl.common.types import GlobalTrainConfig, ModelStoreConfig, ServerParams
+from metisfl.common.types import ControllerConfig, ModelStoreConfig, ServerParams
 from metisfl.controller import Controller
 
 # Parameters for the Controller server.
@@ -11,10 +11,13 @@ controller_params = ServerParams(
 )
 
 # Global training configuration.
-global_train_config = GlobalTrainConfig(
-    aggregation_rule="FedAvg",
+controller_config = ControllerConfig(
+    aggregation_rule="SecAgg",
     communication_protocol="Synchronous",
     scaling_factor="NumTrainingExamples",
+    crypto_context="/home/panoskyriakis/metisfl/crypto_context.txt",
+    batch_size=8192,
+    scaling_factor_bits=40,
 )
 
 # Model store configuration.
@@ -29,7 +32,7 @@ def start_controller():
     # Create the controller.
     controller = Controller(
         server_params=controller_params,
-        global_train_config=global_train_config,
+        controller_config=controller_config,
         model_store_config=model_store_config,
     )
 
