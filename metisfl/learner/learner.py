@@ -180,7 +180,7 @@ def try_call_train(
     weights : List[np.ndarray]
         The weights of the model to be trained.
     params : Dict[str, Any]
-        A dictionary of training parameters.
+        A dictionary of training parameters or metrics to be computed during training.
 
     Returns
     -------
@@ -217,7 +217,7 @@ def try_call_train(
         for metrics in params.get('metrics', []):
             if metrics not in train_res[1]:
                 raise ValueError(
-                    f"Metric {metrics} not found in training results")
+                    f"Metric '{metrics}' not found in training results")
 
         if not isinstance(metadata, dict):
             raise ValueError(
@@ -267,7 +267,7 @@ def try_call_evaluate(
         for metrics in params.get('metrics', []):
             if metrics not in eval_res:
                 raise ValueError(
-                    f"Metric {metrics} not found in evaluation results")
+                    f"Metric '{metrics}' not found in evaluation results")
 
         return eval_res
 

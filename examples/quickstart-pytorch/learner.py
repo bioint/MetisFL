@@ -15,14 +15,14 @@ from metisfl.learner.learner import Learner
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 
-def load_data(rescale_reshape=True) -> Tuple:
+def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """A helper function to load the Fashion MNIST dataset.
 
     Args:
         rescale_reshape (bool, optional): Whether to rescale and reshape. (Defaults to True)
 
     Returns:
-        Tuple: A tuple containing the training and test data.
+        tuple(np.ndarray, np.ndarray, np.ndarray, np.ndarray): A tuple containing the training and test data.
     """
 
     (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -42,9 +42,11 @@ class TFLearner(Learner):
     def __init__(self, x_train, y_train, x_test, y_test):
         super().__init__()
         self.model = get_model()
+
         self.model.compile(
             loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
         )
+
         self.x_train = x_train
         self.y_train = y_train
         self.x_test = x_test
@@ -55,15 +57,21 @@ class TFLearner(Learner):
 
     def set_weights(self, parameters):
         self.model.set_weights(parameters)
+        return True
 
     def train(self, parameters, config):
         self.model.set_weights(parameters)
+
         batch_size = config["batch_size"] if "batch_size" in config else 64
         epochs = config["epochs"] if "epochs" in config else 3
+
         res = self.model.fit(x=self.x_train, y=self.y_train,
                              batch_size=batch_size, epochs=epochs)
+
+        # TODO: Return the loss and accuracy
+
         parameters = self.model.get_weights()
-        return parameters, res.history  # FIXME: check protos
+        return parameters, {}
 
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
@@ -73,9 +81,7 @@ class TFLearner(Learner):
 
 def get_learner_server_params(learner_index, max_learners=3):
     """A helper function to get the server parameters for a learner. """
-
     ports = list(range(50002, 50002 + max_learners))
-
     return ServerParams(
         hostname="localhost",
         port=ports[learner_index],

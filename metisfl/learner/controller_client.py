@@ -237,7 +237,8 @@ class GRPCClient(object):
     def shutdown_client(self):
         """Shuts down the client."""
         with self._get_client() as client:
-            client[2].shutdown()
+            _, _, shutdown = client
+            shutdown()
 
     def _join_federation(
         self,

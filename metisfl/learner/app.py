@@ -26,7 +26,7 @@ def register_handlers(client: GRPCClient, server: LearnerServer):
         print("Received SIGTERM, leaving federation...")
         client.leave_federation(block=False, request_timeout=1)
         client.shutdown_client()
-        server.ShutDown()
+        server.ShutDown(None, None)
         exit(0)
 
     signal.signal(signal.SIGTERM, handler)

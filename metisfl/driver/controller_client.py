@@ -199,5 +199,5 @@ class GRPCControllerClient(object):
         """Shuts down the client."""
 
         with self._get_client() as client:
-            shutdown: Callable = client[2]
+            shutdown: Callable = client[3]
             shutdown()

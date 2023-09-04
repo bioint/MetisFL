@@ -38,18 +38,106 @@ This function takes the dataset and splits it into `num_partitions` chunks. The 
 
 The model used in this example is a simple Dense Neural Network with two hidden layers and a softmax output layer. The model is defined in the `get_model` function in the [model.py](https://github.com/NevronAI/metisfl/blob/main/examples/quickstart-tensorflow/model.py) file. The function allows for some flexibilty in the model definition and can be used to define different models or tune this one.
 
-## MetisFL Learner
-
-The main abstraction of the client is called MetisFL Learner. 
-
 ## MetisFL Controller
 
-The main abstraction of the server is called MetisFL Controller.
+The main abstraction of the server is called MetisFL Controller. The Controller is responsible send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). The `Controller` class is initialized with the parameters of the Learners and the global training configuration. 
+
+```python 
+controller_params = ServerParams(
+    hostname="localhost",
+    port=50051,
+    root_certificate="" # path to the .pem root certificate
+    server_certificate="" # path to the .pem server certificate
+    private_key="" # path to the .pem private key
+)
+
+global_train_config = GlobalTrainConfig(
+    aggregation_rule="FedAvg",
+    communication_protocol="Synchronous",
+    scaling_factor="NumTrainingExamples",
+)
+
+model_store_config = ModelStoreConfig(
+    model_store="InMemory",
+    lineage_length=0
+)
+```
+
+The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. If no certificates are given, then SSL is not active. The GlobalTrainConfig defines the aggregation rule, communication protocol and model scaling factor. For the full set of options in the GlobalTrainConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Note that the "NumTrainingExamples" scaling factor requires that the Learner instance provides the size of its training dataset at initialization. Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). 
+
+
+## MetisFL Learner
+
+The main abstraction of the client is called MetisFL Learner. The MetisFL Learner is responsible for training the model on the local dataset and communicating with the server. For the training tasks, the communication between the Learner and Controller is asynchronous at the protocol level. The Controller sends the training task to the Learner and the Learner sends back a simple acknowledgement of receiving the task. When the Learner finishes the task it sends the results back to the Controller by calling its `TrainDone` endpoint. For the evaluation tasks, the communication is synchronous at the protocol level. The Controller sends the evaluation task to the Learner and waits for the results using the same channel. The abstract class that defines the Learner can be found [here](
+    https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py). For this quickstart example, the Learner that we are using is the following: 
+
+```python
+class TFLearner(Learner):
+
+    """A simple TensorFlow Learner."""
+
+    def __init__(self, x_train, y_train, x_test, y_test):
+        super().__init__()
+        self.model = get_model()
+        self.model.compile(
+            loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
+        )
+        self.x_train = x_train
+        self.y_train = y_train
+        self.x_test = x_test
+        self.y_test = y_test
+
+    def get_weights(self):
+        return self.model.get_weights()
+
+    def set_weights(self, parameters):
+        self.model.set_weights(parameters)
+
+    def train(self, parameters, config):
+        self.model.set_weights(parameters)
+        batch_size = config["batch_size"] if "batch_size" in config else 64
+        epochs = config["epochs"] if "epochs" in config else 3
+        res = self.model.fit(x=self.x_train, y=self.y_train,
+                             batch_size=batch_size, epochs=epochs)
+        parameters = self.model.get_weights()
+        return parameters, res.history
+
+    def evaluate(self, parameters, config):
+        self.model.set_weights(parameters)
+        loss, accuracy = self.model.evaluate(self.x_test, self.y_test)
+        return {"accuracy": float(accuracy), "loss": float(loss)}
+```
+
+The `get_model()` function is in the aforementioned `model.py` and returns the previously described simple 2-layer Dense Neural Network. The `get_weights()` and `set_weights()` functions are used to get and set the model parameters. The `train()` function is used to train the model on the local dataset. The `evaluate()` function is used to evaluate the model on the local test dataset. The `train` and `evaluate` functions use the model weights sent by the controller to train on the local dataset. 
+
 
 ## MetisFL Driver
 
-The MetisFL Driver is the main entry point to the MetisFL framework. It is responsible for coordinating the communication between the clients and the server. 
+The MetisFL Driver is the main entry point to the MetisFL framework. It is responsible for coordinating the communication between the clients and the server, for initializing the weights of the shared model, monitoring the federated training and shutting down the system when the training is done. The Driver is initialized with the Controller and the Learners. 
 
+```python
+def get_learner_server_params(learner_index, max_learners=3):
+    """A helper function to get the server parameters for a learner. """
+    ports = list(range(50002, 50002 + max_learners))
+    return ServerParams(
+        hostname="localhost",
+        port=ports[learner_index],
+    )
+
+termination_signals = TerminationSingals(federation_rounds=5)
+learners = [get_learner_server_params(i) for i in range(max_learners)]
+is_async = global_train_config.communication_protocol == 'Asynchronous'
+
+session = DriverSession(
+    controller=controller_params,
+    learners=learners,
+    termination_signals=termination_signals,
+    is_async=is_async,
+)
+
+logs = session.run()
+```
+The TerminationSignals control when the federated training is stopped. For this example, we will stop the training when we reach 5 federation rounds. For other possible termination signals, please have a look at the class definition and the docstring here [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L18).
 ## Running the example
 
 To run the example, you need to open one terminal for the Controller, one terminal for each Learner and one terminal for the Driver. First, start the Controller. 
