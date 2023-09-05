@@ -45,7 +45,7 @@ class CKKS : public EncryptionScheme {
 
   // CKKS functionality.
   std::string Aggregate(vector<std::string> data_array,
-                        vector<float> scaling_factors) override;
+                        vector<double> scaling_factors) override;
   std::string Encrypt(vector<double> data_array) override;
   std::vector<double> Decrypt(std::string data,
                               unsigned long int data_dimensions) override;

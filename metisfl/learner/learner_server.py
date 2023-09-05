@@ -139,13 +139,15 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         weights = self._message_helper.model_proto_to_weights(model)
 
-        status = try_call_set_weights(
+        try_call_set_weights(
             learner=self._learner,
             weights=weights,
         )
 
+        MetisLogger.info("Received initial model.")
+
         return service_common_pb2.Ack(
-            status=status,
+            status=True,
             timestamp=get_timestamp(),
         )
 
@@ -171,16 +173,19 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return learner_pb2.EvaluateResponse(ack=None)
 
+        MetisLogger.info("Received evaluation request from controller.")
+
         weights = self._message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
 
         received_at = get_timestamp()
-
         metrics = try_call_evaluate(
             learner=self._learner,
             weights=weights,
             params=params,
         )
+
+        MetisLogger.info("Evaluation completed.")
 
         return learner_pb2.EvaluateResponse(
             task=learner_pb2.Task(
@@ -213,12 +218,13 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         Returns
         -------
         service_common_pb2.Ack
-            The response containing the acknoledgement. 
-            The acknoledgement contains the status, i.e. True if the training was started, False otherwise.
+            The response containing the acknoledgement with the Status set to True.
 
         """
         if not self._is_serving(context):
             return service_common_pb2.Ack(status=False)
+
+        MetisLogger.info("Received training request from controller.")
 
         task: learner_pb2.Task = request.task
         weights = self._message_helper.model_proto_to_weights(request.model)

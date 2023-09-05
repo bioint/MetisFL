@@ -40,7 +40,6 @@ typedef struct ModelStoreParams {
 typedef std::unique_ptr<metisfl::LearnerService::Stub> LearnerStub;
 
 // Indexed by learner_id
-typedef absl::flat_hash_map<std::string, LearnerStub> LearnerStubMap;
 typedef absl::flat_hash_map<std::string, Learner> LearnersMap;
 typedef absl::flat_hash_map<std::string, TrainParams> TrainParamsMap;
 typedef absl::flat_hash_map<std::string, EvaluationParams> EvaluationParamsMap;

@@ -76,9 +76,9 @@ class CKKSWrapper : public CKKS {
     }
 
     // Simply cast the given list of data and scaling factors to
-    // their corresponding std::string and std::float vectors.
+    // their corresponding std::string and std::double vectors.
     auto learners_data_vec = learners_data.cast<std::vector<std::string>>();
-    auto scaling_factors_vec = scaling_factors.cast<std::vector<float>>();
+    auto scaling_factors_vec = scaling_factors.cast<std::vector<double>>();
 
     auto weighted_avg_str =
         CKKS::Aggregate(learners_data_vec, scaling_factors_vec);

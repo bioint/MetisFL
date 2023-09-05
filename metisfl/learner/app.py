@@ -3,9 +3,8 @@ import signal
 from typing import Optional
 
 from metisfl.common.types import ClientParams, LearnerConfig, ServerParams
-from metisfl.common.config import get_learner_id_fp
 from metisfl.learner.controller_client import GRPCClient
-from metisfl.learner.learner import Learner
+from metisfl.learner.learner import Learner, has_all
 from metisfl.learner.learner_server import LearnerServer
 from metisfl.learner.message_helper import MessageHelper
 from metisfl.learner.task_manager import TaskManager
@@ -34,12 +33,20 @@ def register_handlers(client: GRPCClient, server: LearnerServer):
     signal.signal(signal.SIGINT, handler)
 
 
+def validate_learner(learner: Learner) -> bool:
+    """Returns True if the given learner has all methods, False otherwise."""
+
+    if not has_all(learner):
+        raise ValueError(
+            "Learner must have get_weights, set_weights, train, and evaluate methods"
+        )
+
+
 def app(
     learner: Learner,
     client_params: ClientParams,
     server_params: ServerParams,
-    learner_config: LearnerConfig,
-    num_training_examples: Optional[int] = None,
+    learner_config: Optional[LearnerConfig] = None,
 ):
     """Entry point for the MetisFL Learner application.
 
@@ -51,17 +58,16 @@ def app(
         The client parameters of the Learner client. 
     server_params : ServerParams
         The server parameters of the Learner server. 
-    num_training_examples : Optional[int], (default=None)
-        The number of training examples. 
-        Used when the scaling factor is "NumTrainingExamples".
-        If not provided, this scaling factor cannot be used.
+    learner_config : Optional[LearnerConfig], (default=None)
+        The configuration of the Learner containing the Homomorphic Encryption scheme. 
     """
 
-    port = client_params.port
+    # Sanity check the learner
+    validate_learner(learner)
 
+    # Setup the Homomorphic Encryption scheme if provided
     enc = None
     if learner_config:
-        # Setup the Homomorphic Encryption scheme if provided
         enc = HomomorphicEncryption(
             batch_size=learner_config.batch_size,
             scaling_factor_bits=learner_config.scaling_factor_bits,
@@ -77,7 +83,6 @@ def app(
     client = GRPCClient(
         client_params=client_params,
         message_helper=message_helper,
-        learner_id_fp=get_learner_id_fp(port),
     )
 
     # Create the gRPC server for the Controller to communicate with the Learner
@@ -90,13 +95,14 @@ def app(
     )
 
     # Register with the Controller
-    client.join_federation(
-        num_training_examples=num_training_examples,
-        server_params=server_params,
-    )
+    client.join_federation(client_params=ClientParams(
+        hostname=server_params.hostname,
+        port=server_params.port,
+        root_certificate=server_params.root_certificate,
+    ))
 
     # Register handlers
     register_handlers(client, server)
 
-    # Blocking until Shutdown endpoint is called
+    # Start the Learner server; blocking call
     server.start()

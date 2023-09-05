@@ -14,8 +14,8 @@ def get_file_path(file_path: str, default_file_name: str) -> str:
 
 
 def generate_keys(
-    batch_size: int = 8192,
-    scaling_factor_bits: int = 40,
+    batch_size: int = 4096,
+    scaling_factor_bits: int = 52,
     crypto_context_path: Optional[str] = "crypto_context.txt",
     public_key_path: Optional[str] = "public_key.txt",
     private_key_path: Optional[str] = "private_key.txt"
@@ -26,9 +26,9 @@ def generate_keys(
 
     Parameters
     ----------
-    batch_size : int, (default=8192)
+    batch_size : int, (default=4096)
         The batch size of the encryption scheme.
-    scaling_factor_bits : int, (default=40)
+    scaling_factor_bits : int, (default=52)
         The number of bits to use for the scaling factor.
     crypto_context_path : Optional[str], (default="crypto_context.txt")
         The path to the crypto context file. By default "crypto_context.txt"

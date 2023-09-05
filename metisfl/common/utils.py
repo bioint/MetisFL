@@ -1,56 +1,59 @@
 """Common utilities for MetisFL."""
 
 import random
-from typing import List, Optional, Tuple, Union
+from typing import Iterable, List, Optional, Tuple, Union
 
 import numpy as np
 
 
 def iid_partition(
-    x_train: Union[np.ndarray, List[np.ndarray]],
-    y_train: Union[np.ndarray, List[np.ndarray]],
+    x_train: Iterable,
     num_partitions: int,
+    y_train: Iterable = None,
     seed: Optional[int] = 1990,
 ) -> Tuple[np.ndarray, np.ndarray]:
     """Partitions the data into IID chunks.
 
     Parameters
     ----------
-    x_train : Union[np.ndarray, List[np.ndarray]]
-        The training data.
-    y_train : Union[np.ndarray, List[np.ndarray]]
-        The training labels.
+    x_train : Iterable
+        An iterable containing the data to be partitioned.
     num_partitions : int
         The number of partitions.
+    y_train : Iterable, optional
+        The labels, by default None
     seed : int, optional
         The random seed, by default 1990
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
+    Tuple[Iterable, Iterable]
         The IID chunks of the data.
     """
 
-    idx = list(range(len(x_train)))
     random.seed(seed)
-    random.shuffle(idx)
-
-    x_train_randomized = x_train[idx]
-    y_train_randomized = y_train[idx]
 
     chunk_size = int(len(x_train) / num_partitions)
-    x_chunks, y_chunks = [], []
+    x_chunks = []
+    if y_train is not None:
+        y_chunks = []
 
     for i in range(num_partitions):
-        x_chunks.append(
-            x_train_randomized[idx[i * chunk_size:(i + 1) * chunk_size]])
-        y_chunks.append(
-            y_train_randomized[idx[i * chunk_size:(i + 1) * chunk_size]])
+        start = i * chunk_size
+        end = (i + 1) * chunk_size
+        x_chunks.append(x_train[start:end])
+
+        if y_train is not None:
+            y_chunks.append(y_train[start:end])
 
     x_chunks = np.array(x_chunks)
-    y_chunks = np.array(y_chunks)
+    if y_train is not None:
+        y_chunks = np.array(y_chunks)
 
-    return x_chunks, y_chunks
+    if y_train is not None:
+        return x_chunks, y_chunks
+
+    return x_chunks
 
 
 def niid_partition(

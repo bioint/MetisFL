@@ -1,41 +1,32 @@
-import os
-from typing import List, Tuple
 
-import tensorflow as tf
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
 
-def get_model(
-        input_shape: Tuple[int] = (28, 28, 1),
-        dense_units_per_layer: List[int] = [256, 128],
-        num_classes: int = 10) -> tf.keras.Model:
-    """A helper function to create a simple sequential model.
+class Model(nn.Module):
+    """A simple CNN for CIFAR-10."""
 
-    Args:
-        input_shape (tuple, optional): The input shape. Defaults to (28, 28).
-        dense_units_per_layer (list, optional): Number of units per Dense layer. Defaults to [256, 128].
-        num_classes (int, optional): Shape of the output. Defaults to 10.
+    def __init__(self) -> None:
+        super(Model, self).__init__()
 
-    Returns:
-        tf.keras.Model: A Keras model (non-compiled).
-    """
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
 
-    # For convenience and readability
-    Dense = tf.keras.layers.Dense
-    Flatten = tf.keras.layers.Flatten
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
 
-    # Create a sequential model
-    model = tf.keras.models.Sequential()
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass."""
 
-    # Add the input layer
-    model.add(Flatten(input_shape=input_shape))
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
 
-    # Add the dense layers
-    for units in dense_units_per_layer:
-        model.add(Dense(units=units, activation="relu"))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
 
-    # Add the output layer
-    model.add(Dense(num_classes, activation="softmax"))
-
-    return model
+        return x

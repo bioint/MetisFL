@@ -20,7 +20,6 @@ class FederationMonitor:
         self,
         termination_signals: TerminationSingals,
         controller_client: GRPCControllerClient,
-        is_async: bool,
         log_request_interval_secs: Optional[int] = 15
     ):
         """Initializes the service monitor for the federation.
@@ -31,15 +30,12 @@ class FederationMonitor:
             The termination signals for the federation. When any of the signals is reached, the training is terminated.
         controller_client : GRPCControllerClient
             A gRPC client used from the driver to communicate with the controller.
-        is_async : bool
-            Whether the communication protocol is asynchronous.
         log_request_interval_secs : Optional[int], optional
             The interval in seconds to request statistics from the Controller, by default 15
         """
 
         self._controller_client = controller_client
         self._signals = termination_signals
-        self._is_async = is_async
         self._log_request_interval_secs = log_request_interval_secs
         self._logs = None
 
@@ -73,7 +69,7 @@ class FederationMonitor:
     def _reached_federation_rounds(self) -> bool:
         """Checks if the federation has reached the maximum number of rounds."""
 
-        if not self._signals.federation_rounds or self._is_async:
+        if not self._signals.federation_rounds or "global_iteration" not in self._logs:
             return False
 
         if self._logs["global_iteration"] >= self._signals.federation_rounds:
@@ -147,12 +143,14 @@ class FederationMonitor:
             return {k: msg_convert(v) for k, v in proto_map.items()}
 
         logs = {
-            "global_iteration": self._logs.global_iteration,
             "tasks": [msg_convert(task) for task in self._logs.tasks],
             "train_results": proto_map_to_dict(self._logs.train_results),
             "evaluation_results": proto_map_to_dict(self._logs.evaluation_results),
             "model_metadata":  proto_map_to_dict(self._logs.model_metadata),
         }
+
+        if self._logs.HasField("global_iteration"):
+            logs["global_iteration"] = self._logs.global_iteration
 
         self._logs = logs
 

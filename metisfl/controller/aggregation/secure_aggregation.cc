@@ -11,12 +11,12 @@ SecAgg::SecAgg(int batch_size, int scaling_factor_bits,
 
 Model SecAgg::Aggregate(
     std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
-  std::vector<float> local_models_contrib_value;
+  std::vector<double> local_models_contrib_value;
   if (pairs.size() == 1) {
     local_models_contrib_value.emplace_back(1.0f);
   } else {
     for (const auto &pair : pairs) {
-      const auto scale = (float)pair.front().second;
+      const auto scale = pair.front().second;
       local_models_contrib_value.emplace_back(scale);
     }
   }

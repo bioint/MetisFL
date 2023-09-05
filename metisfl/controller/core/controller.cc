@@ -60,12 +60,10 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
   model_manager_->InsertModel(learner_id, request.model());
 
   learner_manager_->ScheduleEvaluate({learner_id}, model_manager_->GetModel());
-
   learner_manager_->UpdateTrainResults(task, learner_id, request.results());
 
   auto learner_ids = learner_manager_->GetLearnerIds();
   auto to_schedule = scheduler_->ScheduleNext(learner_id, learner_ids.size());
-
   if (!to_schedule.empty()) {
     model_manager_->UpdateModel(to_schedule, learner_ids);
 

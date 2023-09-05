@@ -6,8 +6,6 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
-from metisfl.common.logger import MetisLogger
-
 
 class Learner(ABC):
     """Abstract class for all MetisFL Learners. All Learners should inherit from this class."""
@@ -24,7 +22,7 @@ class Learner(ABC):
         return np.array([])
 
     @abstractmethod
-    def set_weights(self, weights: List[np.ndarray]) -> bool:
+    def set_weights(self, weights: List[np.ndarray]) -> None:
         """Sets the weights of the model using the given weights.
 
         Parameters
@@ -32,10 +30,6 @@ class Learner(ABC):
         weights : List[np.ndarray]
             A list of numpy arrays representing the weights of the model to be set.
 
-        Returns
-        -------
-        bool
-            True if the weights were successfully set, False otherwise.
         """
         return False
 
@@ -151,17 +145,10 @@ def try_call_set_weights(
     ------
     ValueError
         If the learner does not have a set_weights method.
-    ValueError
-        If the set_weights method returns False.
     """
 
     if has_set_weights(learner):
-        status = learner.set_weights(weights)
-        if status:
-            MetisLogger.info("Applied incoming weights")
-            return True
-        else:
-            raise ValueError("Failed to apply incoming weights")
+        return learner.set_weights(weights)
 
     raise ValueError("Learner does not have a set_weights method")
 

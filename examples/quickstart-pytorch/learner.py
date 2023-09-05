@@ -1,81 +1,100 @@
 import argparse
-import os
+from collections import OrderedDict
 from typing import Tuple
 
-import numpy as np
-import tensorflow as tf
+import torch
+import torchvision.transforms as transforms
 from controller import controller_params
-from model import get_model
+from model import Model
+from torch.utils.data import DataLoader, TensorDataset
+from torchvision.datasets import CIFAR10
 
 from metisfl.common.types import ClientParams, ServerParams
 from metisfl.common.utils import iid_partition
 from metisfl.learner import app
 from metisfl.learner.learner import Learner
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
+DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
-def load_data(rescale_reshape=True) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """A helper function to load the Fashion MNIST dataset.
+def load_data(num_learners: int) -> Tuple:
+    """Load CIFAR-10  and partition it into 3 clients, iid."""
 
-    Args:
-        rescale_reshape (bool, optional): Whether to rescale and reshape. (Defaults to True)
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize(
+            (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+    )
 
-    Returns:
-        tuple(np.ndarray, np.ndarray, np.ndarray, np.ndarray): A tuple containing the training and test data.
-    """
+    trainset = CIFAR10(".", train=True, download=True, transform=transform)
+    testset = CIFAR10(".", train=False, download=True, transform=transform)
 
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
-
-    # Normalize and reshape the data
-    if rescale_reshape:
-        x_train = (x_train.astype('float32') / 256).reshape(-1, 28, 28, 1)
-        x_test = (x_test.astype('float32') / 256).reshape(-1, 28, 28, 1)
-
-    return x_train, y_train, x_test, y_test
+    return trainset, testset
 
 
-class TFLearner(Learner):
+class TorchLearner(Learner):
 
-    """A simple TensorFlow Learner."""
+    """A simple PyTorch Learner."""
 
-    def __init__(self, x_train, y_train, x_test, y_test):
+    def __init__(
+        self,
+        trainset: TensorDataset,
+        testset: TensorDataset,
+    ):
         super().__init__()
-        self.model = get_model()
-
-        self.model.compile(
-            loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
-        )
-
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_test = x_test
-        self.y_test = y_test
+        self.trainset = trainset
+        self.testset = testset
+        self.model = Model().to(DEVICE)
 
     def get_weights(self):
-        return self.model.get_weights()
+        return [val.cpu().numpy() for _, val in self.model.state_dict().items()]
 
     def set_weights(self, parameters):
-        self.model.set_weights(parameters)
-        return True
+        params = zip(self.model.state_dict().keys(), parameters)
+        state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params})
+        self.model.load_state_dict(state_dict, strict=True)
 
     def train(self, parameters, config):
-        self.model.set_weights(parameters)
+        self.set_weights(parameters)
 
         batch_size = config["batch_size"] if "batch_size" in config else 64
         epochs = config["epochs"] if "epochs" in config else 3
+        train_loader = DataLoader(
+            self.trainset, batch_size=batch_size, shuffle=True)
 
-        res = self.model.fit(x=self.x_train, y=self.y_train,
-                             batch_size=batch_size, epochs=epochs)
+        criterion = torch.nn.CrossEntropyLoss()
+        optimizer = torch.optim.SGD(
+            self.model.parameters(), lr=0.001, momentum=0.9)
+        for _ in range(epochs):
+            for images, labels in train_loader:
+                images, labels = images.to(DEVICE), labels.to(DEVICE)
+                optimizer.zero_grad()
+                loss = criterion(self.model(images), labels)
+                loss.backward()
+                optimizer.step()
 
-        # TODO: Return the loss and accuracy
-
-        parameters = self.model.get_weights()
-        return parameters, {}
+        return self.get_weights()
 
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
-        loss, accuracy = self.model.evaluate(self.x_test, self.y_test)
+
+        batch_size = config["batch_size"] if "batch_size" in config else 64
+        test_loader = DataLoader(
+            self.testset, batch_size=batch_size, shuffle=False)
+
+        criterion = torch.nn.CrossEntropyLoss()
+        correct, total, loss = 0, 0, 0.0
+        with torch.no_grad():
+            for data in test_loader:
+                images, labels = data[0].to(DEVICE), data[1].to(DEVICE)
+                outputs = self.model(images)
+                loss += criterion(outputs, labels).item()
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+
+        accuracy = correct / total
+        loss = loss / total
+
         return {"accuracy": float(accuracy), "loss": float(loss)}
 
 
@@ -99,13 +118,18 @@ if __name__ == "__main__":
     index = int(args.learner) - 1
     max_learners = args.max_learners
 
-    x_train, y_train, x_test, y_test = load_data()
-
     # Partition the data into 3 clients, iid
-    x_client, y_client = iid_partition(x_train, y_train, max_learners)
+    trainset, testset = load_data(num_learners=max_learners)
+    x_chunks, y_chunks = iid_partition(
+        x_train=trainset.data, y_train=trainset.targets, num_partitions=max_learners)
 
-    # Setup the Learner and the server parameters based on the given index
-    learner = TFLearner(x_client[index], y_client[index], x_test, y_test)
+    # Get the data for the current learner
+    trainset = TensorDataset(torch.Tensor(
+        x_chunks[index]), torch.Tensor(y_chunks[index]))
+
+    # Create the learner
+    learner = TorchLearner(trainset, testset)
+
     server_params = get_learner_server_params(index)
 
     # Setup the client parameters based on the controller parameters
@@ -120,5 +144,8 @@ if __name__ == "__main__":
         learner=learner,
         server_params=server_params,
         client_params=client_params,
-        num_training_examples=len(x_client[index]),
     )
+
+# x, y = load_data(3)
+# learner = TorchLearner(x[0], y)
+# print(learner.evaluate(learner.get_weights(), {}))

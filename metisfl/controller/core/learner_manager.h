@@ -26,7 +26,6 @@ class LearnerManager {
 
   // learner_id -> value
   LearnersMap learners_;
-  LearnerStubMap learners_stub_;
   TrainParamsMap train_params_;
   EvaluationParamsMap eval_params_;
 
@@ -37,9 +36,6 @@ class LearnerManager {
 
   // learner_id -> {}
   TrainResultsMap latest_train_results_;
-
-  // learner_id -> num_training_examples
-  absl::flat_hash_map<std::string, int> num_training_examples_;
 
  public:
   LearnerManager();

@@ -57,7 +57,7 @@ class EncryptionScheme {
   // Encryption Scheme functionality:
   //    Aggregate Ciphertext - Encrypt Plaintext - Decrypt Ciphertext.
   virtual std::string Aggregate(std::vector<std::string> data_array,
-                                std::vector<float> scaling_factors) = 0;
+                                std::vector<double> scaling_factors) = 0;
   virtual std::string Encrypt(std::vector<double> data_array) = 0;
   virtual std::vector<double> Decrypt(std::string data,
                                       unsigned long int data_dimensions) = 0;

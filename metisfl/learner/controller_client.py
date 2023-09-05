@@ -26,7 +26,6 @@ class GRPCClient(object):
         self,
         client_params: ClientParams,
         message_helper: MessageHelper,
-        learner_id_fp: str,
         max_workers: Optional[int] = 1
     ):
         """A gRPC client used from the Learner to communicate with the Controller.
@@ -37,19 +36,15 @@ class GRPCClient(object):
             The client parameters. Used by the learner to connect to the Controller.
         message_helper : MessageHelper
             The MessageHelper object used to serialize/deserialize the messages.
-        learner_id_fp : str
-            The file where the learner id is stored. 
         max_workers : Optional[int], (default: 1)
             The maximum number of workers for the client ThreadPool, by default 1
         """
         self._client_params = client_params
         self._message_helper = message_helper
-        self._learner_id_fp = learner_id_fp
         self._max_workers = max_workers
 
         # Must be initialized after joining the federation
         self._learner_id = None
-        self._auth_token = None
 
     def _get_client(self):
         return get_client(
@@ -60,20 +55,17 @@ class GRPCClient(object):
 
     def join_federation(
         self,
-        num_training_examples: int,
-        server_params: ServerParams,
+        client_params: ClientParams,
         request_retries: Optional[int] = 1,
         request_timeout: Optional[int] = None,
         block: Optional[bool] = True
-    ) -> service_common_pb2.Ack:
+    ) -> None:
         """Sends a request to the controller to join the federation.
 
         Parameters
         ----------
-        num_training_examples : int
-            The number of training examples of the local dataset.
-        server_params : ServerParams
-            The server parameters of the Learner server. They are sent to the Controller 
+        client_params : ClientParams
+            The client parameters of the Learner server. They are sent to the Controller 
             when joining the federation so that the Controller can connect to the Learner Server.
         request_retries : int, optional
             The number of retries, by default 1
@@ -81,30 +73,24 @@ class GRPCClient(object):
             The timeout in seconds, by default None
         block : bool, optional
             Whether to block until the request is completed, by default True
-
-        Returns
-        -------
-        service_common_pb2.Ack  
-            The response Proto object with the Ack.
         """
+
         with self._get_client() as client:
 
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule = client[1]
 
             def _request(_timeout=None):
-
                 request = controller_pb2.Learner(
-                    hostname=server_params.hostname,
-                    port=server_params.port,
+                    hostname=client_params.hostname,
+                    port=client_params.port,
                     root_certificate_bytes=read_certificate(
-                        server_params.root_certificate),
-                    public_certificate_bytes=read_certificate(
-                        server_params.server_certificate),
-                    num_training_examples=num_training_examples
+                        client_params.root_certificate),
                 )
-
-                return self._join_federation(stub, request, timeout=_timeout)
+                response = stub.JoinFederation(request, timeout=_timeout)
+                self._learner_id = response.id
+                MetisLogger.info(
+                    "Joined federation with learner id: {}".format(self._learner_id))
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -203,6 +189,8 @@ class GRPCClient(object):
             raise RuntimeError(
                 "Cannot send train done before joining the federation.")
 
+        MetisLogger.info("Training done.")
+
         with self._get_client() as client:
 
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
@@ -262,11 +250,7 @@ class GRPCClient(object):
         """
         try:
             response = stub.JoinFederation(request, timeout=timeout)
-            learner_id = response.id
-
-            open(self._learner_id_fp, "w+").write(learner_id.strip())
-            self._learner_id = learner_id
-
+            self._learner_id = response.id
             MetisLogger.info(
                 "Joined federation with learner id: {}".format(learner_id))
         except grpc.RpcError as rpc_error:

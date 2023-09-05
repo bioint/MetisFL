@@ -135,8 +135,8 @@ if __name__ == "__main__":
     """
 
     # Define batch size and scaling factor bits of CKKS scheme.
-    batch_size = 4096
-    scaling_factor_bits = 52
+    batch_size = 8192
+    scaling_factor_bits = 40
 
     # Define demo example learners data and corresponding scaling factors.
     # Case 1: We examine if the number of elements are multiples of the batch size.

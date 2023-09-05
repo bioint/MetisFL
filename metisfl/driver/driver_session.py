@@ -30,9 +30,6 @@ class DriverSession(object):
             The parameters of the learners.
         termination_signals : TerminationSingals
             The termination signals for the federated training.
-        is_async : bool, (default=False)
-            Whether the communication protocol is asynchronous or not.
-
         """
         MetisASCIIArt.print()
 
@@ -46,7 +43,6 @@ class DriverSession(object):
         self._service_monitor = FederationMonitor(
             controller_client=self._controller_client,
             termination_signals=termination_signals,
-            is_async=is_async,
         )
 
     def run(self) -> Dict:
@@ -103,8 +99,8 @@ class DriverSession(object):
             grpc_client.shutdown_server(request_timeout=30, block=False)
             grpc_client.shutdown_client()
 
-        # Sleep for 2 seconds to allow the Learners to shutdown.
-        sleep(5)
+        # Sleep for 1 second to allow the Learners to shutdown.
+        sleep(1)
 
         self._controller_client.shutdown_server(
             request_retries=2, request_timeout=30, block=True)
@@ -126,19 +122,21 @@ class DriverSession(object):
     def _create_learner_clients(self) -> List[GRPCLearnerClient]:
         """Creates a dictionary of GRPC clients for the learners."""
 
-        grpc_clients: List[GRPCLearnerClient] = [None] * self._num_learners
+        grpc_clients: List[GRPCLearnerClient] = []
 
         for idx in range(self._num_learners):
 
             learner = self._learners[idx]
 
-            grpc_clients[idx] = GRPCLearnerClient(
+            client = GRPCLearnerClient(
                 client_params=ClientParams(
                     hostname=learner.hostname,
                     port=learner.port,
                     root_certificate=learner.root_certificate,
                 ),
             )
+
+            grpc_clients.append(client)
 
         return grpc_clients
 

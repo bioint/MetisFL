@@ -6,7 +6,6 @@ using google::protobuf::util::TimeUtil;
 // Constructor
 LearnerManager::LearnerManager()
     : learners_(),
-      learners_stub_(),
       train_params_(),
       eval_params_(),
       learners_mutex_(),
@@ -30,9 +29,7 @@ absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
   if (learners_.contains(learner_id)) {
     return absl::AlreadyExistsError("Learner has already joined.");
   }
-
   learners_[learner_id] = learner;
-  learners_stub_[learner_id] = CreateLearnerStub(learner_id);
 
   return learner_id;
 }
@@ -53,7 +50,6 @@ absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
   }
 
   learners_.erase(learner_id);
-  learners_stub_.erase(learner_id);
   train_params_.erase(learner_id);
   eval_params_.erase(learner_id);
 
@@ -100,10 +96,11 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumTrainingExamples(
   absl::flat_hash_map<std::string, int> num_training_examples;
 
   for (const auto &learner_id : learner_ids) {
-    num_training_examples[learner_id] =
-        learners_[learner_id].num_training_examples();
+    num_training_examples[learner_id] = (int)latest_train_results_[learner_id]
+                                            .metadata()
+                                            .find("num_training_examples")
+                                            ->second;
   }
-
   return num_training_examples;
 }
 
@@ -165,14 +162,12 @@ LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
   auto port = learners_[learner_id].port();
   auto target = absl::StrCat(hostname, ":", port);
   auto &root_certificate = learners_[learner_id].root_certificate_bytes();
-  auto &public_certificate = learners_[learner_id].public_certificate_bytes();
 
   auto ssl_creds = grpc::InsecureChannelCredentials();
 
-  if (!root_certificate.empty() && !public_certificate.empty()) {
+  if (!root_certificate.empty()) {
     grpc::SslCredentialsOptions ssl_opts;
     ssl_opts.pem_root_certs = root_certificate;
-    ssl_opts.pem_cert_chain = public_certificate;
     ssl_creds = grpc::SslCredentials(ssl_opts);
   }
 
@@ -188,8 +183,8 @@ void LearnerManager::SendTrainAsync(const std::string &learner_id,
                                     const Model &model) {
   auto task_id = GenerateRadnomId();
   tasks_[task_id] = Task();
-  tasks_[task_id].set_id(task_id);
-  tasks_[task_id].set_learner_id(learner_id);
+  *tasks_[task_id].mutable_id() = task_id;
+  *tasks_[task_id].mutable_learner_id() = learner_id;
   *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
 
   TrainRequest request;
@@ -230,8 +225,8 @@ void LearnerManager::SendEvaluateAsync(const std::string &learner_id,
                                        const Model &model) {
   auto task_id = GenerateRadnomId();
   tasks_[task_id] = Task();
-  tasks_[task_id].set_id(task_id);
-  tasks_[task_id].set_learner_id(learner_id);
+  *tasks_[task_id].mutable_id() = task_id;
+  *tasks_[task_id].mutable_learner_id() = learner_id;
   *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
 
   EvaluateRequest request;

@@ -146,7 +146,7 @@ void CKKS::Print() {
 }
 
 std::string CKKS::Aggregate(std::vector<std::string> data_array,
-                            std::vector<float> scaling_factors) {
+                            std::vector<double> scaling_factors) {
   if (cc == nullptr) {
     PLOG(FATAL) << "Crypto context is not loaded.";
   }
@@ -165,7 +165,7 @@ std::string CKKS::Aggregate(std::vector<std::string> data_array,
     Serial::Deserialize(data_ciphertext, ss, st);
 
     for (unsigned long int j = 0; j < data_ciphertext.size(); j++) {
-      float sc = scaling_factors[i];
+      double sc = scaling_factors[i];
       data_ciphertext[j] = cc->EvalMult(data_ciphertext[j], sc);
     }
 

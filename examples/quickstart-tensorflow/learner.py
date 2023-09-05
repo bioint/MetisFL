@@ -6,7 +6,7 @@ import tensorflow as tf
 from controller import controller_params
 from model import get_model
 
-from metisfl.common.types import ClientParams, ServerParams, LearnerConfig
+from metisfl.common.types import ClientParams, ServerParams
 from metisfl.common.utils import iid_partition
 from metisfl.learner import app
 from metisfl.learner import Learner
@@ -25,7 +25,7 @@ def load_data(rescale_reshape=True) -> Tuple:
         Tuple: A tuple containing the training and test data.
     """
 
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
 
     # Normalize and reshape the data
     if rescale_reshape:
@@ -54,7 +54,7 @@ class TFLearner(Learner):
         return self.model.get_weights()
 
     def set_weights(self, parameters):
-        self.model.set_weights(parameters)
+        return self.model.set_weights(parameters)
 
     def train(self, parameters, config):
         self.model.set_weights(parameters)
@@ -62,8 +62,10 @@ class TFLearner(Learner):
         epochs = config["epochs"] if "epochs" in config else 3
         res = self.model.fit(x=self.x_train, y=self.y_train,
                              batch_size=batch_size, epochs=epochs)
-        parameters = self.model.get_weights()
-        return parameters, res.history  # FIXME: check protos
+        metadata = {
+            "num_training_examples": len(self.x_train),
+        }
+        return self.model.get_weights(), res.history, metadata
 
     def evaluate(self, parameters, config):
         self.model.set_weights(parameters)
@@ -96,7 +98,8 @@ if __name__ == "__main__":
     x_train, y_train, x_test, y_test = load_data()
 
     # Partition the data into 3 clients, iid
-    x_client, y_client = iid_partition(x_train, y_train, max_learners)
+    x_client, y_client = iid_partition(
+        x_train=x_train, y_train=y_train, num_partitions=max_learners)
 
     # Setup the Learner and the server parameters based on the given index
     learner = TFLearner(x_client[index], y_client[index], x_test, y_test)
@@ -109,19 +112,9 @@ if __name__ == "__main__":
         root_certificate=controller_params.root_certificate,
     )
 
-    config = LearnerConfig(
-        batch_size=8192,
-        scaling_factor_bits=40,
-        crypto_context="/home/panoskyriakis/metisfl/crypto_context.txt",
-        public_key="/home/panoskyriakis/metisfl/public_key.txt",
-        private_key="/home/panoskyriakis/metisfl/private_key.txt",
-    )
-
     # Start the app
     app(
         learner=learner,
         server_params=server_params,
         client_params=client_params,
-        learner_config=config,
-        num_training_examples=len(x_client[index]),
     )

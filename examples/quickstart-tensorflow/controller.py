@@ -12,12 +12,9 @@ controller_params = ServerParams(
 
 # Global training configuration.
 controller_config = ControllerConfig(
-    aggregation_rule="SecAgg",
+    aggregation_rule="FedAvg",
     communication_protocol="Synchronous",
     scaling_factor="NumTrainingExamples",
-    crypto_context="/home/panoskyriakis/metisfl/crypto_context.txt",
-    batch_size=8192,
-    scaling_factor_bits=40,
 )
 
 # Model store configuration.

@@ -80,8 +80,7 @@ Status ControllerServicer::GetHealthStatus(ServerContext *context,
 Status ControllerServicer::JoinFederation(ServerContext *context,
                                           const Learner *learner,
                                           LearnerId *learnerId) {
-  if (learner->hostname().empty() || learner->port() <= 0 ||
-      learner->num_training_examples() <= 0) {
+  if (learner->hostname().empty() || learner->port() <= 0) {
     return {StatusCode::INVALID_ARGUMENT,
             "Must provide a valid hostname, port and number of training "
             "examples."};
@@ -182,7 +181,8 @@ Status ControllerServicer::GetLogs(ServerContext *context, const Empty *request,
   auto evaluation_results = controller_->GetEvaluationResults();
   auto model_metadata = controller_->GetModelMetadata();
 
-  logs->set_global_iteration(controller_->GetGlobalIteration());
+  auto global_iteration = controller_->GetGlobalIteration();
+  if (global_iteration > 0) logs->set_global_iteration(global_iteration);
 
   for (auto &task : tasks_map) {
     auto *task_proto = logs->add_tasks();

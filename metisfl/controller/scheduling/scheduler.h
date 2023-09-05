@@ -9,7 +9,7 @@ namespace metisfl::controller {
 
 class Scheduler {
  protected:
-  int global_iteration_;
+  int global_iteration_ = 0;  // only makes sense for synchronous schedulers
 
  public:
   virtual ~Scheduler() = default;
