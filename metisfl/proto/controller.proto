@@ -47,7 +47,7 @@ message TrainResults {
 }
 
 message Logs {
-  int32 global_iteration = 1;
+  optional int32 global_iteration = 1;
   repeated Task tasks = 2;
 
   // Indexed by task_id

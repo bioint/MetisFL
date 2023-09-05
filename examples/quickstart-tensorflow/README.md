@@ -32,7 +32,7 @@ from metisfl.common.utils import iid_partition
 x_chunks, y_chunks = iid_partition(x_train, y_train, num_partitions=3, seed=1990)
 ```
 
-This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. It produces independent and identically distributed (IID) chunks of the dataset.
+This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. It produces independent and identically distributed (IID) chunks of the dataset. In the code of this example both the learner and the `load_data()` function are in the same file `learner.py`. This means that every time we start up the learner, a new dataset partitioning is created. However, since the seed is kept constant, the partitioning is the same every time. 
 
 ## Model 
 
@@ -46,9 +46,6 @@ The main abstraction of the server is called MetisFL Controller. The Controller 
 controller_params = ServerParams(
     hostname="localhost",
     port=50051,
-    root_certificate="" # path to the .pem root certificate
-    server_certificate="" # path to the .pem server certificate
-    private_key="" # path to the .pem private key
 )
 
 controller_config = ControllerConfig(
@@ -73,8 +70,6 @@ The main abstraction of the client is called MetisFL Learner. The MetisFL Learne
 
 ```python
 class TFLearner(Learner):
-
-    """A simple TensorFlow Learner."""
 
     def __init__(self, x_train, y_train, x_test, y_test):
         super().__init__()
@@ -110,15 +105,18 @@ class TFLearner(Learner):
 
 The `get_model()` function is in the aforementioned `model.py` and returns the previously described simple 2-layer Dense Neural Network. The `get_weights()` and `set_weights()` functions are used to get and set the model parameters. The `train()` function is used to train the model on the local dataset. The `evaluate()` function is used to evaluate the model on the local test dataset. The `train` and `evaluate` functions use the model weights sent by the controller to train on the local dataset. 
 
+Both the `train` and `evaluate` methods of the learner will get the model parameters and a configuration dictionary as input. The configuration dictionary is used to pass additional parameters to the learner. For example, the `train` method will get the batch size and the number of epochs from the configuration dictionary. Depending on the task configuration on the controller, the presence of the batch size and the number of epochs in the configuration dictionary is not guaranteed, so, we default to 64 and 3 respectively.
+
+Finally, note that the `train` method returns the `num_training_examples` as part of the training logs. This is required for the `NumTrainingExamples` scaling factor previously mentioned in the Controller section. 
 
 ## MetisFL Driver
 
 The MetisFL Driver is the main entry point to the MetisFL framework. It is responsible for coordinating the communication between the clients and the server, for initializing the weights of the shared model, monitoring the federated training and shutting down the system when the training is done. The Driver is initialized with the Controller and the Learners. 
 
 ```python
-def get_learner_server_params(learner_index, max_learners=3):
-    """A helper function to get the server parameters for a learner. """
+def get_learner_server_params(learner_index, max_learners=3):    
     ports = list(range(50002, 50002 + max_learners))
+
     return ServerParams(
         hostname="localhost",
         port=ports[learner_index],
@@ -126,13 +124,11 @@ def get_learner_server_params(learner_index, max_learners=3):
 
 termination_signals = TerminationSingals(federation_rounds=5)
 learners = [get_learner_server_params(i) for i in range(max_learners)]
-is_async = controller_config.communication_protocol == 'Asynchronous'
 
 session = DriverSession(
     controller=controller_params,
     learners=learners,
     termination_signals=termination_signals,
-    is_async=is_async,
 )
 
 logs = session.run()
@@ -145,19 +141,17 @@ To run the example, you need to open one terminal for the Controller, one termin
 ```bash
 python controller.py
 ```
-
-Then, start the Learners. 
+Then, start the Learners.
 
 ```bash
-python learner.py --learner X --max-learners Y
+python learner.py --learner ID
 ```
 
-where `X` is the numerical id of the Learner (0,1,2..) and `Y` is the total number of Learners (3 in this example). You can start as many Learners as you want. 
-
-Finally, start the Driver. 
+where `ID` is the numerical id of the Learner (1,2,3). Please make sure to start the controller before the Learners otherwise the Learners will not be able to connect to the Controller. Finally, start the Driver. 
 
 ```bash
 python driver.py
 ```
 
-The Driver will start the training process and each terminal will show the progress of the training.
+The driver will run the federated training for 5 rounds and then stop. The training logs will be save in the `results.json` file in the current directory.
+

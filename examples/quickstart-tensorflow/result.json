@@ -1,1 +1,446 @@
-{"global_iteration": 5, "tasks": [{"id": "1693814130178030", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:30Z", "received_at": "2023-09-04T07:55:30Z", "completed_at": "2023-09-04T07:55:31Z"}, {"id": "1693814130417427", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:30Z", "received_at": "2023-09-04T07:55:30Z", "completed_at": "2023-09-04T07:55:39Z"}, {"id": "1693814120828954", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:20Z", "received_at": "2023-09-04T07:55:20Z", "completed_at": "2023-09-04T07:55:30Z"}, {"id": "1693814130422783", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:30Z", "received_at": "2023-09-04T07:55:30Z", "completed_at": "2023-09-04T07:55:40Z"}, {"id": "1693814140168477", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:40Z"}, {"id": "1693814140171683", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:40Z"}, {"id": "1693814140173232", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:40Z"}, {"id": "1693814120797188", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:20Z", "received_at": "2023-09-04T07:55:20Z", "completed_at": "2023-09-04T07:55:21Z"}, {"id": "1693814129961853", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:29Z", "received_at": "2023-09-04T07:55:29Z", "completed_at": "2023-09-04T07:55:30Z"}, {"id": "1693814111227160", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:11Z", "received_at": "2023-09-04T07:55:11Z", "completed_at": "2023-09-04T07:55:12Z"}, {"id": "1693814111258251", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:11Z", "received_at": "2023-09-04T07:55:11Z", "completed_at": "2023-09-04T07:55:20Z"}, {"id": "1693814102466379", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:02Z", "received_at": "2023-09-04T07:55:02Z", "completed_at": "2023-09-04T07:55:11Z"}, {"id": "1693814102462168", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:02Z", "received_at": "2023-09-04T07:55:02Z", "completed_at": "2023-09-04T07:55:11Z"}, {"id": "1693814120639506", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:20Z", "received_at": "2023-09-04T07:55:20Z", "completed_at": "2023-09-04T07:55:21Z"}, {"id": "1693814130429421", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:30Z", "received_at": "2023-09-04T07:55:30Z", "completed_at": "2023-09-04T07:55:39Z"}, {"id": "1693814120827048", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:20Z", "received_at": "2023-09-04T07:55:20Z", "completed_at": "2023-09-04T07:55:30Z"}, {"id": "1693814139615972", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:39Z", "received_at": "2023-09-04T07:55:39Z", "completed_at": "2023-09-04T07:55:40Z"}, {"id": "1693814139698567", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:39Z", "received_at": "2023-09-04T07:55:39Z", "completed_at": "2023-09-04T07:55:40Z"}, {"id": "1693814130409404", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:30Z", "received_at": "2023-09-04T07:55:30Z", "completed_at": "2023-09-04T07:55:31Z"}, {"id": "1693814140158852", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:40Z", "received_at": "2023-09-04T07:55:40Z", "completed_at": "2023-09-04T07:55:40Z"}, {"id": "1693814111204799", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:11Z", "received_at": "2023-09-04T07:55:11Z", "completed_at": "2023-09-04T07:55:12Z"}, {"id": "1693814111254161", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:11Z", "received_at": "2023-09-04T07:55:11Z", "completed_at": "2023-09-04T07:55:20Z"}, {"id": "1693814120816102", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:20Z", "received_at": "2023-09-04T07:55:20Z", "completed_at": "2023-09-04T07:55:29Z"}, {"id": "1693814111259922", "learner_id": "localhost:50003", "sent_at": "2023-09-04T07:55:11Z", "received_at": "2023-09-04T07:55:11Z", "completed_at": "2023-09-04T07:55:20Z"}, {"id": "1693814111218578", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:11Z", "received_at": "2023-09-04T07:55:11Z", "completed_at": "2023-09-04T07:55:12Z"}, {"id": "1693814120477479", "learner_id": "localhost:50004", "sent_at": "2023-09-04T07:55:20Z", "received_at": "2023-09-04T07:55:20Z", "completed_at": "2023-09-04T07:55:21Z"}, {"id": "1693814102464225", "learner_id": "localhost:50002", "sent_at": "2023-09-04T07:55:02Z", "received_at": "2023-09-04T07:55:02Z", "completed_at": "2023-09-04T07:55:11Z"}], "train_results": {"1693814102464225": {}, "1693814120816102": {}, "1693814111259922": {}, "1693814111254161": {}, "1693814120828954": {}, "1693814102462168": {}, "1693814130429421": {}, "1693814130417427": {}, "1693814111258251": {}, "1693814120827048": {}, "1693814102466379": {}, "1693814130422783": {}}, "evaluation_results": {"1693814111218578": {"metrics": {"loss": 2.3742836, "accuracy": 0.1052}}, "1693814120639506": {"metrics": {"accuracy": 0.9618, "loss": 1.9423685}}, "1693814129961853": {"metrics": {"accuracy": 0.9621, "loss": 1.9213674}}, "1693814111227160": {"metrics": {"loss": 2.3742836, "accuracy": 0.1052}}, "1693814120477479": {"metrics": {"accuracy": 0.9618, "loss": 1.9423685}}, "1693814139615972": {"metrics": {"accuracy": 0.9671, "loss": 1.9041167}}, "1693814120797188": {"metrics": {"loss": 1.9423685, "accuracy": 0.9618}}, "1693814111204799": {"metrics": {"loss": 2.3742836, "accuracy": 0.1052}}, "1693814130409404": {"metrics": {"accuracy": 0.9621, "loss": 1.9213674}}, "1693814139698567": {"metrics": {"loss": 1.9041167, "accuracy": 0.9671}}, "1693814130178030": {"metrics": {"accuracy": 0.9621, "loss": 1.9213674}}, "1693814140158852": {"metrics": {"accuracy": 0.9671, "loss": 1.9041167}}}, "model_metadata": {"1693814140158906": {"selection_duration_ms": 0.002314, "aggregation_duration_ms": 8.545197, "aggregation_block_size": [1.0], "aggregation_block_memory_kb": [197112.0], "aggregation_block_duration_ms": [8.516302]}, "1693814120797258": {"selection_duration_ms": 0.002527, "aggregation_duration_ms": 16.622857, "aggregation_block_size": [1.0], "aggregation_block_memory_kb": [173904.0], "aggregation_block_duration_ms": [16.593645]}, "1693814130409492": {"selection_duration_ms": 0.002186, "aggregation_duration_ms": 6.958673, "aggregation_block_size": [1.0], "aggregation_block_memory_kb": [191040.0], "aggregation_block_duration_ms": [6.92823]}, "1693814111227255": {"selection_duration_ms": 0.004224, "aggregation_duration_ms": 24.478918, "aggregation_block_size": [1.0], "aggregation_block_memory_kb": [163732.0], "aggregation_block_duration_ms": [24.433582]}}}
+{
+  "tasks": [
+    {
+      "id": "1693891248482279",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:48Z",
+      "received_at": "2023-09-05T05:20:48Z",
+      "completed_at": "2023-09-05T05:20:52Z"
+    },
+    {
+      "id": "1693891252639962",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:52Z",
+      "received_at": "2023-09-05T05:20:52Z",
+      "completed_at": "2023-09-05T05:20:53Z"
+    },
+    {
+      "id": "1693891248472845",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:48Z",
+      "received_at": "2023-09-05T05:20:48Z",
+      "completed_at": "2023-09-05T05:20:49Z"
+    },
+    {
+      "id": "1693891234932423",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:34Z",
+      "received_at": "2023-09-05T05:20:34Z",
+      "completed_at": "2023-09-05T05:20:36Z"
+    },
+    {
+      "id": "1693891239444904",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:39Z",
+      "received_at": "2023-09-05T05:20:39Z",
+      "completed_at": "2023-09-05T05:20:40Z"
+    },
+    {
+      "id": "1693891230005140",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:30Z",
+      "received_at": "2023-09-05T05:20:30Z",
+      "completed_at": "2023-09-05T05:20:34Z"
+    },
+    {
+      "id": "1693891248482939",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:48Z",
+      "received_at": "2023-09-05T05:20:48Z",
+      "completed_at": "2023-09-05T05:20:52Z"
+    },
+    {
+      "id": "1693891243987214",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:43Z",
+      "received_at": "2023-09-05T05:20:44Z",
+      "completed_at": "2023-09-05T05:20:48Z"
+    },
+    {
+      "id": "1693891243875230",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:43Z",
+      "received_at": "2023-09-05T05:20:43Z",
+      "completed_at": "2023-09-05T05:20:45Z"
+    },
+    {
+      "id": "1693891239372279",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:39Z",
+      "received_at": "2023-09-05T05:20:39Z",
+      "completed_at": "2023-09-05T05:20:41Z"
+    },
+    {
+      "id": "1693891243895964",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:43Z",
+      "received_at": "2023-09-05T05:20:43Z",
+      "completed_at": "2023-09-05T05:20:45Z"
+    },
+    {
+      "id": "1693891234941731",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:34Z",
+      "received_at": "2023-09-05T05:20:34Z",
+      "completed_at": "2023-09-05T05:20:36Z"
+    },
+    {
+      "id": "1693891252620736",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:52Z",
+      "received_at": "2023-09-05T05:20:52Z",
+      "completed_at": "2023-09-05T05:20:53Z"
+    },
+    {
+      "id": "1693891252684318",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:52Z",
+      "received_at": "2023-09-05T05:20:52Z",
+      "completed_at": "2023-09-05T05:20:56Z"
+    },
+    {
+      "id": "1693891234923313",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:34Z",
+      "received_at": "2023-09-05T05:20:34Z",
+      "completed_at": "2023-09-05T05:20:36Z"
+    },
+    {
+      "id": "1693891239324052",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:39Z",
+      "received_at": "2023-09-05T05:20:39Z",
+      "completed_at": "2023-09-05T05:20:40Z"
+    },
+    {
+      "id": "1693891256832840",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:56Z"
+    },
+    {
+      "id": "1693891256764261",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:56Z",
+      "received_at": "2023-09-05T05:20:56Z",
+      "completed_at": "2023-09-05T05:20:57Z"
+    },
+    {
+      "id": "1693891252685094",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:52Z",
+      "received_at": "2023-09-05T05:20:52Z",
+      "completed_at": "2023-09-05T05:20:56Z"
+    },
+    {
+      "id": "1693891243979501",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:43Z",
+      "received_at": "2023-09-05T05:20:43Z",
+      "completed_at": "2023-09-05T05:20:45Z"
+    },
+    {
+      "id": "1693891239467761",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:39Z",
+      "received_at": "2023-09-05T05:20:39Z",
+      "completed_at": "2023-09-05T05:20:43Z"
+    },
+    {
+      "id": "1693891248479359",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:48Z",
+      "received_at": "2023-09-05T05:20:48Z",
+      "completed_at": "2023-09-05T05:20:52Z"
+    },
+    {
+      "id": "1693891248387122",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:48Z",
+      "received_at": "2023-09-05T05:20:48Z",
+      "completed_at": "2023-09-05T05:20:49Z"
+    },
+    {
+      "id": "1693891234964400",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:34Z",
+      "received_at": "2023-09-05T05:20:34Z",
+      "completed_at": "2023-09-05T05:20:39Z"
+    },
+    {
+      "id": "1693891252670425",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:52Z",
+      "received_at": "2023-09-05T05:20:52Z",
+      "completed_at": "2023-09-05T05:20:53Z"
+    },
+    {
+      "id": "1693891234957791",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:34Z",
+      "received_at": "2023-09-05T05:20:34Z",
+      "completed_at": "2023-09-05T05:20:39Z"
+    },
+    {
+      "id": "1693891239462376",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:39Z",
+      "received_at": "2023-09-05T05:20:39Z",
+      "completed_at": "2023-09-05T05:20:43Z"
+    },
+    {
+      "id": "1693891256828054",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:56Z"
+    },
+    {
+      "id": "1693891256832170",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:56Z"
+    },
+    {
+      "id": "1693891243987782",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:43Z",
+      "received_at": "2023-09-05T05:20:44Z",
+      "completed_at": "2023-09-05T05:20:48Z"
+    },
+    {
+      "id": "1693891234962173",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:34Z",
+      "received_at": "2023-09-05T05:20:34Z",
+      "completed_at": "2023-09-05T05:20:39Z"
+    },
+    {
+      "id": "1693891256799193",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:56Z",
+      "received_at": "2023-09-05T05:20:56Z",
+      "completed_at": "2023-09-05T05:20:58Z"
+    },
+    {
+      "id": "1693891230007040",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:30Z",
+      "received_at": "2023-09-05T05:20:30Z",
+      "completed_at": "2023-09-05T05:20:34Z"
+    },
+    {
+      "id": "1693891248347595",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:48Z",
+      "received_at": "2023-09-05T05:20:48Z",
+      "completed_at": "2023-09-05T05:20:49Z"
+    },
+    {
+      "id": "1693891239465487",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:39Z",
+      "received_at": "2023-09-05T05:20:39Z",
+      "completed_at": "2023-09-05T05:20:43Z"
+    },
+    {
+      "id": "1693891243991303",
+      "learner_id": "localhost:50003",
+      "sent_at": "2023-09-05T05:20:43Z",
+      "received_at": "2023-09-05T05:20:43Z",
+      "completed_at": "2023-09-05T05:20:48Z"
+    },
+    {
+      "id": "1693891252680514",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:52Z",
+      "received_at": "2023-09-05T05:20:52Z",
+      "completed_at": "2023-09-05T05:20:56Z"
+    },
+    {
+      "id": "1693891256821359",
+      "learner_id": "localhost:50004",
+      "sent_at": "2023-09-05T05:20:56Z",
+      "received_at": "2023-09-05T05:20:56Z",
+      "completed_at": "2023-09-05T05:20:58Z"
+    },
+    {
+      "id": "1693891230008961",
+      "learner_id": "localhost:50002",
+      "sent_at": "2023-09-05T05:20:30Z",
+      "received_at": "2023-09-05T05:20:30Z",
+      "completed_at": "2023-09-05T05:20:34Z"
+    }
+  ],
+  "train_results": {
+    "1693891239462376": {
+      "metrics": "{\"loss\": [0.6228646636009216, 0.4104861915111542, 0.36855602264404297], \"accuracy\": [0.8007960319519043, 0.8484500050544739, 0.8666999936103821]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891234962173": {
+      "metrics": "{\"loss\": [0.5729568600654602, 0.4046928882598877, 0.36706429719924927], \"accuracy\": [0.8066999912261963, 0.8517500162124634, 0.8665000200271606]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891248479359": {
+      "metrics": "{\"loss\": [0.6150735020637512, 0.40263456106185913, 0.3687523603439331], \"accuracy\": [0.8055904507637024, 0.854200005531311, 0.8646000027656555]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891248482279": {
+      "metrics": "{\"loss\": [0.5983030796051025, 0.38896089792251587, 0.35110777616500854], \"accuracy\": [0.8094135522842407, 0.8564500212669373, 0.8705499768257141]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891239467761": {
+      "metrics": "{\"loss\": [0.6153033375740051, 0.4024334251880646, 0.3619884252548218], \"accuracy\": [0.8001952171325684, 0.8537499904632568, 0.8691999912261963]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891230008961": {
+      "metrics": "{\"loss\": [0.619795024394989, 0.4351408779621124, 0.3882726728916168], \"accuracy\": [0.7831000089645386, 0.8449500203132629, 0.8575500249862671]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891248482939": {
+      "metrics": "{\"loss\": [0.6123152375221252, 0.39601942896842957, 0.3565700054168701], \"accuracy\": [0.8068690299987793, 0.8589000105857849, 0.8710500001907349]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891243987214": {
+      "metrics": "{\"loss\": [0.6187340617179871, 0.4060761332511902, 0.3642694056034088], \"accuracy\": [0.7990083694458008, 0.8520500063896179, 0.8643500208854675]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891243991303": {
+      "metrics": "{\"loss\": [0.6231411099433899, 0.39543968439102173, 0.3604911267757416], \"accuracy\": [0.8024657368659973, 0.8569999933242798, 0.8687000274658203]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891234964400": {
+      "metrics": "{\"loss\": [0.5589392781257629, 0.4020175635814667, 0.36308255791664124], \"accuracy\": [0.8082333207130432, 0.8569999933242798, 0.8698999881744385]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891234957791": {
+      "metrics": "{\"loss\": [0.5663650631904602, 0.4086872637271881, 0.375262051820755], \"accuracy\": [0.8042666912078857, 0.8544999957084656, 0.862500011920929]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891230007040": {
+      "metrics": "{\"loss\": [0.6043395400047302, 0.4349747598171234, 0.38223427534103394], \"accuracy\": [0.7886000275611877, 0.8423500061035156, 0.8611999750137329]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891230005140": {
+      "metrics": "{\"loss\": [0.6038349270820618, 0.4264282286167145, 0.3845897316932678], \"accuracy\": [0.7923499941825867, 0.8494499921798706, 0.8622999787330627]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891252680514": {
+      "metrics": "{\"loss\": [0.6252692937850952, 0.4012732207775116, 0.3694220185279846], \"accuracy\": [0.7965288758277893, 0.8529000282287598, 0.8639000058174133]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891252685094": {
+      "metrics": "{\"loss\": [0.6109756827354431, 0.39376771450042725, 0.3550548553466797], \"accuracy\": [0.8063825368881226, 0.8593999743461609, 0.870199978351593]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891243987782": {
+      "metrics": "{\"loss\": [0.5970476269721985, 0.38503479957580566, 0.3564653694629669], \"accuracy\": [0.8113519549369812, 0.8605999946594238, 0.8677499890327454]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891252684318": {
+      "metrics": "{\"loss\": [0.6018102765083313, 0.3878811001777649, 0.35208001732826233], \"accuracy\": [0.8100793361663818, 0.8597999811172485, 0.8700000047683716]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    },
+    "1693891239465487": {
+      "metrics": "{\"loss\": [0.6093565225601196, 0.39601078629493713, 0.3534780740737915], \"accuracy\": [0.8031333088874817, 0.8558499813079834, 0.8694499731063843]}",
+      "metadata": { "num_training_examples": 20000.0 }
+    }
+  },
+  "evaluation_results": {
+    "1693891243875230": {
+      "metrics": { "accuracy": 0.7800866, "loss": 0.71929944 }
+    },
+    "1693891256799193": {
+      "metrics": { "accuracy": 0.7904065, "loss": 0.6753143 }
+    },
+    "1693891239324052": {
+      "metrics": { "accuracy": 0.7766789, "loss": 0.7171504 }
+    },
+    "1693891243979501": {
+      "metrics": { "loss": 0.68073887, "accuracy": 0.7937038 }
+    },
+    "1693891239444904": {
+      "metrics": { "accuracy": 0.7840096, "loss": 0.69210327 }
+    },
+    "1693891252620736": {
+      "metrics": { "accuracy": 0.789136, "loss": 0.6975003 }
+    },
+    "1693891252670425": {
+      "metrics": { "loss": 0.68779504, "accuracy": 0.7913414 }
+    },
+    "1693891234923313": {
+      "metrics": { "accuracy": 0.79626334, "loss": 0.600468 }
+    },
+    "1693891248472845": {
+      "metrics": { "loss": 0.67857695, "accuracy": 0.79292166 }
+    },
+    "1693891248387122": {
+      "metrics": { "accuracy": 0.7882607, "loss": 0.7073406 }
+    },
+    "1693891256764261": {
+      "metrics": { "loss": 0.71842074, "accuracy": 0.7789757 }
+    },
+    "1693891256821359": {
+      "metrics": { "loss": 0.67623675, "accuracy": 0.79484695 }
+    },
+    "1693891239372279": {
+      "metrics": { "loss": 0.70393014, "accuracy": 0.784424 }
+    },
+    "1693891243895964": {
+      "metrics": { "accuracy": 0.7803586, "loss": 0.7007621 }
+    },
+    "1693891234932423": {
+      "metrics": { "loss": 0.5995678, "accuracy": 0.7937898 }
+    },
+    "1693891234941731": {
+      "metrics": { "loss": 0.61631376, "accuracy": 0.796976 }
+    },
+    "1693891248347595": {
+      "metrics": { "loss": 0.7148656, "accuracy": 0.78486353 }
+    },
+    "1693891252639962": {
+      "metrics": { "accuracy": 0.7781639, "loss": 0.7152868 }
+    }
+  },
+  "model_metadata": {
+    "1693891239444957": {
+      "selection_duration_ms": 0.00273,
+      "aggregation_duration_ms": 14.451477,
+      "aggregation_block_size": [1.0],
+      "aggregation_block_memory_kb": [191372.0],
+      "aggregation_block_duration_ms": [14.42589]
+    },
+    "1693891256821430": {
+      "selection_duration_ms": 0.002821,
+      "aggregation_duration_ms": 4.459264,
+      "aggregation_block_size": [1.0],
+      "aggregation_block_memory_kb": [220416.0],
+      "aggregation_block_duration_ms": [4.425721]
+    },
+    "1693891234941809": {
+      "selection_duration_ms": 0.002617,
+      "aggregation_duration_ms": 13.245341,
+      "aggregation_block_size": [1.0],
+      "aggregation_block_memory_kb": [176908.0],
+      "aggregation_block_duration_ms": [13.218905]
+    },
+    "1693891248472895": {
+      "selection_duration_ms": 0.00256,
+      "aggregation_duration_ms": 2.924832,
+      "aggregation_block_size": [1.0],
+      "aggregation_block_memory_kb": [209780.0],
+      "aggregation_block_duration_ms": [2.898921]
+    },
+    "1693891252670496": {
+      "selection_duration_ms": 0.002503,
+      "aggregation_duration_ms": 4.356761,
+      "aggregation_block_size": [1.0],
+      "aggregation_block_memory_kb": [212944.0],
+      "aggregation_block_duration_ms": [4.328552]
+    },
+    "1693891243979559": {
+      "selection_duration_ms": 0.002625,
+      "aggregation_duration_ms": 6.516182,
+      "aggregation_block_size": [1.0],
+      "aggregation_block_memory_kb": [200872.0],
+      "aggregation_block_duration_ms": [6.490678]
+    }
+  },
+  "global_iteration": 7
+}
