@@ -46,9 +46,10 @@ void ModelManager::UpdateModel(std::vector<std::string> &to_schedule,
   std::chrono::time_point<std::chrono::system_clock> start_time_aggregation =
       std::chrono::high_resolution_clock::now();
 
+  std::vector<std::pair<std::string, int>> to_select_block;
+
   for (std::string learner_id : learner_ids) {
     auto lineage_length = GetLineageLength(learner_id);
-    std::vector<std::pair<std::string, int>> to_select_block;
 
     to_select_block.emplace_back(learner_id, lineage_length);
     int block_size = to_select_block.size();

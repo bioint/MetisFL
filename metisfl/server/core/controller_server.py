@@ -68,7 +68,7 @@ class ControllerServer(Server, controller_pb2_grpc.ControllerServiceServicer):
         self,
         learner: controller_pb2.Learner,
         context: Any
-    ) -> controller_pb2.LearnerId:
+    ) -> Union[controller_pb2.LearnerId, service_common_pb2.Ack]:
         """Joins the federation.
 
         Parameters
@@ -80,12 +80,12 @@ class ControllerServer(Server, controller_pb2_grpc.ControllerServiceServicer):
 
         Returns
         -------
-        controller_pb2.LearnerId
-            The response containing the learner id.
+        Union[controller_pb2.LearnerId, service_common_pb2.Ack]
+            The response containing the learner id or a failure acknoledgement if the server is not serving.
         """
 
         if not self.is_serving(context):
-            return controller_pb2.LearnerId()
+            return service_common_pb2.Ack(status=False)
 
         learner_id = self.controller.add_learner(learner=learner)
 
@@ -184,7 +184,7 @@ class ControllerServer(Server, controller_pb2_grpc.ControllerServiceServicer):
         self,
         _: controller_pb2.Empty,
         context: Any
-    ) -> controller_pb2.Logs:
+    ) -> Union[controller_pb2.Logs, service_common_pb2.Ack]:
         """Gets the logs of the controller.
 
         Parameters
@@ -196,12 +196,12 @@ class ControllerServer(Server, controller_pb2_grpc.ControllerServiceServicer):
 
         Returns
         -------
-        controller_pb2.Logs
-            The response containing the logs.
+        Union[controller_pb2.Logs, service_common_pb2.Ack]
+            The response containing the logs or a failure acknoledgement if the server is not serving.
         """
 
         if not self.is_serving(context):
-            return controller_pb2.Logs()
+            return service_common_pb2.Ack(status=False)
 
         logs = self.controller.get_logs()
 

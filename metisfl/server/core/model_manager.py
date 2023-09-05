@@ -1,18 +1,24 @@
 
+import time
 from typing import Dict, List, Tuple
-from metisfl.common.types import GlobalTrainConfig, ModelStoreConfig
+from metisfl.common.types import GlobalTrainConfig
 from metisfl.proto import controller_pb2, model_pb2
-from metisfl.server.core.learner_manager import LearnerManager
+from metisfl.common.utils import random_id_generator
+from metisfl.server.aggregation import Aggregator
+from metisfl.server.core import LearnerManager
 from metisfl.server.selection.scheduled_cardinality import ScheduledCardinality
-from metisfl.server.store.model_store import ModelStore
+from metisfl.server.store import ModelStore
+from metisfl.server.scaling import batches_scaling, participants_scaling, dataset_scaling
 
 
 class ModelManager:
 
+    aggregator: Aggregator = None
+
     model: model_pb2.Model = None
     model_store: ModelStore = None
     global_train_config: GlobalTrainConfig = None
-    metadata: controller_pb2.ModelMetadata = None
+    metadata: controller_pb2.ModelMetadata = {}
     selector: ScheduledCardinality = None
     learner_manager: LearnerManager = None
     is_initialized: bool = False
@@ -63,7 +69,9 @@ class ModelManager:
         model : model_pb2.Model
             The model to be inserted.
         """
-        pass
+        self.model_store.insert(
+            [(learner_id, model)],
+        )
 
     def update_model(
         self,
@@ -79,7 +87,14 @@ class ModelManager:
         learner_ids : List[str]
             The learners ids.
         """
-        pass
+        selected_ids = self.selector.select(to_schedule, learner_ids)
+        scaling_factors = self.compute_scaling_factor(learner_ids)
+        stride_length = self.get_stride_length(len(learner_ids))
+
+        update_id = self.init_metadata()
+        aggregation_start_time = time.time()
+
+        # FIXME: continue this
 
     def erase_models(self, learner_ids: List[str]) -> None:
         """Erases the models of the learners.
@@ -89,7 +104,7 @@ class ModelManager:
         learner_ids : List[str]
             The learners ids.
         """
-        pass
+        self.model_store.erase(learner_ids)
 
     def get_model(self) -> model_pb2.Model:
         """Gets the model.
@@ -101,9 +116,13 @@ class ModelManager:
         """
         return self.model
 
-    def init_medata(self) -> None:
+    def init_metadata(self) -> str:
         """Initializes the metadata."""
-        pass
+
+        update_id = str(random_id_generator())
+        self.metadata[update_id] = controller_pb2.ModelMetadata()
+
+        return
 
     def get_stride_length(self, num_learners: int) -> int:
         """Returns the stride length.
@@ -159,7 +178,23 @@ class ModelManager:
         Dict[str, float]
             The scaling factor for each learner.
         """
-        pass
+
+        scaling_factor = self.global_train_config.scaling_factor
+
+        if scaling_factor == "NumCompletedBatches":
+            num_completed_batches = self.learner_manager.get_num_completed_batches(
+                learner_ids
+            )
+            return batches_scaling(num_completed_batches)
+        elif scaling_factor == "NumTrainingExamples":
+            num_training_examples = self.learner_manager.get_num_training_examples(
+                learner_ids
+            )
+            return dataset_scaling(num_training_examples)
+        elif scaling_factor == "NumParticipants":
+            return participants_scaling(learner_ids)
+        else:
+            raise Exception("Invalid scaling factor")
 
     def get_aggregation_pairs(
         self,
@@ -167,9 +202,8 @@ class ModelManager:
         scaling_factors: Dict[str, float],
     ) -> List[List[Tuple[model_pb2.Model, float]]]:
         """Returns the aggregation pairs. """
-        pass
 
-    def aggrefate(
+    def aggregate(
         self,
         update_id: str,
         to_aggregate_block: List[List[Tuple[model_pb2.Model, float]]],

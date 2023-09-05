@@ -6,7 +6,6 @@ from metisfl.common.types import ClientParams
 
 from metisfl.proto import (controller_pb2, controller_pb2_grpc, learner_pb2, learner_pb2_grpc,
                            model_pb2, service_common_pb2)
-from metisfl.server.core.learner_client import LearnerClient
 
 
 def get_learner_id(
@@ -99,13 +98,13 @@ class LearnerManager:
 
             def _request(_timeout=None):
 
-                request = controller_pb2.Train(
+                request = controller_pb2.TrainRequest(
                     task=task,
                     model=model,
-                    train_params=train_params
+                    params=train_params
                 )
 
-                return self._train(stub, request, timeout=_timeout)
+                return stub.Train(request, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -126,13 +125,13 @@ class LearnerManager:
 
             def _request(_timeout=None):
 
-                request = controller_pb2.Evaluate(
+                request = controller_pb2.EvaluateRequest(
                     task=task,
                     model=model,
-                    eval_params=eval_params
+                    params=eval_params
                 )
 
-                return self._evaluate(stub, request, timeout=_timeout)
+                return stub.Evaluate(request, timeout=_timeout)
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -154,7 +153,11 @@ class LearnerManager:
         Dict[str, int]
             The number of training examples for each learner.
         """
-        pass
+        num_training_examples = {}
+        for learner_id in learner_ids:
+            num_training_examples[learner_id] = self.num_training_examples.get(
+                learner_id, 0
+            )
 
     def get_num_completed_batches(self, learner_ids: List[str]) -> Dict[str, int]:
         """Gets the number of completed batches for the learners.
@@ -169,7 +172,11 @@ class LearnerManager:
         Dict[str, int]
             The number of completed batches for each learner.
         """
-        pass
+        num_completed_batches = {}
+        for learner_id in learner_ids:
+            num_completed_batches[learner_id] = self.last_train_results.get(
+                learner_id, 0
+            )  # FIXME: this is not correct
 
     def get_learner_ids(self) -> List[str]:
         """Gets the learner ids.

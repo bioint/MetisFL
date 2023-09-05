@@ -62,3 +62,14 @@ def niid_partition(
     """Partitions the data into Non-IID chunks."""
 
     pass
+
+
+def random_id_generator() -> int:
+    """ Generates a random id. """
+    # generate random id
+    random_id = random.randint(0, 10000000000)
+
+    return random_id
+
+
+print(random_id_generator())
