@@ -1,5 +1,5 @@
 
-""" Controller for the TF quickstart example."""
+""" Controller for the Pytorch quickstart example."""
 
 from metisfl.common.types import ControllerConfig, ModelStoreConfig, ServerParams
 from metisfl.controller import Controller
