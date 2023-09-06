@@ -2,13 +2,10 @@ import random
 from time import sleep
 from typing import Dict, List
 
-from loguru import logger
-
 from metisfl.common.logger import MetisASCIIArt
 from metisfl.common.types import ClientParams, ServerParams, TerminationSingals
-from metisfl.driver.controller_client import GRPCControllerClient
+from metisfl.driver.clients import GRPCControllerClient, GRPCLearnerClient
 from metisfl.driver.monitor import FederationMonitor
-from metisfl.driver.learner_client import GRPCLearnerClient
 from metisfl.proto import model_pb2
 
 
@@ -20,7 +17,6 @@ class DriverSession(object):
         controller: ServerParams,
         learners: List[ServerParams],
         termination_signals: TerminationSingals,
-        is_async: bool = False,
     ) -> None:
         """Initializes a new DriverSession.
 

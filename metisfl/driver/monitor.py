@@ -8,7 +8,7 @@ from google.protobuf.json_format import MessageToDict
 from loguru import logger
 
 from metisfl.common.types import TerminationSingals
-from metisfl.driver.controller_client import GRPCControllerClient
+from metisfl.driver.clients import GRPCControllerClient
 from metisfl.proto import controller_pb2
 
 
