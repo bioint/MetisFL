@@ -12,7 +12,7 @@ import pandas as pd
 
 from housing_mlp import HousingMLP
 
-from metisfl.driver.driver_session import DriverSession
+from metisfl.driver.driver import DriverSession
 from metisfl.models.model_dataset import ModelDatasetRegression
 from metisfl.common.fedenv_gen import EnvGen
 

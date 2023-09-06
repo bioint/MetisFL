@@ -1,6 +1,6 @@
 # MetisFl Quikstart: Tensorflow
 
-This example shows how to use MetisFL to train a Tensorflow in a simulated federated learning setting using MetisFL. This guide describes the main steps and the full scripts can be found in the [examples/quickstart-tensorflow](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-tensorflow) directory. 
+This example shows how to use MetisFL to train a Tensorflow model in a simulated federated learning setting using MetisFL. This guide describes the main steps and the full scripts can be found in the [examples/quickstart-tensorflow](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-tensorflow) directory. 
 
 ## Prerequisites
 

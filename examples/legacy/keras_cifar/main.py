@@ -6,7 +6,7 @@ from dataset import load_data, partition_data_iid, save_data
 from model import get_model
 from recipe import dataset_recipe_fn
 
-from metisfl.driver.driver_session import DriverSession
+from metisfl.driver.driver import DriverSession
 from metisfl.models.keras.keras_model import MetisModelKeras
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
@@ -22,12 +22,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--env", default=default_fed_env_fp)
     args = parser.parse_args()
- 
+
     # Load the data
     x_train, y_train, x_test, y_test = load_data()
 
     # Partition the data, iid partitions
-    num_learners = 1 # must match the number of learners in the environment yaml file
+    num_learners = 1  # must match the number of learners in the environment yaml file
     x_chunks, y_chunks = partition_data_iid(x_train, y_train, num_learners)
 
     # Save the data
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     # Compile the model
     nn_model.compile(optimizer="adam",
                      loss="sparse_categorical_crossentropy", metrics=["accuracy"])
-    
+
     # Wrap it with MetisKerasModel
     model = MetisModelKeras(nn_model)
 

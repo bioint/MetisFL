@@ -2,6 +2,7 @@ import argparse
 from collections import OrderedDict
 from typing import Tuple
 
+import numpy as np
 import torch
 import torchvision.transforms as transforms
 from controller import controller_params
@@ -18,7 +19,7 @@ DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 
 def load_data(num_learners: int) -> Tuple:
-    """Load CIFAR-10  and partition it into 3 clients, iid."""
+    """Load CIFAR-10  and partition it into num_learners clients, iid."""
 
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize(
@@ -28,7 +29,20 @@ def load_data(num_learners: int) -> Tuple:
     trainset = CIFAR10(".", train=True, download=True, transform=transform)
     testset = CIFAR10(".", train=False, download=True, transform=transform)
 
-    return trainset, testset
+    x_chunks, y_chunks = iid_partition(
+        x_train=trainset.data, y_train=trainset.targets, num_partitions=num_learners)
+
+    # Convert the numpy arrays to torch tensors and make it channels first
+    x_chunks = [torch.Tensor(x).permute(0, 3, 1, 2) for x in x_chunks]
+    y_chunks = [torch.Tensor(y).long() for y in y_chunks]
+    trainset_chunks = [TensorDataset(x, y) for x, y in zip(x_chunks, y_chunks)]
+
+    # Same for the test set
+    test_data = torch.Tensor(testset.data).permute(0, 3, 1, 2)
+    test_labels = torch.Tensor(testset.targets).long()
+    testset = TensorDataset(test_data, test_labels)
+
+    return trainset_chunks, testset
 
 
 class TorchLearner(Learner):
@@ -41,8 +55,10 @@ class TorchLearner(Learner):
         testset: TensorDataset,
     ):
         super().__init__()
-        self.trainset = trainset
-        self.testset = testset
+        self.trainloader = DataLoader(trainset, batch_size=64, shuffle=True)
+        self.testloader = DataLoader(testset, batch_size=64, shuffle=False)
+        self.criterion = torch.nn.CrossEntropyLoss()
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
         self.model = Model().to(DEVICE)
 
     def get_weights(self):
@@ -55,39 +71,44 @@ class TorchLearner(Learner):
 
     def train(self, parameters, config):
         self.set_weights(parameters)
-
-        batch_size = config["batch_size"] if "batch_size" in config else 64
-        epochs = config["epochs"] if "epochs" in config else 3
-        train_loader = DataLoader(
-            self.trainset, batch_size=batch_size, shuffle=True)
-
-        criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.SGD(
-            self.model.parameters(), lr=0.001, momentum=0.9)
+        epochs = config["epochs"] if "epochs" in config else 1
+        losses = []
+        accs = []
         for _ in range(epochs):
-            for images, labels in train_loader:
+            for images, labels in self.trainloader:
                 images, labels = images.to(DEVICE), labels.to(DEVICE)
-                optimizer.zero_grad()
-                loss = criterion(self.model(images), labels)
+                self.optimizer.zero_grad()
+                outputs = self.model(images)
+                loss = self.criterion(outputs, labels)
                 loss.backward()
-                optimizer.step()
+                self.optimizer.step()
 
-        return self.get_weights()
+                _, predicted = torch.max(outputs.data, 1)
+                total = labels.size(0)
+                correct = (predicted == labels).sum().item()
+                accuracy = correct / total
+
+                losses.append(loss.item())
+                accs.append(accuracy)
+
+        metrics = {
+            "accuracy": np.mean(accs),
+            "loss": np.mean(losses),
+        }
+        metadata = {
+            "num_training_examples": len(self.trainset),
+        }
+        return self.get_weights(), metrics, metadata
 
     def evaluate(self, parameters, config):
-        self.model.set_weights(parameters)
+        self.set_weights(parameters)
 
-        batch_size = config["batch_size"] if "batch_size" in config else 64
-        test_loader = DataLoader(
-            self.testset, batch_size=batch_size, shuffle=False)
-
-        criterion = torch.nn.CrossEntropyLoss()
         correct, total, loss = 0, 0, 0.0
         with torch.no_grad():
-            for data in test_loader:
+            for data in self.testloader:
                 images, labels = data[0].to(DEVICE), data[1].to(DEVICE)
                 outputs = self.model(images)
-                loss += criterion(outputs, labels).item()
+                loss += self.criterion(outputs, labels).item()
                 _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += (predicted == labels).sum().item()
@@ -119,25 +140,19 @@ if __name__ == "__main__":
     max_learners = args.max_learners
 
     # Partition the data into 3 clients, iid
-    trainset, testset = load_data(num_learners=max_learners)
-    x_chunks, y_chunks = iid_partition(
-        x_train=trainset.data, y_train=trainset.targets, num_partitions=max_learners)
-
-    # Get the data for the current learner
-    trainset = TensorDataset(torch.Tensor(
-        x_chunks[index]), torch.Tensor(y_chunks[index]))
+    trainset_chuncks, testset = load_data(num_learners=max_learners)
 
     # Create the learner
-    learner = TorchLearner(trainset, testset)
+    learner = TorchLearner(trainset_chuncks[index], testset)
 
-    server_params = get_learner_server_params(index)
-
-    # Setup the client parameters based on the controller parameters
+    # Setup the client parameters
     client_params = ClientParams(
         hostname=controller_params.hostname,
         port=controller_params.port,
-        root_certificate=controller_params.root_certificate,
     )
+
+    # Setup the server parameters of the learner
+    server_params = get_learner_server_params(index)
 
     # Start the app
     app(
@@ -145,7 +160,3 @@ if __name__ == "__main__":
         server_params=server_params,
         client_params=client_params,
     )
-
-# x, y = load_data(3)
-# learner = TorchLearner(x[0], y)
-# print(learner.evaluate(learner.get_weights(), {}))

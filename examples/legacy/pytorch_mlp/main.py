@@ -6,7 +6,7 @@ from dataset import CSVDataset
 from mlp import MLP
 from torch.utils.data import DataLoader
 
-from metisfl.driver.driver_session import DriverSession
+from metisfl.driver.driver import DriverSession
 from metisfl.models.model_dataset import ModelDatasetClassification
 from metisfl.models.torch.torch_learner import MetisModelTorch
 

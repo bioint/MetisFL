@@ -3,7 +3,7 @@ from typing import List, Tuple
 import tensorflow as tf
 import numpy as np
 
-from metisfl.learner.message_helper import MessageHelper
+from metisfl.learner.message import MessageHelper
 from metisfl.encryption.homomorphic import HomomorphicEncryption
 from metisfl.helpers.keys_helper import generate_keys
 

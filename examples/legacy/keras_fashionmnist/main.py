@@ -6,7 +6,7 @@ from dataset import load_data, partition_data_iid, save_data
 from model import get_model
 from recipe import dataset_recipe_fn
 
-from metisfl.driver.driver_session import DriverSession
+from metisfl.driver.driver import DriverSession
 from metisfl.models.keras.keras_model import MetisModelKeras
 from metisfl.models.keras.optimizers.fed_prox import FedProx
 
@@ -31,7 +31,8 @@ if __name__ == "__main__":
     x_train, y_train, x_test, y_test = load_data()
 
     # Partition the data, iid partitions
-    num_learners = int(args.num_learners)  # Must match the number of learners in the federation environment yaml file
+    # Must match the number of learners in the federation environment yaml file
+    num_learners = int(args.num_learners)
     x_chunks, y_chunks = partition_data_iid(x_train, y_train, num_learners)
 
     # Save the data

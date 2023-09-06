@@ -3,12 +3,12 @@ from typing import Any, Dict, List, Optional
 
 import grpc
 import numpy as np
+from loguru import logger
 
 from metisfl.common.client import get_client
-from metisfl.common.logger import MetisLogger
-from metisfl.common.types import ClientParams, ServerParams
 from metisfl.common.formatting import get_timestamp
-from metisfl.learner.message_helper import MessageHelper
+from metisfl.common.types import ClientParams
+from metisfl.learner.message import MessageHelper
 from metisfl.proto import (controller_pb2, controller_pb2_grpc, learner_pb2,
                            service_common_pb2)
 
@@ -89,7 +89,7 @@ class GRPCClient(object):
                 )
                 response = stub.JoinFederation(request, timeout=_timeout)
                 self._learner_id = response.id
-                MetisLogger.info(
+                logger.success(
                     "Joined federation with learner id: {}".format(self._learner_id))
 
             return schedule(_request, request_retries, request_timeout, block)
@@ -124,7 +124,7 @@ class GRPCClient(object):
         """
 
         if not self._has_learner_id():
-            MetisLogger.warning(
+            logger.warning(
                 "Cannot leave federation before joining the federation.")
             return
 
@@ -189,7 +189,7 @@ class GRPCClient(object):
             raise RuntimeError(
                 "Cannot send train done before joining the federation.")
 
-        MetisLogger.info("Training done.")
+        logger.info("Completed training task with id: {}".format(task.id))
 
         with self._get_client() as client:
 
@@ -251,7 +251,7 @@ class GRPCClient(object):
         try:
             response = stub.JoinFederation(request, timeout=timeout)
             self._learner_id = response.id
-            MetisLogger.info(
+            logger.info(
                 "Joined federation with learner id: {}".format(learner_id))
         except grpc.RpcError as rpc_error:
 
@@ -259,12 +259,12 @@ class GRPCClient(object):
 
                 learner_id = open(self._learner_id_fp, "r").read().strip()
                 self._learner_id = learner_id
-                MetisLogger.info(
+                logger.info(
                     "Rejoined federation with learner id: {}".format(learner_id))
 
             else:
                 # FIXME: figure out how to handle this error
-                MetisLogger.fatal("Unhandled grpc error: {}".format(rpc_error))
+                logger.critical("Unhandled grpc error: {}".format(rpc_error))
 
     def _has_learner_id(self) -> bool:
         """Checks if the learner id exists.

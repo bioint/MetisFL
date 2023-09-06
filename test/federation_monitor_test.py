@@ -4,7 +4,7 @@ from google.protobuf.json_format import MessageToDict
 
 from metisfl.common.types import TerminationSingals
 from metisfl.driver.controller_client import GRPCControllerClient
-from metisfl.driver.federation_monitor import FederationMonitor
+from metisfl.driver.monitor import FederationMonitor
 from metisfl.proto import controller_pb2
 
 

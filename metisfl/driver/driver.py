@@ -2,10 +2,12 @@ import random
 from time import sleep
 from typing import Dict, List
 
+from loguru import logger
+
 from metisfl.common.logger import MetisASCIIArt
 from metisfl.common.types import ClientParams, ServerParams, TerminationSingals
 from metisfl.driver.controller_client import GRPCControllerClient
-from metisfl.driver.federation_monitor import FederationMonitor
+from metisfl.driver.monitor import FederationMonitor
 from metisfl.driver.learner_client import GRPCLearnerClient
 from metisfl.proto import model_pb2
 

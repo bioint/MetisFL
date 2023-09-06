@@ -141,3 +141,7 @@ build/*
 **experiment.json
 
 **/*.pem
+
+**/*.txt
+**/*.json
+**/*.gz

@@ -14,7 +14,7 @@ if __name__ == "__main__":
     """ Entry point for the driver. """
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-m', '--max-learners', type=int, default=1)
+    parser.add_argument('-m', '--max-learners', type=int, default=3)
     args = parser.parse_args()
     max_learners = args.max_learners
 

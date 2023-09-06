@@ -15,7 +15,7 @@ import tensorflow as tf
 from alzheimers_disease_cnns import AlzheimersDisease2DCNN, AlzheimersDisease3DCNN
 from brainage_cnns import BrainAge2DCNN, BrainAge3DCNN
 
-from metisfl.driver.driver_session import DriverSession
+from metisfl.driver.driver import DriverSession
 from metisfl.models.model_dataset import ModelDatasetClassification, ModelDatasetRegression
 from metisfl.common.fedenv_parser import FederationEnvironment
 

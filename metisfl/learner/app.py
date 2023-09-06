@@ -3,11 +3,11 @@ import signal
 from typing import Optional
 
 from metisfl.common.types import ClientParams, LearnerConfig, ServerParams
-from metisfl.learner.controller_client import GRPCClient
+from metisfl.learner.client import GRPCClient
 from metisfl.learner.learner import Learner, has_all
-from metisfl.learner.learner_server import LearnerServer
-from metisfl.learner.message_helper import MessageHelper
-from metisfl.learner.task_manager import TaskManager
+from metisfl.learner.server import LearnerServer
+from metisfl.learner.message import MessageHelper
+from metisfl.learner.tasks import TaskManager
 from metisfl.encryption import HomomorphicEncryption
 
 
@@ -40,6 +40,8 @@ def validate_learner(learner: Learner) -> bool:
         raise ValueError(
             "Learner must have get_weights, set_weights, train, and evaluate methods"
         )
+
+    # TODO: add more checks, e.g. if the learner has the correct signature for each method
 
 
 def app(

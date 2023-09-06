@@ -5,8 +5,8 @@ from typing import Dict, Optional, Union
 
 import numpy as np
 from google.protobuf.json_format import MessageToDict
+from loguru import logger
 
-from metisfl.common.logger import MetisLogger
 from metisfl.common.types import TerminationSingals
 from metisfl.driver.controller_client import GRPCControllerClient
 from metisfl.proto import controller_pb2
@@ -56,7 +56,7 @@ class FederationMonitor:
 
         while not terminate:
             time.sleep(self._log_request_interval_secs)
-            MetisLogger.info("Requesting logs from controller ...")
+            logger.info("Requesting logs from controller ...")
 
             self._get_logs()
 
@@ -73,7 +73,7 @@ class FederationMonitor:
             return False
 
         if self._logs["global_iteration"] >= self._signals.federation_rounds:
-            MetisLogger.info(
+            logger.info(
                 "Exceeded federation rounds cutoff point. Exiting ...")
             return True
 
@@ -108,7 +108,7 @@ class FederationMonitor:
                 timestamps[learner_id] = task.completed_at
 
         if np.mean(list(eval_metric.values())) > cutoff_score:
-            MetisLogger.info(
+            logger.info(
                 f"Exceeded evaluation score cutoff point. Exiting ...")
             return True
 
@@ -122,7 +122,7 @@ class FederationMonitor:
         cutoff_mins = self._signals.execution_cutoff_time_mins
 
         if cutoff_mins and diff_mins >= cutoff_mins:
-            MetisLogger.info(
+            logger.info(
                 "Exceeded execution time cutoff minutes. Exiting ...")
             return True
 

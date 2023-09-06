@@ -5,17 +5,17 @@ from typing import Any, Tuple
 
 import grpc
 from google.protobuf.json_format import MessageToDict
+from loguru import logger
 
-from metisfl.common.logger import MetisLogger
+from metisfl.common.formatting import get_timestamp
 from metisfl.common.server import get_server
 from metisfl.common.types import ServerParams
-from metisfl.common.formatting import get_timestamp
-from metisfl.learner.controller_client import GRPCClient
+from metisfl.learner.client import GRPCClient
 from metisfl.learner.learner import (Learner, try_call_evaluate,
                                      try_call_get_weights,
                                      try_call_set_weights, try_call_train)
-from metisfl.learner.message_helper import MessageHelper
-from metisfl.learner.task_manager import TaskManager
+from metisfl.learner.message import MessageHelper
+from metisfl.learner.tasks import TaskManager
 from metisfl.proto import (learner_pb2, learner_pb2_grpc, model_pb2,
                            service_common_pb2)
 
@@ -68,7 +68,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         if self._server:
             self._status = service_common_pb2.ServingStatus.SERVING
-            MetisLogger.info("Learner server started. Listening on: {}:{} with SSL: {}".format(
+            logger.info("Learner server started. Listening on: {}:{} with SSL: {}".format(
                 self._server_params.hostname,
                 self._server_params.port,
                 "ENABLED" if self._is_ssl() else "DISABLED",
@@ -76,7 +76,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             self._shutdown_event.wait()
         else:
             # TODO: Should we raise an exception here?
-            MetisLogger.error("Learner server failed to start.")
+            logger.error("Learner server failed to start.")
 
     def GetHealthStatus(self) -> service_common_pb2.HealthStatusResponse:
         """Returns the health status of the server."""
@@ -144,7 +144,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             weights=weights,
         )
 
-        MetisLogger.info("Received initial model.")
+        logger.success("Initial model set.")
 
         return service_common_pb2.Ack(
             status=True,
@@ -173,7 +173,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return learner_pb2.EvaluateResponse(ack=None)
 
-        MetisLogger.info("Received evaluation request from controller.")
+        logger.info("Received evaluation task with id: {}".format(
+            request.task.id))
 
         weights = self._message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
@@ -185,7 +186,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             params=params,
         )
 
-        MetisLogger.info("Evaluation completed.")
+        logger.success("Evaluation task with id: {} completed.".format(
+            request.task.id))
 
         return learner_pb2.EvaluateResponse(
             task=learner_pb2.Task(
@@ -224,7 +226,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         if not self._is_serving(context):
             return service_common_pb2.Ack(status=False)
 
-        MetisLogger.info("Received training request from controller.")
+        logger.info("Received training task with id: {}".format(
+            request.task.id))
 
         task: learner_pb2.Task = request.task
         weights = self._message_helper.model_proto_to_weights(request.model)
