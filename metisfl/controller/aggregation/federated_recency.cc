@@ -11,7 +11,7 @@ Model FederatedRecency::Aggregate(
     std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
   std::vector<std::pair<const Model *, double>> model_pair = pairs.front();
   if (model_pair.size() > RequiredLearnerLineageLength()) {
-    PLOG(ERROR) << "More models have been given: " << model_pair.size()
+    LOG(ERROR) << "More models have been given: " << model_pair.size()
                 << " than required: " << RequiredLearnerLineageLength();
     return {};
   }
@@ -20,7 +20,7 @@ Model FederatedRecency::Aggregate(
   double new_contrib_value = new_model_pair.second;
 
   if (num_contributors == 0) {
-    PLOG(INFO) << "Initializing Community Model.";
+    LOG(INFO) << "Initializing Community Model.";
     InitializeModel(new_model, new_contrib_value);
   } else {
     auto number_of_models = model_pair.size();

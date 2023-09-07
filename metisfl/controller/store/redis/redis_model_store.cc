@@ -7,17 +7,17 @@ RedisModelStore::RedisModelStore(const std::string &hostname, const int port,
                                  const int lineage_length)
     : ModelStore(lineage_length) {
   MakeConnection(hostname, port);
-  PLOG(INFO) << "Using RedisDB as model store backend.";
+  LOG(INFO) << "Using RedisDB as model store backend.";
 }
 
 RedisModelStore::~RedisModelStore() {
   redisFree(m_redis_context);
-  PLOG(INFO) << "Disconnected from Redis.";
+  LOG(INFO) << "Disconnected from Redis.";
 }
 
 void RedisModelStore::Expunge() {
   // WARNING: flushing the entire database.
-  PLOG(WARNING) << "Flush Redis Database.";
+  LOG(WARNING) << "Flush Redis Database.";
   auto *redis_reply = (redisReply *)redisCommand(m_redis_context, "flushdb");
   freeReplyObject(redis_reply);
 
@@ -39,7 +39,7 @@ void RedisModelStore::EraseModels(const std::vector<std::string> &learner_ids) {
     // Get all model keys associated with the learner_id.
     std::vector<std::string> model_keys = FindModelKeys(learner_id, 0);
     for (const auto &model_key : model_keys) {
-      PLOG(INFO) << "Erasing models: " << model_key << std::endl;
+      LOG(INFO) << "Erasing models: " << model_key << std::endl;
       std::string get_command = "DEL " + model_key;
 
       auto *redis_reply =
@@ -66,7 +66,7 @@ void RedisModelStore::InsertModel(
         // Check if the model being inserted is greater than max length.
         if (learner_lineage_[learner_id].size() >= m_lineage_length) {
           auto itr_first_elem = learner_lineage_[learner_id].begin();
-          PLOG(INFO) << "Reached max limit.";
+          LOG(INFO) << "Reached max limit.";
           EraseModel(
               std::pair<std::string, std::string>(learner_id, *itr_first_elem));
         }
@@ -76,7 +76,7 @@ void RedisModelStore::InsertModel(
     // Generate a unique model_key for learner_id
     std::string model_key = GenerateModelKey(learner_id);
 
-    PLOG(INFO) << "Adding Model in Redis for Model key " << model_key;
+    LOG(INFO) << "Adding Model in Redis for Model key " << model_key;
 
     // The Model is inserted a List where each entry is a serialized
     // Model_Variable We choose this design over serializing whole model for
@@ -104,7 +104,7 @@ void RedisModelStore::InsertModel(
 
 void RedisModelStore::ResetState() {
   // Erase all models as they are no longer needed. Reclaim the memory.
-  PLOG(INFO) << "Removing Models! Processed Batch Size: "
+  LOG(INFO) << "Removing Models! Processed Batch Size: "
              << m_model_store_cache.size();
   m_model_store_cache.clear();
 }
@@ -134,7 +134,7 @@ std::map<std::string, std::vector<const Model *>> RedisModelStore::SelectModels(
     // Check if index is less than size of
     // lineage return empty models.
     if (index > learner_lineage_[learner_id].size()) {
-      PLOG(WARNING) << "Index larger than lineage size";
+      LOG(WARNING) << "Index larger than lineage size";
       reply_models[learner_id].clear();
       continue;
     }
@@ -156,7 +156,7 @@ std::map<std::string, std::vector<const Model *>> RedisModelStore::SelectModels(
 
     // Step #2: Submit all queries.
     for (const auto &model_key : model_keys) {
-      PLOG(INFO) << "Select from Redis, Model: " << model_key
+      LOG(INFO) << "Select from Redis, Model: " << model_key
                  << " learner_id: " << learner_id;
 
       std::string get_command = "LRANGE " + model_key + " 0 -1";
@@ -173,7 +173,7 @@ std::map<std::string, std::vector<const Model *>> RedisModelStore::SelectModels(
     auto elapsed_start_time =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - start_select_time);
-    PLOG(INFO) << "Model Select Time: " << elapsed_start_time.count() << " ms";
+    LOG(INFO) << "Model Select Time: " << elapsed_start_time.count() << " ms";
 
     auto start_model_desz = std::chrono::high_resolution_clock::now();  // temp
 
@@ -210,7 +210,7 @@ std::map<std::string, std::vector<const Model *>> RedisModelStore::SelectModels(
     auto elapsed_model_desz_time =
         std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - start_model_desz);
-    PLOG(INFO) << "Model Desz Time " << elapsed_model_desz_time.count()
+    LOG(INFO) << "Model Desz Time " << elapsed_model_desz_time.count()
                << " ms";
 
     /* Step#2: Return reference to the local temp store.
@@ -260,15 +260,15 @@ void RedisModelStore::MakeConnection(const std::string &localhost = "127.0.0.1",
   m_redis_context = redisConnectWithTimeout(localhost.c_str(), port, timeout);
   if (m_redis_context == nullptr || m_redis_context->err) {
     if (m_redis_context) {
-      PLOG(ERROR) << "Connection error: " << m_redis_context->errstr;
+      LOG(ERROR) << "Connection error: " << m_redis_context->errstr;
       redisFree(m_redis_context);
     } else {
-      PLOG(ERROR) << "Connection error: can't allocate redis context";
+      LOG(ERROR) << "Connection error: can't allocate redis context";
     }
     exit(1);
   }
 
-  PLOG(INFO) << "Connected to Redis with addr " << localhost << " port " << port
+  LOG(INFO) << "Connected to Redis with addr " << localhost << " port " << port
              << ".";
 }
 
@@ -283,7 +283,7 @@ void RedisModelStore::EraseModel(
                                  learner_lineage_[learner_id].end(), model_key);
   std::string s_key_to_remove = (*key_to_remove);
   if (!s_key_to_remove.empty()) {
-    PLOG(INFO) << "Erasing model with key: " << s_key_to_remove << std::endl;
+    LOG(INFO) << "Erasing model with key: " << s_key_to_remove << std::endl;
     std::string get_command = "DEL " + model_key;
     auto *redis_reply =
         (redisReply *)redisCommand(m_redis_context, get_command.c_str());
@@ -295,7 +295,7 @@ void RedisModelStore::EraseModel(
 
 void RedisModelStore::Shutdown() {
   redisFree(m_redis_context);
-  PLOG(INFO) << "Disconnected from Redis.";
+  LOG(INFO) << "Disconnected from Redis.";
 }
 
 }  // namespace metisfl::controller

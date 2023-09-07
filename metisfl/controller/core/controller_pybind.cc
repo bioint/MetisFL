@@ -1,4 +1,5 @@
 
+#include <glog/logging.h>
 #include <pybind11/pybind11.h>
 
 #include <iostream>
@@ -67,7 +68,7 @@ class ControllerWrapper {
   }
 
   void Shutdown() {
-    PLOG(INFO) << "Wrapping up resources and shutting down...";
+    LOG(INFO) << "Wrapping up resources and shutting down...";
     servicer->StopService();
     servicer->WaitService();
   }

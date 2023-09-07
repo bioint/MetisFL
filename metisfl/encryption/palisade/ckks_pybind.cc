@@ -71,7 +71,7 @@ class CKKSWrapper : public CKKS {
 
   py::bytes PyAggregate(py::list learners_data, py::list scaling_factors) {
     if (learners_data.size() != scaling_factors.size()) {
-      PLOG(FATAL)
+      LOG(FATAL)
           << "Error: learner_data and scaling_factors size need to match";
     }
 

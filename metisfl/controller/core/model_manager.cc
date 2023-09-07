@@ -89,7 +89,7 @@ absl::flat_hash_map<std::string, double> ModelManager::ComputeScalingFactors(
         learner_manager_->GetNumTrainingExamples(selected_ids);
     return Scaling::GetDatasetScalingFactors(num_training_examples);
   } else {
-    PLOG(FATAL) << "Unsupported scaling factor.";
+    LOG(FATAL) << "Unsupported scaling factor.";
   }
 }
 

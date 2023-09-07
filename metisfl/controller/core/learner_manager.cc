@@ -145,7 +145,7 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
 
 //       auto processing_ms_per_batch = metadata.processing_ms_per_batch();
 //       if (processing_ms_per_batch == 0) {
-//         PLOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
+//         LOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
 //         processing_ms_per_batch = 1;
 //       }
 //       int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
@@ -213,7 +213,7 @@ void LearnerManager::DigestTrainResponses() {
 
     if (call) {
       if (!call->status.ok()) {
-        PLOG(ERROR) << "Train RPC request to learner: " << call->learner_id
+        LOG(ERROR) << "Train RPC request to learner: " << call->learner_id
                     << " failed with error: " << call->status.error_message();
       }
     }
@@ -262,7 +262,7 @@ void LearnerManager::DigestEvaluateResponses() {
         *tasks_[task_id].mutable_completed_at() =
             call->reply.task().completed_at();
       } else {
-        PLOG(ERROR) << "EvaluateModel RPC request to learner: "
+        LOG(ERROR) << "EvaluateModel RPC request to learner: "
                     << call->learner_id
                     << " failed with error: " << call->status.error_message();
       }

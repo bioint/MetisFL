@@ -22,7 +22,7 @@ void CKKS::GenCryptoParamsFiles(CryptoParamsFiles crypto_params_files) {
 
   if (!Serial::SerializeToFile(crypto_params_files.crypto_context_file,
                                cryptoContext, SerType::BINARY)) {
-    PLOG(WARNING) << "Error writing serialization of the crypto context";
+    LOG(WARNING) << "Error writing serialization of the crypto context";
   }
 
   LPKeyPair<DCRTPoly> keyPair;
@@ -30,12 +30,12 @@ void CKKS::GenCryptoParamsFiles(CryptoParamsFiles crypto_params_files) {
 
   if (!Serial::SerializeToFile(crypto_params_files.public_key_file,
                                keyPair.publicKey, SerType::BINARY)) {
-    PLOG(WARNING) << "Error writing serialization of public key";
+    LOG(WARNING) << "Error writing serialization of public key";
   }
 
   if (!Serial::SerializeToFile(crypto_params_files.private_key_file,
                                keyPair.secretKey, SerType::BINARY)) {
-    PLOG(WARNING) << "Error writing serialization of private key";
+    LOG(WARNING) << "Error writing serialization of private key";
   }
 
   crypto_params_files_ = crypto_params_files;
@@ -76,7 +76,7 @@ bool CKKS::DeserializeFromFile(std::string filepath, T &obj) {
   bool successful_deser = false;
   if (obj == nullptr) {
     if (!Serial::DeserializeFromFile(filepath, obj, SerType::BINARY)) {
-      PLOG(ERROR) << "Could not deserialize from file: " << filepath;
+      LOG(ERROR) << "Could not deserialize from file: " << filepath;
     } else {
       successful_deser = true;
     }
@@ -135,12 +135,12 @@ void CKKS::Deserialize(std::string s, T &obj) {
     std::stringstream ss(s);
     Serial::Deserialize(obj, ss, SerType::JSON);
   } catch (const std::exception &e) {
-    PLOG(WARNING) << "Deserialization of " << obj << "Failed";
+    LOG(WARNING) << "Deserialization of " << obj << "Failed";
   }
 }
 
 void CKKS::Print() {
-  PLOG(INFO) << "CKKS scheme specifications."
+  LOG(INFO) << "CKKS scheme specifications."
              << "Batch Size: " << batch_size
              << " Scaling Factor Bits: " << scaling_factor_bits;
 }
@@ -148,11 +148,11 @@ void CKKS::Print() {
 std::string CKKS::Aggregate(std::vector<std::string> data_array,
                             std::vector<double> scaling_factors) {
   if (cc == nullptr) {
-    PLOG(FATAL) << "Crypto context is not loaded.";
+    LOG(FATAL) << "Crypto context is not loaded.";
   }
 
   if (data_array.size() != scaling_factors.size()) {
-    PLOG(ERROR) << "Error: data_array and scaling_factors size mismatch";
+    LOG(ERROR) << "Error: data_array and scaling_factors size mismatch";
     return "";
   }
 
@@ -187,11 +187,11 @@ std::string CKKS::Aggregate(std::vector<std::string> data_array,
 
 std::string CKKS::Encrypt(std::vector<double> data_array) {
   if (cc == nullptr) {
-    PLOG(FATAL) << "Crypto context is not loaded.";
+    LOG(FATAL) << "Crypto context is not loaded.";
   }
 
   if (pk == nullptr) {
-    PLOG(FATAL) << "Public key is not loaded.";
+    LOG(FATAL) << "Public key is not loaded.";
   }
 
   unsigned long int data_size = data_array.size();
@@ -235,11 +235,11 @@ std::string CKKS::Encrypt(std::vector<double> data_array) {
 vector<double> CKKS::Decrypt(std::string data,
                              unsigned long int data_dimensions) {
   if (cc == nullptr) {
-    PLOG(FATAL) << "Crypto context is not loaded.";
+    LOG(FATAL) << "Crypto context is not loaded.";
   }
 
   if (sk == nullptr) {
-    PLOG(FATAL) << "Private key is not loaded.";
+    LOG(FATAL) << "Private key is not loaded.";
   }
 
   const SerType::SERBINARY st;

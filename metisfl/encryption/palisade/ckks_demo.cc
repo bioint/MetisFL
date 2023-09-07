@@ -47,7 +47,7 @@ int main() {
   // params we always need to invoke the GenCryptoContextAndKeys() function.
   ckks.GenCryptoContextAndKeys(cryptodir);
   auto crypto_params_files = ckks.GetCryptoParamsFiles();
-  PLOG(INFO) << crypto_params_files.crypto_context_file;
+  LOG(INFO) << crypto_params_files.crypto_context_file;
   ckks.LoadCryptoContextFromFile(crypto_params_files.crypto_context_file);
   ckks.LoadPublicKeyFromFile(crypto_params_files.public_key_file);
   ckks.LoadPrivateKeyFromFile(crypto_params_files.private_key_file);

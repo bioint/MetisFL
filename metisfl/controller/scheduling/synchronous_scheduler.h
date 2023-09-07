@@ -24,7 +24,7 @@ class SynchronousScheduler : public Scheduler {
     learner_ids_.clear();
     ++global_iteration_;
 
-    PLOG(INFO) << "Starting Federation Round " << global_iteration_;
+    LOG(INFO) << "Starting Federation Round " << global_iteration_;
 
     return to_schedule;
   }
