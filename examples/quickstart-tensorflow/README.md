@@ -39,7 +39,7 @@ The model used in this example is a simple Dense Neural Network with two hidden 
 
 ## MetisFL Controller
 
-The main abstraction of the server is called MetisFL Controller. The Controller is responsible send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). The `Controller` class is initialized with the parameters of the Learners and the global training configuration. 
+The main abstraction of the server is called MetisFL Controller. The Controller is responsible send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). 
 
 ```python 
 controller_params = ServerParams(
@@ -56,6 +56,12 @@ controller_config = ControllerConfig(
 model_store_config = ModelStoreConfig(
     model_store="InMemory",
     lineage_length=0
+)
+
+controller = Controller(
+    server_params=controller_params,
+    controller_config=controller_config,
+    model_store_config=model_store_config,
 )
 ```
 

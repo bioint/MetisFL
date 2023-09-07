@@ -1,5 +1,5 @@
 
-""" Driver for the pytorch quickstart example. """
+""" Driver for the quickstart example. """
 
 import argparse
 import json

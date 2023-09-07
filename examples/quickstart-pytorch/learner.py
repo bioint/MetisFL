@@ -13,7 +13,7 @@ from torchvision.datasets import CIFAR10
 from metisfl.common.types import ClientParams, ServerParams
 from metisfl.common.utils import iid_partition
 from metisfl.learner import app
-from metisfl.learner.learner import Learner
+from metisfl.learner import Learner
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

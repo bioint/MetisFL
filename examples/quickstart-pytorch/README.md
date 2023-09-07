@@ -1,6 +1,6 @@
 # MetisFl Quikstart: Pytorch
 
-This example shows how to use MetisFL to train a Pytorch model in a simulated federated learning setting using MetisFL. This guide describes the main steps and the full scripts can be found in the [examples/quickstart-pytorch](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-pytorch) directory. 
+This example shows how to use MetisFL to train a Pytorch model in a simulated federated learning setting using MetisFL. The guide describes the main steps and the full scripts can be found in the [examples/quickstart-pytorch](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-pytorch) directory. 
 
 ## Prerequisites
 
@@ -153,7 +153,7 @@ def evaluate(self, parameters, config):
 
 ## MetisFL Controller
 
-The Controller is responsible send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). The `Controller` class is initialized with the parameters of the Learners and the global training configuration. 
+The Controller is responsible for send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). The `Controller` class is initialized with the parameters of the Learners and the global training configuration. 
 
 ```python 
 controller_params = ServerParams(
