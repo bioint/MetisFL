@@ -22,34 +22,34 @@ class tensorsProtoTest(unittest.TestCase):
                         converted_array.dtype.byteorder)  # tests endian value
 
     def test_array_dtype_i1(self):
-        self._generate_and_validate_np_array("i1")
+        self.generate_and_validate_np_array("i1")
 
     def test_array_dtype_i2(self):
-        self._generate_and_validate_np_array("i2")
+        self.generate_and_validate_np_array("i2")
 
     def test_array_dtype_i4(self):
-        self._generate_and_validate_np_array("i4")
+        self.generate_and_validate_np_array("i4")
 
     def test_array_dtype_i8(self):
-        self._generate_and_validate_np_array("i8")
+        self.generate_and_validate_np_array("i8")
 
     def test_array_dtype_u1(self):
-        self._generate_and_validate_np_array("u1")
+        self.generate_and_validate_np_array("u1")
 
     def test_array_dtype_u2(self):
-        self._generate_and_validate_np_array("u2")
+        self.generate_and_validate_np_array("u2")
 
     def test_array_dtype_u4(self):
-        self._generate_and_validate_np_array("u4")
+        self.generate_and_validate_np_array("u4")
 
     def test_array_dtype_u8(self):
-        self._generate_and_validate_np_array("u8")
+        self.generate_and_validate_np_array("u8")
 
     def test_array_dtype_f4(self):
-        self._generate_and_validate_np_array("f4")
+        self.generate_and_validate_np_array("f4")
 
     def test_array_dtype_f8(self):
-        self._generate_and_validate_np_array("f8")
+        self.generate_and_validate_np_array("f8")
 
 
 if __name__ == "__main__":

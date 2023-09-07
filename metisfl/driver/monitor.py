@@ -34,10 +34,10 @@ class FederationMonitor:
             The interval in seconds to request statistics from the Controller, by default 15
         """
 
-        self._controller_client = controller_client
-        self._signals = termination_signals
-        self._log_request_interval_secs = log_request_interval_secs
-        self._logs = None
+        self.controller_client = controller_client
+        self.signals = termination_signals
+        self.log_request_interval_secs = log_request_interval_secs
+        self.logs = None
 
     def monitor_federation(self) -> Union[Dict, None]:
         """Monitors the federation. 
@@ -55,24 +55,24 @@ class FederationMonitor:
         terminate = False
 
         while not terminate:
-            time.sleep(self._log_request_interval_secs)
+            time.sleep(self.log_request_interval_secs)
             logger.info("Requesting logs from controller ...")
 
-            self._get_logs()
+            self.get_logs()
 
-            terminate = self._reached_federation_rounds() or \
-                self._reached_evaluation_score() or \
-                self._reached_execution_time(st)
+            terminate = self.reached_federation_rounds() or \
+                self.reached_evaluation_score() or \
+                self.reached_execution_time(st)
 
-        return self._logs
+        return self.logs
 
     def _reached_federation_rounds(self) -> bool:
         """Checks if the federation has reached the maximum number of rounds."""
 
-        if not self._signals.federation_rounds or "global_iteration" not in self._logs:
+        if not self.signals.federation_rounds or "global_iteration" not in self.logs:
             return False
 
-        if self._logs["global_iteration"] >= self._signals.federation_rounds:
+        if self.logs["global_iteration"] >= self.signals.federation_rounds:
             logger.info(
                 "Exceeded federation rounds cutoff point. Exiting ...")
             return True
@@ -82,8 +82,8 @@ class FederationMonitor:
     def _reached_evaluation_score(self) -> bool:
         """Checks if the federation has reached the maximum evaluation score."""
 
-        metric = self._signals.evaluation_metric
-        cutoff_score = self._signals.evaluation_metric_cutoff_score
+        metric = self.signals.evaluation_metric
+        cutoff_score = self.signals.evaluation_metric_cutoff_score
 
         if not metric or not cutoff_score:
             return False
@@ -91,8 +91,8 @@ class FederationMonitor:
         eval_metric = {}  # learner_id -> eval_metric
         timestamps = {}  # learner_id -> timestamp
 
-        tasks = self._logs["tasks"]
-        eval_results = self._logs["evaluation_results"]
+        tasks = self.logs["tasks"]
+        eval_results = self.logs["evaluation_results"]
 
         for task in tasks:
             task_id = task["id"]
@@ -119,7 +119,7 @@ class FederationMonitor:
 
         et = datetime.datetime.now()
         diff_mins = (et - st).seconds / 60
-        cutoff_mins = self._signals.execution_cutoff_time_mins
+        cutoff_mins = self.signals.execution_cutoff_time_mins
 
         if cutoff_mins and diff_mins >= cutoff_mins:
             logger.info(
@@ -131,9 +131,9 @@ class FederationMonitor:
     def _get_logs(self) -> controller_pb2.Logs:
         """Collects statistics from the federation."""
 
-        self._logs = self._controller_client.get_logs()
+        self.logs = self.controller_client.get_logs()
 
-        if self._logs is None:
+        if self.logs is None:
             raise Exception("Failed to get logs from controller.")
 
         def msg_convert(msg):
@@ -143,15 +143,15 @@ class FederationMonitor:
             return {k: msg_convert(v) for k, v in proto_map.items()}
 
         logs = {
-            "tasks": [msg_convert(task) for task in self._logs.tasks],
-            "train_results": proto_map_to_dict(self._logs.train_results),
-            "evaluation_results": proto_map_to_dict(self._logs.evaluation_results),
-            "model_metadata":  proto_map_to_dict(self._logs.model_metadata),
+            "tasks": [msg_convert(task) for task in self.logs.tasks],
+            "train_results": proto_map_to_dict(self.logs.train_results),
+            "evaluation_results": proto_map_to_dict(self.logs.evaluation_results),
+            "model_metadata":  proto_map_to_dict(self.logs.model_metadata),
         }
 
-        if self._logs.HasField("global_iteration"):
-            logs["global_iteration"] = self._logs.global_iteration
+        if self.logs.HasField("global_iteration"):
+            logs["global_iteration"] = self.logs.global_iteration
 
-        self._logs = logs
+        self.logs = logs
 
         return logs

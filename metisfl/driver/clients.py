@@ -24,14 +24,14 @@ class GRPCControllerClient(object):
         max_workers : int, optional
             The maximum number of workers for the client ThreadPool, by default 1
         """
-        self._client_params = client_params
-        self._max_workers = max_workers
+        self.client_params = client_params
+        self.max_workers = max_workers
 
     def _get_client(self):
         return get_client(
             stub_class=controller_pb2_grpc.ControllerServiceStub,
-            client_params=self._client_params,
-            max_workers=self._max_workers
+            client_params=self.client_params,
+            max_workers=self.max_workers
         )
 
     def check_health_status(
@@ -57,7 +57,7 @@ class GRPCControllerClient(object):
             The response Proto object with the health status from the controller.
         """
 
-        with self._get_client() as client:
+        with self.get_client() as client:
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule: Callable = client[1]
 
@@ -89,7 +89,7 @@ class GRPCControllerClient(object):
         service_common_pb2.Ack
             The response Proto object with the ack from the controller.
         """
-        with self._get_client() as client:
+        with self.get_client() as client:
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule: Callable = client[1]
 
@@ -121,7 +121,7 @@ class GRPCControllerClient(object):
             The response Proto object with the ack from the controller.
         """
 
-        with self._get_client() as client:
+        with self.get_client() as client:
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule: Callable = client[1]
 
@@ -152,7 +152,7 @@ class GRPCControllerClient(object):
         controller_pb2.GetStatisticsResponse
             The response Proto object with the statistics from the controller.
         """
-        with self._get_client() as client:
+        with self.get_client() as client:
 
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule: Callable = client[1]
@@ -186,7 +186,7 @@ class GRPCControllerClient(object):
             The response Proto object with the ack from the controller.
 
         """
-        with self._get_client() as client:
+        with self.get_client() as client:
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule: Callable = client[1]
 
@@ -198,7 +198,7 @@ class GRPCControllerClient(object):
     def shutdown_client(self):
         """Shuts down the client."""
 
-        with self._get_client() as client:
+        with self.get_client() as client:
             shutdown: Callable = client[2]
             shutdown()
 
@@ -221,14 +221,14 @@ class GRPCLearnerClient(object):
         max_workers : Optional[int], (default: 1)
             The maximum number of workers for the client ThreadPool, by default 1
         """
-        self._client_params = client_params
-        self._max_workers = max_workers
+        self.client_params = client_params
+        self.max_workers = max_workers
 
     def _get_client(self):
         return get_client(
-            client_params=self._client_params,
+            client_params=self.client_params,
             stub_class=learner_pb2_grpc.LearnerServiceStub,
-            max_workers=self._max_workers
+            max_workers=self.max_workers
         )
 
     def get_model(
@@ -254,7 +254,7 @@ class GRPCLearnerClient(object):
             The response Proto object with the Ack.
 
         """
-        with self._get_client() as client:
+        with self.get_client() as client:
             stub, schedule, _ = client
 
             def _request(_timeout=None):
@@ -288,7 +288,7 @@ class GRPCLearnerClient(object):
             The response Proto object with the Ack.
 
         """
-        with self._get_client() as client:
+        with self.get_client() as client:
             stub: learner_pb2_grpc.LearnerServiceStub = client[0]
             schedule = client[1]
 
@@ -320,7 +320,7 @@ class GRPCLearnerClient(object):
             The response Proto object with the Ack.
 
         """
-        with self._get_client() as client:
+        with self.get_client() as client:
             stub: learner_pb2_grpc.LearnerServiceStub = client[0]
             schedule = client[1]
 
@@ -332,6 +332,6 @@ class GRPCLearnerClient(object):
     def shutdown_client(self) -> None:
         """Shuts down the client."""
 
-        with self._get_client() as client:
+        with self.get_client() as client:
             _, _, shutdown = client
             shutdown()

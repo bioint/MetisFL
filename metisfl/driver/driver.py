@@ -31,15 +31,15 @@ class DriverSession(object):
         """
         MetisASCIIArt.print()
 
-        self._learners = learners
-        self._controller = controller
-        self._num_learners = len(self._learners)
+        self.learners = learners
+        self.controller = controller
+        self.num_learners = len(self.learners)
 
-        self._controller_client = self._create_controller_client()
-        self._learner_clients = self._create_learner_clients()
+        self.controller_client = self.create_controller_client()
+        self.learner_clients = self.create_learner_clients()
 
-        self._service_monitor = FederationMonitor(
-            controller_client=self._controller_client,
+        self.service_monitor = FederationMonitor(
+            controller_client=self.controller_client,
             termination_signals=termination_signals,
         )
 
@@ -63,13 +63,13 @@ class DriverSession(object):
             ships the weights to all other Learners and the Controller.
         """
 
-        learner_index = random.randint(0, self._num_learners - 1)
+        learner_index = random.randint(0, self.num_learners - 1)
 
-        model = self._learner_clients[learner_index].get_model(
+        model = self.learner_clients[learner_index].get_model(
             request_timeout=30, request_retries=2, block=True)
 
-        self._ship_model_to_learners(model=model, skip_learner=learner_index)
-        self._ship_model_to_controller(model=model)
+        self.ship_model_to_learners(model=model, skip_learner=learner_index)
+        self.ship_model_to_controller(model=model)
 
         sleep(1)  # FIXME: Wait for the controller to receive the model.
 
@@ -78,7 +78,7 @@ class DriverSession(object):
     def start_training(self) -> None:
         """Starts the federated training."""
         # TODO: Ping controller and learners to check if they are alive.
-        self._controller_client.start_training()
+        self.controller_client.start_training()
 
     def monitor_federation(self) -> Dict:
         """Monitors the federation and returns the statistics. This is a blocking call.
@@ -88,26 +88,26 @@ class DriverSession(object):
         Dict
             A dictionary containing the statistics of the federated training.
         """
-        return self._service_monitor.monitor_federation()  # Blocking call.
+        return self.service_monitor.monitor_federation()  # Blocking call.
 
     def shutdown_federation(self):
         """Shuts down the Controller and all Learners."""
 
-        for grpc_client in self._learner_clients:
+        for grpc_client in self.learner_clients:
             grpc_client.shutdown_server(request_timeout=30, block=False)
             grpc_client.shutdown_client()
 
         # Sleep for 1 second to allow the Learners to shutdown.
         sleep(1)
 
-        self._controller_client.shutdown_server(
+        self.controller_client.shutdown_server(
             request_retries=2, request_timeout=30, block=True)
-        self._controller_client.shutdown_client()
+        self.controller_client.shutdown_client()
 
     def _create_controller_client(self):
         """Creates a GRPC client for the controller."""
 
-        controller = self._controller
+        controller = self.controller
 
         return GRPCControllerClient(
             client_params=ClientParams(
@@ -122,9 +122,9 @@ class DriverSession(object):
 
         grpc_clients: List[GRPCLearnerClient] = []
 
-        for idx in range(self._num_learners):
+        for idx in range(self.num_learners):
 
-            learner = self._learners[idx]
+            learner = self.learners[idx]
 
             client = GRPCLearnerClient(
                 client_params=ClientParams(
@@ -147,7 +147,7 @@ class DriverSession(object):
             The Protobuf object containing the model to be shipped.
         """
 
-        self._controller_client.set_initial_model(
+        self.controller_client.set_initial_model(
             model=model,
         )
 
@@ -162,10 +162,10 @@ class DriverSession(object):
             The index of the learner to skip.
         """
 
-        for idx in range(self._num_learners):
+        for idx in range(self.num_learners):
             if idx == skip_learner:
                 continue
 
-            self._learner_clients[idx].set_initial_model(
+            self.learner_clients[idx].set_initial_model(
                 model=model,
             )

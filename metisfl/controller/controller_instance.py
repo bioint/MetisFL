@@ -26,21 +26,21 @@ class Controller(object):
         model_store_config : ModelStoreConfig
             Configuration for the model store.
         """
-        self._server_params = server_params
-        self._controller_config = controller_config
-        self._model_store_config = model_store_config
-        self._controller_wrapper = controller.ControllerWrapper()
-        self._shutdown_signal_received = False
+        self.server_params = server_params
+        self.controller_config = controller_config
+        self.model_store_config = model_store_config
+        self.controller_wrapper = controller.ControllerWrapper()
+        self.shutdown_signal_received = False
 
     def start(self):
         """Starts the controller."""
 
-        server = self._server_params
-        global_train = self._controller_config
-        model_store = self._model_store_config
+        server = self.server_params
+        global_train = self.controller_config
+        model_store = self.model_store_config
 
         # Optional parameters are passed as empty strings or -1.
-        self._controller_wrapper.start(
+        self.controller_wrapper.start(
             hostname=server.hostname,
             port=server.port,
             root_certificate=server.root_certificate or "",
@@ -78,7 +78,7 @@ class Controller(object):
             from the server or for a SIGINT/SIGTERM signal.
         """
         def sigint_handler(signum, frame):
-            self._shutdown_signal_received = True
+            self.shutdown_signal_received = True
 
         signal.signal(signal.SIGTERM, sigint_handler)
         signal.signal(signal.SIGINT, sigint_handler)
@@ -86,11 +86,11 @@ class Controller(object):
         while True:
             shutdown_condition = \
                 stop_instantly or \
-                self._shutdown_signal_received or \
-                self._controller_wrapper.shutdown_request_received()
+                self.shutdown_signal_received or \
+                self.controller_wrapper.shutdown_request_received()
             if shutdown_condition:
                 break
             time.sleep(0.01)
 
-        if not self._controller_wrapper.shutdown_request_received():
-            self._controller_wrapper.shutdown()
+        if not self.controller_wrapper.shutdown_request_received():
+            self.controller_wrapper.shutdown()

@@ -46,16 +46,16 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             The server parameters of the Learner server.
 
         """
-        self._learner = learner
-        self._client = client
-        self._message_helper = message_helper
-        self._task_manager = task_manager
+        self.learner = learner
+        self.client = client
+        self.message_helper = message_helper
+        self.task_manager = task_manager
 
-        self._status = service_common_pb2.ServingStatus.UNKNOWN
-        self._shutdown_event = threading.Event()
-        self._server_params = server_params
+        self.status = service_common_pb2.ServingStatus.UNKNOWN
+        self.shutdown_event = threading.Event()
+        self.server_params = server_params
 
-        self._server = get_server(
+        self.server = get_server(
             server_params=server_params,
             servicer=self,
             add_servicer_to_server_fn=learner_pb2_grpc.add_LearnerServiceServicer_to_server,
@@ -64,16 +64,16 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
     def start(self):
         """Starts the server. This is a blocking call and will block until the server is shutdown."""
 
-        self._server.start()
+        self.server.start()
 
-        if self._server:
-            self._status = service_common_pb2.ServingStatus.SERVING
+        if self.server:
+            self.status = service_common_pb2.ServingStatus.SERVING
             logger.success("Learner server started. Listening on: {}:{} with SSL: {}".format(
-                self._server_params.hostname,
-                self._server_params.port,
-                "ENABLED" if self._is_ssl() else "DISABLED",
+                self.server_params.hostname,
+                self.server_params.port,
+                "ENABLED" if self.is_ssl() else "DISABLED",
             ))
-            self._shutdown_event.wait()
+            self.shutdown_event.wait()
         else:
             # TODO: Should we raise an exception here?
             logger.error("Learner server failed to start.")
@@ -82,7 +82,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         """Returns the health status of the server."""
 
         return service_common_pb2.HealthStatusResponse(
-            status=self._status,
+            status=self.status,
         )
 
     def GetModel(
@@ -105,14 +105,14 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             The ProtoBuf object containing the model.
 
         """
-        if not self._is_serving(context):
+        if not self.is_serving(context):
             return None
 
         weights = try_call_get_weights(
-            learner=self._learner,
+            learner=self.learner,
         )
 
-        return self._message_helper.weights_to_model_proto(weights)
+        return self.message_helper.weights_to_model_proto(weights)
 
     def SetInitialModel(
         self,
@@ -134,13 +134,13 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             The response containing the acknoledgement.
         """
 
-        if not self._is_serving(context):
+        if not self.is_serving(context):
             return service_common_pb2.Ack(status=False)
 
-        weights = self._message_helper.model_proto_to_weights(model)
+        weights = self.message_helper.model_proto_to_weights(model)
 
         try_call_set_weights(
-            learner=self._learner,
+            learner=self.learner,
             weights=weights,
         )
 
@@ -170,18 +170,18 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
         learner_pb2.EvaluateResponse
             The response containing the evaluation metrics.
         """
-        if not self._is_serving(context):
+        if not self.is_serving(context):
             return learner_pb2.EvaluateResponse(ack=None)
 
         logger.info("Received evaluation task with id: {}".format(
             request.task.id))
 
-        weights = self._message_helper.model_proto_to_weights(request.model)
+        weights = self.message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
 
         received_at = get_timestamp()
         metrics = try_call_evaluate(
-            learner=self._learner,
+            learner=self.learner,
             weights=weights,
             params=params,
         )
@@ -223,14 +223,14 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             The response containing the acknoledgement with the Status set to True.
 
         """
-        if not self._is_serving(context):
+        if not self.is_serving(context):
             return service_common_pb2.Ack(status=False)
 
         logger.info("Received training task with id: {}".format(
             request.task.id))
 
         task: learner_pb2.Task = request.task
-        weights = self._message_helper.model_proto_to_weights(request.model)
+        weights = self.message_helper.model_proto_to_weights(request.model)
         params = MessageToDict(request.params)
 
         new_task = learner_pb2.Task(
@@ -247,14 +247,14 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
                 train_out[2],  # metadata
             )
 
-        self._task_manager.run_task(
+        self.task_manager.run_task(
             task_fn=try_call_train,
             task_kwargs={
-                'learner': self._learner,
+                'learner': self.learner,
                 'weights': weights,
                 'params': params,
             },
-            callback=self._client.train_done,
+            callback=self.client.train_done,
             task_out_to_callback_fn=train_out_to_callback_fn,
         )
 
@@ -270,8 +270,8 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
     ) -> service_common_pb2.Ack:
         """Shuts down the server."""
 
-        self._status = service_common_pb2.ServingStatus.NOT_SERVING
-        self._shutdown_event.set()
+        self.status = service_common_pb2.ServingStatus.NOT_SERVING
+        self.shutdown_event.set()
 
         return service_common_pb2.Ack(
             status=True,
@@ -281,7 +281,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
     def _is_serving(self, context) -> bool:
         """Returns True if the server is serving, False otherwise."""
 
-        if self._status != service_common_pb2.ServingStatus.SERVING:
+        if self.status != service_common_pb2.ServingStatus.SERVING:
             context.set_code(grpc.StatusCode.UNAVAILABLE)
             return False
         return True
@@ -289,4 +289,4 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
     def _is_ssl(self) -> bool:
         """Returns True if the server is using SSL, False otherwise."""
 
-        return self._server_params.root_certificate is not None
+        return self.server_params.root_certificate is not None

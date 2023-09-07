@@ -35,10 +35,10 @@ class HomomorphicEncryption(EncryptionScheme):
 
         """
         # TODO: Make it easier to load the crypto context and keys.
-        self._he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
-        self._he_scheme.load_crypto_context_from_file(crypto_context_path)
-        self._he_scheme.load_public_key_from_file(public_key_path)
-        self._he_scheme.load_private_key_from_file(private_key_path)
+        self.he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
+        self.he_scheme.load_crypto_context_from_file(crypto_context_path)
+        self.he_scheme.load_public_key_from_file(public_key_path)
+        self.he_scheme.load_private_key_from_file(private_key_path)
 
     def decrypt(self, value: bytes, length: int) -> np.ndarray:
         """Decrypts the value.
@@ -56,7 +56,7 @@ class HomomorphicEncryption(EncryptionScheme):
             The decrypted value as a numpy array.
         """
 
-        return self._he_scheme.decrypt(value, length)
+        return self.he_scheme.decrypt(value, length)
 
     def encrypt(self, arr: np.ndarray) -> bytes:
         """Encrypts the array.
@@ -72,4 +72,4 @@ class HomomorphicEncryption(EncryptionScheme):
             The encrypted array as bytes.
         """
 
-        return self._he_scheme.encrypt(arr)
+        return self.he_scheme.encrypt(arr)

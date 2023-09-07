@@ -39,18 +39,18 @@ class GRPCClient(object):
         max_workers : Optional[int], (default: 1)
             The maximum number of workers for the client ThreadPool, by default 1
         """
-        self._client_params = client_params
-        self._message_helper = message_helper
-        self._max_workers = max_workers
+        self.client_params = client_params
+        self.message_helper = message_helper
+        self.max_workers = max_workers
 
         # Must be initialized after joining the federation
-        self._learner_id = None
+        self.learner_id = None
 
     def _get_client(self):
         return get_client(
             stub_class=controller_pb2_grpc.ControllerServiceStub,
-            client_params=self._client_params,
-            max_workers=self._max_workers
+            client_params=self.client_params,
+            max_workers=self.max_workers
         )
 
     def join_federation(
@@ -75,7 +75,7 @@ class GRPCClient(object):
             Whether to block until the request is completed, by default True
         """
 
-        with self._get_client() as client:
+        with self.get_client() as client:
 
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule = client[1]
@@ -88,9 +88,9 @@ class GRPCClient(object):
                         client_params.root_certificate),
                 )
                 response = stub.JoinFederation(request, timeout=_timeout)
-                self._learner_id = response.id
+                self.learner_id = response.id
                 logger.success(
-                    "Joined federation with learner id: {}".format(self._learner_id))
+                    "Joined federation with learner id: {}".format(self.learner_id))
 
             return schedule(_request, request_retries, request_timeout, block)
 
@@ -123,19 +123,19 @@ class GRPCClient(object):
             which means that the Learner has not joined the federation.
         """
 
-        if not self._has_learner_id():
+        if not self.has_learner_id():
             logger.warning(
                 "Cannot leave federation before joining the federation.")
             return
 
-        with self._get_client() as client:
+        with self.get_client() as client:
 
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule = client[1]
 
             def _request(_timeout=None):
                 request = controller_pb2.LearnerId(
-                    id=self._learner_id,
+                    id=self.learner_id,
                 )
                 return stub.LeaveFederation(
                     request=request,
@@ -185,13 +185,13 @@ class GRPCClient(object):
             which means that the Learner has not joined the federation.
         """
 
-        if not self._has_learner_id():
+        if not self.has_learner_id():
             raise RuntimeError(
                 "Cannot send train done before joining the federation.")
 
         logger.success("Completed training task with id: {}".format(task.id))
 
-        with self._get_client() as client:
+        with self.get_client() as client:
 
             stub: controller_pb2_grpc.ControllerServiceStub = client[0]
             schedule = client[1]
@@ -204,7 +204,7 @@ class GRPCClient(object):
             )
 
             def _request(_timeout=None):
-                model = self._message_helper.weights_to_model_proto(weights)
+                model = self.message_helper.weights_to_model_proto(weights)
 
                 train_results = controller_pb2.TrainResults(
                     metrics=json.dumps(metrics),
@@ -226,7 +226,7 @@ class GRPCClient(object):
 
     def shutdown_client(self):
         """Shuts down the client."""
-        with self._get_client() as client:
+        with self.get_client() as client:
             _, _, shutdown = client
             shutdown()
 
@@ -250,15 +250,15 @@ class GRPCClient(object):
         """
         try:
             response = stub.JoinFederation(request, timeout=timeout)
-            self._learner_id = response.id
+            self.learner_id = response.id
             logger.info(
                 "Joined federation with learner id: {}".format(learner_id))
         except grpc.RpcError as rpc_error:
 
             if rpc_error.code() == grpc.StatusCode.ALREADY_EXISTS:
 
-                learner_id = open(self._learner_id_fp, "r").read().strip()
-                self._learner_id = learner_id
+                learner_id = open(self.learner_id_fp, "r").read().strip()
+                self.learner_id = learner_id
                 logger.info(
                     "Rejoined federation with learner id: {}".format(learner_id))
 
@@ -274,4 +274,4 @@ class GRPCClient(object):
         bool
             True if the learner id exists, False otherwise.
         """
-        return self._learner_id is not None
+        return self.learner_id is not None
