@@ -189,7 +189,7 @@ class GRPCClient(object):
             raise RuntimeError(
                 "Cannot send train done before joining the federation.")
 
-        logger.info("Completed training task with id: {}".format(task.id))
+        logger.success("Completed training task with id: {}".format(task.id))
 
         with self._get_client() as client:
 
