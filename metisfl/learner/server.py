@@ -68,7 +68,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
 
         if self._server:
             self._status = service_common_pb2.ServingStatus.SERVING
-            logger.info("Learner server started. Listening on: {}:{} with SSL: {}".format(
+            logger.success("Learner server started. Listening on: {}:{} with SSL: {}".format(
                 self._server_params.hostname,
                 self._server_params.port,
                 "ENABLED" if self._is_ssl() else "DISABLED",
