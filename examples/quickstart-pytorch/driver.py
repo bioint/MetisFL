@@ -22,14 +22,12 @@ if __name__ == "__main__":
     termination_signals = TerminationSingals(
         federation_rounds=5)
     learners = [get_learner_server_params(i) for i in range(max_learners)]
-    is_async = controller_config.communication_protocol == 'Asynchronous'
 
     # Start the driver session.
     session = DriverSession(
         controller=controller_params,
         learners=learners,
         termination_signals=termination_signals,
-        is_async=is_async,
     )
 
     # Run the driver session.

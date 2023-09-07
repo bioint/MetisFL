@@ -58,15 +58,16 @@ class TorchLearner(Learner):
         self.trainloader = DataLoader(trainset, batch_size=64, shuffle=True)
         self.testloader = DataLoader(testset, batch_size=64, shuffle=False)
         self.criterion = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
         self.model = Model().to(DEVICE)
+        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
 
     def get_weights(self):
         return [val.cpu().numpy() for _, val in self.model.state_dict().items()]
 
     def set_weights(self, parameters):
         params = zip(self.model.state_dict().keys(), parameters)
-        state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params})
+        state_dict = OrderedDict(
+            {k: torch.from_numpy(v.copy()) for k, v in params})
         self.model.load_state_dict(state_dict, strict=True)
 
     def train(self, parameters, config):
@@ -96,7 +97,7 @@ class TorchLearner(Learner):
             "loss": np.mean(losses),
         }
         metadata = {
-            "num_training_examples": len(self.trainset),
+            "num_training_examples": len(self.trainloader.dataset),
         }
         return self.get_weights(), metrics, metadata
 
