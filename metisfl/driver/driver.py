@@ -104,7 +104,7 @@ class DriverSession(object):
             request_retries=2, request_timeout=30, block=True)
         self.controller_client.shutdown_client()
 
-    def _create_controller_client(self):
+    def create_controller_client(self):
         """Creates a GRPC client for the controller."""
 
         controller = self.controller
@@ -117,7 +117,7 @@ class DriverSession(object):
             )
         )
 
-    def _create_learner_clients(self) -> List[GRPCLearnerClient]:
+    def create_learner_clients(self) -> List[GRPCLearnerClient]:
         """Creates a dictionary of GRPC clients for the learners."""
 
         grpc_clients: List[GRPCLearnerClient] = []
@@ -138,7 +138,7 @@ class DriverSession(object):
 
         return grpc_clients
 
-    def _ship_model_to_controller(self, model: model_pb2.Model) -> None:
+    def ship_model_to_controller(self, model: model_pb2.Model) -> None:
         """Encrypts and ships the model to the controller.
 
         Parameters
@@ -151,7 +151,7 @@ class DriverSession(object):
             model=model,
         )
 
-    def _ship_model_to_learners(self, model: model_pb2.Model, skip_learner: int = None) -> None:
+    def ship_model_to_learners(self, model: model_pb2.Model, skip_learner: int = None) -> None:
         """Ships the given model to all Learners.
 
         Parameters

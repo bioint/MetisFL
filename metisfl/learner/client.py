@@ -46,7 +46,7 @@ class GRPCClient(object):
         # Must be initialized after joining the federation
         self.learner_id = None
 
-    def _get_client(self):
+    def get_client(self):
         return get_client(
             stub_class=controller_pb2_grpc.ControllerServiceStub,
             client_params=self.client_params,
@@ -266,7 +266,7 @@ class GRPCClient(object):
                 # FIXME: figure out how to handle this error
                 logger.critical("Unhandled grpc error: {}".format(rpc_error))
 
-    def _has_learner_id(self) -> bool:
+    def has_learner_id(self) -> bool:
         """Checks if the learner id exists.
 
         Returns

@@ -7,7 +7,7 @@ from metisfl.proto.proto_messages_factory import ModelProtoMessages
 
 class tensorsProtoTest(unittest.TestCase):
 
-    def _generate_and_validate_np_array(self, dtype):
+    def generate_and_validate_np_array(self, dtype):
         original_array = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], dtype=dtype)
         print(original_array)
         tensor = ModelProtoMessages.tensorsProto.numpy_array_to_proto_tensor_spec(

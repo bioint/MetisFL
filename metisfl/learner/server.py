@@ -278,7 +278,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             timestamp=get_timestamp(),
         )
 
-    def _is_serving(self, context) -> bool:
+    def is_serving(self, context) -> bool:
         """Returns True if the server is serving, False otherwise."""
 
         if self.status != service_common_pb2.ServingStatus.SERVING:
@@ -286,7 +286,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
             return False
         return True
 
-    def _is_ssl(self) -> bool:
+    def is_ssl(self) -> bool:
         """Returns True if the server is using SSL, False otherwise."""
 
         return self.server_params.root_certificate is not None

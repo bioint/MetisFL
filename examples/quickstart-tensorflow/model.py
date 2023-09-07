@@ -7,7 +7,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
 
 
 def get_model(
-        input_shape: Tuple[int] = (28, 28, 1),
+        input_shape: Tuple[int] = (32, 32, 3),
         dense_units_per_layer: List[int] = [256, 128],
         num_classes: int = 10) -> tf.keras.Model:
     """A helper function to create a simple sequential model.

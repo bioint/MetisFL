@@ -33,19 +33,19 @@ tf.random.set_seed(seed_num)
 class TFDatasetUtils(object):
 
     @classmethod
-    def _int64_feature(cls, value):
+    def int64_feature(cls, value):
         return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
     @classmethod
-    def _float_feature(cls, value):
+    def float_feature(cls, value):
         return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
 
     @classmethod
-    def _bytes_feature(cls, value):
+    def bytes_feature(cls, value):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
     @classmethod
-    def _generate_tffeature(cls, dataset_records):
+    def generate_tffeature(cls, dataset_records):
         # Loop over the schema keys.
         record_keys = dataset_records.keys()
         # We split the input arrays in one-to-one examples.

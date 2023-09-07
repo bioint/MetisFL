@@ -18,11 +18,10 @@ pip install tensorflow
 
 ## Dataset
 
-The dataset used in this example is the [MNIST dataset](http://yann.lecun.com/exdb/mnist/). The dataset can be easily downloaded using Keras. 
+The dataset used in this example is the [CIFAR10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset. The dataset is downloaded and prepared in the `load_data` function.
 
 ```python
-from tensorflow.keras.datasets import mnist
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
+(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 ```
 
 To prepare the dataset for simulated federated learning, we need to split it into chunks and distribute them to clients. We can use the `iid_partition` function in `metisfl.common.utils`  module to do this. 

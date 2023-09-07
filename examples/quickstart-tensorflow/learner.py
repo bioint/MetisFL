@@ -25,12 +25,12 @@ def load_data(rescale_reshape=True) -> Tuple:
         Tuple: A tuple containing the training and test data.
     """
 
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.fashion_mnist.load_data()
+    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
 
     # Normalize and reshape the data
     if rescale_reshape:
-        x_train = (x_train.astype('float32') / 256).reshape(-1, 28, 28, 1)
-        x_test = (x_test.astype('float32') / 256).reshape(-1, 28, 28, 1)
+        x_train = (x_train.astype('float32') / 256).reshape(-1, 32, 32, 3)
+        x_test = (x_test.astype('float32') / 256).reshape(-1, 32, 32, 3)
 
     return x_train, y_train, x_test, y_test
 

@@ -1,6 +1,6 @@
 import multiprocessing as mp
 import queue
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Optional, Tuple
 
 from pebble import ProcessFuture, ProcessPool
 
@@ -71,7 +71,7 @@ class TaskManager(object):
 
         self.future_queue.put(future)
 
-    def _callback_wrapper(
+    def callback_wrapper(
         self,
         callback: Callable,
         task_out_to_callback_fn: Callable = lambda x: x,
@@ -91,12 +91,12 @@ class TaskManager(object):
             A Callable object that represents the wrapped callback function.
         """
 
-        def callback_wrapper(future: ProcessFuture) -> None:
+        def wrapper(future: ProcessFuture) -> None:
             if future.done() and not future.cancelled():
                 # FIXME: need to catch errors here
                 callback(*task_out_to_callback_fn(future.result()))
 
-        return callback_wrapper
+        return wrapper
 
     def shutdown(self, force: Optional[bool] = False) -> None:
         """Shuts down the pool of workers and empties the task queue.
@@ -111,7 +111,7 @@ class TaskManager(object):
         self.empty_tasks_q(force=force)
         self.worker_pool.join()
 
-    def _empty_tasks_q(self, force: Optional[bool] = False) -> None:
+    def empty_tasks_q(self, force: Optional[bool] = False) -> None:
         """Empties the task queue.
 
         Parameters

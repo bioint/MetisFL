@@ -27,7 +27,7 @@ class GRPCControllerClient(object):
         self.client_params = client_params
         self.max_workers = max_workers
 
-    def _get_client(self):
+    def get_client(self):
         return get_client(
             stub_class=controller_pb2_grpc.ControllerServiceStub,
             client_params=self.client_params,
@@ -224,7 +224,7 @@ class GRPCLearnerClient(object):
         self.client_params = client_params
         self.max_workers = max_workers
 
-    def _get_client(self):
+    def get_client(self):
         return get_client(
             client_params=self.client_params,
             stub_class=learner_pb2_grpc.LearnerServiceStub,

@@ -66,7 +66,7 @@ class FederationMonitor:
 
         return self.logs
 
-    def _reached_federation_rounds(self) -> bool:
+    def reached_federation_rounds(self) -> bool:
         """Checks if the federation has reached the maximum number of rounds."""
 
         if not self.signals.federation_rounds or "global_iteration" not in self.logs:
@@ -79,7 +79,7 @@ class FederationMonitor:
 
         return False
 
-    def _reached_evaluation_score(self) -> bool:
+    def reached_evaluation_score(self) -> bool:
         """Checks if the federation has reached the maximum evaluation score."""
 
         metric = self.signals.evaluation_metric
@@ -114,7 +114,7 @@ class FederationMonitor:
 
         return False
 
-    def _reached_execution_time(self, st) -> bool:
+    def reached_execution_time(self, st) -> bool:
         """Checks if the federation has exceeded the maximum execution time."""
 
         et = datetime.datetime.now()
@@ -128,7 +128,7 @@ class FederationMonitor:
 
         return False
 
-    def _get_logs(self) -> controller_pb2.Logs:
+    def get_logs(self) -> controller_pb2.Logs:
         """Collects statistics from the federation."""
 
         self.logs = self.controller_client.get_logs()
