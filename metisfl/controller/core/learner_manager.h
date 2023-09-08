@@ -25,6 +25,7 @@ class LearnerManager {
   grpc::CompletionQueue eval_tasks_cq_;
 
   // learner_id -> value
+  // TODO: how does the controller gets these values?
   LearnersMap learners_;
   TrainParamsMap train_params_;
   EvaluationParamsMap eval_params_;
@@ -54,6 +55,9 @@ class LearnerManager {
 
   void UpdateTrainResults(const Task &task, const std::string &learner_id,
                           const TrainResults &metadata);
+
+  void UpdateTrainParams(const std::vector<std::string> &learner_ids,
+                         const int semi_sync_lambda);
 
   // Public methods
   absl::StatusOr<std::string> AddLearner(const Learner &learner);

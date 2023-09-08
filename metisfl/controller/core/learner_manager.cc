@@ -118,43 +118,39 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
   return num_completed_batches;
 }
 
-// FIXME:
-// void LearnerManager::UpdateLearnersTaskTemplates(
-//     std::vector<std::string> &learners) {
-//   const auto &communication_protocol =
-//       global_train_params_.communication_protocol;
-//   if (communication_protocol == "SemiSynchronous" &&
-//       (global_iteration_ == 2 ||
-//        global_train_params_.semi_sync_recompute_num_updates)) {
-//     // Finds the slowest learner.
-//     float ms_per_epoch_slowest = std::numeric_limits<float>::min();
-//     for (const auto &learner_id : learners) {
-//       const auto &metadata = train_results_[learner_id].front();
-//       if (metadata.processing_ms_per_epoch() > ms_per_epoch_slowest) {
-//         ms_per_epoch_slowest = metadata.processing_ms_per_epoch();
-//       }
-//     }
+void LearnerManager::UpdateTrainParams(
+    const std::vector<std::string> &learner_ids, const int semi_sync_lambda) {
+  // Finds the slowest learner.
+  float ms_per_epoch_slowest = std::numeric_limits<float>::min();
+  for (const auto &learner_id : learner_ids) {
+    auto processing_ms_per_epoch = train_results_[learner_id]
+                                       .metadata()
+                                       .find("processing_ms_per_epoch")
+                                       ->second;
+    if (processing_ms_per_epoch > ms_per_epoch_slowest) {
+      ms_per_epoch_slowest = processing_ms_per_epoch;
+    }
+  }
 
-//     // Calculates the allowed time for training.
-//     float t_max = static_cast<float>(global_train_params_.semi_sync_lambda) *
-//                   ms_per_epoch_slowest;
+  // Calculates the allowed time for training.
+  float t_max = static_cast<float>(semi_sync_lambda) * ms_per_epoch_slowest;
 
-//     // Updates the task templates based on the slowest learner.
-//     for (const auto &learner_id : learners) {
-//       const auto &metadata = train_results_[learner_id].front();
+  // Updates the task templates based on the slowest learner.
+  for (const auto &learner_id : learner_ids) {
+    auto processing_ms_per_batch = train_results_[learner_id]
+                                       .metadata()
+                                       .find("processing_ms_per_batch")
+                                       ->second;
+    if (processing_ms_per_batch == 0) {
+      // FIXME: Better error handling.
+      LOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
+      processing_ms_per_batch = 1;
+    }
+    int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
 
-//       auto processing_ms_per_batch = metadata.processing_ms_per_batch();
-//       if (processing_ms_per_batch == 0) {
-//         LOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
-//         processing_ms_per_batch = 1;
-//       }
-//       int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
-
-//       auto &task_template = train_params_[learner_id];
-//       task_template.set_num_local_updates(num_local_updates);
-//     }
-//   }
-// }
+    train_params_[learner_id].set_num_local_updates(num_local_updates);
+  }
+}
 
 // Private methods
 LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
@@ -214,7 +210,7 @@ void LearnerManager::DigestTrainResponses() {
     if (call) {
       if (!call->status.ok()) {
         LOG(ERROR) << "Train RPC request to learner: " << call->learner_id
-                    << " failed with error: " << call->status.error_message();
+                   << " failed with error: " << call->status.error_message();
       }
     }
     delete call;
@@ -263,8 +259,8 @@ void LearnerManager::DigestEvaluateResponses() {
             call->reply.task().completed_at();
       } else {
         LOG(ERROR) << "EvaluateModel RPC request to learner: "
-                    << call->learner_id
-                    << " failed with error: " << call->status.error_message();
+                   << call->learner_id
+                   << " failed with error: " << call->status.error_message();
       }
     }
     delete call;

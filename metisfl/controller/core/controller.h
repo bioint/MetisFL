@@ -72,6 +72,9 @@ class Controller {
   absl::Status TrainDone(const TrainDoneRequest &task);
 
   void Shutdown();
+
+ private:
+  void UpdateTrainParams(const std::vector<std::string> &learner_ids);
 };
 
 }  // namespace metisfl::controller

@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from metisfl.common.formatting import camel_to_snake_dict_keys
 
-# TODO: add SemiSynchronous; fix in backend
-COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous"]
+COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
 MODEL_STORES = ["InMemory"]  # TODO: add Redis, fix in backend
 HE_SCHEMES = ["CKKS"]
 AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "SecAgg"]

@@ -56,21 +56,32 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
 
   auto task = request.task();
   auto learner_id = learner_manager_->GetLearnerId(task.id());
-
-  model_manager_->InsertModel(learner_id, request.model());
-
-  learner_manager_->ScheduleEvaluate({learner_id}, model_manager_->GetModel());
   learner_manager_->UpdateTrainResults(task, learner_id, request.results());
+  model_manager_->InsertModel(learner_id, request.model());
+  learner_manager_->ScheduleEvaluate({learner_id}, model_manager_->GetModel());
 
   auto learner_ids = learner_manager_->GetLearnerIds();
   auto to_schedule = scheduler_->ScheduleNext(learner_id, learner_ids.size());
+
   if (!to_schedule.empty()) {
     model_manager_->UpdateModel(to_schedule, learner_ids);
-
     learner_manager_->ScheduleTrain(to_schedule, model_manager_->GetModel());
+    UpdateTrainParams(to_schedule);
   }
 
   return absl::OkStatus();
+}
+
+void Controller::UpdateTrainParams(
+    const std::vector<std::string> &learner_ids) {
+  if (global_train_params_.communication_protocol == "SemiSynchronous") {
+    auto global_iteration = scheduler_->GetGlobalIteration();
+    if (global_iteration == 2 ||
+        global_train_params_.semi_sync_recompute_num_updates) {
+      auto semi_sync_lambda = global_train_params_.semi_sync_lambda;
+      learner_manager_->UpdateTrainParams(learner_ids, semi_sync_lambda);
+    }
+  }
 }
 
 void Controller::Shutdown() {
