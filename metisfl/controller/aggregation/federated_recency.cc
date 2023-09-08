@@ -12,8 +12,8 @@ Model FederatedRecency::Aggregate(
   std::vector<std::pair<const Model *, double>> model_pair = pairs.front();
   if (model_pair.size() > RequiredLearnerLineageLength()) {
     LOG(ERROR) << "More models have been given: " << model_pair.size()
-                << " than required: " << RequiredLearnerLineageLength();
-    return {};
+               << " than required: " << RequiredLearnerLineageLength();
+    return {};  // FIXME: can the caller handle this?
   }
   std::pair<const Model *, double> new_model_pair = model_pair.back();
   const Model *new_model = new_model_pair.first;

@@ -5,10 +5,14 @@ namespace metisfl::controller {
 
 Model FederatedAverage::Aggregate(
     std::vector<std::vector<std::pair<const Model *, double>>> &pairs) {
-  Model model;
-
   const auto &sample_model = pairs.front().front().first;
+  if (sample_model->encrypted()) {
+    throw std::runtime_error(
+        "Cannot aggregate encrypted tensors using "
+        "Federated Average.");
+  }
 
+  Model model;
   model.mutable_tensors()->CopyFrom(sample_model->tensors());
 
   auto total_tensors = model.tensors_size();
@@ -30,7 +34,17 @@ Model FederatedAverage::Aggregate(
   return model;
 }
 
-void FederatedAverage::Reset() {}
+std::vector<double> FederatedAverage::AggregateTensorAtIndex(
+    std::vector<std::vector<std::pair<const Model *, double>>> &pairs,
+    int var_idx, uint32_t var_num_values) const {
+  auto aggregated_tensor = std::vector<double>(var_num_values);
+  for (const auto &pair : pairs) {
+    const auto *local_model = pair.front().first;
+    const auto &local_tensor = local_model->tensors(var_idx);
+    AddTensors(aggregated_tensor, local_tensor, pair.front().second);
+  }
+  return aggregated_tensor;
+}
 
 void FederatedAverage::AddTensors(std::vector<double> &tensor_left,
                                   const Tensor &tensor_spec_right,
@@ -45,22 +59,6 @@ void FederatedAverage::AddTensors(std::vector<double> &tensor_left,
             tensor_left.begin(), std::plus<double>());
 }
 
-std::vector<double> FederatedAverage::AggregateTensorAtIndex(
-    std::vector<std::vector<std::pair<const Model *, double>>> &pairs,
-    int var_idx, uint32_t var_num_values) const {
-  auto aggregated_tensor = std::vector<double>(var_num_values);
-  for (const auto &pair : pairs) {
-    const auto *local_model = pair.front().first;
-    if (!local_model->encrypted()) {
-      const auto &local_tensor = local_model->tensors(var_idx);
-      AddTensors(aggregated_tensor, local_tensor, pair.front().second);
-    } else {
-      throw std::runtime_error(
-          "Cannot aggregate encrypted tensors using "
-          "Federated Average.");
-    }
-  }
-  return aggregated_tensor;
-}
+void FederatedAverage::Reset() {}
 
 }  // namespace metisfl::controller
