@@ -1,38 +1,11 @@
 import argparse
-import os
-from typing import Tuple
 
-import tensorflow as tf
 from controller import controller_params
+from data import load_data
 from model import get_model
 
 from metisfl.common.types import ClientParams, ServerParams
-from metisfl.common.utils import iid_partition
-from metisfl.learner import app
-from metisfl.learner import Learner
-
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
-
-
-def load_data(rescale_reshape=True) -> Tuple:
-    """A helper function to load the Fashion MNIST dataset.
-
-    Args:
-        rescale_reshape (bool, optional): Whether to rescale and reshape. (Defaults to True)
-
-    Returns:
-        Tuple: A tuple containing the training and test data.
-    """
-
-    (x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
-
-    # Normalize and reshape the data
-    if rescale_reshape:
-        x_train = (x_train.astype('float32') / 256).reshape(-1, 32, 32, 3)
-        x_test = (x_test.astype('float32') / 256).reshape(-1, 32, 32, 3)
-
-    return x_train, y_train, x_test, y_test
+from metisfl.learner import Learner, app
 
 
 class TFLearner(Learner):
@@ -95,14 +68,10 @@ if __name__ == "__main__":
     index = int(args.learner) - 1
     max_learners = args.max_learners
 
-    x_train, y_train, x_test, y_test = load_data()
-
-    # Partition the data into 3 clients, iid
-    x_client, y_client = iid_partition(
-        x_train=x_train, y_train=y_train, num_partitions=max_learners)
+    x_chunks, y_chunks, x_test, y_test = load_data(max_learners=max_learners)
 
     # Setup the Learner and the server parameters based on the given index
-    learner = TFLearner(x_client[index], y_client[index], x_test, y_test)
+    learner = TFLearner(x_chunks[index], y_chunks[index], x_test, y_test)
     server_params = get_learner_server_params(index)
 
     # Setup the client parameters based on the controller parameters

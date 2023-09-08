@@ -65,7 +65,7 @@ Note that the parameters are manually initialized to zero. This is needed becaus
 
 ## MetisFL Learner
 
-The MetisFL Learner trains the model on the local dataset and communicating with the server. The  class that defines the Learner can be found [here](https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py). For this quickstart example, the Learner that we are using is the following: 
+The MetisFL Learner trains the model on the local dataset and communicates model updates with the server. The  class that defines the Learner can be found [here](https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py). For this quickstart example, the Learner that we are using is the following: 
 
 ```python
 class TFLearner(Learner):

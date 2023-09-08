@@ -16,7 +16,7 @@ from metisfl.proto import learner_pb2 as metisfl_dot_proto_dot_learner__pb2
 from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__common__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\x1bmetisfl/proto/learner.proto\x1a\"metisfl/proto/service_common.proto\"\x8a\x01\n\x07Learner\x12\x10\n\x08hostname\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\r\x12\x1e\n\x16root_certificate_bytes\x18\x03 \x01(\t\x12 \n\x18public_certificate_bytes\x18\x04 \x01(\t\x12\x1d\n\x15num_training_examples\x18\x05 \x01(\r\"\x17\n\tLearnerId\x12\n\n\x02id\x18\x01 \x01(\t\"v\n\x10TrainDoneRequest\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12\x1d\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.Model\x12&\n\x07results\x18\x04 \x01(\x0b\x32\x15.metisfl.TrainResults\"\x87\x01\n\x0cTrainResults\x12\x0f\n\x07metrics\x18\x01 \x01(\t\x12\x35\n\x08metadata\x18\x02 \x03(\x0b\x32#.metisfl.TrainResults.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x01:\x02\x38\x01\"\xfc\x03\n\x04Logs\x12\x1d\n\x10global_iteration\x18\x01 \x01(\x05H\x00\x88\x01\x01\x12\x1c\n\x05tasks\x18\x02 \x03(\x0b\x32\r.metisfl.Task\x12\x36\n\rtrain_results\x18\x04 \x03(\x0b\x32\x1f.metisfl.Logs.TrainResultsEntry\x12@\n\x12\x65valuation_results\x18\x05 \x03(\x0b\x32$.metisfl.Logs.EvaluationResultsEntry\x12\x38\n\x0emodel_metadata\x18\x06 \x03(\x0b\x32 .metisfl.Logs.ModelMetadataEntry\x1aJ\n\x11TrainResultsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12$\n\x05value\x18\x02 \x01(\x0b\x32\x15.metisfl.TrainResults:\x02\x38\x01\x1aT\n\x16\x45valuationResultsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12)\n\x05value\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResults:\x02\x38\x01\x1aL\n\x12ModelMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12%\n\x05value\x18\x02 \x01(\x0b\x32\x16.metisfl.ModelMetadata:\x02\x38\x01\x42\x13\n\x11_global_iteration\"\xf2\x01\n\rModelMetadata\x12\x1d\n\x15selection_duration_ms\x18\x02 \x01(\x01\x12\x1f\n\x17\x61ggregation_duration_ms\x18\x03 \x01(\x01\x12\x1e\n\x16\x61ggregation_block_size\x18\x0f \x03(\x01\x12#\n\x1b\x61ggregation_block_memory_kb\x18\x10 \x03(\x01\x12%\n\x1d\x61ggregation_block_duration_ms\x18\x11 \x03(\x01\x12\x35\n\x12tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifier2\xab\x03\n\x11\x43ontrollerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12\x38\n\x0eJoinFederation\x12\x10.metisfl.Learner\x1a\x12.metisfl.LearnerId\"\x00\x12\x35\n\x0fLeaveFederation\x12\x12.metisfl.LearnerId\x1a\x0c.metisfl.Ack\"\x00\x12/\n\rStartTraining\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x36\n\tTrainDone\x12\x19.metisfl.TrainDoneRequest\x1a\x0c.metisfl.Ack\"\x00\x12*\n\x07GetLogs\x12\x0e.metisfl.Empty\x1a\r.metisfl.Logs\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1emetisfl/proto/controller.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\x1bmetisfl/proto/learner.proto\x1a\"metisfl/proto/service_common.proto\"I\n\x07Learner\x12\x10\n\x08hostname\x18\x01 \x01(\t\x12\x0c\n\x04port\x18\x02 \x01(\r\x12\x1e\n\x16root_certificate_bytes\x18\x03 \x01(\t\"\x17\n\tLearnerId\x12\n\n\x02id\x18\x01 \x01(\t\"v\n\x10TrainDoneRequest\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12\x1d\n\x05model\x18\x03 \x01(\x0b\x32\x0e.metisfl.Model\x12&\n\x07results\x18\x04 \x01(\x0b\x32\x15.metisfl.TrainResults\"\x87\x01\n\x0cTrainResults\x12\x0f\n\x07metrics\x18\x01 \x01(\t\x12\x35\n\x08metadata\x18\x02 \x03(\x0b\x32#.metisfl.TrainResults.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x01:\x02\x38\x01\"\xfc\x03\n\x04Logs\x12\x1d\n\x10global_iteration\x18\x01 \x01(\x05H\x00\x88\x01\x01\x12\x1c\n\x05tasks\x18\x02 \x03(\x0b\x32\r.metisfl.Task\x12\x36\n\rtrain_results\x18\x04 \x03(\x0b\x32\x1f.metisfl.Logs.TrainResultsEntry\x12@\n\x12\x65valuation_results\x18\x05 \x03(\x0b\x32$.metisfl.Logs.EvaluationResultsEntry\x12\x38\n\x0emodel_metadata\x18\x06 \x03(\x0b\x32 .metisfl.Logs.ModelMetadataEntry\x1aJ\n\x11TrainResultsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12$\n\x05value\x18\x02 \x01(\x0b\x32\x15.metisfl.TrainResults:\x02\x38\x01\x1aT\n\x16\x45valuationResultsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12)\n\x05value\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResults:\x02\x38\x01\x1aL\n\x12ModelMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12%\n\x05value\x18\x02 \x01(\x0b\x32\x16.metisfl.ModelMetadata:\x02\x38\x01\x42\x13\n\x11_global_iteration\"\xf2\x01\n\rModelMetadata\x12\x1d\n\x15selection_duration_ms\x18\x02 \x01(\x01\x12\x1f\n\x17\x61ggregation_duration_ms\x18\x03 \x01(\x01\x12\x1e\n\x16\x61ggregation_block_size\x18\x0f \x03(\x01\x12#\n\x1b\x61ggregation_block_memory_kb\x18\x10 \x03(\x01\x12%\n\x1d\x61ggregation_block_duration_ms\x18\x11 \x03(\x01\x12\x35\n\x12tensor_quantifiers\x18\x12 \x03(\x0b\x32\x19.metisfl.TensorQuantifier2\xab\x03\n\x11\x43ontrollerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12\x38\n\x0eJoinFederation\x12\x10.metisfl.Learner\x1a\x12.metisfl.LearnerId\"\x00\x12\x35\n\x0fLeaveFederation\x12\x12.metisfl.LearnerId\x1a\x0c.metisfl.Ack\"\x00\x12/\n\rStartTraining\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12\x36\n\tTrainDone\x12\x19.metisfl.TrainDoneRequest\x1a\x0c.metisfl.Ack\"\x00\x12*\n\x07GetLogs\x12\x0e.metisfl.Empty\x1a\r.metisfl.Logs\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -32,26 +32,26 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _LOGS_EVALUATIONRESULTSENTRY._serialized_options = b'8\001'
   _LOGS_MODELMETADATAENTRY._options = None
   _LOGS_MODELMETADATAENTRY._serialized_options = b'8\001'
-  _globals['_LEARNER']._serialized_start=136
-  _globals['_LEARNER']._serialized_end=274
-  _globals['_LEARNERID']._serialized_start=276
-  _globals['_LEARNERID']._serialized_end=299
-  _globals['_TRAINDONEREQUEST']._serialized_start=301
-  _globals['_TRAINDONEREQUEST']._serialized_end=419
-  _globals['_TRAINRESULTS']._serialized_start=422
-  _globals['_TRAINRESULTS']._serialized_end=557
-  _globals['_TRAINRESULTS_METADATAENTRY']._serialized_start=510
-  _globals['_TRAINRESULTS_METADATAENTRY']._serialized_end=557
-  _globals['_LOGS']._serialized_start=560
-  _globals['_LOGS']._serialized_end=1068
-  _globals['_LOGS_TRAINRESULTSENTRY']._serialized_start=809
-  _globals['_LOGS_TRAINRESULTSENTRY']._serialized_end=883
-  _globals['_LOGS_EVALUATIONRESULTSENTRY']._serialized_start=885
-  _globals['_LOGS_EVALUATIONRESULTSENTRY']._serialized_end=969
-  _globals['_LOGS_MODELMETADATAENTRY']._serialized_start=971
-  _globals['_LOGS_MODELMETADATAENTRY']._serialized_end=1047
-  _globals['_MODELMETADATA']._serialized_start=1071
-  _globals['_MODELMETADATA']._serialized_end=1313
-  _globals['_CONTROLLERSERVICE']._serialized_start=1316
-  _globals['_CONTROLLERSERVICE']._serialized_end=1743
+  _globals['_LEARNER']._serialized_start=135
+  _globals['_LEARNER']._serialized_end=208
+  _globals['_LEARNERID']._serialized_start=210
+  _globals['_LEARNERID']._serialized_end=233
+  _globals['_TRAINDONEREQUEST']._serialized_start=235
+  _globals['_TRAINDONEREQUEST']._serialized_end=353
+  _globals['_TRAINRESULTS']._serialized_start=356
+  _globals['_TRAINRESULTS']._serialized_end=491
+  _globals['_TRAINRESULTS_METADATAENTRY']._serialized_start=444
+  _globals['_TRAINRESULTS_METADATAENTRY']._serialized_end=491
+  _globals['_LOGS']._serialized_start=494
+  _globals['_LOGS']._serialized_end=1002
+  _globals['_LOGS_TRAINRESULTSENTRY']._serialized_start=743
+  _globals['_LOGS_TRAINRESULTSENTRY']._serialized_end=817
+  _globals['_LOGS_EVALUATIONRESULTSENTRY']._serialized_start=819
+  _globals['_LOGS_EVALUATIONRESULTSENTRY']._serialized_end=903
+  _globals['_LOGS_MODELMETADATAENTRY']._serialized_start=905
+  _globals['_LOGS_MODELMETADATAENTRY']._serialized_end=981
+  _globals['_MODELMETADATA']._serialized_start=1005
+  _globals['_MODELMETADATA']._serialized_end=1247
+  _globals['_CONTROLLERSERVICE']._serialized_start=1250
+  _globals['_CONTROLLERSERVICE']._serialized_end=1677
 # @@protoc_insertion_point(module_scope)

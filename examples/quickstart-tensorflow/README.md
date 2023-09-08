@@ -31,11 +31,18 @@ from metisfl.common.utils import iid_partition
 x_chunks, y_chunks = iid_partition(x_train, y_train, num_partitions=3, seed=1990)
 ```
 
-This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. It produces independent and identically distributed (IID) chunks of the dataset. In the code of this example both the learner and the `load_data()` function are in the same file `learner.py`. This means that every time we start up the learner, a new dataset partitioning is created. However, since the seed is kept constant, the partitioning is the same every time. 
+This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. It produces independent and identically distributed (IID) chunks of the dataset. By keeping the seed constant, we can ensure that the same chunks are produced every time.
 
 ## Model 
 
-The model used in this example is a simple Dense Neural Network with two hidden layers and a softmax output layer. The model is defined in the `get_model` function in the [model.py](https://github.com/NevronAI/metisfl/blob/main/examples/quickstart-tensorflow/model.py) file. The function allows for some flexibility in the model definition and can be used to define different models or tune this one.
+The model used in this example is a simple Dense Neural Network with two hidden layers and a softmax output layer. The model is defined in the `get_model` function in the [model.py](https://github.com/NevronAI/metisfl/blob/main/examples/quickstart-tensorflow/model.py) file. The function allows for some flexibility in the model definition and can be used to define different models or tune this one. Note that on the top of the file we set the following Tensorflow configuration. 
+
+```python
+tf.config.experimental.set_memory_growth(gpu, True)
+```
+
+This is required to avoid Tensorflow allocating all the GPU memory to the first learner. For more information, please have a look at the [Tensorflow documentation](https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth).
+
 
 ## MetisFL Controller
 
