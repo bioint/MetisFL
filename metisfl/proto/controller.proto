@@ -27,8 +27,6 @@ message Learner {
   string hostname = 1;
   uint32 port = 2;
   string root_certificate_bytes = 3;
-  string public_certificate_bytes = 4;
-  uint32 num_training_examples = 5;
 }
 
 message LearnerId {
