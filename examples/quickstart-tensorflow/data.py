@@ -25,4 +25,4 @@ def load_data(max_learners: int = 3, rescale_reshape: bool = True) -> Tuple:
     x_chunks, y_chunks = iid_partition(
         x_train=x_train, y_train=y_train, num_partitions=max_learners)
 
-    return (x_chunks, y_chunks), (x_test, y_test)
+    return x_chunks, y_chunks, x_test, y_test

@@ -100,12 +100,23 @@ The architecture of MetisFL consists of three main components: the **Federation 
 </div>
 
 ## Federation Controller
-The Federation Controller acts as the federation cluster manager, and it is responsible for selecting and delegating training and evaluating tasks to the federation learners (cluster nodes) and storing and aggregating the learners’ local models (w/ or w/out encryption).
+The Federation Controller is responsible for selecting and delegating training and evaluating tasks to the federation learners, for receiving, aggregating and storing the model updates and for storing the training logs and metadata. For the training tasks, the communication between the Learner and Controller is asynchronous at the protocol level. The Controller sends the training task to the Learner and the Learner sends back a simple acknowledgement of receiving the task. When the Learner finishes the task it sends the results back to the Controller by calling its `TrainDone` endpoint. For the evaluation tasks, the communication is synchronous at the protocol level, i.e., the Controller sends the evaluation task to the Learner and waits for the results using the same channel. 
+
+* Aggregation Rules: Federated Average, Federated Recency, Federated Stride, Secure Aggregation
+* Communication Protocols: Synchronous, Semi-Synchronous, Asynchronous
+* Security: Fully Homomorphic Encryption (FHE) using the [Palisade](https://gitlab.com/palisade/palisade-release) C++ cryptographic library
+* Model Storage: In-memory, Redis (beta)
+* Secure gRPC communication using SSL/TLS
 
 ## Federation Learner
-The Federation Learner(s) are the cluster node responsible for training and evaluating the federation model assigned to the by the Controller on the local, private dataset.
+The main abstraction of the client is called MetisFL Learner. The MetisFL Learner is responsible for training the model on the local dataset and communicating with the server.  The Controller sends the evaluation task to the Learner and waits for the results using the same channel. The abstract class that defines the Learner can be found [here](
+    https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py). Each MetisFL learner must impliment the following methods:
+
+* `set_weights`: This method is called by the Controller to set the initial model weights. The Learner must implement the logic to set the weights of the local model.
+* `get_weights`: This method is called by the Controller to get the current model weights. The Learner must implement the logic to return the weights of the local model.
+* `train`: This method is called by the Controller to initiate the training task. The input to this method is the current model weights and a dictionary of hyperparameters. The Learner must implement the training logic and return the updated model weights to the Controller.
+* `evaluate`: This method is called by the Controller to initiate the evaluation task. The Learner must implement the evaluation logic and return the evaluation metrics to the Controller.
 
 ## Federation Driver
-The Federation Driver parses the federated learning workflow defined by the system user and creates the Metis Context. The Metis Context is responsible for initializing and monitoring the federation cluster, initializing the original federation model state, defining the data loading recipe for each learner, and generating the security keys where needed (e.g., SSL certificates, and FHE key pair).
-
+The Driver orchestrates the training process by communicating with the Controller and the Learners. First, it initializes the model weights by requesting the initial values from a randomly selected learner and distributing to everyone else. Additionally, it monitors the federation for the termination signal(s) and shuts the learners/controller down once the signal is reached. Finally, it collects the training logs and metadata from the Controller and stores them in a local file.
 
