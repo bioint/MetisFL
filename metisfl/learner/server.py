@@ -64,19 +64,14 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
     def start(self):
         """Starts the server. This is a blocking call and will block until the server is shutdown."""
 
-        self.server.start()
-
-        if self.server:
-            self.status = service_common_pb2.ServingStatus.SERVING
-            logger.success("Learner server started. Listening on: {}:{} with SSL: {}".format(
-                self.server_params.hostname,
-                self.server_params.port,
-                "ENABLED" if self.is_ssl() else "DISABLED",
-            ))
-            self.shutdown_event.wait()
-        else:
-            # TODO: Should we raise an exception here?
-            logger.error("Learner server failed to start.")
+        self.server.start()  # TODO: anyway this could fail?
+        self.status = service_common_pb2.ServingStatus.SERVING
+        logger.success("Learner server started. Listening on: {}:{} with SSL: {}".format(
+            self.server_params.hostname,
+            self.server_params.port,
+            "ENABLED" if self.is_ssl() else "DISABLED",
+        ))
+        self.shutdown_event.wait()
 
     def GetHealthStatus(self) -> service_common_pb2.HealthStatusResponse:
         """Returns the health status of the server."""
@@ -244,7 +239,7 @@ class LearnerServer(learner_pb2_grpc.LearnerServiceServicer):
                 new_task,  # task
                 train_out[0],  # weights
                 train_out[1],  # metrics
-                train_out[2],  # metadata
+                train_out[2]  # metadata
             )
 
         self.task_manager.run_task(
