@@ -40,7 +40,7 @@ class CKKS {
                         vector<double> scaling_factors);
 
   std::vector<double> Decrypt(std::string data,
-                              unsigned long int data_dimensions);
+                              unsigned long int num_elements);
   void Print();
 
  private:

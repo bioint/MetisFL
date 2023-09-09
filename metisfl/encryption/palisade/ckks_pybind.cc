@@ -50,9 +50,9 @@ class CKKSWrapper {
     return py_bytes_avg;
   }
 
-  py::array_t<double> PyDecrypt(string data,
-                                unsigned long int data_dimensions) {
-    auto data_decrypted = ckks_->Decrypt(data, data_dimensions);
+  py::array_t<double> PyDecrypt(std::string data,
+                                unsigned long int num_elements) {
+    auto data_decrypted = ckks_->Decrypt(data, num_elements);
     auto py_array_decrypted =
         py::array_t<double>(py::cast(std::move(data_decrypted)));
     return py_array_decrypted;
@@ -80,31 +80,7 @@ PYBIND11_MODULE(fhe, m) {
                   &CKKSWrapper::PyGenCryptoParamsFiles)
       .def("aggregate", &CKKSWrapper::PyAggregate)
       .def("encrypt", &CKKSWrapper::PyEncrypt)
-      .def(
-          "decrypt",
-          [](CKKSWrapper& ckks_wrapper, std::string data,
-             unsigned long int data_dimensions) {
-            try {
-              return ckks_wrapper.PyDecrypt(data, data_dimensions);
-            } catch (const py::error_already_set& e) {
-              // TODO(@stripeli): We need to change the printing message
-              //  when the function is invoked with wrong arguments.
-              //  The following does not seem to do the trick ...
-              std::string custom_msg =
-                  "Error: Invalid argument types. Expected integers.";
-
-              // Raise a new TypeError with the custom message
-              PyErr_SetString(PyExc_TypeError, custom_msg.c_str());
-
-              // Print the custom error message
-              std::cerr << custom_msg << std::endl;
-
-              // Rethrow the exception to let Python handle it
-              // throw py::error_already_set();
-              return py::array_t<double>();
-            }
-          },
-          "");
+      .def("decrypt", &CKKSWrapper::PyDecrypt);
 
   m.doc() = R"pbdoc(
         Pybind11 example plugin

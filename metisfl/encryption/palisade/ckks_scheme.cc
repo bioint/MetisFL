@@ -143,8 +143,7 @@ std::string CKKS::Encrypt(std::vector<double> data_array) {
   return ss.str();
 }
 
-vector<double> CKKS::Decrypt(std::string data,
-                             unsigned long int data_dimensions) {
+vector<double> CKKS::Decrypt(std::string data, unsigned long int num_elements) {
   if (cc == nullptr) {
     LOG(FATAL) << "Crypto context is not loaded.";
   }
@@ -159,7 +158,7 @@ vector<double> CKKS::Decrypt(std::string data,
   vector<Ciphertext<DCRTPoly>> data_ciphertext;
   Serial::Deserialize(data_ciphertext, ss, st);
 
-  vector<double> result(data_dimensions);
+  vector<double> result(num_elements);
 
 #pragma omp parallel for
   for (unsigned long int i = 0; i < data_ciphertext.size(); i++) {
@@ -168,7 +167,7 @@ vector<double> CKKS::Decrypt(std::string data,
     int length;
 
     if (i == data_ciphertext.size() - 1) {
-      length = data_dimensions - (i)*batch_size;
+      length = num_elements - (i)*batch_size;
     } else {
       length = batch_size;
     }
