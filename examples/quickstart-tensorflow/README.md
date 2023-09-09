@@ -1,5 +1,13 @@
 # MetisFl Quikstart: Tensorflow
 
+<div align="center">
+<picture>
+  <img 
+    style="border: 1px solid black; border-radius: 5px;"
+  alt="MetisFL TensforFlow Quickstart" src="../../docs/img/gif/quickstart-tensorflow.gif" width="800">
+</picture>
+</div>
+
 This example shows how to use MetisFL to train a Tensorflow model in a simulated federated learning setting using MetisFL. This guide describes the main steps and the full scripts can be found in the [examples/quickstart-tensorflow](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-tensorflow) directory. 
 
 ## Prerequisites
@@ -166,4 +174,3 @@ python driver.py
 ```
 
 The driver will run the federated training for 5 rounds and then stop. The training logs will be save in the `results.json` file in the current directory.
-
