@@ -4,7 +4,7 @@
 import argparse
 import json
 
-from controller import controller_params, controller_config
+from controller import controller_params
 from learner import get_learner_server_params
 
 from metisfl.common.types import TerminationSingals
@@ -23,14 +23,14 @@ if __name__ == "__main__":
         federation_rounds=5)
     learners = [get_learner_server_params(i) for i in range(max_learners)]
 
-    # Start the driver session.
+    # Initialize the driver session.
     session = DriverSession(
         controller=controller_params,
         learners=learners,
         termination_signals=termination_signals,
     )
 
-    # Run the driver session.
+    # Run
     logs = session.run()
 
     # Save the results.

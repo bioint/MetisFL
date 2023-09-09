@@ -41,10 +41,10 @@ class TorchLearner(Learner):
 
     def train(self, parameters, config):
         self.set_weights(parameters)
-        epochs = config["epochs"] if "epochs" in config else 1
+        epochs = config["epochs"] if "epochs" in config else 5
         losses = []
         accs = []
-        for _ in range(epochs):
+        for epoch in range(epochs):
             for images, labels in self.trainloader:
                 images, labels = images.to(DEVICE), labels.to(DEVICE)
                 self.optimizer.zero_grad()
@@ -60,6 +60,8 @@ class TorchLearner(Learner):
 
                 losses.append(loss.item())
                 accs.append(accuracy)
+            print(
+                f"Finished epoch {epoch + 1} with loss {loss.item()} and accuracy {accuracy}")
 
         metrics = {
             "accuracy": np.mean(accs),
@@ -85,6 +87,7 @@ class TorchLearner(Learner):
 
         accuracy = correct / total
         loss = loss / total
+        print(f"Evaluation Accuracy: {accuracy}, Evaluation Loss: {loss}")
 
         return {"accuracy": float(accuracy), "loss": float(loss)}
 

@@ -14,7 +14,7 @@ controller_params = ServerParams(
 controller_config = ControllerConfig(
     aggregation_rule="FedAvg",
     communication_protocol="Synchronous",
-    scaling_factor="NumTrainingExamples",
+    scaling_factor="NumParticipants",
 )
 
 # Model store configuration.

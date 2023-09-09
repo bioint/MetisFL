@@ -1,8 +1,18 @@
-# MetisFl Quikstart: SKLearn
+# 🚀 MetisFL Quickstart: SKLearn
+
+<div align="center">
+<picture>
+  <img 
+    style="border: 1px solid black; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5);"
+  alt="MetisFL TensforFlow Quickstart" src="../../docs/img/gif/quickstart-tensorflow.gif">
+</picture>
+</div>
+
+&nbsp;
 
 This example shows how to use MetisFL to a simple SKLearn logistic regression model on the MNIST dataset. The example is based on the official SKLearn [tutorial](https://scikit-learn.org/stable/auto_examples/linear_model/plot_sparse_logistic_regression_mnist.html). The guide describes the main steps and the full scripts can be found in the [examples/quickstart-sklearn](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-sklearn) directory. 
 
-## Prerequisites
+## ⚙️ Prerequisites
 
 Before running this example, please make sure you have installed the MetisFL package 
 
@@ -16,7 +26,7 @@ Additionally, make sure to install the sklearn package
 pip install scikit-learn
 ```
 
-## Dataset
+## 💾 Dataset
 
 The dataset used in this example is the classical [MNIST](https://www.kaggle.com/datasets/hojjatk/mnist-dataset) dataset which can be downloaded using the `fetch_openml` function of the `sklearn.datasets` package. To prepare the dataset for simulated federated learning, we need to split it into chunks and distribute them to clients. We can use the `iid_partition` function in `metisfl.common.utils` package to do this. 
 
@@ -40,7 +50,7 @@ def load_data(num_clients: int = 3) -> Tuple:
 
 This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. Both this random seed as well as the `iid_partitions` are kept constant in this example since the data loader function is part of the `learner.py` file which is used to start all the learners, as we will see later.
 
-## Model 
+## 🧠 Model 
 
 The model used in this example is a simple logistic regression model. 
 
@@ -63,7 +73,7 @@ if model.fit_intercept:
 Note that the parameters are manually initialized to zero. This is needed because they are not defined before the first call to the `fit` method. However, the driver will need to request the parameters from a randomly selected learner to initialize the model on the controller side. 
 
 
-## MetisFL Learner
+## 👨‍💻 MetisFL Learner
 
 The MetisFL Learner trains the model on the local dataset and communicates model updates with the server. The  class that defines the Learner can be found [here](https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py). For this quickstart example, the Learner that we are using is the following: 
 
@@ -113,7 +123,7 @@ class TFLearner(Learner):
 
 The `get_model()` function is in the aforementioned `model.py` and returns the previously described simple 2-layer Dense Neural Network. The `get_weights()` and `set_weights()` functions are used to get and set the model parameters. The `train()` function is used to train the model on the local dataset. The `evaluate()` function is used to evaluate the model on the local test dataset. The `train` and `evaluate` functions use the model weights sent by the controller to train on the local dataset. They can optionally use any of the configuration parameters sent by the controller in the `config` dictionary. 
 
-## MetisFL Controller
+## 🎛️ MetisFL Controller
 
 The Controller is responsible send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10).
 
@@ -144,7 +154,7 @@ controller = Controller(
 The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. Certificates are optional and if not given then SSL is not active. The ControllerConfig defines the aggregation rule, communication protocol and model scaling factor. For the full set of options in the ControllerConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Note that the "NumTrainingExamples" scaling factor requires that the Learner instance provides the size of its training dataset at initialization. Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). 
 
 
-## MetisFL Driver
+## 🚦 MetisFL Driver
 
 The MetisFL Driver is the main entry point to the MetisFL framework. It is responsible for coordinating the communication between the clients and the server, for initializing the weights of the shared model, monitoring the federated training and shutting down the system when the training is done. The Driver is initialized as follows:
 
@@ -169,7 +179,7 @@ logs = session.run()
 ```
 The TerminationSignals control when the federated training is stopped. For this example, we will stop the training when we reach 5 federation rounds. For other possible termination signals, please have a look at the class definition and the docstring here [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L18).
 
-## Running the example
+## 🎬 Running the example
 
 To run the example, you need to open one terminal for the Controller, one terminal for each Learner and one terminal for the Driver. First, start the Controller. 
 
@@ -189,3 +199,4 @@ python driver.py
 ```
 The driver will run the federated training for 5 rounds and then stop. The training logs will be save in the `results.json` file in the current directory.
 
+## 🚀 Next steps

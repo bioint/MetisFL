@@ -189,7 +189,7 @@ python controller.py
 Then, start the Learners.
 
 ```bash
-python learner.py --learner ID
+python learner.py -l ID
 ```
 
 where `ID` is the numerical id of the Learner (1,2,3). Please make sure to start the controller before the Learners otherwise the Learners will not be able to connect to the Controller. Finally, start the Driver. 
