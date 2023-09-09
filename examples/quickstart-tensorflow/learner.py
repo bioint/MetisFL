@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     # Setup the Learner and the server parameters based on the given index
     learner = TFLearner(x_chunks[index], y_chunks[index], x_test, y_test)
-    server_params = get_learner_server_params(index)
+    server_params = get_learner_server_params(index, max_learners)
 
     # Setup the client parameters based on the controller parameters
     client_params = ClientParams(

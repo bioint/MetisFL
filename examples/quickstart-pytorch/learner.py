@@ -92,7 +92,7 @@ class TorchLearner(Learner):
         return {"accuracy": float(accuracy), "loss": float(loss)}
 
 
-def get_learner_server_params(learner_index, max_learners=3):
+def get_learner_server_params(learner_index, max_learners):
     """A helper function to get the server parameters for a learner. """
     ports = list(range(50002, 50002 + max_learners))
     return ServerParams(
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     )
 
     # Setup the server parameters of the learner
-    server_params = get_learner_server_params(index)
+    server_params = get_learner_server_params(index, max_learners)
 
     # Start the app
     app(

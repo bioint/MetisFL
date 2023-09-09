@@ -21,7 +21,8 @@ if __name__ == "__main__":
     # Setup the environment.
     termination_signals = TerminationSingals(
         federation_rounds=5)
-    learners = [get_learner_server_params(i) for i in range(max_learners)]
+    learners = [get_learner_server_params(
+        i, max_learners) for i in range(max_learners)]
 
     # Initialize the driver session.
     session = DriverSession(
