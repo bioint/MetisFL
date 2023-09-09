@@ -4,7 +4,7 @@
 <picture>
   <img 
     style="border: 1px solid black; border-radius: 5px;"
-  alt="MetisFL TensforFlow Quickstart" src="../../docs/img/gif/quickstart-tensorflow.gif" width="800">
+  alt="MetisFL TensforFlow Quickstart" src="../../docs/img/gif/quickstart-tensorflow.gif">
 </picture>
 </div>
 
