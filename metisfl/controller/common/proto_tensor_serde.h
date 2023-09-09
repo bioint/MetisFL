@@ -31,19 +31,6 @@ class TensorOps {
     return serialized_tensor;
   }
 
-  static metisfl::TensorQuantifier QuantifyTensor(
-      const metisfl::Tensor &tensor) {
-    auto t = TensorOps::DeserializeTensor(tensor);
-    auto t_zeros = std::count(t.begin(), t.end(), 0);
-    auto t_non_zeros = t.size() - t_zeros;
-    auto t_bytes = sizeof(double) * t.size();
-    auto tensor_quantifier = metisfl::TensorQuantifier();
-    tensor_quantifier.set_tensor_non_zeros(t_non_zeros);
-    tensor_quantifier.set_tensor_zeros(t_zeros);
-    tensor_quantifier.set_tensor_size_bytes(t_bytes);
-    return tensor_quantifier;
-  }
-
   static void PrintSerializedTensor(const std::string &str,
                                     const uint32_t num_values) {
     std::vector<double> loaded_values(num_values);

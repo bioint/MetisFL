@@ -55,10 +55,9 @@ message Logs {
 }
 
 message ModelMetadata {
-  double selection_duration_ms = 2;
-  double aggregation_duration_ms = 3;
-  repeated double aggregation_block_size = 15;
-  repeated double aggregation_block_memory_kb = 16;
-  repeated double aggregation_block_duration_ms = 17;
-  repeated TensorQuantifier tensor_quantifiers = 18;
+  double selection_duration_ms = 1;
+  double aggregation_duration_ms = 2;
+  repeated double aggregation_block_size = 3;
+  repeated double aggregation_block_memory_kb = 4;
+  repeated double aggregation_block_duration_ms = 5;
 }

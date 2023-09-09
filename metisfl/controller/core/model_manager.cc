@@ -68,7 +68,6 @@ void ModelManager::UpdateModel(std::vector<std::string> &to_schedule,
   }
 
   RecordAggregationTime(update_id, start_time_aggregation);
-  RecordModelSize(update_id);
   aggregator_->Reset();
 }
 
@@ -193,11 +192,4 @@ void ModelManager::RecordAggregationTime(
   metadata_[update_id].set_aggregation_duration_ms(elapsed.count());
 }
 
-void ModelManager::RecordModelSize(std::string &update_id) {
-  for (auto const &tensor : model_.tensors()) {
-    auto tensor_quantifier = metisfl::proto::TensorOps::QuantifyTensor(tensor);
-    *metadata_[update_id].mutable_tensor_quantifiers()->Add() =
-        tensor_quantifier;
-  }
-}
 };  // namespace metisfl::controller
