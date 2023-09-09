@@ -5,68 +5,34 @@
 #include <pybind11/stl.h>
 
 #include "metisfl/encryption/palisade/ckks_scheme.h"
-#include "metisfl/encryption/palisade/encryption_scheme.h"
 
-#define CRYPTO_CONTEXT "crypto_context"
-#define CRYPTO_PUBLIC_KEY "public_key"
-#define CRYPTO_PRIVATE_KEY "private_key"
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 namespace py = pybind11;
 
-// We need to define CKKS as public in order
-// to access its methods through PyBind.
-class CKKSWrapper : public CKKS {
+class CKKSWrapper {
+  CKKS* ckks_;
+
  public:
-  ~CKKSWrapper() = default;
-  CKKSWrapper(uint32_t batch_size, uint32_t scaling_factor_bits)
-      : CKKS(batch_size, scaling_factor_bits) {}
-
-  void PyGenCryptoParamsFiles(std::string crypto_context_file,
-                              std::string public_key_file,
-                              std::string private_key_file) {
-    CryptoParamsFiles crypto_params_files{crypto_context_file, public_key_file,
-                                          private_key_file};
-
-    CKKS::GenCryptoParamsFiles(crypto_params_files);
+  static void PyGenCryptoParamsFiles(uint32_t batch_size,
+                                     uint32_t scaling_factor_bits,
+                                     std::string crypto_context_file,
+                                     std::string public_key_file,
+                                     std::string private_key_file) {
+    GenCryptoParamsFiles(batch_size, scaling_factor_bits, crypto_context_file,
+                         public_key_file, private_key_file);
   }
 
-  py::dict PyGetCryptoParamsFiles() {
-    py::dict py_dict_crypto_params_files;
-    auto crypto_params_files = CKKS::GetCryptoParamsFiles();
-    py_dict_crypto_params_files[CRYPTO_CONTEXT] =
-        crypto_params_files.crypto_context_file;
-    py_dict_crypto_params_files[CRYPTO_PUBLIC_KEY] =
-        crypto_params_files.public_key_file;
-    py_dict_crypto_params_files[CRYPTO_PRIVATE_KEY] =
-        crypto_params_files.private_key_file;
-    return py_dict_crypto_params_files;
+  CKKSWrapper(uint32_t batch_size, uint32_t scaling_factor_bits,
+              std::string crypto_context_file) {
+    ckks_ = new CKKS(batch_size, scaling_factor_bits, crypto_context_file);
   }
 
-  py::dict PyGenCryptoParams() {
-    py::dict py_dict_crypto_params;
-    auto crypto_params = CKKS::GenCryptoParams();
-    // Need to explicitly convert to py::str() to avoid encoding errors.
-    py_dict_crypto_params[CRYPTO_CONTEXT] =
-        py::str(crypto_params.crypto_context);
-    py_dict_crypto_params[CRYPTO_PUBLIC_KEY] =
-        py::str(crypto_params.public_key);
-    py_dict_crypto_params[CRYPTO_PRIVATE_KEY] =
-        py::str(crypto_params.private_key);
-    return py_dict_crypto_params;
-  }
-
-  py::dict PyGetCryptoParams() {
-    py::dict py_dict_crypto_params;
-    auto crypto_params = CKKS::GetCryptoParams();
-    // Need to explicitly convert to py::bytes() to avoid encoding errors.
-    py_dict_crypto_params[CRYPTO_CONTEXT] =
-        py::str(crypto_params.crypto_context);
-    py_dict_crypto_params[CRYPTO_PUBLIC_KEY] =
-        py::str(crypto_params.public_key);
-    py_dict_crypto_params[CRYPTO_PRIVATE_KEY] =
-        py::str(crypto_params.private_key);
-    return py_dict_crypto_params;
+  CKKSWrapper(uint32_t batch_size, uint32_t scaling_factor_bits,
+              std::string crypto_context_file, std::string public_key_file,
+              std::string private_key_file) {
+    ckks_ = new CKKS(batch_size, scaling_factor_bits, crypto_context_file,
+                     public_key_file, private_key_file);
   }
 
   py::bytes PyAggregate(py::list learners_data, py::list scaling_factors) {
@@ -74,22 +40,19 @@ class CKKSWrapper : public CKKS {
       LOG(FATAL)
           << "Error: learner_data and scaling_factors size need to match";
     }
-
-    // Simply cast the given list of data and scaling factors to
-    // their corresponding std::string and std::double vectors.
     auto learners_data_vec = learners_data.cast<std::vector<std::string>>();
     auto scaling_factors_vec = scaling_factors.cast<std::vector<double>>();
 
     auto weighted_avg_str =
-        CKKS::Aggregate(learners_data_vec, scaling_factors_vec);
+        ckks_->Aggregate(learners_data_vec, scaling_factors_vec);
     py::bytes py_bytes_avg(weighted_avg_str);
+
     return py_bytes_avg;
   }
 
   py::array_t<double> PyDecrypt(string data,
                                 unsigned long int data_dimensions) {
-    auto data_decrypted = CKKS::Decrypt(data, data_dimensions);
-    // Cast and release created vector.
+    auto data_decrypted = ckks_->Decrypt(data, data_dimensions);
     auto py_array_decrypted =
         py::array_t<double>(py::cast(std::move(data_decrypted)));
     return py_array_decrypted;
@@ -98,7 +61,7 @@ class CKKSWrapper : public CKKS {
   py::bytes PyEncrypt(py::array_t<double> data_array) {
     auto data_vec = std::vector<double>(data_array.data(),
                                         data_array.data() + data_array.size());
-    auto data_encrypted_str = CKKS::Encrypt(data_vec);
+    auto data_encrypted_str = ckks_->Encrypt(data_vec);
     py::bytes py_bytes(data_encrypted_str);
     return py_bytes;
   }
@@ -107,18 +70,14 @@ class CKKSWrapper : public CKKS {
 PYBIND11_MODULE(fhe, m) {
   m.doc() = "CKKS soft python wrapper.";
   py::class_<CKKSWrapper>(m, "CKKS")
-      .def(py::init<int, int>(), py::arg("batch_size"),
-           py::arg("scaling_factor_bits"))
-      .def("gen_crypto_params_files", &CKKSWrapper::PyGenCryptoParamsFiles)
-      .def("get_crypto_params_files", &CKKSWrapper::PyGetCryptoParamsFiles)
-      .def("load_crypto_context_from_file", &CKKS::LoadCryptoContextFromFile)
-      .def("load_private_key_from_file", &CKKS::LoadPrivateKeyFromFile)
-      .def("load_public_key_from_file", &CKKS::LoadPublicKeyFromFile)
-      .def("gen_crypto_params", &CKKSWrapper::PyGenCryptoParams)
-      .def("get_crypto_params", &CKKSWrapper::PyGetCryptoParams)
-      .def("load_crypto_context", &CKKS::LoadCryptoContext)
-      .def("load_private_key", &CKKS::LoadPrivateKey)
-      .def("load_public_key", &CKKS::LoadPublicKey)
+      .def(py::init<int, int, std::string>(), py::arg("batch_size"),
+           py::arg("scaling_factor_bits"), py::arg("crypto_context_file"))
+      .def(py::init<int, int, std::string, std::string, std::string>(),
+           py::arg("batch_size"), py::arg("scaling_factor_bits"),
+           py::arg("crypto_context_file"), py::arg("public_key_file"),
+           py::arg("private_key_file"))
+      .def_static("gen_crypto_params_files",
+                  &CKKSWrapper::PyGenCryptoParamsFiles)
       .def("aggregate", &CKKSWrapper::PyAggregate)
       .def("encrypt", &CKKSWrapper::PyEncrypt)
       .def(

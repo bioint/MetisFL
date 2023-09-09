@@ -82,7 +82,7 @@ cmake(
 
 cc_library(
     name = "palisade_wrapper",
-    hdrs = ["ckks_scheme.h", "encryption_scheme.h"],
+    hdrs = ["ckks_scheme.h"],
     srcs = ["ckks_scheme.cc"],
     deps = [
       "//metisfl/encryption/palisade:palisade_cmake",

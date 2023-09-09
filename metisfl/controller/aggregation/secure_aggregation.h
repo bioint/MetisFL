@@ -6,7 +6,6 @@
 
 #include "metisfl/controller/aggregation/aggregation_function.h"
 #include "metisfl/encryption/palisade/ckks_scheme.h"
-#include "metisfl/encryption/palisade/encryption_scheme.h"
 #include "metisfl/proto/model.pb.h"
 
 namespace metisfl::controller {
@@ -25,7 +24,7 @@ class SecAgg : public AggregationFunction {
   void Reset() override;
 
  private:
-  std::unique_ptr<EncryptionScheme> encryption_scheme_;
+  std::unique_ptr<CKKS> ckks_;
 };
 
 }  // namespace metisfl::controller
