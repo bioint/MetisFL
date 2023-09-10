@@ -12,6 +12,11 @@
 
 This example shows how to use MetisFL to a simple SKLearn logistic regression model on the MNIST dataset. The example is based on the official SKLearn [tutorial](https://scikit-learn.org/stable/auto_examples/linear_model/plot_sparse_logistic_regression_mnist.html). The guide describes the main steps and the full scripts can be found in the [examples/quickstart-sklearn](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-sklearn) directory. 
 
+It is recommended to run this example in an isolated Python environment. You can create a new environment using [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) or [virtualenv](https://virtualenv.pypa.io/en/latest/). 
+
+The example, like all of MetisFL example, consists of the Controller and 3 learners all running in the same machine. The Controller sends training and evaluation tasks to the learners, aggregates the model updates, and stores the training results and metadata . The learners train the model on the local dataset and communicate the model updates with the controller. The main entry point to the MetisFL framework is the Driver, which coordinates the communication between the clients and the server, initializes the weights of the shared model, monitors the federated training and shuts down the system when the training is done.
+
+
 ## ⚙️ Prerequisites
 
 Before running this example, please make sure you have installed the MetisFL package 
@@ -35,7 +40,8 @@ def load_data(num_clients: int = 3) -> Tuple:
     x_train, y_train = fetch_openml(
         "mnist_784", version=1, return_X_y=True, as_frame=False, parser="pandas"
     )
-
+    y_train = y_train.astype(int)
+    
     X_train, X_test, y_train, y_test = train_test_split(
         x_train, y_train, train_size=5000, test_size=10000
     )
@@ -48,7 +54,7 @@ def load_data(num_clients: int = 3) -> Tuple:
     return x_chunks, y_chunks, X_test, y_test
 ```
 
-This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. Both this random seed as well as the `iid_partitions` are kept constant in this example since the data loader function is part of the `learner.py` file which is used to start all the learners, as we will see later.
+This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. Both this random seed as well as the `iid_partitions` are kept constant in this example since the data loader function is part of the `learner.py` file which is used to start all the learners, as we will see later. Notice that `y_train` is converted to `int` to ensure that the labels are correctly compared with the output of the model, which is always of type `int`. 
 
 ## 🧠 Model 
 
@@ -70,8 +76,7 @@ if model.fit_intercept:
     model.intercept_ = np.zeros(n_classes)
 ```
 
-Note that the parameters are manually initialized to zero. This is needed because they are not defined before the first call to the `fit` method. However, the driver will need to request the parameters from a randomly selected learner to initialize the model on the controller side. 
-
+Note that the parameters are manually initialized to zero. This is needed because they are not defined before the first call to the `fit` method. However, the driver will need to request the parameters from a randomly selected learner to initialize the model across the entire federation. Therefore, we need to manually initialize the parameters to zero.
 
 ## 👨‍💻 MetisFL Learner
 
@@ -200,3 +205,7 @@ python driver.py
 The driver will run the federated training for 5 rounds and then stop. The training logs will be save in the `results.json` file in the current directory.
 
 ## 🚀 Next steps
+
+Congratulations 👏 you have just completed your first MetisFL federated learning example using SKLearn and you should see and output similar to the photo on the top of this page. You may notice that both the training and evaluation steps are extremely fast. This is because the MNIST dataset is very small and the model is very simple. In the next example, we will use a more deep neural networks with TensorFlow and PyTorch to demonstrate how MetisFL can be used to train more complex models.
+
+Please share your results with us or ask any questions that you might have on our [Slack channel](https://nevronai.slack.com/archives/C05E9HCG0DB). We would love to hear from you!

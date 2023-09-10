@@ -1,4 +1,4 @@
-# 🚀 MetisFL Quickstart: Pytorch
+# 🚀 MetisFL Quickstart: PyTorch
 
 <div align="center">
 <picture>

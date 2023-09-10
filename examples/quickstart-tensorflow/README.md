@@ -1,4 +1,4 @@
-# 🚀 MetisFL Quickstart: Tensorflow
+# 🚀 MetisFL Quickstart: TensorFlow
 
 <div align="center">
 <picture>
