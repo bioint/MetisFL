@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from metisfl.common.formatting import camel_to_snake_dict_keys
 
-COMMUNICATION_PROTOCOLS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
+SCHEDULERS = ["Synchronous", "Asynchronous", "SemiSynchronous"]
 MODEL_STORES = ["InMemory"]  # TODO: add Redis, fix in backend
 HE_SCHEMES = ["CKKS"]
 AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "SecAgg"]
@@ -111,8 +111,8 @@ class ControllerConfig(object):
     ----------
     aggregation_rule : str
         The aggregation rule to use. Must be one of the following: ["FedAvg", "FedRec", "FedStride", "SecAgg"].
-    communication_protocol : str
-        The communication protocol to use. Must be one of the following: ["Synchronous", "Asynchronous", "SemiSynchronous"].
+    scheduler : str
+        The scheduler to use. Must be one of the following: ["Synchronous", "Asynchronous", "SemiSynchronous"].
     scaling_factor : str
         The scaling factor to use. Must be one of the following: ["NumTrainingExamples", "NumCompletedBatches", "NumParticipants"].
     participation_ratio : Optional[float], (default=1.0)
@@ -122,23 +122,23 @@ class ControllerConfig(object):
     crypto_context : Optional[str], (default=None)
         The HE crypto context file to use. Required if the aggregation rule is SecAgg.  
     semi_sync_lambda : Optional[float], (default=None)
-        The semi-sync lambda to use. Required if the communication protocol is SemiSynchronous.
+        The semi-sync lambda to use. Required if the scheduler is SemiSynchronous.
     semi_sync_recompute_num_updates : Optional[bool], (default=None)
-        Whether to recompute the number of updates. Required if the communication protocol is SemiSynchronous.
+        Whether to recompute the number of updates. Required if the scheduler is SemiSynchronous.
 
     Raises
     ------
     ValueError
         Value error is raised in the following cases:
         - If the aggregation rule is not one of the following: ["FedAvg", "FedRec", "FedStride", "SecAgg"].
-        - If the communication protocol is not one of the following: ["Synchronous", "Asynchronous", "SemiSynchronous"].
+        - If the scheduler is not one of the following: ["Synchronous", "Asynchronous", "SemiSynchronous"].
         - If the scaling factor is not one of the following: ["NumTrainingExamples", "NumCompletedBatches", "NumParticipants"].
-        - If the communication protocol is SemiSynchronous and the semi_sync_lambda or semi_sync_recompute_num_updates are not specified.
+        - If the scheduler is SemiSynchronous and the semi_sync_lambda or semi_sync_recompute_num_updates are not specified.
 
     """
 
     aggregation_rule: str
-    communication_protocol: str
+    scheduler: str
     scaling_factor: str
     participation_ratio: Optional[float] = 1.0
     stride_length: Optional[int] = None
@@ -157,9 +157,9 @@ class ControllerConfig(object):
         if self.aggregation_rule not in AGGREGATION_RULES:
             raise ValueError(
                 f"Invalid aggregation rule: {self.aggregation_rule}")
-        if self.communication_protocol not in COMMUNICATION_PROTOCOLS:
+        if self.scheduler not in SCHEDULERS:
             raise ValueError(
-                f"Invalid communication protocol: {self.protocol}")
+                f"Invalid scheduler: {self.protocol}")
         if self.scaling_factor not in SCALING_FACTORS:
             raise ValueError(f"Invalid scaling factor: {self.scaling_factor}")
         if self.crypto_context is not None and not os.path.isfile(self.crypto_context):
@@ -348,6 +348,6 @@ class FederationEnvironment(object):
         return cls(**yaml_dict)
 
     def __post_init__(self):
-        if self.termination_signals.federation_rounds and self.controller_config.communication_protocol == "Asynchronous":
+        if self.termination_signals.federation_rounds and self.controller_config.scheduler == "Asynchronous":
             raise ValueError(
-                "Cannot specify federation rounds when the communication protocol is asynchronous.")
+                "Cannot specify federation rounds when the scheduler is asynchronous.")

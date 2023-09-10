@@ -48,7 +48,7 @@ class Controller(object):
             private_key=server.private_key or "",
 
             aggregation_rule=global_train.aggregation_rule,
-            communication_protocol=global_train.communication_protocol,
+            scheduler=global_train.scheduler,
             scaling_factor=global_train.scaling_factor,
             participation_ratio=global_train.participation_ratio,
             stride_length=global_train.stride_length or -1,

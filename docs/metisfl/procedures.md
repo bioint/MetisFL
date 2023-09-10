@@ -1,11 +1,12 @@
-Procedures
-=============================
-Here, we present the internal mechanisms of MetisFL with repsect to federation initialization, and federated model traninig and evaluation using a synchronous communication protocol.
+# Procedures
+
+Here, we present the internal mechanisms of MetisFL with repsect to federation initialization, and federated model traninig and evaluation using a synchronous scheduler.
 
 ## Federation Lifecycle
-The Federation lifecycle consists of three core steps: *initialization, monitoring, shutdown*:
 
-The driver first **initializes** the controller process at the remote host (or localhost) and receives an acknowledgment when the remote process is alive. Thereafter, the driver sends the initial state of the model (just the model tensors not the actual architecture) to the controller and proceeds with learners' initialization. Once all learners are initialized, the driver sends the model (model tensors & architecture) to every other learner. 
+The Federation lifecycle consists of three core steps: _initialization, monitoring, shutdown_:
+
+The driver first **initializes** the controller process at the remote host (or localhost) and receives an acknowledgment when the remote process is alive. Thereafter, the driver sends the initial state of the model (just the model tensors not the actual architecture) to the controller and proceeds with learners' initialization. Once all learners are initialized, the driver sends the model (model tensors & architecture) to every other learner.
 
 > **Note:** The learners need the actual model architecture since learners are required to perform training and evaluation on their local private datasets, whereas the controller is responsible to merely orchestrate the federation workflow and aggregate learners' models.
 
@@ -15,7 +16,6 @@ The learners then register with the controller (join federation) and the trainin
  <img 
     src="../img/MetisFL-Procedures-FederationLifecycle.png" width="300px",alt="Federation Lifecycle.">
 </div>
-
 
 </br>
 
@@ -31,19 +31,13 @@ The submitted training task is registered with a callback function that will han
 
 > **Clarification:** The training tasks are asynchronous calls, meaning that the controller does not wait for the training task to complete. The controller simply submits the task but the learner needs to inform the controller when its local training is complete.
 
-
-
 <div align="center">
 
-| Training Round Overview   |      Training Round with Requests      |
-|:----------:|:-------------:|
-| ![Training Round Overview](../img/MetisFL-ControllerLearner-TrainingTaskSubmission.png) |  ![Training Round with Requests](../img/MetisFL-Procedures-TrainingRound.png) |
+|                                 Training Round Overview                                 |                         Training Round with Requests                         |
+| :-------------------------------------------------------------------------------------: | :--------------------------------------------------------------------------: |
+| ![Training Round Overview](../img/MetisFL-ControllerLearner-TrainingTaskSubmission.png) | ![Training Round with Requests](../img/MetisFL-Procedures-TrainingRound.png) |
 
 </div>
-
-
-
-
 
 </br>
 

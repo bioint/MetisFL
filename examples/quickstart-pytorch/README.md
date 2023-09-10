@@ -10,15 +10,13 @@
 
 &nbsp;
 
-This example shows how to use MetisFL to train a Pytorch model in a simulated federated learning setting using MetisFL. The guide describes the main steps and the full scripts can be found in the [examples/quickstart-pytorch](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-pytorch) directory. 
+This example shows how to use MetisFL to train a Pytorch model in a simulated federated learning setting using MetisFL. The guide describes the main steps and the full scripts can be found in the [examples/quickstart-pytorch](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-pytorch) directory.
 
-It is recommended to run this example in an isolated Python environment. You can create a new environment using [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) or [virtualenv](https://virtualenv.pypa.io/en/latest/). 
-
-
+It is recommended to run this example in an isolated Python environment. You can create a new environment using [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) or [virtualenv](https://virtualenv.pypa.io/en/latest/).
 
 ## ⚙️ Prerequisites
 
-Before running this example, please make sure you have installed the MetisFL package 
+Before running this example, please make sure you have installed the MetisFL package
 
 ```bash
 pip install metisfl
@@ -64,9 +62,9 @@ def load_data(num_learners: int) -> Tuple:
 
 To split the dataset we user the `iid_partition` function from the `metisfl.common.utils` module. This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. It produces independent and identically distributed (IID) chunks of the dataset. Note that the data are transformed channels first (NCHW) as expected by Pytorch.
 
-## 🧠 Model 
+## 🧠 Model
 
-The model used in this example is a simple CNN and is defined in the `model.py` file. 
+The model used in this example is a simple CNN and is defined in the `model.py` file.
 
 ```python
 class Model(nn.Module):
@@ -93,8 +91,7 @@ class Model(nn.Module):
 
 ## 👨‍💻 MetisFL Learner
 
-The main abstraction of the client is called MetisFL Learner. The MetisFL Learner is responsible for training the model on the local dataset and communicating with the server. Following the [class](
-    https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py) that must be implemented by the learner, we first start by the `get_weights` and `set_weights` methods. These methods are used by the Controller to get and set the model parameters. The `get_weights` method returns a list of numpy arrays and the `set_weights` method takes a list of numpy arrays as input.
+The main abstraction of the client is called MetisFL Learner. The MetisFL Learner is responsible for training the model on the local dataset and communicating with the server. Following the [class](https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py) that must be implemented by the learner, we first start by the `get_weights` and `set_weights` methods. These methods are used by the Controller to get and set the model parameters. The `get_weights` method returns a list of numpy arrays and the `set_weights` method takes a list of numpy arrays as input.
 
 ```python
 def get_weights(self):
@@ -161,12 +158,11 @@ def evaluate(self, parameters, config):
     return {"accuracy": float(accuracy), "loss": float(loss)}
 ```
 
-
 ## 🎛️ MetisFL Controller
 
-The Controller is responsible for send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). The `Controller` class is initialized with the parameters of the Learners and the global training configuration. 
+The Controller is responsible for send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). The `Controller` class is initialized with the parameters of the Learners and the global training configuration.
 
-```python 
+```python
 controller_params = ServerParams(
     hostname="localhost",
     port=50051,
@@ -174,7 +170,7 @@ controller_params = ServerParams(
 
 controller_config = ControllerConfig(
     aggregation_rule="FedAvg",
-    communication_protocol="Synchronous",
+    scheduler="Synchronous",
     scaling_factor="NumParticipants",
 )
 
@@ -184,20 +180,20 @@ model_store_config = ModelStoreConfig(
 )
 ```
 
-The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. Certificates are optional and if not given then SSL is not active. The ControllerConfig defines the aggregation rule, communication protocol and model scaling factor. 
+The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. Certificates are optional and if not given then SSL is not active. The ControllerConfig defines the aggregation rule, scheduler and model scaling factor.
 
-For the full set of options in the ControllerConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). A positive value for `lineage_length` means that the Controller will start dropping models from the model store after the given number of models, starting from the oldest. 
+For the full set of options in the ControllerConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). A positive value for `lineage_length` means that the Controller will start dropping models from the model store after the given number of models, starting from the oldest.
 
 ## 🚦 MetisFL Driver
 
-The MetisFL Driver is the main entry point to the MetisFL application. It will initialize the model weights by requesting the model weights from a random learner and then distributing the weights to all learners and the controller. Additionally, it monitor the federation and will stop the training process when the termination condition is met. 
+The MetisFL Driver is the main entry point to the MetisFL application. It will initialize the model weights by requesting the model weights from a random learner and then distributing the weights to all learners and the controller. Additionally, it monitor the federation and will stop the training process when the termination condition is met.
 
 ```python
 # Setup the environment.
 termination_signals = TerminationSingals(
     federation_rounds=5)
 learners = [get_learner_server_params(i) for i in range(max_learners)]
-is_async = controller_config.communication_protocol == 'Asynchronous'
+is_async = controller_config.scheduler == 'Asynchronous'
 
 # Start the driver session.
 session = DriverSession(
@@ -215,13 +211,13 @@ To see and experiment with the different termination conditions, please have a l
 
 ## 🎬 Running the example
 
-To run the example, you need to open one terminal for the Controller, one terminal for each Learner and one terminal for the Driver. First, start the Controller. 
+To run the example, you need to open one terminal for the Controller, one terminal for each Learner and one terminal for the Driver. First, start the Controller.
 
 ```bash
 python controller.py
 ```
 
-Then, start the Learners. 
+Then, start the Learners.
 
 ```bash
 python learner.py -l X
@@ -229,7 +225,7 @@ python learner.py -l X
 
 where `X` is the numerical id of the Learner (1,2,3). Note that both the learner and driver scripts have been configured to use 3 learners by default. If you want to experiment with a different number of learners, you need to change the `max_learners` variable in both scripts. Also, please make sure to start the controller before the Learners otherwise the Learners will not be able to connect to the Controller.
 
-Finally, start the Driver. 
+Finally, start the Driver.
 
 ```bash
 python driver.py

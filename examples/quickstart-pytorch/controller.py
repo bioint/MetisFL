@@ -13,7 +13,7 @@ controller_params = ServerParams(
 # Global training configuration.
 controller_config = ControllerConfig(
     aggregation_rule="FedAvg",
-    communication_protocol="Synchronous",
+    scheduler="Synchronous",
     scaling_factor="NumParticipants",
 )
 

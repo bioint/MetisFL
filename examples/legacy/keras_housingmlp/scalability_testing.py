@@ -23,7 +23,7 @@ if __name__ == "__main__":
     script_cwd = os.path.dirname(__file__)
     print("Script current working directory: ", script_cwd, flush=True)
     parser = argparse.ArgumentParser()
-    parser.add_argument("--communication_protocol",
+    parser.add_argument("--scheduler",
                         default="Synchronous", type=str)
     parser.add_argument("--federation_rounds", default=10, type=int)
     parser.add_argument("--learners_num", default=10, type=int)

@@ -17,7 +17,7 @@ typedef struct ServerParams {
 
 typedef struct GlobalTrainParams {
   std::string aggregation_rule;
-  std::string communication_protocol;
+  std::string scheduler;
   std::string scaling_factor;
   float participation_ratio;
   int stride_length;

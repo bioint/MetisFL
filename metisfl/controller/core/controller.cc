@@ -9,7 +9,7 @@ Controller::Controller(const GlobalTrainParams &global_train_params,
   global_train_params_ = global_train_params;
 
   learner_manager_ = absl::make_unique<LearnerManager>();
-  scheduler_ = CreateScheduler(global_train_params_.communication_protocol);
+  scheduler_ = CreateScheduler(global_train_params_.scheduler);
   selector_ = CreateSelector();
   model_manager_ =
       absl::make_unique<ModelManager>(learner_manager_.get(), selector_.get(),
@@ -19,7 +19,7 @@ Controller::Controller(const GlobalTrainParams &global_train_params,
 // Public methods
 absl::StatusOr<std::string> Controller::AddLearner(const Learner &learner) {
   auto is_semi_sync =
-      global_train_params_.communication_protocol == "SemiSynchronous";
+      global_train_params_.scheduler == "SemiSynchronous";
   return learner_manager_->AddLearner(learner, is_semi_sync,
                                       global_train_params_.scaling_factor);
 }
@@ -77,7 +77,7 @@ absl::Status Controller::TrainDone(const TrainDoneRequest &request) {
 
 void Controller::UpdateTrainParams(
     const std::vector<std::string> &learner_ids) {
-  if (global_train_params_.communication_protocol == "SemiSynchronous") {
+  if (global_train_params_.scheduler == "SemiSynchronous") {
     auto global_iteration = scheduler_->GetGlobalIteration();
     if (global_iteration == 2 ||
         global_train_params_.semi_sync_recompute_num_updates) {

@@ -26,7 +26,7 @@ std::unique_ptr<ModelStore> CreateModelStore(
     const ModelStoreParams &model_store_params);
 
 std::unique_ptr<Scheduler> CreateScheduler(
-    const std::string &communication_protocol);
+    const std::string &scheduler);
 
 std::unique_ptr<Selector> CreateSelector();
 
