@@ -20,7 +20,8 @@ def load_data(num_clients: int = 3) -> Tuple:
     x_train, y_train = fetch_openml(
         "mnist_784", version=1, return_X_y=True, as_frame=False, parser="pandas"
     )
-
+    y_train = y_train.astype(int)
+    
     X_train, X_test, y_train, y_test = train_test_split(
         x_train, y_train, train_size=12000, test_size=3000, random_state=42
     )
@@ -83,22 +84,24 @@ class TFLearner(Learner):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = model.fit(
+            model.fit(
                 self.x_train,
                 self.y_train,
             )
-            score = clf.score(self.x_test, self.y_test)
-            loss = log_loss(self.y_test, clf.predict_proba(self.x_test))
-
+            score = model.score(self.x_test, self.y_test)
+            loss = log_loss(self.y_test, model.predict_proba(self.x_test))
+            print("Training: accuracy = %f, loss = %f" % (score, loss))
+            
         return self.get_weights(), {"accuracy": score, "loss": loss}, {"num_train_examples": len(self.x_train)}
 
     def evaluate(self, parameters, config):
         """Evaluates the Logistic Regression model."""
 
         self.set_weights(parameters)
-        loss = log_loss(self.y_test, model.predict_proba(self.x_test))
         score = model.score(self.x_test, self.y_test)
-
+        loss = log_loss(self.y_test, model.predict_proba(self.x_test))
+        print("Evaluation: accuracy = %f, loss = %f" % (score, loss))
+        
         return {"accuracy": score, "loss": loss}
 
 
