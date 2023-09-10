@@ -2,7 +2,7 @@
 import signal
 from typing import Optional
 
-from metisfl.common.types import ClientParams, LearnerConfig, ServerParams
+from metisfl.common.types import ClientParams, EncryptionConfig, ServerParams
 from metisfl.learner.client import GRPCClient
 from metisfl.learner.learner import Learner, has_all
 from metisfl.learner.server import LearnerServer
@@ -48,7 +48,7 @@ def app(
     learner: Learner,
     client_params: ClientParams,
     server_params: ServerParams,
-    learner_config: Optional[LearnerConfig] = None,
+    enc_config: Optional[EncryptionConfig] = None,
 ):
     """Entry point for the MetisFL Learner application.
 
@@ -60,7 +60,7 @@ def app(
         The client parameters of the Learner client. 
     server_params : ServerParams
         The server parameters of the Learner server. 
-    learner_config : Optional[LearnerConfig], (default=None)
+    learner_config : Optional[EncryptionConfig]
         The configuration of the Learner containing the Homomorphic Encryption scheme. 
     """
 
@@ -69,13 +69,13 @@ def app(
 
     # Setup the Homomorphic Encryption scheme if provided
     enc = None
-    if learner_config:
+    if enc_config:
         enc = HomomorphicEncryption(
-            batch_size=learner_config.batch_size,
-            scaling_factor_bits=learner_config.scaling_factor_bits,
-            crypto_context_path=learner_config.crypto_context,
-            public_key_path=learner_config.public_key,
-            private_key_path=learner_config.private_key,
+            batch_size=enc_config.batch_size,
+            scaling_factor_bits=enc_config.scaling_factor_bits,
+            crypto_context_path=enc_config.crypto_context,
+            public_key_path=enc_config.public_key,
+            private_key_path=enc_config.private_key,
         )
 
     # Create the MessageHelper

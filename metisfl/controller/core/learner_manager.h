@@ -60,7 +60,9 @@ class LearnerManager {
                          const int semi_sync_lambda);
 
   // Public methods
-  absl::StatusOr<std::string> AddLearner(const Learner &learner);
+  absl::StatusOr<std::string> AddLearner(const Learner &learner,
+                                         const bool is_semi_sync,
+                                         const std::string &scaling_factor);
 
   std::vector<std::string> GetLearnerIds() const;
 

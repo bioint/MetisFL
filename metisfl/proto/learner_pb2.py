@@ -16,7 +16,7 @@ from metisfl.proto import service_common_pb2 as metisfl_dot_proto_dot_service__c
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bmetisfl/proto/learner.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb6\x01\n\x04Task\x12\n\n\x02id\x18\x01 \x01(\t\x12\x12\n\nlearner_id\x18\x02 \x01(\t\x12+\n\x07sent_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0breceived_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x30\n\x0c\x63ompleted_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"p\n\x0cTrainRequest\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12\x1d\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.Model\x12$\n\x06params\x18\x03 \x01(\x0b\x32\x14.metisfl.TrainParams\"]\n\x0bTrainParams\x12\x12\n\nbatch_size\x18\x01 \x01(\r\x12\x0e\n\x06\x65pochs\x18\x02 \x01(\r\x12\x19\n\x11num_local_updates\x18\x03 \x01(\r\x12\x0f\n\x07metrics\x18\x04 \x03(\t\"x\n\x0f\x45valuateRequest\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12\x1d\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.Model\x12)\n\x06params\x18\x03 \x01(\x0b\x32\x19.metisfl.EvaluationParams\"7\n\x10\x45valuationParams\x12\x12\n\nbatch_size\x18\x01 \x01(\r\x12\x0f\n\x07metrics\x18\x02 \x03(\t\"\\\n\x10\x45valuateResponse\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12+\n\x07results\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResults\"}\n\x11\x45valuationResults\x12\x38\n\x07metrics\x18\x01 \x03(\x0b\x32\'.metisfl.EvaluationResults.MetricsEntry\x1a.\n\x0cMetricsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x02:\x02\x38\x01\x32\xc3\x02\n\x0eLearnerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12,\n\x08GetModel\x12\x0e.metisfl.Empty\x1a\x0e.metisfl.Model\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12.\n\x05Train\x12\x15.metisfl.TrainRequest\x1a\x0c.metisfl.Ack\"\x00\x12\x41\n\x08\x45valuate\x12\x18.metisfl.EvaluateRequest\x1a\x19.metisfl.EvaluateResponse\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1bmetisfl/proto/learner.proto\x12\x07metisfl\x1a\x19metisfl/proto/model.proto\x1a\"metisfl/proto/service_common.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb6\x01\n\x04Task\x12\n\n\x02id\x18\x01 \x01(\t\x12\x12\n\nlearner_id\x18\x02 \x01(\t\x12+\n\x07sent_at\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12/\n\x0breceived_at\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x30\n\x0c\x63ompleted_at\x18\x05 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"p\n\x0cTrainRequest\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12\x1d\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.Model\x12$\n\x06params\x18\x03 \x01(\x0b\x32\x14.metisfl.TrainParams\"o\n\x0bTrainParams\x12\x12\n\nbatch_size\x18\x01 \x01(\r\x12\x0e\n\x06\x65pochs\x18\x02 \x01(\r\x12\x19\n\x11num_local_updates\x18\x03 \x01(\r\x12\x0f\n\x07metrics\x18\x04 \x03(\t\x12\x10\n\x08metadata\x18\x05 \x03(\t\"x\n\x0f\x45valuateRequest\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12\x1d\n\x05model\x18\x02 \x01(\x0b\x32\x0e.metisfl.Model\x12)\n\x06params\x18\x03 \x01(\x0b\x32\x19.metisfl.EvaluationParams\"7\n\x10\x45valuationParams\x12\x12\n\nbatch_size\x18\x01 \x01(\r\x12\x0f\n\x07metrics\x18\x02 \x03(\t\"\\\n\x10\x45valuateResponse\x12\x1b\n\x04task\x18\x01 \x01(\x0b\x32\r.metisfl.Task\x12+\n\x07results\x18\x02 \x01(\x0b\x32\x1a.metisfl.EvaluationResults\"}\n\x11\x45valuationResults\x12\x38\n\x07metrics\x18\x01 \x03(\x0b\x32\'.metisfl.EvaluationResults.MetricsEntry\x1a.\n\x0cMetricsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x02:\x02\x38\x01\x32\xc3\x02\n\x0eLearnerService\x12\x31\n\x0fGetHealthStatus\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x12,\n\x08GetModel\x12\x0e.metisfl.Empty\x1a\x0e.metisfl.Model\"\x00\x12\x31\n\x0fSetInitialModel\x12\x0e.metisfl.Model\x1a\x0c.metisfl.Ack\"\x00\x12.\n\x05Train\x12\x15.metisfl.TrainRequest\x1a\x0c.metisfl.Ack\"\x00\x12\x41\n\x08\x45valuate\x12\x18.metisfl.EvaluateRequest\x1a\x19.metisfl.EvaluateResponse\"\x00\x12*\n\x08ShutDown\x12\x0e.metisfl.Empty\x1a\x0c.metisfl.Ack\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -31,17 +31,17 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_TRAINREQUEST']._serialized_start=321
   _globals['_TRAINREQUEST']._serialized_end=433
   _globals['_TRAINPARAMS']._serialized_start=435
-  _globals['_TRAINPARAMS']._serialized_end=528
-  _globals['_EVALUATEREQUEST']._serialized_start=530
-  _globals['_EVALUATEREQUEST']._serialized_end=650
-  _globals['_EVALUATIONPARAMS']._serialized_start=652
-  _globals['_EVALUATIONPARAMS']._serialized_end=707
-  _globals['_EVALUATERESPONSE']._serialized_start=709
-  _globals['_EVALUATERESPONSE']._serialized_end=801
-  _globals['_EVALUATIONRESULTS']._serialized_start=803
-  _globals['_EVALUATIONRESULTS']._serialized_end=928
-  _globals['_EVALUATIONRESULTS_METRICSENTRY']._serialized_start=882
-  _globals['_EVALUATIONRESULTS_METRICSENTRY']._serialized_end=928
-  _globals['_LEARNERSERVICE']._serialized_start=931
-  _globals['_LEARNERSERVICE']._serialized_end=1254
+  _globals['_TRAINPARAMS']._serialized_end=546
+  _globals['_EVALUATEREQUEST']._serialized_start=548
+  _globals['_EVALUATEREQUEST']._serialized_end=668
+  _globals['_EVALUATIONPARAMS']._serialized_start=670
+  _globals['_EVALUATIONPARAMS']._serialized_end=725
+  _globals['_EVALUATERESPONSE']._serialized_start=727
+  _globals['_EVALUATERESPONSE']._serialized_end=819
+  _globals['_EVALUATIONRESULTS']._serialized_start=821
+  _globals['_EVALUATIONRESULTS']._serialized_end=946
+  _globals['_EVALUATIONRESULTS_METRICSENTRY']._serialized_start=900
+  _globals['_EVALUATIONRESULTS_METRICSENTRY']._serialized_end=946
+  _globals['_LEARNERSERVICE']._serialized_start=949
+  _globals['_LEARNERSERVICE']._serialized_end=1272
 # @@protoc_insertion_point(module_scope)

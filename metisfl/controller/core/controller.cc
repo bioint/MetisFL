@@ -18,7 +18,10 @@ Controller::Controller(const GlobalTrainParams &global_train_params,
 
 // Public methods
 absl::StatusOr<std::string> Controller::AddLearner(const Learner &learner) {
-  return learner_manager_->AddLearner(learner);
+  auto is_semi_sync =
+      global_train_params_.communication_protocol == "SemiSynchronous";
+  return learner_manager_->AddLearner(learner, is_semi_sync,
+                                      global_train_params_.scaling_factor);
 }
 
 absl::Status Controller::RemoveLearner(std::string learner_id) {

@@ -20,7 +20,9 @@ LearnerManager::LearnerManager()
 }
 
 // Public methods
-absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
+absl::StatusOr<std::string> LearnerManager::AddLearner(
+    const Learner &learner, bool is_semi_sync,
+    const std::string &scaling_factor) {
   std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
   std::string learner_id =
@@ -30,6 +32,18 @@ absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
     return absl::AlreadyExistsError("Learner has already joined.");
   }
   learners_[learner_id] = learner;
+
+  TrainParams train_params;
+  if (is_semi_sync) {
+    train_params.add_metadata("processing_ms_per_batch");
+    train_params.add_metadata("processing_ms_per_epoch");
+  }
+  if (scaling_factor == "NumTrainingExamples")
+    train_params.add_metadata("num_training_examples");
+  if (scaling_factor == "NumCompletedBatches")
+    train_params.add_metadata("num_completed_batches");
+
+  train_params_[learner_id] = train_params;
 
   return learner_id;
 }

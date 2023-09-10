@@ -201,14 +201,24 @@ def try_call_train(
             raise ValueError(
                 "Learner.train must return a list of numpy arrays")
 
-        for metrics in params.get('metrics', []):
-            if metrics not in train_res[1]:
-                raise ValueError(
-                    f"Metric '{metrics}' not found in training results")
-
+        if not isinstance(metrics, dict):
+            raise ValueError(
+                "Learner.train must return a dictionary of metrics")
+            
         if not isinstance(metadata, dict):
             raise ValueError(
                 "Learner.train must return a dictionary of metadata")
+
+        for metrics in params.get('metrics', []):
+            if metrics not in train_res[1]:
+                raise ValueError(
+                    f"Metric '{metrics}' not found in training metadata")
+                
+        for metadata in params.get('metadata', []):
+            if metadata not in train_res[2]:
+                raise ValueError(
+                    f"Metadata '{metadata}' not found in training metadata")
+
 
         return weights, metrics, metadata
 

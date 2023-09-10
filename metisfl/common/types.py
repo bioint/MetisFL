@@ -12,7 +12,8 @@ AGGREGATION_RULES = ["FedAvg", "FedRec", "FedStride", "SecAgg"]
 SCALING_FACTORS = ["NumTrainingExamples",
                    "NumCompletedBatches", "NumParticipants"]
 
-
+#FIXME: if the protocol is asynchronous, the federation rounds are not defined
+# and we need a different termination signal, must validate that
 @dataclass
 class TerminationSingals(object):
     """Set of termination signals for the federated training. Controls when the training is terminated.
@@ -122,8 +123,8 @@ class ControllerConfig(object):
         The HE crypto context file to use. Required if the aggregation rule is SecAgg.  
     semi_sync_lambda : Optional[float], (default=None)
         The semi-sync lambda to use. Required if the communication protocol is SemiSynchronous.
-    semi_sync_recompute_num_updates : Optional[int], (default=None)
-        The semi-sync recompute num updates to use. Required if the communication protocol is SemiSynchronous.
+    semi_sync_recompute_num_updates : Optional[bool], (default=None)
+        Whether to recompute the number of updates. Required if the communication protocol is SemiSynchronous.
 
     Raises
     ------
@@ -145,7 +146,7 @@ class ControllerConfig(object):
     batch_size: Optional[int] = None
     scaling_factor_bits: Optional[int] = None
     semi_sync_lambda: Optional[float] = None
-    semi_sync_recompute_num_updates: Optional[int] = None
+    semi_sync_recompute_num_updates: Optional[bool] = None
 
     @classmethod
     def from_yaml(cls, yaml_dict: dict) -> 'ControllerConfig':
@@ -170,11 +171,12 @@ class ControllerConfig(object):
         if self.crypto_context and not self.aggregation_rule == "SecAgg":
             raise ValueError(
                 f"HE crypto context file can only be specified for SecAgg")
-
-
+        
+        
+        
 @dataclass
-class LearnerConfig(object):
-
+class EncryptionConfig(object):
+    
     he_scheme: Optional[str] = "CKKS"
     batch_size: Optional[int] = None
     scaling_factor_bits: Optional[int] = None
