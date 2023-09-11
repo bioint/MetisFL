@@ -51,6 +51,7 @@ def get_server(
     options = [
         ("grpc.max_concurrent_streams", max_workers),
         ("grpc.max_send_message_length", max_message_length),
+        ("grpc.max_receive_message_length", max_message_length),
     ]
 
     server = grpc.server(

@@ -26,19 +26,17 @@ class HomomorphicEncryption(EncryptionScheme):
             The batch size of the encryption scheme.
         scaling_factor_bits : int
             The number of bits to use for the scaling factor.
-        crypto_context_path : str, optional
+        crypto_context_path : str
             The path to the crypto context file.
-        public_key_path : str, optional
+        public_key_path : str
             The path to the public key file.
-        private_key_path : str, optional
+        private_key_path : str
             The path to the private key file.
 
         """
-        # TODO: Make it easier to load the crypto context and keys.
-        self._he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
-        self._he_scheme.load_crypto_context_from_file(crypto_context_path)
-        self._he_scheme.load_public_key_from_file(public_key_path)
-        self._he_scheme.load_private_key_from_file(private_key_path)
+        self.ckks = fhe.CKKS(
+            batch_size, scaling_factor_bits, crypto_context_path, public_key_path, private_key_path
+        )
 
     def decrypt(self, value: bytes, length: int) -> np.ndarray:
         """Decrypts the value.
@@ -56,7 +54,7 @@ class HomomorphicEncryption(EncryptionScheme):
             The decrypted value as a numpy array.
         """
 
-        return self._he_scheme.decrypt(value, length)
+        return self.ckks.decrypt(value, length)
 
     def encrypt(self, arr: np.ndarray) -> bytes:
         """Encrypts the array.
@@ -71,5 +69,7 @@ class HomomorphicEncryption(EncryptionScheme):
         bytes
             The encrypted array as bytes.
         """
+        
+        arr = np.array(arr).flatten()
 
-        return self._he_scheme.encrypt(arr)
+        return self.ckks.encrypt(arr)

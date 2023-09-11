@@ -27,8 +27,6 @@ message Learner {
   string hostname = 1;
   uint32 port = 2;
   string root_certificate_bytes = 3;
-  string public_certificate_bytes = 4; // not needed 
-  uint32 num_training_examples = 5;
 }
 
 message LearnerId {
@@ -42,12 +40,12 @@ message TrainDoneRequest {
 }
 
 message TrainResults {
-  map<string, float> metrics = 1;
+  string metrics = 1; // string representation of a JSON object
   map<string, double> metadata = 2;
 }
 
 message Logs {
-  int32 global_iteration = 1;
+  optional int32 global_iteration = 1;
   repeated Task tasks = 2;
 
   // Indexed by task_id
@@ -58,10 +56,9 @@ message Logs {
 
 // TODO: consode AggregationMetadata as name
 message ModelMetadata {
-  double selection_duration_ms = 2;
-  double aggregation_duration_ms = 3;
-  repeated double aggregation_block_size = 15;
-  repeated double aggregation_block_memory_kb = 16;
-  repeated double aggregation_block_duration_ms = 17;
-  repeated TensorQuantifier tensor_quantifiers = 18;
+  double selection_duration_ms = 1;
+  double aggregation_duration_ms = 2;
+  repeated double aggregation_block_size = 3;
+  repeated double aggregation_block_memory_kb = 4;
+  repeated double aggregation_block_duration_ms = 5;
 }

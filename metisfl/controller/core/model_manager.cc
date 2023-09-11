@@ -69,7 +69,6 @@ void ModelManager::UpdateModel(std::vector<std::string> &to_schedule,
   }
 
   RecordAggregationTime(update_id, start_time_aggregation);
-  RecordModelSize(update_id);
   aggregator_->Reset();
 }
 
@@ -90,7 +89,7 @@ absl::flat_hash_map<std::string, double> ModelManager::ComputeScalingFactors(
         learner_manager_->GetNumTrainingExamples(selected_ids);
     return Scaling::GetDatasetScalingFactors(num_training_examples);
   } else {
-    PLOG(FATAL) << "Unsupported scaling factor.";
+    LOG(FATAL) << "Unsupported scaling factor.";
   }
 }
 
@@ -194,7 +193,4 @@ void ModelManager::RecordAggregationTime(
   metadata_[update_id].set_aggregation_duration_ms(elapsed.count());
 }
 
-void ModelManager::RecordModelSize(std::string &update_id) {
-  // TODO:
-}
 };  // namespace metisfl::controller

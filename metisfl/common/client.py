@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import Any, Callable, Optional, Union
 
 import grpc
+from loguru import logger
 from pebble import ThreadPool
 
 from metisfl.common.types import ClientParams
-from metisfl.common.logger import MetisLogger
 from metisfl.common.formatting import get_endpoint
 
 GRPC_MAX_MESSAGE_LENGTH: int = 512 * 1024 * 1024
@@ -172,7 +172,7 @@ def request_with_timeout(
         try:
             response = request_fn(request_timeout)
         except grpc.RpcError as rpc_error:
-            MetisLogger.error(
+            logger.error(
                 f"Request to failed with {rpc_error.code()}: {rpc_error.details()}")
             if rpc_error.code() == grpc.StatusCode.UNAVAILABLE:
                 time.sleep(10)

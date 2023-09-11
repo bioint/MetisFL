@@ -37,7 +37,9 @@ message TrainParams {
   uint32 batch_size = 1;
   uint32 epochs = 2;
   uint32 num_local_updates = 3;
+  // Metrics and metadata to be collected during training. Learner must return
   repeated string metrics = 4;
+  repeated string metadata = 5;
 }
 
 message EvaluateRequest {

@@ -7,7 +7,7 @@ namespace metisfl::controller {
 
 HashMapModelStore::HashMapModelStore(const int lineage_length)
     : ModelStore(lineage_length), m_model_store_cache_mutex() {
-  PLOG(INFO) << "Using InMemory Model Store.";
+  LOG(INFO) << "Using InMemory Model Store.";
 }
 
 void HashMapModelStore::Expunge() {
@@ -55,7 +55,7 @@ void HashMapModelStore::InsertModel(
         m_model_store_cache.find(learner_id) != m_model_store_cache.end()) {
       if (m_model_store_cache[learner_id].size() >= m_lineage_length) {
         auto itr_first_elem = m_model_store_cache[learner_id].begin();
-        PLOG(INFO) << "Reached max limit. Erasing oldest model.";
+        LOG(INFO) << "Reached max limit. Erasing oldest model.";
         m_model_store_cache[learner_id].erase(itr_first_elem);
       }
     }
@@ -87,7 +87,7 @@ HashMapModelStore::SelectModels(
     // Check if index is less than size of lineage
     // return empty models.
     if (index > m_model_store_cache[learner_id].size()) {
-      PLOG(WARNING) << "Index larger than lineage size";
+      LOG(WARNING) << "Index larger than lineage size";
       reply_models[learner_id].clear();
       continue;
     }

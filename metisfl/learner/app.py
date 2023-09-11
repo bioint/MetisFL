@@ -2,13 +2,13 @@
 import signal
 from typing import Optional
 
-from metisfl.common.types import ClientParams, ServerParams
-from metisfl.common.config import get_learner_id_fp
-from metisfl.learner.controller_client import GRPCClient
-from metisfl.learner.learner import Learner
-from metisfl.learner.learner_server import LearnerServer
-from metisfl.learner.message_helper import MessageHelper
-from metisfl.learner.task_manager import TaskManager
+from metisfl.common.types import ClientParams, EncryptionConfig, ServerParams
+from metisfl.learner.client import GRPCClient
+from metisfl.learner.learner import Learner, has_all
+from metisfl.learner.server import LearnerServer
+from metisfl.learner.message import MessageHelper
+from metisfl.learner.tasks import TaskManager
+from metisfl.encryption import HomomorphicEncryption
 
 
 def register_handlers(client: GRPCClient, server: LearnerServer):
@@ -26,18 +26,29 @@ def register_handlers(client: GRPCClient, server: LearnerServer):
         print("Received SIGTERM, leaving federation...")
         client.leave_federation(block=False, request_timeout=1)
         client.shutdown_client()
-        server.ShutDown()
+        server.ShutDown(None, None)
         exit(0)
 
     signal.signal(signal.SIGTERM, handler)
     signal.signal(signal.SIGINT, handler)
 
 
+def validate_learner(learner: Learner) -> bool:
+    """Returns True if the given learner has all methods, False otherwise."""
+
+    if not has_all(learner):
+        raise ValueError(
+            "Learner must have get_weights, set_weights, train, and evaluate methods"
+        )
+
+    # TODO: add more checks, e.g. if the learner has the correct signature for each method
+
+
 def app(
     learner: Learner,
     client_params: ClientParams,
     server_params: ServerParams,
-    num_training_examples: Optional[int] = None,
+    enc_config: Optional[EncryptionConfig] = None,
 ):
     """Entry point for the MetisFL Learner application.
 
@@ -49,22 +60,31 @@ def app(
         The client parameters of the Learner client. 
     server_params : ServerParams
         The server parameters of the Learner server. 
-    num_training_examples : Optional[int], (default=None)
-        The number of training examples. 
-        Used when the scaling factor is "NumTrainingExamples".
-        If not provided, this scaling factor cannot be used.
+    learner_config : Optional[EncryptionConfig]
+        The configuration of the Learner containing the Homomorphic Encryption scheme. 
     """
 
-    port = client_params.port
+    # Sanity check the learner
+    validate_learner(learner)
 
-    # FIXME: add encryption if needed
-    message_helper = MessageHelper()
+    # Setup the Homomorphic Encryption scheme if provided
+    enc = None
+    if enc_config:
+        enc = HomomorphicEncryption(
+            batch_size=enc_config.batch_size,
+            scaling_factor_bits=enc_config.scaling_factor_bits,
+            crypto_context_path=enc_config.crypto_context,
+            public_key_path=enc_config.public_key,
+            private_key_path=enc_config.private_key,
+        )
+
+    # Create the MessageHelper
+    message_helper = MessageHelper(scheme=enc)
 
     # Create the gRPC client to communicate with the Controller
     client = GRPCClient(
         client_params=client_params,
         message_helper=message_helper,
-        learner_id_fp=get_learner_id_fp(port),
     )
 
     # Create the gRPC server for the Controller to communicate with the Learner
@@ -77,13 +97,14 @@ def app(
     )
 
     # Register with the Controller
-    client.join_federation(
-        num_training_examples=num_training_examples,
-        server_params=server_params,
-    )
+    client.join_federation(client_params=ClientParams(
+        hostname=server_params.hostname,
+        port=server_params.port,
+        root_certificate=server_params.root_certificate,
+    ))
 
     # Register handlers
     register_handlers(client, server)
 
-    # Blocking until Shutdown endpoint is called
+    # Start the Learner server; blocking call
     server.start()

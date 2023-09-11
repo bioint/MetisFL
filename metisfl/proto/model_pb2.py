@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\"\x8d\x01\n\x10TensorQuantifier\x12\x1d\n\x10tensor_non_zeros\x18\x01 \x01(\rH\x00\x88\x01\x01\x12\x19\n\x0ctensor_zeros\x18\x02 \x01(\rH\x01\x88\x01\x01\x12\x19\n\x11tensor_size_bytes\x18\x03 \x01(\rB\x13\n\x11_tensor_non_zerosB\x0f\n\r_tensor_zeros\";\n\x06Tensor\x12\x0e\n\x06length\x18\x01 \x01(\r\x12\x12\n\ndimensions\x18\x02 \x03(\x03\x12\r\n\x05value\x18\x03 \x01(\x0c\"<\n\x05Model\x12\x11\n\tencrypted\x18\x01 \x01(\x08\x12 \n\x07tensors\x18\x02 \x03(\x0b\x32\x0f.metisfl.Tensorb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\";\n\x06Tensor\x12\x0e\n\x06length\x18\x01 \x01(\r\x12\x12\n\ndimensions\x18\x02 \x03(\x03\x12\r\n\x05value\x18\x03 \x01(\x0c\"<\n\x05Model\x12\x11\n\tencrypted\x18\x01 \x01(\x08\x12 \n\x07tensors\x18\x02 \x03(\x0b\x32\x0f.metisfl.Tensorb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -21,10 +21,8 @@ _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'metisfl.proto.model_pb2', _
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  _globals['_TENSORQUANTIFIER']._serialized_start=39
-  _globals['_TENSORQUANTIFIER']._serialized_end=180
-  _globals['_TENSOR']._serialized_start=182
-  _globals['_TENSOR']._serialized_end=241
-  _globals['_MODEL']._serialized_start=243
-  _globals['_MODEL']._serialized_end=303
+  _globals['_TENSOR']._serialized_start=38
+  _globals['_TENSOR']._serialized_end=97
+  _globals['_MODEL']._serialized_start=99
+  _globals['_MODEL']._serialized_end=159
 # @@protoc_insertion_point(module_scope)

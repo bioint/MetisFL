@@ -1,6 +1,6 @@
 
 """ MetisFL driver package. """
 
-from .driver_session import DriverSession
+from .driver import DriverSession
 
 __all__ = ['DriverSession']

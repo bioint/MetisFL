@@ -32,18 +32,18 @@ std::unique_ptr<ModelStore> CreateModelStore(
   if (model_store == "InMemory")
     return absl::make_unique<HashMapModelStore>(lineage_length);
 
-  PLOG(FATAL) << "Unsupported model store.";
+  LOG(FATAL) << "Unsupported model store.";
 }
 
 std::unique_ptr<Scheduler> CreateScheduler(
-    const std::string &communication_protocol) {
-  if (communication_protocol == "Synchronous" ||
-      communication_protocol == "SemiSynchronous")
+    const std::string &scheduler) {
+  if (scheduler == "Synchronous" ||
+      scheduler == "SemiSynchronous")
     return absl::make_unique<SynchronousScheduler>();
-  if (communication_protocol == "Asynchronous")
+  if (scheduler == "Asynchronous")
     return absl::make_unique<AsynchronousScheduler>();
 
-  PLOG(FATAL) << "Unsupported communication protocol.";
+  LOG(FATAL) << "Unsupported scheduler.";
 }
 
 std::unique_ptr<Selector> CreateSelector() {

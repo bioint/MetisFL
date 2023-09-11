@@ -1,4 +1,5 @@
 
+#include <glog/logging.h>
 #include <pybind11/pybind11.h>
 
 #include <iostream>
@@ -31,8 +32,8 @@ class ControllerWrapper {
     GlobalTrainParams global_train_params = {};
     global_train_params.aggregation_rule =
         params["aggregation_rule"].cast<std::string>();
-    global_train_params.communication_protocol =
-        params["communication_protocol"].cast<std::string>();
+    global_train_params.scheduler =
+        params["scheduler"].cast<std::string>();
     global_train_params.scaling_factor =
         params["scaling_factor"].cast<std::string>();
     global_train_params.participation_ratio =
@@ -67,7 +68,7 @@ class ControllerWrapper {
   }
 
   void Shutdown() {
-    PLOG(INFO) << "Wrapping up resources and shutting down...";
+    LOG(INFO) << "Wrapping up resources and shutting down...";
     servicer->StopService();
     servicer->WaitService();
   }

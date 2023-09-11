@@ -74,7 +74,7 @@ TEST_F(SecAggTest, SecureAggregationCKKSwithFiles) /* NOLINT */ {
   // values.
   bool equal_vectors = 1;
   if (model_values.size() != aggregated_dec.size()) {
-    PLOG(INFO) << "Different sizes: " << model_values.size() << " "
+    LOG(INFO) << "Different sizes: " << model_values.size() << " "
                << aggregated_dec.size();
     equal_vectors = 0;
   } else {
@@ -89,7 +89,7 @@ TEST_F(SecAggTest, SecureAggregationCKKSwithFiles) /* NOLINT */ {
       // only for this case, because we are working with integers.
       diff = abs(trunc(diff));
       if (diff != 0) {
-        PLOG(INFO)
+        LOG(INFO)
             << "Numbers after truncation and absolute value are not equal."
             << " Their difference is: " << diff;
         equal_vectors = 0;

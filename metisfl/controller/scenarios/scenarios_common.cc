@@ -81,9 +81,9 @@ namespace metisfl::controller
   {
 
     // The added padding is only for visual symmetry
-    PLOG(INFO) << "Generating model...";
-    PLOG(INFO) << "Tensors: " << num_of_tensors;
-    PLOG(INFO) << "Values per tensor: " << values_per_tensor;
+    LOG(INFO) << "Generating model...";
+    LOG(INFO) << "Tensors: " << num_of_tensors;
+    LOG(INFO) << "Values per tensor: " << values_per_tensor;
     PlaintextTensor plainTextTensor;
     Tensor tensor;
     Model_Variable modelVariable;
@@ -142,7 +142,7 @@ namespace metisfl::controller
       (*model.add_tensors()) = modelVariable;
     }
 
-    PLOG(INFO) << "Model generated!";
+    LOG(INFO) << "Model generated!";
 
     return model;
   }
@@ -180,7 +180,7 @@ namespace metisfl::controller
       participating_states[id] = &learners_.at(id);
     }
 
-    PLOG(INFO) << "Participants memory usage: " << GetTotalMemory();
+    LOG(INFO) << "Participants memory usage: " << GetTotalMemory();
 
     auto scaling_factors = scaler_->ComputeScalingFactors(
         community_model,
@@ -201,7 +201,7 @@ namespace metisfl::controller
     // Compute number of blocks.
     int num_of_blocks =
         std::ceil(participating_states.size() / aggregation_stride_length);
-    PLOG(INFO) << "Stride length: "
+    LOG(INFO) << "Stride length: "
                << aggregation_stride_length
                << " and total blocks to compute: "
                << num_of_blocks;
@@ -237,7 +237,7 @@ namespace metisfl::controller
       if (block_size == aggregation_stride_length || itr == last_elem_itr)
       {
 
-        PLOG(INFO) << "Computing for block size: " << block_size;
+        LOG(INFO) << "Computing for block size: " << block_size;
         *metadata_.mutable_model_aggregation_block_size()->Add() = block_size;
 
         /*! --- SELECT MODELS ---
@@ -286,7 +286,7 @@ namespace metisfl::controller
             elapsed_time_block_aggregation.count();
 
         long block_memory = GetTotalMemory();
-        PLOG(INFO) << "Aggregate block memory usage: " << block_memory;
+        LOG(INFO) << "Aggregate block memory usage: " << block_memory;
         *metadata_.mutable_model_aggregation_block_memory_kb()->Add() = block_memory;
 
         // Cleanup. Clear sentinel block variables and reset

@@ -1,12 +1,6 @@
 syntax = "proto3";
 package metisfl;
 
-message TensorQuantifier {
-  optional uint32 tensor_non_zeros = 1; // We set the field as optional because we want to print/record the zero values.
-  optional uint32 tensor_zeros = 2; // We set the field as optional because we want to print/record the zero values.
-  uint32 tensor_size_bytes = 3;
-}
-
 message Tensor {
   uint32 length = 1;
   repeated int64 dimensions = 2;

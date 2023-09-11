@@ -14,7 +14,7 @@
 #include "metisfl/controller/core/controller_servicer.h"
 
 void sigint_handler(int code) {
-  PLOG(INFO) << "Received SIGINT (code " << code << ")" << std::endl;
+  LOG(INFO) << "Received SIGINT (code " << code << ")" << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -22,13 +22,13 @@ int main(int argc, char **argv) {
   FLAGS_alsologtostderr = true;
   google::InitGoogleLogging(argv[0]);
 
-  PLOG(INFO) << "Starting controller with params: ";
+  LOG(INFO) << "Starting controller with params: ";
 
   signal(SIGINT, sigint_handler);
 
   // FIXME: Add params
 
-  PLOG(INFO) << "Exiting... Bye!";
+  LOG(INFO) << "Exiting... Bye!";
 
   return 0;
 }

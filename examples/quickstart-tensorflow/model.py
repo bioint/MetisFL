@@ -3,11 +3,20 @@ from typing import List, Tuple
 
 import tensorflow as tf
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # or any {'0', '1', '2'}
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    try:
+        for gpu in gpus:
+            tf.config.experimental.set_memory_growth(gpu, True)
+    except RuntimeError as e:
+        print(e)
 
 
 def get_model(
-        input_shape: Tuple[int] = (28, 28, 1),
+        input_shape: Tuple[int] = (32, 32, 3),
         dense_units_per_layer: List[int] = [256, 128],
         num_classes: int = 10) -> tf.keras.Model:
     """A helper function to create a simple sequential model.

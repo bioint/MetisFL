@@ -25,8 +25,8 @@ class LearnerManager {
   grpc::CompletionQueue eval_tasks_cq_;
 
   // learner_id -> value
+  // TODO: how does the controller gets these values?
   LearnersMap learners_;
-  LearnerStubMap learners_stub_;
   TrainParamsMap train_params_;
   EvaluationParamsMap eval_params_;
 
@@ -37,9 +37,6 @@ class LearnerManager {
 
   // learner_id -> {}
   TrainResultsMap latest_train_results_;
-
-  // learner_id -> num_training_examples
-  absl::flat_hash_map<std::string, int> num_training_examples_;
 
  public:
   LearnerManager();
@@ -59,8 +56,13 @@ class LearnerManager {
   void UpdateTrainResults(const Task &task, const std::string &learner_id,
                           const TrainResults &metadata);
 
+  void UpdateTrainParams(const std::vector<std::string> &learner_ids,
+                         const int semi_sync_lambda);
+
   // Public methods
-  absl::StatusOr<std::string> AddLearner(const Learner &learner);
+  absl::StatusOr<std::string> AddLearner(const Learner &learner,
+                                         const bool is_semi_sync,
+                                         const std::string &scaling_factor);
 
   std::vector<std::string> GetLearnerIds() const;
 

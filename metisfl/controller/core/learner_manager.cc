@@ -6,7 +6,6 @@ using google::protobuf::util::TimeUtil;
 // Constructor
 LearnerManager::LearnerManager()
     : learners_(),
-      learners_stub_(),
       train_params_(),
       eval_params_(),
       learners_mutex_(),
@@ -21,7 +20,9 @@ LearnerManager::LearnerManager()
 }
 
 // Public methods
-absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
+absl::StatusOr<std::string> LearnerManager::AddLearner(
+    const Learner &learner, bool is_semi_sync,
+    const std::string &scaling_factor) {
   std::lock_guard<std::mutex> learners_guard(learners_mutex_);
 
   std::string learner_id =
@@ -30,9 +31,19 @@ absl::StatusOr<std::string> LearnerManager::AddLearner(const Learner &learner) {
   if (learners_.contains(learner_id)) {
     return absl::AlreadyExistsError("Learner has already joined.");
   }
-
   learners_[learner_id] = learner;
-  learners_stub_[learner_id] = CreateLearnerStub(learner_id);
+
+  TrainParams train_params;
+  if (is_semi_sync) {
+    train_params.add_metadata("processing_ms_per_batch");
+    train_params.add_metadata("processing_ms_per_epoch");
+  }
+  if (scaling_factor == "NumTrainingExamples")
+    train_params.add_metadata("num_training_examples");
+  if (scaling_factor == "NumCompletedBatches")
+    train_params.add_metadata("num_completed_batches");
+
+  train_params_[learner_id] = train_params;
 
   return learner_id;
 }
@@ -53,7 +64,6 @@ absl::Status LearnerManager::RemoveLearner(const std::string &learner_id) {
   }
 
   learners_.erase(learner_id);
-  learners_stub_.erase(learner_id);
   train_params_.erase(learner_id);
   eval_params_.erase(learner_id);
 
@@ -100,10 +110,11 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumTrainingExamples(
   absl::flat_hash_map<std::string, int> num_training_examples;
 
   for (const auto &learner_id : learner_ids) {
-    num_training_examples[learner_id] =
-        learners_[learner_id].num_training_examples();
+    num_training_examples[learner_id] = (int)latest_train_results_[learner_id]
+                                            .metadata()
+                                            .find("num_training_examples")
+                                            ->second;
   }
-
   return num_training_examples;
 }
 
@@ -121,43 +132,39 @@ absl::flat_hash_map<std::string, int> LearnerManager::GetNumCompletedBatches(
   return num_completed_batches;
 }
 
-// FIXME:
-// void LearnerManager::UpdateLearnersTaskTemplates(
-//     std::vector<std::string> &learners) {
-//   const auto &communication_protocol =
-//       global_train_params_.communication_protocol;
-//   if (communication_protocol == "SemiSynchronous" &&
-//       (global_iteration_ == 2 ||
-//        global_train_params_.semi_sync_recompute_num_updates)) {
-//     // Finds the slowest learner.
-//     float ms_per_epoch_slowest = std::numeric_limits<float>::min();
-//     for (const auto &learner_id : learners) {
-//       const auto &metadata = train_results_[learner_id].front();
-//       if (metadata.processing_ms_per_epoch() > ms_per_epoch_slowest) {
-//         ms_per_epoch_slowest = metadata.processing_ms_per_epoch();
-//       }
-//     }
+void LearnerManager::UpdateTrainParams(
+    const std::vector<std::string> &learner_ids, const int semi_sync_lambda) {
+  // Finds the slowest learner.
+  float ms_per_epoch_slowest = std::numeric_limits<float>::min();
+  for (const auto &learner_id : learner_ids) {
+    auto processing_ms_per_epoch = train_results_[learner_id]
+                                       .metadata()
+                                       .find("processing_ms_per_epoch")
+                                       ->second;
+    if (processing_ms_per_epoch > ms_per_epoch_slowest) {
+      ms_per_epoch_slowest = processing_ms_per_epoch;
+    }
+  }
 
-//     // Calculates the allowed time for training.
-//     float t_max = static_cast<float>(global_train_params_.semi_sync_lambda) *
-//                   ms_per_epoch_slowest;
+  // Calculates the allowed time for training.
+  float t_max = static_cast<float>(semi_sync_lambda) * ms_per_epoch_slowest;
 
-//     // Updates the task templates based on the slowest learner.
-//     for (const auto &learner_id : learners) {
-//       const auto &metadata = train_results_[learner_id].front();
+  // Updates the task templates based on the slowest learner.
+  for (const auto &learner_id : learner_ids) {
+    auto processing_ms_per_batch = train_results_[learner_id]
+                                       .metadata()
+                                       .find("processing_ms_per_batch")
+                                       ->second;
+    if (processing_ms_per_batch == 0) {
+      // FIXME: Better error handling.
+      LOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
+      processing_ms_per_batch = 1;
+    }
+    int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
 
-//       auto processing_ms_per_batch = metadata.processing_ms_per_batch();
-//       if (processing_ms_per_batch == 0) {
-//         PLOG(ERROR) << "Processing ms per batch is zero. Setting to 1.";
-//         processing_ms_per_batch = 1;
-//       }
-//       int num_local_updates = std::ceil(t_max / processing_ms_per_batch);
-
-//       auto &task_template = train_params_[learner_id];
-//       task_template.set_num_local_updates(num_local_updates);
-//     }
-//   }
-// }
+    train_params_[learner_id].set_num_local_updates(num_local_updates);
+  }
+}
 
 // Private methods
 LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
@@ -165,14 +172,12 @@ LearnerStub LearnerManager::CreateLearnerStub(const std::string &learner_id) {
   auto port = learners_[learner_id].port();
   auto target = absl::StrCat(hostname, ":", port);
   auto &root_certificate = learners_[learner_id].root_certificate_bytes();
-  auto &public_certificate = learners_[learner_id].public_certificate_bytes();
 
   auto ssl_creds = grpc::InsecureChannelCredentials();
 
-  if (!root_certificate.empty() && !public_certificate.empty()) {
+  if (!root_certificate.empty()) {
     grpc::SslCredentialsOptions ssl_opts;
     ssl_opts.pem_root_certs = root_certificate;
-    ssl_opts.pem_cert_chain = public_certificate;
     ssl_creds = grpc::SslCredentials(ssl_opts);
   }
 
@@ -188,8 +193,8 @@ void LearnerManager::SendTrainAsync(const std::string &learner_id,
                                     const Model &model) {
   auto task_id = GenerateRadnomId();
   tasks_[task_id] = Task();
-  tasks_[task_id].set_id(task_id);
-  tasks_[task_id].set_learner_id(learner_id);
+  *tasks_[task_id].mutable_id() = task_id;
+  *tasks_[task_id].mutable_learner_id() = learner_id;
   *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
 
   TrainRequest request;
@@ -218,8 +223,8 @@ void LearnerManager::DigestTrainResponses() {
 
     if (call) {
       if (!call->status.ok()) {
-        PLOG(ERROR) << "Train RPC request to learner: " << call->learner_id
-                    << " failed with error: " << call->status.error_message();
+        LOG(ERROR) << "Train RPC request to learner: " << call->learner_id
+                   << " failed with error: " << call->status.error_message();
       }
     }
     delete call;
@@ -230,8 +235,8 @@ void LearnerManager::SendEvaluateAsync(const std::string &learner_id,
                                        const Model &model) {
   auto task_id = GenerateRadnomId();
   tasks_[task_id] = Task();
-  tasks_[task_id].set_id(task_id);
-  tasks_[task_id].set_learner_id(learner_id);
+  *tasks_[task_id].mutable_id() = task_id;
+  *tasks_[task_id].mutable_learner_id() = learner_id;
   *tasks_[task_id].mutable_sent_at() = TimeUtil::GetCurrentTime();
 
   EvaluateRequest request;
@@ -267,9 +272,9 @@ void LearnerManager::DigestEvaluateResponses() {
         *tasks_[task_id].mutable_completed_at() =
             call->reply.task().completed_at();
       } else {
-        PLOG(ERROR) << "EvaluateModel RPC request to learner: "
-                    << call->learner_id
-                    << " failed with error: " << call->status.error_message();
+        LOG(ERROR) << "EvaluateModel RPC request to learner: "
+                   << call->learner_id
+                   << " failed with error: " << call->status.error_message();
       }
     }
     delete call;

@@ -2,7 +2,7 @@ import os
 import argparse
 
 from typing import Optional
-from metisfl.encryption import fhe
+from metisfl.encryption.fhe import CKKS
 
 
 def get_file_path(file_path: str, default_file_name: str) -> str:
@@ -14,8 +14,8 @@ def get_file_path(file_path: str, default_file_name: str) -> str:
 
 
 def generate_keys(
-    batch_size: int = 8192,
-    scaling_factor_bits: int = 40,
+    batch_size: int = 4096,
+    scaling_factor_bits: int = 52,
     crypto_context_path: Optional[str] = "crypto_context.txt",
     public_key_path: Optional[str] = "public_key.txt",
     private_key_path: Optional[str] = "private_key.txt"
@@ -26,9 +26,9 @@ def generate_keys(
 
     Parameters
     ----------
-    batch_size : int, (default=8192)
+    batch_size : int, (default=4096)
         The batch size of the encryption scheme.
-    scaling_factor_bits : int, (default=40)
+    scaling_factor_bits : int, (default=52)
         The number of bits to use for the scaling factor.
     crypto_context_path : Optional[str], (default="crypto_context.txt")
         The path to the crypto context file. By default "crypto_context.txt"
@@ -43,13 +43,10 @@ def generate_keys(
     public_key_path = get_file_path(public_key_path, "public_key.txt")
     private_key_path = get_file_path(private_key_path, "private_key.txt")
 
-    he_scheme = fhe.CKKS(batch_size, scaling_factor_bits)
-
-    he_scheme.gen_crypto_params_files(
-        crypto_context_path,
-        public_key_path,
-        private_key_path
-    )
+    CKKS.gen_crypto_params_files(batch_size, scaling_factor_bits,
+                                 crypto_context_path,
+                                 public_key_path,
+                                 private_key_path)
 
 
 if __name__ == "__main__":
