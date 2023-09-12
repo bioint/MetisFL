@@ -87,7 +87,25 @@ def iid_partition_dir(
         for j in range(start, end):
             shutil.move(files[j], path + "/chunk" + str(i))
             
-    
+
+def iid_repartition_dir(
+    path: str,
+    num_partitions: int,
+    chunk_prefix: str = "chunk",
+) -> None:
+    """ Repartition all files in the chuck-ed dir into IID chunks and saves them into new subdirs named chunk0, chunk1, etc.
+        This is useful when you want to change the number of partitions.
+        
+    Parameters
+    ----------
+    path : str
+        The path to the directory containing the files to be partitioned.
+    num_partitions : int
+        The number of partitions.
+    chunk_prefix : str
+        The prefix of the subdirs containing the files to be repartitioned.     
+    """    
+    pass
 
 def niid_partition(
     x_train: Union[np.ndarray, List[np.ndarray]],
