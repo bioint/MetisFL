@@ -4,7 +4,7 @@
 <picture>
   <img 
     style="border: 1px solid black; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5);"
-  alt="MetisFL TensforFlow Quickstart" src="../../docs/img/gif/quickstart-pytorch.gif">
+  alt="MetisFL TensforFlow Quickstart" src="https://docs.nevron.ai/img/gif/quickstart-pytorch.gif">
 </picture>
 </div>
 
