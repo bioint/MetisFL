@@ -1,20 +1,5 @@
-# 🚀 MetisFL Quickstart: Tensorflow
+# 🚀 MetisFL Generative AI Tutorial
 
-<div align="center">
-<picture>
-  <img 
-    style="border: 1px solid black; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5);"
-  alt="MetisFL TensforFlow Quickstart" src="../../docs/img/gif/quickstart-tensorflow.gif">
-</picture>
-</div>
-
-&nbsp;
-
-This example shows how to use MetisFL to train a federated model. The example uses Tensorflow as the machine learning framework and the CIFAR10 dataset. This guide describes the main steps and the full scripts can be found in the [examples/quickstart-tensorflow](https://github.com/NevronAI/metisfl/tree/main/examples/quickstart-tensorflow) directory.
-
-It is recommended to run this example in an isolated Python environment. You can create a new environment using [conda](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) or [virtualenv](https://virtualenv.pypa.io/en/latest/).
-
-The example consists of the Controller and 3 learners all running in the same machine. The Controller is responsible for sending training and evaluation tasks to the learners and for aggregating the model parameters. The learners are responsible for training the model on the local dataset and communicating with the server. The main entry point to the MetisFL framework is the Driver. The Driver is responsible for coordinating the communication between the clients and the server, for initializing the weights of the shared model, monitoring the federated training and shutting down the system when the training is done.
 
 ## ⚙️ Prerequisites
 
@@ -24,62 +9,145 @@ Before running this example, please make sure you have installed the MetisFL pac
 pip install metisfl
 ```
 
-The default installation of MetisFL does not include any backend. Since this example uses Tensorflow, you need to install that if you haven't already.
+The default installation of MetisFL does not include any backend. This example uses Pytorch as a backend as well as torchvision to load the CIFAR10 dataset. Both can be installed using pip.
 
 ```bash
-pip install tensorflow
+pip install torch torchvision
 ```
 
 ## 💾 Dataset
 
-The dataset used in this example is the [CIFAR10](https://www.cs.toronto.edu/~kriz/cifar.html) dataset. The dataset is downloaded and prepared in the `load_data` function.
+The dataset we use is the CIFAR10 and the example is based on the model training example in the [Pytorch documentation](https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html). First, we load the dataset and split it into `num_learners` chunks.
 
 ```python
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.cifar10.load_data()
+def load_data(num_learners: int) -> Tuple:
+    """Load CIFAR-10  and partition it into num_learners clients, iid."""
+
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize(
+            (0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+    )
+
+    trainset = CIFAR10(".", train=True, download=True, transform=transform)
+    testset = CIFAR10(".", train=False, download=True, transform=transform)
+
+    x_chunks, y_chunks = iid_partition(
+        x_train=trainset.data, y_train=trainset.targets, num_partitions=num_learners)
+
+    # Convert the numpy arrays to torch tensors and make it channels first
+    x_chunks = [torch.Tensor(x).permute(0, 3, 1, 2) for x in x_chunks]
+    y_chunks = [torch.Tensor(y).long() for y in y_chunks]
+    trainset_chunks = [TensorDataset(x, y) for x, y in zip(x_chunks, y_chunks)]
+
+    # Same for the test set
+    test_data = torch.Tensor(testset.data).permute(0, 3, 1, 2)
+    test_labels = torch.Tensor(testset.targets).long()
+    testset = TensorDataset(test_data, test_labels)
+
+    return trainset_chunks, testset
 ```
 
-To prepare the dataset for simulated federated learning, we need to split it into chunks and distribute them to the learners. We can use the `iid_partition` function in `metisfl.common.utils` module to do this.
-
-```python
-from metisfl.common.utils import iid_partition
-x_chunks, y_chunks = iid_partition(x_train, y_train, num_partitions=3, seed=1990)
-```
-
-This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. It produces independent and identically distributed (IID) chunks of the dataset. By keeping the seed constant, we can ensure that the same chunks are produced every time.
+To split the dataset we user the `iid_partition` function from the `metisfl.common.utils` module. This function takes the dataset and splits it into `num_partitions` chunks. The optional `seed` parameter is used to control the randomness of the split and can be used to reproduce the same split. It produces independent and identically distributed (IID) chunks of the dataset. Note that the data are transformed channels first (NCHW) as expected by Pytorch.
 
 ## 🧠 Model
 
-The model used in this example is a simple Dense Neural Network with two hidden layers and a softmax output layer. The model is defined in the `get_model` function in the [model.py](https://github.com/NevronAI/metisfl/blob/main/examples/quickstart-tensorflow/model.py) file. The function allows for some flexibility in the model definition and can be used to define different models or tune this one.
+The model used in this example is a simple CNN and is defined in the `model.py` file.
 
 ```python
-def get_model(
-        input_shape: Tuple[int] = (32, 32, 3),
-        dense_units_per_layer: List[int] = [256, 128],
-        num_classes: int = 10) -> tf.keras.Model:
+class Model(nn.Module):
+    """A simple CNN for CIFAR-10."""
 
-    Dense = tf.keras.layers.Dense
-    Flatten = tf.keras.layers.Flatten
-    model = tf.keras.models.Sequential()
-    model.add(Flatten(input_shape=input_shape))
+    def __init__(self) -> None:
+        super(Model, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
 
-    for units in dense_units_per_layer:
-        model.add(Dense(units=units, activation="relu"))
-    model.add(Dense(num_classes, activation="softmax"))
-
-    return model
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
 ```
 
-Note that on the top of the file we set the following Tensorflow configuration:
+## 👨‍💻 MetisFL Learner
+
+The main abstraction of the client is called MetisFL Learner. The MetisFL Learner is responsible for training the model on the local dataset and communicating with the server. Following the [class](https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py) that must be implemented by the learner, we first start by the `get_weights` and `set_weights` methods. These methods are used by the Controller to get and set the model parameters. The `get_weights` method returns a list of numpy arrays and the `set_weights` method takes a list of numpy arrays as input.
 
 ```python
-tf.config.experimental.set_memory_growth(gpu, True)
+def get_weights(self):
+    return [val.cpu().numpy() for _, val in self.model.state_dict().items()]
+
+def set_weights(self, parameters):
+    params = zip(self.model.state_dict().keys(), parameters)
+    state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params})
+    self.model.load_state_dict(state_dict, strict=True)
 ```
 
-This is required to avoid Tensorflow allocating all the GPU memory to the first learner. For more information, please have a look at the [Tensorflow documentation](https://www.tensorflow.org/guide/gpu#limiting_gpu_memory_growth).
+Then, we implement the `train` and `evaluate` methods. Both of them take the model weights and a dictionary of configuration parameters as input. The `train` method returns the updated model weights, a dictionary of metrics and a dictionary of metadata. The `evaluate` method returns a dictionary of metrics.
+
+```python
+def train(self, parameters, config):
+    self.set_weights(parameters)
+    epochs = config["epochs"] if "epochs" in config else 1
+    losses = []
+    accs = []
+    for _ in range(epochs):
+        for images, labels in self.trainloader:
+            images, labels = images.to(DEVICE), labels.to(DEVICE)
+            self.optimizer.zero_grad()
+            outputs = self.model(images)
+            loss = self.criterion(outputs, labels)
+            loss.backward()
+            self.optimizer.step()
+
+            _, predicted = torch.max(outputs.data, 1)
+            total = labels.size(0)
+            correct = (predicted == labels).sum().item()
+            accuracy = correct / total
+
+            losses.append(loss.item())
+            accs.append(accuracy)
+
+    metrics = {
+        "accuracy": np.mean(accs),
+        "loss": np.mean(losses),
+    }
+    metadata = {
+        "num_training_examples": len(self.trainset),
+    }
+    return self.get_weights(), metrics, metadata
+```
+
+```python
+def evaluate(self, parameters, config):
+    self.set_weights(parameters)
+
+    correct, total, loss = 0, 0, 0.0
+    with torch.no_grad():
+        for data in self.testloader:
+            images, labels = data[0].to(DEVICE), data[1].to(DEVICE)
+            outputs = self.model(images)
+            loss += self.criterion(outputs, labels).item()
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+
+    accuracy = correct / total
+    loss = loss / total
+
+    return {"accuracy": float(accuracy), "loss": float(loss)}
+```
 
 ## 🎛️ MetisFL Controller
 
-The main abstraction of the server is called MetisFL Controller. The Controller is responsible for sending training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10).
+The Controller is responsible for send training and evaluation tasks to the learners and for aggregating the model parameters. The entrypoint for the Controller is `Controller` class found [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/controller/controller_instance.py#L10). The `Controller` class is initialized with the parameters of the Learners and the global training configuration.
 
 ```python
 controller_params = ServerParams(
@@ -90,94 +158,43 @@ controller_params = ServerParams(
 controller_config = ControllerConfig(
     aggregation_rule="FedAvg",
     scheduler="Synchronous",
-    scaling_factor="NumTrainingExamples",
+    scaling_factor="NumParticipants",
 )
 
 model_store_config = ModelStoreConfig(
     model_store="InMemory",
     lineage_length=0
 )
-
-controller = Controller(
-    server_params=controller_params,
-    controller_config=controller_config,
-    model_store_config=model_store_config,
-)
 ```
 
-The ServerParams define the hostname and port of the Controller and, optionally, the paths to the root certificate, server certificate and private key. The ControllerConfig defines the aggregation rule, scheduler and model scaling factor. For the full set of options in the ControllerConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Note that the "NumTrainingExamples" scaling factor requires that the Learner instance provides the size of its training dataset at initialization. Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`).
+The ServerParams define the hostname and port of the Controller and the paths to the root certificate, server certificate and private key. Certificates are optional and if not given then SSL is not active. The ControllerConfig defines the aggregation rule, scheduler and model scaling factor.
 
-## 👨‍💻 MetisFL Learner
-
-The MetisFL Learner is responsible for training the model on the local dataset and communicating with the server. For the training tasks, the communication between the Learner and Controller is asynchronous at the protocol level. The Controller sends the training task to the Learner and the Learner sends back a simple acknowledgement of receiving the task. When the Learner finishes the task it sends the results back to the Controller by calling its `TrainDone` endpoint. For the evaluation tasks, the communication is synchronous at the protocol level. The Controller sends the evaluation task to the Learner and waits for the results using the same channel. The abstract class that defines the Learner can be found [here](https://github.com/NevronAI/metisfl/blob/main/metisfl/learner/learner.py).
-
-The main reason for choosing such an architecture is the fact that training task normally take long to complete and, by releasing the communication channel after sending the task, the Controller can scale and support thousands of Learners without having to maintain a connection with each one of them.
-
-For this quickstart example, the Learner that we are using is the following:
-
-```python
-class TFLearner(Learner):
-
-    def __init__(self, x_train, y_train, x_test, y_test):
-        super().__init__()
-        self.model = get_model()
-        self.model.compile(
-            loss="sparse_categorical_crossentropy", optimizer="adam", metrics=["accuracy"]
-        )
-        self.x_train = x_train
-        self.y_train = y_train
-        self.x_test = x_test
-        self.y_test = y_test
-
-    def get_weights(self):
-        return self.model.get_weights()
-
-    def set_weights(self, parameters):
-        self.model.set_weights(parameters)
-
-    def train(self, parameters, config):
-        self.model.set_weights(parameters)
-        batch_size = config["batch_size"] if "batch_size" in config else 64
-        epochs = config["epochs"] if "epochs" in config else 3
-        res = self.model.fit(x=self.x_train, y=self.y_train,
-                             batch_size=batch_size, epochs=epochs)
-        parameters = self.model.get_weights()
-        return parameters, res.history
-
-    def evaluate(self, parameters, config):
-        self.model.set_weights(parameters)
-        loss, accuracy = self.model.evaluate(self.x_test, self.y_test)
-        return {"accuracy": float(accuracy), "loss": float(loss)}
-```
-
-The `get_weights()` and `set_weights()` functions are used to get and set the model parameters. The `train()` and `evaluate()` functions are used to train and evaluate the model, respectively, on the local dataset. Both of these methods will get the model parameters and a configuration dictionary as input. The configuration dictionary is used to pass additional parameter, such as the batch size, local epochs, optimizer parameters, etc. It is up to the learner to decide how to use these parameters. Finally, note that the `train` method returns the `num_training_examples` as part of the training logs. This is required for the `NumTrainingExamples` scaling factor previously mentioned in the Controller section.
+For the full set of options in the ControllerConfig please have a look [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L99). Finally, this example uses an "InMemory" model store with no eviction (`lineage_length=0`). A positive value for `lineage_length` means that the Controller will start dropping models from the model store after the given number of models, starting from the oldest.
 
 ## 🚦 MetisFL Driver
 
-The MetisFL Driver is the main entry point to the MetisFL framework. It is responsible for coordinating the communication between the clients and the server, for initializing the weights of the shared model, monitoring the federated training and shutting down the system when the training is done. The Driver is initialized with the Controller and the Learners.
+The MetisFL Driver is the main entry point to the MetisFL application. It will initialize the model weights by requesting the model weights from a random learner and then distributing the weights to all learners and the controller. Additionally, it monitor the federation and will stop the training process when the termination condition is met.
 
 ```python
-def get_learner_server_params(learner_index, max_learners=3):
-    ports = list(range(50002, 50002 + max_learners))
-
-    return ServerParams(
-        hostname="localhost",
-        port=ports[learner_index],
-    )
-
-termination_signals = TerminationSingals(federation_rounds=5)
+# Setup the environment.
+termination_signals = TerminationSingals(
+    federation_rounds=5)
 learners = [get_learner_server_params(i) for i in range(max_learners)]
+is_async = controller_config.scheduler == 'Asynchronous'
 
+# Start the driver session.
 session = DriverSession(
     controller=controller_params,
     learners=learners,
     termination_signals=termination_signals,
+    is_async=is_async,
 )
 
+# Run
 logs = session.run()
 ```
 
-The TerminationSignals control when the federated training is stopped. For this example, we will stop the training when we reach 5 federation rounds. For other possible termination signals, please have a look at the class definition and the docstring here [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L18).
+To see and experiment with the different termination conditions, please have a look at the TerminationsSignals class [here](https://github.com/NevronAI/metisfl/blob/127ad7147133d25188fc07018f2d031d6ad1b622/metisfl/common/types.py#L18).
 
 ## 🎬 Running the example
 
@@ -190,23 +207,21 @@ python controller.py
 Then, start the Learners.
 
 ```bash
-python learner.py -l ID
+python learner.py -l X
 ```
 
-where `ID` is the numerical id of the Learner (1,2,3). Please make sure to start the controller before the Learners otherwise the Learners will not be able to connect to the Controller. Finally, start the Driver.
+where `X` is the numerical id of the Learner (1,2,3). Note that both the learner and driver scripts have been configured to use 3 learners by default. If you want to experiment with a different number of learners, you need to change the `max_learners` variable in both scripts. Also, please make sure to start the controller before the Learners otherwise the Learners will not be able to connect to the Controller.
+
+Finally, start the Driver.
 
 ```bash
 python driver.py
 ```
 
-The driver will run the federated training for 5 rounds and then stop. The training logs will be save in the `results.json` file in the current directory.
+The Driver will start the training process and each terminal will show the progress. The experiment will run for 5 federation rounds and then stop. The logs will be saved in the `results.json` file in the current directory.
 
 ## 🚀 Next steps
 
-Congratulations👏 You have successfully run your first federated learning experiment with MetisFL and you should see an output similar to the image at the top of this page. There are multiple way with which you can experiment and extend this example. Here are some ideas:
-
-- Try varying the number of learners and see how you partition the dataset.
-- Try different models or different hyperparameters on the existing model and see how the federated training converges.
-- Try different aggregation rules and schedulers.
+Congratulations 👏 you have successfully run your first MetisFL federated learning experiment using Pytorch! And you should see an output similar to the image on the top of this page. You may notice that the performance of the model is not that good. You can try to improve it by experimenting both the the federated learning parameters (e.g., the number of learners, federation rounds, aggregation rule) as well as with the typical machine learning parameters (e.g., learning rate, batch size, number of epochs, model architecture).
 
 Please share your results with us or ask any questions that you might have on our [Slack channel](https://nevronai.slack.com/archives/C05E9HCG0DB). We would love to hear from you!
