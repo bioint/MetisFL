@@ -4,8 +4,8 @@ Here, we present the internal mechanisms of MetisFL with respect to federation i
 
 <p align="center">
 <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-FederationLifecycle-02.png" width="700px">
-    <img alt="Federation Lifecycle" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-FederationLifecycle-01.png" width="700px">
+    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-FederationLifecycle-02.webp" width="700px">
+    <img alt="Federation Lifecycle" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-FederationLifecycle-01.webp" width="700px">
 </picture>
 </p>
 
@@ -19,8 +19,8 @@ Before the training round starts, the controller creates/defines the model train
 
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-TrainingRound-02.png" width="700px">
-        <img alt="Training Round with Requests" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-TrainingRound-01.png" width="700px">
+        <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-TrainingRound-02.webp" width="700px">
+        <img alt="Training Round with Requests" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-TrainingRound-01.webp" width="700px">
     </picture>
 </p>
 
@@ -28,8 +28,8 @@ The Learner receives the task through the Learner Servicer process and submits t
 
 <p align="center">
 <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-TrainingRound-02.png" width="700px">
-    <img alt="Training Round with Requests" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-TrainingRound-01.png" width="700px">
+    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-TrainingRound-02.webp" width="700px">
+    <img alt="Training Round with Requests" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-TrainingRound-01.webp" width="700px">
 </picture>
 </p>
 
@@ -39,8 +39,8 @@ The submitted training task is registered with a callback function that will han
 
 <div align="center">
 <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-EvaluationRound-02.png" width="700px">
-    <img alt="Evaluation Round with Requests" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-EvaluationRound-01.png" width="700px">
+    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Procedures-EvaluationRound-02.webp" width="700px">
+    <img alt="Evaluation Round with Requests" src="https://docs.nevron.ai/img/dark/MetisFL-Procedures-EvaluationRound-01.webp" width="700px">
 </pictyre>
 </div>
 

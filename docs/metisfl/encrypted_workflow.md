@@ -1,7 +1,7 @@
 <div align="center">
  <picture> 
-    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-ExecutionFlow-WithEncryption-02.png" width="700px">
-    <img alt="MetisFL Execution Flow with FHE" src="https://docs.nevron.ai/img/dark/MetisFL-ExecutionFlow-WithEncryption-01.png" width="700px">
+    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-ExecutionFlow-WithEncryption-02.webp" width="700px">
+    <img alt="MetisFL Execution Flow with FHE" src="https://docs.nevron.ai/img/dark/MetisFL-ExecutionFlow-WithEncryption-01.webp" width="700px">
 </picture>
 </div>
 

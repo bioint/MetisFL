@@ -16,21 +16,16 @@ Whether the data are considered private, proprietary, or regulated, the common p
 
 The history of federated learning is short but very promising. Federated Learning was introduced in the seminal paper [Communication-efficient learning of deep networks from decentralized data](https://proceedings.mlr.press/v54/mcmahan17a/mcmahan17a.pdf) by Google in 2017. The authors proposed a framework that allows to train a machine learning model across multiple data sources without the need to transfer the data to a centralized location. The framework was initially applied to train a language model across mobile phones. The model was trained locally on each phone and only the model parameters were transferred to a centralized location for aggregation. The aggregated model was then sent back to the phones to be used for inference.
 
+
 <div align="center">
-<div class="row" align="center">
   <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/CentralizedMachineLearning-02.png" width="700px">
-  <img alt="MetisFL Components Overview" src="https://docs.nevron.ai/img/dark/CentralizedMachineLearning-01.png" width="700px">
-</picture>
-
-</div>
-<div class="column">
+  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/CentralizedMachineLearning-02.webp" width="40%">
+  <img alt="MetisFL Components Overview" src="https://docs.nevron.ai/img/dark/CentralizedMachineLearning-01.webp" width="40%">
+  </picture>
   <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/FederatedMachineLearning-02.png" width="700px">
-  <img alt="MetisFL Components Overview" src="https://docs.nevron.ai/img/dark/FederatedMachineLearning-01.png" width="700px">
+  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/FederatedMachineLearning-02.webp" width="45%">
+  <img alt="MetisFL Components Overview" src="https://docs.nevron.ai/img/dark/FederatedMachineLearning-01.webp" width="45%">
 </picture>
-
-</div>
 </div>
 
 <!-- ## Is FL Needed?
@@ -46,7 +41,7 @@ To demonstrate the significance and promise of Federated Learning in the figure 
 <div align="center">
 <img
 style={{margin: '0 0 0 30px', display: 'block'}}
-src="../img/CentralizedvsSiloedvsFederated-BrainAGE.png"  alt="Centralized vs. Federated vs. Siloed BrainAGE models." />
+src="../img/CentralizedvsSiloedvsFederated-BrainAGE.webp"  alt="Centralized vs. Federated vs. Siloed BrainAGE models." />
 </div>
 
 :::info
@@ -59,8 +54,8 @@ The physical location, the computational capabilities and the data distribution 
 
 <div align="center">  
   <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/FederatedLearningTopologies-02.png" width="500px">
-  <img alt="Federated Learning Topologies" src="https://docs.nevron.ai/img/dark/FederatedLearningTopologies-01.png" width="500px">
+  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/FederatedLearningTopologies-02.webp" width="500px">
+  <img alt="Federated Learning Topologies" src="https://docs.nevron.ai/img/dark/FederatedLearningTopologies-01.webp" width="500px">
 </picture>
 </div>
 
@@ -100,4 +95,4 @@ After the model aggregation the Controller selects the next subset of learners t
 
 ## 🚀 Next steps
 
-Congratulations 👏. You have completed the introduction and know the basics of federated learning. The best way to continue learning is to dive into the quick start guide and start training your first federated models! But first, make sure you have installed MetisFL :)
+Congratulations 👏. You have completed the introduction and know the basics of federated learning. The best way to continue learning is to dive into the quick start guide and start training your first federated models! But first, make sure you have installed MetisFL!

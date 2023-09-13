@@ -1,8 +1,8 @@
 
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Components-Internal-02.png" width="700px">
-    <img alt="MetisFL Components Internal" src="https://docs.nevron.ai/img/dark/MetisFL-Components-Internal-01.png" width="700px">
+    <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Components-Internal-02.webp" width="700px">
+    <img alt="MetisFL Components Internal" src="https://docs.nevron.ai/img/dark/MetisFL-Components-Internal-01.webp" width="700px">
     </picture>
 </div>
 

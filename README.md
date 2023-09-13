@@ -96,8 +96,8 @@ The architecture of MetisFL consists of three main components: the **Federation 
 
 <div align="center">
 <picture>
-  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Components-Overview-02.png" width="700px">
-  <img alt="MetisFL Components Overview" src="https://docs.nevron.ai/img/dark/MetisFL-Components-Overview-01.png" width="700px">
+  <source media="(prefers-color-scheme: light)" srcset="https://docs.nevron.ai/img/light/MetisFL-Components-Overview-02.webp" width="700px">
+  <img alt="MetisFL Components Overview" src="https://docs.nevron.ai/img/dark/MetisFL-Components-Overview-01.webp" width="700px">
 </picture>
 </div>
 
