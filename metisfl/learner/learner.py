@@ -196,6 +196,7 @@ def try_call_train(
         metrics = train_res[1]
         metadata = train_res[2] if len(train_res) == 3 else {}
 
+
         if not isinstance(weights, list) or len(weights) == 0 or \
                 not all(isinstance(weight, np.ndarray) for weight in weights):
             raise ValueError(
@@ -214,11 +215,10 @@ def try_call_train(
                 raise ValueError(
                     f"Metric '{metrics}' not found in training metadata")
                 
-        for metadata in params.get('metadata', []):
-            if metadata not in train_res[2]:
+        for required_metadata in params.get('metadata', []):
+            if required_metadata not in metadata:
                 raise ValueError(
-                    f"Metadata '{metadata}' not found in training metadata")
-
+                    f"Metadata '{required_metadata}' not found in training metadata")
 
         return weights, metrics, metadata
 
