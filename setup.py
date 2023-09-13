@@ -75,6 +75,7 @@ def run_build():
 # Run build
 run_build()
 
+# TODO: add py version and arch to wheel name
 setup(
     name="metisfl",
     version="0.1.0",
@@ -108,5 +109,6 @@ setup(
         "protobuf>=4.23.4",
         "termcolor>=2.3.0",
         "pyfiglet>=0.8.post1",
+        "loguru>=0.7.1",
     ],
 )
