@@ -60,6 +60,7 @@ def iid_partition_dir(
     path: str,
     extension: str,
     num_partitions: int,
+    subdir_name: str = None
 ) -> None:
     """ Partitions all files in a dir into IID chunks and saves them in subdirs named chunk0, chunk1, etc.
 
@@ -71,21 +72,29 @@ def iid_partition_dir(
         The extension of the files to be partitioned.
     num_partitions : int
         The number of partitions.
-    
+    subdir_name : str, optional
+        If given, the files will be placed under `chunk0/subdir_name`, `chunk1/subdir_name`, etc.
     """
     files = glob.glob(path + "/*." + extension)
     num_files = len(files)
     chunk_size = int(num_files / num_partitions)
     random.shuffle(files)
 
+    paths = []
     for i in range(num_partitions):
-        os.mkdir(path + "/chunk" + str(i))
+        if not subdir_name:
+            paths.append(path + "/chunk" + str(i))
+        else:
+            paths.append(path + "/chunk" + str(i) + "/" + subdir_name)
+
+    for i in range(num_partitions):
+        os.makedirs(paths[i], exist_ok=True)
 
     for i in range(num_partitions):
         start = i * chunk_size
         end = (i + 1) * chunk_size
         for j in range(start, end):
-            shutil.move(files[j], path + "/chunk" + str(i))
+            shutil.move(files[j], paths[i])
             
 
 def iid_repartition_dir(
@@ -116,4 +125,3 @@ def niid_partition(
     """Partitions the data into Non-IID chunks."""
 
     pass
-
