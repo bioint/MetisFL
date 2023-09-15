@@ -3,9 +3,9 @@
 # source: metisfl/proto/model.proto
 """Generated protocol buffer code."""
 from google.protobuf import descriptor as _descriptor
-from google.protobuf import descriptor_pool as _descriptor_pool
+from google.protobuf import message as _message
+from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf.internal import builder as _builder
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -13,16 +13,120 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\";\n\x06Tensor\x12\x0e\n\x06length\x18\x01 \x01(\r\x12\x12\n\ndimensions\x18\x02 \x03(\x03\x12\r\n\x05value\x18\x03 \x01(\x0c\"<\n\x05Model\x12\x11\n\tencrypted\x18\x01 \x01(\x08\x12 \n\x07tensors\x18\x02 \x03(\x0b\x32\x0f.metisfl.Tensorb\x06proto3')
+DESCRIPTOR = _descriptor.FileDescriptor(
+  name='metisfl/proto/model.proto',
+  package='metisfl',
+  syntax='proto3',
+  serialized_options=None,
+  create_key=_descriptor._internal_create_key,
+  serialized_pb=b'\n\x19metisfl/proto/model.proto\x12\x07metisfl\";\n\x06Tensor\x12\x0e\n\x06length\x18\x01 \x01(\r\x12\x12\n\ndimensions\x18\x02 \x03(\x03\x12\r\n\x05value\x18\x03 \x01(\x0c\"<\n\x05Model\x12\x11\n\tencrypted\x18\x01 \x01(\x08\x12 \n\x07tensors\x18\x02 \x03(\x0b\x32\x0f.metisfl.Tensorb\x06proto3'
+)
 
-_globals = globals()
-_builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
-_builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'metisfl.proto.model_pb2', _globals)
-if _descriptor._USE_C_DESCRIPTORS == False:
 
-  DESCRIPTOR._options = None
-  _globals['_TENSOR']._serialized_start=38
-  _globals['_TENSOR']._serialized_end=97
-  _globals['_MODEL']._serialized_start=99
-  _globals['_MODEL']._serialized_end=159
+
+
+_TENSOR = _descriptor.Descriptor(
+  name='Tensor',
+  full_name='metisfl.Tensor',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='length', full_name='metisfl.Tensor.length', index=0,
+      number=1, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='dimensions', full_name='metisfl.Tensor.dimensions', index=1,
+      number=2, type=3, cpp_type=2, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='metisfl.Tensor.value', index=2,
+      number=3, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=38,
+  serialized_end=97,
+)
+
+
+_MODEL = _descriptor.Descriptor(
+  name='Model',
+  full_name='metisfl.Model',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='encrypted', full_name='metisfl.Model.encrypted', index=0,
+      number=1, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='tensors', full_name='metisfl.Model.tensors', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=99,
+  serialized_end=159,
+)
+
+_MODEL.fields_by_name['tensors'].message_type = _TENSOR
+DESCRIPTOR.message_types_by_name['Tensor'] = _TENSOR
+DESCRIPTOR.message_types_by_name['Model'] = _MODEL
+_sym_db.RegisterFileDescriptor(DESCRIPTOR)
+
+Tensor = _reflection.GeneratedProtocolMessageType('Tensor', (_message.Message,), {
+  'DESCRIPTOR' : _TENSOR,
+  '__module__' : 'metisfl.proto.model_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.Tensor)
+  })
+_sym_db.RegisterMessage(Tensor)
+
+Model = _reflection.GeneratedProtocolMessageType('Model', (_message.Message,), {
+  'DESCRIPTOR' : _MODEL,
+  '__module__' : 'metisfl.proto.model_pb2'
+  # @@protoc_insertion_point(class_scope:metisfl.Model)
+  })
+_sym_db.RegisterMessage(Model)
+
+
 # @@protoc_insertion_point(module_scope)
