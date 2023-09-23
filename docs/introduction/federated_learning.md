@@ -71,7 +71,7 @@ The centralized topology is most of the time seen in federated environments wher
 
 ## Federated Training
 
-Federated training differs from centralized training as it involves the coordination an communication between multiple parties. The main steps of a federated training process are the following:
+Federated training differs from centralized training as it involves the coordination and communication between multiple parties. The main steps of a federated training process are the following:
 
 ### Initialize global model
 
