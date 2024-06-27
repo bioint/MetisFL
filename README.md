@@ -1,3 +1,20 @@
+&nbsp;
+<div align="center">
+
+# MetisFL: The Open Federated Learning Framework for Scalable, Efficient, and Secure Federated Learning Workflows
+
+MetisFL - The First Open Federated Learning Framework implemented in C++ and Python3.
+
+[![BSD-3 License](https://badgen.net/badge/License/BSD-3-Clause/green?icon=github)](https://github.com/NevronAI/MetisFL/blob/main/LICENSE)
+[![PyPI - Python Version](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10-blue)](https://pypi.org/project/metisfl/)
+<!-- [![Documentation](https://badgen.net/badge/Read/Documentation/orange?icon=buymeacoffee)](https://docs.metisfl.ai)
+[![Blog](https://badgen.net/badge/Mentions/Blog?icon=awesome)](https://blog.metisfl.ai)
+[![Slack Community](https://img.shields.io/badge/JoinSlack-@metisfl-brightgreen.svg?logo=slack)](https://join.slack.com/t/metisfl/shared_invite/zt-233d3rg4x-9HNnRloTkyEh8_XPch9mfQ) -->
+[![Citation](https://img.shields.io/badge/cite-citation-brightgreen)](https://arxiv.org/pdf/2205.05249.pdf)
+
+</div>
+&nbsp;
+
 ## Project Installation Steps - Docker
 Due to some library inconsistencies that appeared across operating systems (e.g., Centos vs MacOS) we concluded that we
 should build a docker image and run the entire project within a container. The Dockerfile(s) contain all required steps.
