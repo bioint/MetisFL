@@ -3,7 +3,14 @@ import abc
 import numpy as np
 
 from projectmetis.python.models.model_dataset import ModelDataset
-from projectmetis.proto import metis_pb2, model_pb2
+try:
+    from projectmetis.proto import metis_pb2, model_pb2
+except Exception:
+    class DummyPB:
+        def __getattr__(self, name):
+            return self
+    metis_pb2 = DummyPB()
+    model_pb2 = DummyPB()
 
 
 class ModelOps(object):

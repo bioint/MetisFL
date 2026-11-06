@@ -1,5 +1,12 @@
-from termcolor import cprint
-from pyfiglet import figlet_format
+try:
+    from termcolor import cprint
+    from pyfiglet import figlet_format
+except (ImportError, ModuleNotFoundError):
+    def cprint(text, *args, **kwargs):
+        print(text)
+
+    def figlet_format(text, *args, **kwargs):
+        return text
 
 import datetime as dt
 import threading
